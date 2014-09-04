@@ -8,6 +8,7 @@
 
     </style>
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
+    <script language="javascript" type="text/javascript" src="constraints.js"></script>
     <script language="javascript" type="text/javascript" src="jquery.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
@@ -124,13 +125,11 @@ $(document).ready(function() {
   $( "#drawSamples" ).click(drawSamples());
   $( "#manualSamples" ).click(function() {
     function onDataReceived(series) {
-        alert("success");
         drawSamples();
         newSamples = [];
         
     };
 
-    alert(JSON.stringify(newSamples));
     $.ajax({
         url: "../manualCheckSamples/",
         type: "POST",
@@ -141,51 +140,27 @@ $(document).ready(function() {
     });
   });
 
-//     // Initiate a recurring data update
-// 
-//     $("button.dataUpdate").click(function () {
-// 
-//         data = [];
-//         alreadyFetched = {};
-// 
-//         $.plot("#placeholder", data, options);
-// 
-//         var iteration = 0;
-// 
-//         function fetchData() {
-// 
-//             ++iteration;
-// 
-//             function onDataReceived(series) {
-// 
-//                 // Load all the data in one pass; if we only got partial
-//                 // data we could merge it with what we already have.
-// 
-//                 data = [ series ];
-//                 $.plot("#placeholder", data, options);
-//             }
-// 
-//             // Normally we call the same URL - a script connected to a
-//             // database - but in this case we only have static example
-//             // files, so we need to modify the URL.
-// 
-//             $.ajax({
-//                 url: "data-eu-gdp-growth-" + iteration + ".json",
-//                 type: "GET",
-//                 dataType: "json",
-//                 success: onDataReceived
-//             });
-// 
-//             if (iteration < 5) {
-//                 setTimeout(fetchData, 1000);
-//             } else {
-//                 data = [];
-//                 alreadyFetched = {};
-//             }
-//         }
-// 
-//         setTimeout(fetchData, 1000);
-//     });
+  
+  
+    $( "#fNewSamples" ).submit(function( event ) {
+        event.preventDefault();
+        iterations = $("#iterations").val();
+        sampling = $("#sampling").val();
+        function onDataReceived(func) {
+            drawSamples();
+        }
+        $.ajax({
+                    url: "/calculateSamples/" + iterations + "/" + sampling,
+                    type: "GET",
+                    dataType: "json",
+                    success: onDataReceived,
+                    fail: function(bla) {
+                        alert(bla);
+                    }
+        });
+    });
+
+
     $( "#fSelectRatFile" ).submit(function( event ) {
         event.preventDefault();
         filename = $("#ratFiles").val();
@@ -232,22 +207,73 @@ $(document).ready(function() {
 //             plot.highlight(item.series, item.datapoint);
             
         } else if ($("#addConstraint:checked").length > 0) {
-            var fullCircle = false;
-            if(item)
+            var p = [pos.x.toFixed(2), pos.y.toFixed(2)];
+            var n = newConstraint.length;
+            // If it is on a line with the last points, just change line.
+            if(n < 2)
             {
-                for(i = 0; i < newConstraint.length; i++)
+                newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+                plotSamples(fullCircle);
+            }
+            else
+            {
+                var t = sideOfLine(newConstraint[n-2], newConstraint[n-1], p);
+                if(t == 0) 
+                {
+                    newConstraint[n-1] = p;
+                    plotSamples();
+                    return;
+                }
+                var fullCircle = false;
+                for(i = 0; i < n; i++)
                 {
                     if(newConstraint[i][0] == pos.x.toFixed(2) && newConstraint[i][1] == pos.y.toFixed(2))
                     {
                         newConstraint = newConstraint.slice(i);
+                        n = newConstraint.length;
                         fullCircle = true;
                         break;
                     }
                 }
-            }
+                    
+                
+                
+                if(n > 2)
+                {
+                    var checkbound = n - 1
+                    if(fullCircle)
+                    {
+                        checkbound = 1
+                    }
+                    
+                    for(i = 0; i < checkbound; i++)
+                    {
+                        if(t != sideOfLine(newConstraint[n-2-i], newConstraint[n-1-i], p))
+                        {
+                            alert("Constrainted area should be convex");
+                            return;
+                        }
+                    }
+                }
             
-            newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
-            plotSamples(fullCircle);
+                
+                
+                newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+                plotSamples(fullCircle);
+                
+                if(fullCircle) 
+                {
+                    origin = [0,0];
+                    for(i = 0; i < newConstraint.length - 1; i++)
+                    {
+                        if(newConstraint[i][1] == newConstraint[i+1][1]) 
+                        {
+                           //  line.push([[0, newConstraint[i][1]], t * sideOfLine( )
+                        }
+                        
+                    }
+                }
+            }
             
         }
     });    
