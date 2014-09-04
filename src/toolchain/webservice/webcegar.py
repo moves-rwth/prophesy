@@ -51,11 +51,11 @@ def index():
 
     request.session['something'] = 0
 
-@route('/invalidateSession/')
+@route('/invalidateSession')
 def invalidateSession():
     request.session.invalidate()
 
-@route('/uploadComicsResult/', method='POST')    
+@route('/uploadComicsResult', method='POST')    
 def uploadComicsResult():
     upload     = bottle.request.files.get('upload')
     name, ext = os.path.splitext(upload.filename)
@@ -69,9 +69,8 @@ def uploadComicsResult():
     inputfile.close()
     return 'OK'
 
-    return str("Success")
 
-@route('/listAvailableResultFiles/')
+@route('/listAvailableResultFiles')
 def loadAvailableResults():
     files = [f for f in os.listdir(RESULTFILES_DIR) if f.endswith('.pol')]
     files.sort()
@@ -92,12 +91,12 @@ def loadComicsResult(filename):
 def setThreshold(threshold):
     request.session['threshold'] = threshold
 
-@route('/showRationalFunction/')
+@route('/showRationalFunction')
 def showRationalFunction():
     if 'ratfunc' in request.session:
        return json.dumps([str(request.session['ratfunc'])])
    
-@route('/manualCheckSamples/', method="POST")
+@route('/manualCheckSamples', method="POST")
 def manualCheckSamples():
     spots = bottle.request.json
     print(spots)
@@ -170,10 +169,13 @@ def calculateSamples(iterations, nrsamples):
     print(flattenedsamples)
     return json.dumps(flattenedsamples)
 
-@route('/getSamples/')
+@route('/getSamples')
 def getSamples():
-    flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
-    return json.dumps(flattenedsamples)
+    if 'samples' in request.session:
+        flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
+        return json.dumps(flattenedsamples)
+    else:
+        return json.dumps([])
 
 # strips trailing slashes from requests
 class StripPathMiddleware(object):
