@@ -4,6 +4,7 @@ VERSION = [0, 3, 0]
 
 AUTHORS = ["Florian Corzilius", "Christian Dehnert", "Nils Jansen", "Sebastian Junges", "Matthias Volk"]
 SUPPORT = ["Nils Jansen", "Sebastian Junges"]
+TOOLNAME = "Cool Toolname"
 
 thisfilepath =  os.path.dirname(os.path.realpath(__file__))
 

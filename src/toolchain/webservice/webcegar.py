@@ -10,8 +10,8 @@ from bottle import request, route, hook, static_file
 import beaker.middleware
 import json
 
+import argparse
 import math
-import re
 import config
 from checks import *
 from data.constraint import Constraint
@@ -27,22 +27,9 @@ from output.samplepoints import *
 
 
 
-
 RESULTFILES_DIR = os.path.join(INTERMEDIATE_FILES_DIR, "results/")
 
 
-ensure_dir_exists(INTERMEDIATE_FILES_DIR)
-ensure_dir_exists(RESULTFILES_DIR)
-
-session_opts = {
-    'session.type': 'file',
-    'session.data_dir': WEBSESSIONS_DIR,
-    'session.auto': True,
-}
-
-
-
-app = beaker.middleware.SessionMiddleware(bottle.app(), session_opts)
 
 @hook('before_request')
 def setup_request():
@@ -181,7 +168,24 @@ def calculateSamples(iterations, nrsamples):
 def getSamples():
     flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
     return json.dumps(flattenedsamples)
+    
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Start a webservice for ' + TOOLNAME)
+    parser.add_argument('--server-port',  type=int, help='the port the server listens on', default=4242)
+    parser.add_argument('--server-host',  help="server host name", default="localhost")
+    parser.add_argument('--server-debug', type=bool, help='run the server in debug mode', default=True)
+    parser.add_argument('--server-quiet', type=bool, help='run the server in quiet mode', default=False)
+    cmdargs = parser.parse_args()    
+    
+    ensure_dir_exists(INTERMEDIATE_FILES_DIR)
+    ensure_dir_exists(RESULTFILES_DIR)
 
-    
-    
-bottle.run(app=app,host='localhost', port=1234, debug=True)
+    session_opts = {
+        'session.type': 'file',
+        'session.data_dir': WEBSESSIONS_DIR,
+        'session.auto': True,
+    }
+
+    app = beaker.middleware.SessionMiddleware(bottle.app(), session_opts)
+    bottle.run(app=app,host=vars(cmdargs)['server_host'], port=vars(cmdargs)['server_port'], debug=vars(cmdargs)['server_debug'], quiet=vars(cmdargs)['server_quiet'])
