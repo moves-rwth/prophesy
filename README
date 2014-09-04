@@ -1,0 +1,9 @@
+To run the web interface execute
+
+$ ./run_server.sh
+
+and open 
+
+http://localhost:4242/ui/index.html
+
+in your favorite webbrowser.
