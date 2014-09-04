@@ -85,7 +85,8 @@ function drawSamples() {
 
 
     function onDataReceived(series) {
-        
+        data[0] = [];
+        data[1] = [];
         $.each(series, function() {
             if(this.value < threshold)
             {
@@ -117,7 +118,13 @@ $(document).ready(function() {
             availableFiles.append($("<option />").val(this).text(this));
         });
     });
+
     
+    $.getJSON("../showRationalFunction/", function(result) {
+        $("#info_ratfunc").text(result);
+    });
+    
+
     
     
     var alreadyFetched = {};
@@ -166,6 +173,7 @@ $(document).ready(function() {
         filename = $("#ratFiles").val();
         function onDataReceived(func) {
             $("#info_ratfunc").text(func);
+            drawSamples();
         }
         $.ajax({
                     url: "/loadComicsResult/" + filename,
