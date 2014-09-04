@@ -1,4 +1,9 @@
 #!/env/python3
+import sys
+import os
+# import library. Using this instead of appends prevents naming clashes..
+thisfilepath =  os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import bottle
 from bottle import request, route, hook, static_file
@@ -7,6 +12,8 @@ import json
 
 import math
 import re
+import config
+from checks import *
 from data.constraint import Constraint
 from data.rationalfunction import RationalFunction
 from sympy.polys import Poly
@@ -17,17 +24,19 @@ from output.output import *
 from output.smt2 import *
 from output.plot import *
 from output.samplepoints import *
-import shlex
-import subprocess
-import os
 
 
-intermediateFilesDir = "./intermediatefiles/"
-resultFilesDir = os.path.join(intermediateFilesDir, "results/")
+
+
+RESULTFILES_DIR = os.path.join(INTERMEDIATE_FILES_DIR, "results/")
+
+
+ensure_dir_exists(INTERMEDIATE_FILES_DIR)
+ensure_dir_exists(RESULTFILES_DIR)
 
 session_opts = {
     'session.type': 'file',
-    'session.data_dir': './session/',
+    'session.data_dir': WEBSESSIONS_DIR,
     'session.auto': True,
 }
 
@@ -43,7 +52,7 @@ def setup_request():
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
-    return static_file(filepath, root='../webui/')
+    return static_file(filepath, root=WEB_INTERFACE_DIR)
 
 @route('/')
 def index():
@@ -61,7 +70,7 @@ def uploadComicsResult():
 #        return 'File extension not allowed.'
 
 #    save_path = get_save_path_for_category(category)
-    save_path = os.path.join(resultFilesDir, upload.filename)
+    save_path = os.path.join(RESULTFILES_DIR, upload.filename)
     inputfile = open(save_path, 'wb')
     inputfile.write(upload.file.read())
     inputfile.close()
@@ -71,13 +80,13 @@ def uploadComicsResult():
 
 @route('/listAvailableResultFiles/')
 def loadAvailableResults():
-    files = [f for f in os.listdir(resultFilesDir) if f.endswith('.pol')]
+    files = [f for f in os.listdir(RESULTFILES_DIR) if f.endswith('.pol')]
     files.sort()
     return json.dumps(files)
     
 @route('/loadComicsResult/<filename>')    
 def loadComicsResult(filename):    
-    filepath = os.path.join(resultFilesDir, filename)
+    filepath = os.path.join(RESULTFILES_DIR, filename)
     [parameters, constraints, nominator, denominator] = get_polynomials_from_comics_file(filepath)
     
     request.session['constraints'] = constraints
