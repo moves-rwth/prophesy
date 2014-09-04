@@ -81,9 +81,11 @@ def loadComicsResult(filename):
     filepath = os.path.join(RESULTFILES_DIR, filename)
     [parameters, constraints, nominator, denominator] = get_polynomials_from_comics_file(filepath)
     
+    request.session['name'] = filename
     request.session['constraints'] = constraints
     request.session['parameters'] = parameters
     request.session['ratfunc'] = RationalFunction(nominator, denominator)
+    request.session['samples'] = {}
     print(str(request.session['ratfunc']))
     return json.dumps([str(request.session['ratfunc'])])
 
@@ -106,7 +108,7 @@ def manualCheckSamples():
         return 'fail'
     ratfunc = request.session['ratfunc']
     parameters = request.session['parameters']
-    samples = request.session['samples']
+    samples = request.session.get('samples', {})
     for spot in spots:
         value = ratfunc.evaluate(zip(parameters, [float(x) for x in spot]))
         point = tuple([float(x) for x in spot])
@@ -168,6 +170,38 @@ def calculateSamples(iterations, nrsamples):
     flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in samples.items()])
     print(flattenedsamples)
     return json.dumps(flattenedsamples)
+
+@route('/checkConstraints', method='POST')
+def checkConstraints():
+    check = bottle.request.json
+    print(check)
+    
+    # export problem as smt2
+    smt2_to_file(request.session['name'],
+                 request.session['parameters'], 
+                 request.session['constraints'] + extra_constraints, 
+                 request.session['ratfunc'],
+                 request.session['ratfunc'], 
+                 request.session['threshold'],
+                 request.session['excluded_regions'], 
+                 safity)
+    # call smt solver
+    (smtres, model) = call_smt_solver("z3", request.session['name'])
+
+    if smtres == "sat":
+        modelPoint = tuple([model[p.name] for p in parameters])
+        print(modelPoint)
+        samples[modelPoint] = ratfunc.evaluate(list(model.items()))
+        print(samples)
+    else:
+        samples = remove_covered_samples(parameters, samples, extra_constraints)
+        if safity:
+            safe.append(extra_constraints)
+        else:
+            bad.append(extra_constraints)
+        excluded_regions.append(extra_constraints)    
+        print(safe)
+        print(bad)
 
 @route('/getSamples')
 def getSamples():
