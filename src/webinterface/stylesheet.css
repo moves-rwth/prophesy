@@ -1,0 +1,94 @@
+* { padding: 0; margin: 0px; vertical-align: top; }
+
+body {
+    background-color: #eee;
+    font: 18px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
+}
+
+a { color: #069; }
+a:hover { color: #28b; }
+
+h2 {
+    margin-top: 15px;
+    font: normal 32px "omnes-pro", Helvetica, Arial, sans-serif;
+}
+
+h3 {
+    margin-left: 30px;
+    font: normal 26px "omnes-pro", Helvetica, Arial, sans-serif;
+    color: #666;
+}
+
+p {
+    margin-top: 10px;
+}
+
+button {
+    font-size: 18px;
+    padding: 1px 7px;
+}
+
+input {
+    font-size: 18px;
+}
+
+input[type=checkbox] {
+    margin: 7px;
+}
+
+#header {
+    position: relative;
+    height: 80px;
+    background-color:#dd1020;
+    color: #eee;
+    margin: 0px;
+}
+
+
+
+#header h1 {
+    margin-left: 10px;
+    padding-top: 30px;
+    font-size: 55px;
+    font-weight: bold;
+    text-decoration: none;
+    color: #eee;
+}
+
+#content {
+    width: 880px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+
+#infopanel {
+    float: right;
+    position: relative;
+    max-width: 466px;
+}
+
+#controlpanel {
+    float: right;
+    position: relative;
+}
+
+.cp {
+    margin-left: 10px;
+    margin-top: 20px;
+    background-color: #ddd;
+    width: 350px;
+}
+
+#footer {
+    margin-top: 25px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+}
+
+
+.legend table {
+    border-spacing: 5px;
+}

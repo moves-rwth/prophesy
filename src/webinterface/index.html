@@ -1,0 +1,323 @@
+<!--<?xml version="1.0" encoding="iso-8859-1"?>-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Web UI</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <style>
+
+    </style>
+    <link href="stylesheet.css" rel="stylesheet" type="text/css">
+    <script language="javascript" type="text/javascript" src="jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+    <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
+    <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
+    <script language="javascript">
+    
+    
+  var d1 = [[0,1],[1,2],[3,8],[5,4],[2,10],[1.2,9],[9,2],[46,41],[22,14],[20,12],[20,25],[7,5],[18,11],[31,20]];
+var d2 = [[50,40],[24,36],[20,42],[33,41],[51,39],[11,28],[32,16],[38,40],[35,22],[41,30],[21,18]];
+var threshold = "0.5";
+
+var data = [];
+data.push([]);
+data.push([]);
+var newSamples = [];
+var newConstraint = [];
+var plotpoints = [];
+
+
+var options = {
+        axisLabels: {
+            show: true
+        },
+        crosshair: {
+                mode: "xy"
+        },
+        xaxis: {
+            min: 0,
+            max: 1,
+            tickSize: 0.1,
+            tickDecimals: 1,
+            axisLabel: "parameter1",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 12,
+            axisLabelFontFamily: "Verdana, Arial, Helvetica, Tahoma, sans-serif",
+            axisLabelPadding: 5
+        },
+        yaxis: {
+            min: 0,
+            max: 1,
+            tickSize: 0.1,
+            tickDecimals: 1,
+            axisLabel: "parameter2",
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 12,
+            axisLabelFontFamily: "Verdana, Arial, Helvetica, Tahoma, sans-serif",
+            axisLabelPadding: 5
+        },
+        series: {
+            points: {
+                radius: 3,
+                show: true,
+                fill: true
+            },
+        },
+        grid: {
+                hoverable: true,
+                clickable: true
+        },
+        legend: {
+            labelBoxBorderColor: "black",
+            position: "right"
+        }};
+
+function plotSamples() {
+    plotpoints = [{label: "< " + threshold, data: data[0], points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
+                  {label: "> " + threshold, data: data[1], points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+                  {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "yellow"}, color: "yellow"},
+                  {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true}, color: "black"}];
+    $.plot("#placeholder", plotpoints, options);
+}
+        
+function drawSamples() {
+
+
+    function onDataReceived(series) {
+        
+        $.each(series, function() {
+            if(this.value < threshold)
+            {
+                data[0].push(this.coordinates);
+            }
+            else
+            {
+                data[1].push(this.coordinates);
+            }
+        });
+        plotSamples();
+
+    };
+
+    $.ajax({
+        url: "../getSamples/",
+        type: "GET",
+        dataType: "json",
+        success: onDataReceived
+    });
+} 
+ 
+$(document).ready(function() {
+    drawSamples();
+    
+    $.getJSON("../listAvailableResultFiles/", function(result) {
+        var availableFiles = $("#ratFiles");
+        $.each(result, function() {
+            availableFiles.append($("<option />").val(this).text(this));
+        });
+    });
+    
+    
+    
+    var alreadyFetched = {};
+
+  $( "#drawSamples" ).click(drawSamples());
+  $( "#manualSamples" ).click(function() {
+    function onDataReceived(series) {
+        alert("success");
+        drawSamples();
+        newSamples = [];
+        
+    };
+
+    alert(JSON.stringify(newSamples));
+    $.ajax({
+        url: "../manualCheckSamples/",
+        type: "POST",
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify(newSamples),
+        dataType: "json",
+        success: onDataReceived
+    });
+  });
+
+//     // Initiate a recurring data update
+// 
+//     $("button.dataUpdate").click(function () {
+// 
+//         data = [];
+//         alreadyFetched = {};
+// 
+//         $.plot("#placeholder", data, options);
+// 
+//         var iteration = 0;
+// 
+//         function fetchData() {
+// 
+//             ++iteration;
+// 
+//             function onDataReceived(series) {
+// 
+//                 // Load all the data in one pass; if we only got partial
+//                 // data we could merge it with what we already have.
+// 
+//                 data = [ series ];
+//                 $.plot("#placeholder", data, options);
+//             }
+// 
+//             // Normally we call the same URL - a script connected to a
+//             // database - but in this case we only have static example
+//             // files, so we need to modify the URL.
+// 
+//             $.ajax({
+//                 url: "data-eu-gdp-growth-" + iteration + ".json",
+//                 type: "GET",
+//                 dataType: "json",
+//                 success: onDataReceived
+//             });
+// 
+//             if (iteration < 5) {
+//                 setTimeout(fetchData, 1000);
+//             } else {
+//                 data = [];
+//                 alreadyFetched = {};
+//             }
+//         }
+// 
+//         setTimeout(fetchData, 1000);
+//     });
+    $( "#fSelectRatFile" ).submit(function( event ) {
+        event.preventDefault();
+        filename = $("#ratFiles").val();
+        function onDataReceived(func) {
+            $("#info_ratfunc").text(func);
+        }
+        $.ajax({
+                    url: "/loadComicsResult/" + filename,
+                    type: "GET",
+                    dataType: "json",
+                    success: onDataReceived,
+                    fail: function(bla) {
+                        alert(bla);
+                    }
+        });
+    });
+// 
+//         
+    $("#placeholder").bind("plothover", function (event, pos, item) {
+
+        var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
+        $("#mousePos").text(str);
+        
+//         if ($("#enableTooltip:checked").length > 0) {
+//             if (item) {
+//                 var x = item.datapoint[0].toFixed(2),
+//                     y = item.datapoint[1].toFixed(2);
+// 
+//                 $("#tooltip").html(item.series.label + " of " + x + " = " + y)
+//                     .css({top: item.pageY+5, left: item.pageX+5})
+//                     .fadeIn(200);
+//             } else {
+//                 $("#tooltip").hide();
+//             }
+//         }
+    });
+
+    $("#placeholder").bind("plotclick", function (event, pos, item) {
+        if ($("#addSamples:checked").length > 0) {
+            newSamples.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+            plotSamples();
+//         if (item) {
+//             $("#clickdata").text(" - click point " + item.dataIndex + " in " + item.series.label);
+//             plot.highlight(item.series, item.datapoint);
+            
+        } else if ($("#addConstraint:checked").length > 0) {
+            newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+            plotSamples();
+        }
+    });    
+    
+    $("#addConstraint").click(function() {
+        if($("#addConstraint:checked"))
+    });
+});
+
+
+</script>
+</head>
+ 
+<body>
+<div id="header"><h1>Web UI</h1></div>
+
+<div id="controlpanel">
+    <h2>Control</h2>
+    <div id="rComics" class="cp"> 
+        <h3>Run **tool**</h3>
+        <form id="rTool">
+            <input id="prismfile" type="file" /><span>(Path to prism file.)</span> 
+            <input type="submit" value="Calculate" />
+        </form>
+    </div>
+    
+    <div id="dUploadRatFile"  class="cp">
+        <h3>Upload result file</h3>
+        <form id="fUploadRatFile" action="../uploadComicsResult/"  method="post" enctype="multipart/form-data">
+            <input id="ratfile" type="file" name="upload" /><span>(Path to result file.)</span> 
+            <input type="submit" value="Submit" />
+        </form>
+    </div>
+    
+    <div id="dSelectRatFile" class="cp">
+        <h3>Select result file</h3>
+        <form id="fSelectRatFile">
+            <select id="ratFiles">
+            
+            </select>
+            <input type="submit" value="Load"/>
+        </form>
+    </div>
+    
+    <div id="dNewSamples"  class="cp">
+        <h3>New samples</h3>
+        <form id="fNewSamples">
+            <span>Number of iterations:</span> <input id="iterations" type="text" value="2" /><br/>
+            <span>Sampling number:</span> <input id="sampling" type="text" value="2" />
+            <input type="submit" value="Go" />
+        </form>
+        <button id="drawSamples">Draw</button></br>
+        <label><input id="addSamples" type="checkbox" checked="checked"></input>Add samples by mouse clicks</label>
+        <button id="manualSamples">Check New</button>
+    </div>    
+    
+    <div id=newConstraints" class="cp">
+        <label><input id="addConstraint" type="checkbox" checked="checked"></input>Add constraints by mouse clicks</label>
+        <button id="manualConstraints">Check New</button>
+    </div>
+    
+</div>
+
+<div id="infopanel">
+    <h2>Info</h2>
+    
+    <h3>Rational Function</h3>
+    <div id="info_ratfunc">
+    </div>
+    
+</div>
+
+<div id="plotsurround">
+
+<div id="placeholder" style="width:600px;height:600px"></div>
+<span id="mousePos">Mouse position</span>
+</div>
+
+
+<div id="settings">
+   <h2>Settings</h2>
+   
+</div>
+
+
+</body>
+  
+</html>
