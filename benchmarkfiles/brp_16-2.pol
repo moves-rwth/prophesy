@@ -1,0 +1,32 @@
+States: 679
+Transitions:    867
+SCC detection time: 3.8e-05
+SCC elimination time:   0.130205
+Cancel time:    0.000678
+Addition (Factor) time: 0.120296
+Common coefficient time:    0
+Polynomial count:   587
+Total time: 0.130995
+
+Other Information:
+Parameters:
+pK, pL
+
+Constraints:
+0 < 1-pL
+pL < 1
+1-pK < 1
+0 < 1-pK
+0 < pL
+pK < 1
+1-pL < 1
+0 < pK
+
+Abstract Parameters: 0
+
+Count polynomials: 587
+
+Model Checking result:  1+2054378010528*pL^31*pK^31-333753433560*pL^34*pK^34-4545258511248*pL^28*pK^28+71250192*pL^41*pK^41-12044592*pL^42*pK^42-2348209259370*pL^24*pK^24-5395189032*pL^18*pK^18+684792670176*pL^33*pK^33+4677267510864*pL^27*pK^27-56114302608*pL^36*pK^36+48*pL^47*pK^47-193860*pL^44*pK^44+1548162720*pL^39*pK^39+1402417529136*pL^23*pK^23+27549901440*pL^19*pK^19-43046721*pL^16*pK^16-4248649715544*pL^26*pK^26+17280*pL^45*pK^45-5828051736*pL^38*pK^38-1254816463923*pL^32*pK^32-3003780902040*pL^30*pK^30-1128*pL^46*pK^46-711221113008*pL^22*pK^22-103025152260*pL^20*pK^20+19248014448*pL^37*pK^37+1696464*pL^43*pK^43-357904170*pL^40*pK^40+3917069740080*pL^29*pK^29+3385831868640*pL^25*pK^25+688747536*pL^17*pK^17+145076657040*pL^35*pK^35+300523508208*pL^21*pK^21-pL^48*pK^48
+Cmd:    /home/mazz/dual/Develop/sbmc/implementation_scc_mc/comics/branch/branch_parametric/cmdl_src/build/param_sccmc /home/mazz/dual/Develop/sbmc/implementation_scc_mc/comics/branch/branch_parametric/examples/benchmarks/brp/brp_16-2.pm --log /home/mazz/dual/Develop/sbmc/implementation_scc_mc/comics/branch/branch_parametric/examples/benchmarks/logs/brp_16-2_2014-02-03_22-55.log
+Time:   0.36 s
+Mem:    5164 kb /4

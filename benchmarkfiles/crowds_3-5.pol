@@ -1,0 +1,34 @@
+-------------------- COMICS (SCC) --------------------
+
+States: 1774
+Transitions:    2612
+SCC detection time: 0.000254
+SCC elimination time:   0.167715
+Cancel time:    0.077959
+Addition (Factor) time: 0.051487
+Common coefficient time:    0
+Polynomial count:   571
+Total time: 0.169564
+
+Other Information:
+Parameters:
+PF, badC
+
+Constraints:
+1-PF < 1
+0 < 1-PF
+PF < 1
+0 < PF
+badC < 1
+0 < badC
+1-badC < 1
+0 < 1-badC
+
+Abstract Parameters: 0
+
+Count polynomials: 571
+
+Model Checking result:  (((3+2*PF*badC-2*PF)^2)*(270-996*PF^3*badC^4+2250*PF*badC+405*badC^2+276*PF^3*badC^5-810*PF-32*PF^3*badC^6-108*badC^3-144*PF^2*badC^5+1161*PF*badC^3-540*badC+1008*PF^2*badC^4-2385*PF*badC^2+4050*PF^2*badC^2+1170*PF^3*badC-2844*PF^2*badC^3-216*PF*badC^4+810*PF^2-2070*PF^3*badC^2-270*PF^3-2880*PF^2*badC+1922*PF^3*badC^3)*(badC^2)) / ((3^5)*((1+PF*badC-PF)^5))
+Cmd:    /home/mazz/dual/Develop/sbmc/implementation_scc_mc/comics/branch/branch_parametric/cmdl_src/build/param_sccmc /home/mazz/dual/Develop/sbmc/implementation_scc_mc/comics/branch/branch_parametric/examples/benchmarks/crowds/crowds_3-5.pm --log /home/mazz/dual/Develop/sbmc/implementation_scc_mc/comics/branch/branch_parametric/examples/benchmarks/logs/crowds_3-5_2014-02-03_22-56.log
+Time:   0.63 s
+Mem:    6960 kb /4
