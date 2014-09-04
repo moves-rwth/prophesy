@@ -238,7 +238,9 @@ $(document).ready(function() {
     });    
     
     $("#addConstraint").click(function() {
-        if($("#addConstraint:checked"))
+        if($("#addConstraint:checked")) {
+            newConstraints = [];
+        }
     });
 });
 
