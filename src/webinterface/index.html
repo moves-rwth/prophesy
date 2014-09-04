@@ -237,9 +237,10 @@ $(document).ready(function() {
         }
     });    
     
-    $("#addConstraint").click(function() {
-        if($("#addConstraint:checked")) {
-            newConstraints = [];
+    $("#addConstraint").change(function() {
+        if($("#addConstraint:checked").length == 0) {
+            newConstraint = [];
+            plotSamples();
         }
     });
 });
