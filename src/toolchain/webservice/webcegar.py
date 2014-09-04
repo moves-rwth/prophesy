@@ -1,4 +1,4 @@
-#!/env/python3
+#!/usr/bin/env python3
 import sys
 import os
 # import library. Using this instead of appends prevents naming clashes..
@@ -35,7 +35,9 @@ RESULTFILES_DIR = os.path.join(INTERMEDIATE_FILES_DIR, "results/")
 def setup_request():
     request.session = request.environ['beaker.session']
     if 'threshold' not in request.session: 
-        request.session['threshold'] = 0.3
+        request.session['threshold'] = 0.5
+
+
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -48,6 +50,10 @@ def index():
        return str(request.session['something'])
 
     request.session['something'] = 0
+
+@route('/invalidateSession/')
+def invalidateSession():
+    request.session.invalidate()
 
 @route('/uploadComicsResult/', method='POST')    
 def uploadComicsResult():
@@ -116,9 +122,9 @@ def manualCheckSamples():
 def calculateSamples(iterations, nrsamples):
     
     if 'ratfunc' not in request.session:
-        return 'fail'
+        abort(409, 'rational function required')
     if 'parameters' not in request.session:
-        return 'fail'
+        abort(409, 'parameters required')
     ratfunc = request.session['ratfunc']
     print(ratfunc)
     parameters = request.session['parameters']
@@ -168,6 +174,14 @@ def calculateSamples(iterations, nrsamples):
 def getSamples():
     flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
     return json.dumps(flattenedsamples)
+
+# strips trailing slashes from requests
+class StripPathMiddleware(object):
+  def __init__(self, app):
+    self.app = app
+  def __call__(self, e, h):
+    e['PATH_INFO'] = e['PATH_INFO'].rstrip('/')
+    return self.app(e,h)
     
     
 if __name__ == "__main__":
@@ -187,5 +201,5 @@ if __name__ == "__main__":
         'session.auto': True,
     }
 
-    app = beaker.middleware.SessionMiddleware(bottle.app(), session_opts)
+    app = StripPathMiddleware(beaker.middleware.SessionMiddleware(bottle.app(), session_opts))
     bottle.run(app=app,host=vars(cmdargs)['server_host'], port=vars(cmdargs)['server_port'], debug=vars(cmdargs)['server_debug'], quiet=vars(cmdargs)['server_quiet'])
