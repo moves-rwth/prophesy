@@ -61,9 +61,6 @@ var options = {
                 radius: 3,
                 show: true,
                 fill: true
-            },
-            lines: {
-                fill: true
             }
         },
         grid: {
@@ -75,11 +72,11 @@ var options = {
             position: "right"
         }};
 
-function plotSamples() {
+function plotSamples(newConstraintFixed = false) {
     plotpoints = [{label: "< " + threshold, data: data[0], points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
                   {label: "> " + threshold, data: data[1], points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "yellow"}, color: "yellow"},
-                  {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true}, color: "black"}];
+                  {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: newConstraintFixed}, color: "black"}];
     $.plot("#placeholder", plotpoints, options);
 }
         
@@ -235,8 +232,23 @@ $(document).ready(function() {
 //             plot.highlight(item.series, item.datapoint);
             
         } else if ($("#addConstraint:checked").length > 0) {
+            var fullCircle = false;
+            if(item)
+            {
+                for(i = 0; i < newConstraint.length; i++)
+                {
+                    if(newConstraint[i][0] == pos.x.toFixed(2) && newConstraint[i][1] == pos.y.toFixed(2))
+                    {
+                        newConstraint = newConstraint.slice(i);
+                        fullCircle = true;
+                        break;
+                    }
+                }
+            }
+            
             newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
-            plotSamples();
+            plotSamples(fullCircle);
+            
         }
     });    
     
