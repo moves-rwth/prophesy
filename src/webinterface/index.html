@@ -292,6 +292,15 @@ $(document).ready(function() {
             plotSamples();
         }
     });
+    
+     $("#thresholdSlider").on('change', function() {
+        threshold = $('#thresholdSlider').val()/1000;        
+        drawSamples();
+     });
+//         
+//         //
+//         alert('change');
+//     });​
 });
 
 
@@ -361,6 +370,7 @@ $(document).ready(function() {
 
 <div id="placeholder" style="width:600px;height:600px"></div>
 <span id="mousePos">Mouse position</span>
+<input type="range" min="0" max="1000" value="500" id="thresholdSlider" />
 </div>
 
 
