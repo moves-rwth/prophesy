@@ -55,22 +55,30 @@ input[type=checkbox] {
     color: #eee;
 }
 
-#content {
-    width: 880px;
-    margin: 0 auto;
-    padding: 10px;
-}
+
 
 
 #infopanel {
-    float: right;
-    position: relative;
-    max-width: 466px;
+    float: left;
+    width: 400px;
 }
 
 #controlpanel {
     float: right;
-    position: relative;
+    width: 370px;
+}
+#plotsurround {
+    width: 620px;
+    float:left;
+}
+
+#placeholder {
+    min-width:600px;
+    min-height:600px;
+}
+
+#settings {
+    width: 400px;
 }
 
 .cp {

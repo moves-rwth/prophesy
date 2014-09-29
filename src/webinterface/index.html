@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Web UI</title>
+    <title>Prophesy UI</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <style>
 
@@ -217,7 +217,6 @@ $(document).ready(function() {
         } else if ($("#addConstraint:checked").length > 0) {
             var p = [pos.x.toFixed(2), pos.y.toFixed(2)];
             var n = newConstraint.length;
-            // If it is on a line with the last points, just change line.
             if(n < 2)
             {
                 newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
@@ -226,6 +225,7 @@ $(document).ready(function() {
             else
             {
                 var t = sideOfLine(newConstraint[n-2], newConstraint[n-1], p);
+                // If it is on a line with the last points, just change line.
                 if(t == 0) 
                 {
                     newConstraint[n-1] = p;
@@ -233,6 +233,7 @@ $(document).ready(function() {
                     return;
                 }
                 var fullCircle = false;
+                // Check if the last point was already in the constraint set.
                 for(i = 0; i < n; i++)
                 {
                     if(newConstraint[i][0] == pos.x.toFixed(2) && newConstraint[i][1] == pos.y.toFixed(2))
@@ -243,9 +244,7 @@ $(document).ready(function() {
                         break;
                     }
                 }
-                    
-                
-                
+                // Check convexity.    
                 if(n > 2)
                 {
                     var checkbound = n - 1
@@ -263,9 +262,6 @@ $(document).ready(function() {
                         }
                     }
                 }
-            
-                
-                
                 newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
                 plotSamples(fullCircle);
                 
@@ -276,7 +272,7 @@ $(document).ready(function() {
                     {
                         if(newConstraint[i][1] == newConstraint[i+1][1]) 
                         {
-                           //  line.push([[0, newConstraint[i][1]], t * sideOfLine( )
+                           
                         }
                         
                     }
@@ -308,7 +304,15 @@ $(document).ready(function() {
 </head>
  
 <body>
-<div id="header"><h1>Web UI</h1></div>
+<div id="header"><h1>Prophesy UI</h1></div>
+
+<div id="plotsurround">
+
+<div id="placeholder"></div>
+<span id="mousePos">Mouse position</span>
+<input type="range" min="0" max="1000" value="500" id="thresholdSlider" />
+</div>
+
 
 <div id="controlpanel">
     <h2>Control</h2>
@@ -364,13 +368,6 @@ $(document).ready(function() {
     <div id="info_ratfunc">
     </div>
     
-</div>
-
-<div id="plotsurround">
-
-<div id="placeholder" style="width:600px;height:600px"></div>
-<span id="mousePos">Mouse position</span>
-<input type="range" min="0" max="1000" value="500" id="thresholdSlider" />
 </div>
 
 
