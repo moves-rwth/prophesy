@@ -286,8 +286,27 @@ $(document).ready(function() {
         if($("#addConstraint:checked").length == 0) {
             newConstraint = [];
             plotSamples();
+        } else {
+            $("#addSamples").attr("checked", false);
         }
     });
+    
+    $("#addSamples").change(function() {
+        if($("#addSamples:checked").length == 0) {
+            newSamples = [];
+            plotSamples();
+        } else {
+            $("#addConstraint").attr("checked", false);
+        }
+    });
+    
+    $('.cpheader').on("click", function() {
+            var divId = $( this ).closest("div").attr('id') + "Content";
+            
+            $("#" +  divId).toggle();
+    });
+    
+    
     
      $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val()/1000;        
@@ -317,46 +336,70 @@ $(document).ready(function() {
 <div id="controlpanel">
     <h2>Control</h2>
     <div id="rComics" class="cp"> 
-        <h3>Run **tool**</h3>
+        <h3 class="cpheader">Run Model Checker</h3>
+        <div id="rComicsContent">
         <form id="rTool">
-            <input id="prismfile" type="file" /><span>(Path to prism file.)</span> 
-            <input type="submit" value="Calculate" />
+            <span>Path to prism file:</span>
+            <input id="prismfile" type="file" />
+            <span>Run with:</span>
+            <select id="mctool">
+                <option>comics</option>
+                <option selected="selected">storm</option>
+                <option>param</option>
+                <option>prism</option>
+            </select><br/>
+            <input type="submit" value="Calculate" class="submit"/>
         </form>
+        </div>
     </div>
     
     <div id="dUploadRatFile"  class="cp">
-        <h3>Upload result file</h3>
+        <h3 class="cpheader">Upload result file</h3>
+        <div id="dUploadRatFileContent">
         <form id="fUploadRatFile" action="../uploadComicsResult/"  method="post" enctype="multipart/form-data">
-            <input id="ratfile" type="file" name="upload" /><span>(Path to result file.)</span> 
-            <input type="submit" value="Submit" />
+            <span>Path to result file:</span><input id="ratfile" type="file" name="upload" />
+            <input type="submit" value="Submit" class="submit"/>
         </form>
+        </div>
     </div>
     
     <div id="dSelectRatFile" class="cp">
-        <h3>Select result file</h3>
+        <h3 class="cpheader">Select result file</h3>
+        <div id=dSelectRatFileContent>
         <form id="fSelectRatFile">
             <select id="ratFiles">
             
             </select>
             <input type="submit" value="Load"/>
         </form>
+        </div>
     </div>
     
     <div id="dNewSamples"  class="cp">
-        <h3>New samples</h3>
+        <h3 class="cpheader">New samples</h3>
+        <div id="dNewSamplesContent">
+        <h4>Manual Sampling</h4>
+        <label><input id="addSamples" type="checkbox" checked="checked"></input>Add samples by mouse clicks</label>
+        <button id="manualSamples" class="submit">Check New</button>
+        <h4>Auto Sampling</h4>
         <form id="fNewSamples">
             <span>Number of iterations:</span> <input id="iterations" type="text" value="2" /><br/>
             <span>Sampling number:</span> <input id="sampling" type="text" value="2" />
-            <input type="submit" value="Go" />
+            <input type="submit" value="Go" class="submit" />
         </form>
-        <button id="drawSamples">Draw</button></br>
-        <label><input id="addSamples" type="checkbox" checked="checked"></input>Add samples by mouse clicks</label>
-        <button id="manualSamples">Check New</button>
+        </div>
+        <!--<button id="drawSamples">Draw</button></br>-->
+        
     </div>    
     
-    <div id=newConstraints" class="cp">
-        <label><input id="addConstraint" type="checkbox" checked="checked"></input>Add constraints by mouse clicks</label>
-        <button id="manualConstraints">Check New</button>
+    <div id="dNewConstraints" class="cp">
+        <h3 class="cpheader">New constraints</h3>
+        <div id="dNewConstraintsContent">
+        <span>SMT Solver:</span><select id="smtsolver"><option selected="selected">SMT-RAT</option><option>Z3</option></select>
+        <h4>Manual Constraints</h4>
+        <label><input id="addConstraint" type="checkbox"></input>Add constraints by mouse clicks</label>
+        <button id="manualConstraints" class="submit">Check New</button>
+        <h4>Auto Constraints</h4>
     </div>
     
 </div>

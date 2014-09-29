@@ -2,7 +2,7 @@
 
 body {
     background-color: #eee;
-    font: 18px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
+    font: 16px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
 }
 
 a { color: #069; }
@@ -24,12 +24,12 @@ p {
 }
 
 button {
-    font-size: 18px;
+    font-size: 16px;
     padding: 1px 7px;
 }
 
 input {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 input[type=checkbox] {
@@ -65,27 +65,33 @@ input[type=checkbox] {
 
 #controlpanel {
     float: right;
-    width: 370px;
+    width: 422px;
 }
 #plotsurround {
-    width: 620px;
+    width: 562px;
     float:left;
 }
 
 #placeholder {
-    min-width:600px;
-    min-height:600px;
+    min-width:560px;
+    min-height:560px;
 }
 
 #settings {
     width: 400px;
 }
 
+.submit{
+margin: 10px 0px 0px 280px;
+width: 100px;
+
+}    
+
 .cp {
     margin-left: 10px;
     margin-top: 20px;
     background-color: #ddd;
-    width: 350px;
+    width: 420px;
 }
 
 #footer {
