@@ -76,7 +76,7 @@ var options = {
 function plotSamples(newConstraintFixed = false) {
     plotpoints = [{label: "< " + threshold, data: data[0], points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
                   {label: "> " + threshold, data: data[1], points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
-                  {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "yellow"}, color: "yellow"},
+                  {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: newConstraintFixed}, color: "black"}];
     $.plot("#placeholder", plotpoints, options);
 }
