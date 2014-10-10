@@ -1,9 +1,0 @@
-// Detection (metric A)
-//Pmax=?[true U (newInstance & runCount=0 & observe0 > observe1 & observe0 > observe2 & observe0 > observe3 & observe0 > observe4 & observe0 > observe5 & observe0 > observe6 & observe0 > observe7 & observe0 > observe8 & observe0 > observe9 & observe0 > observe10 & observe0 > observe11 & observe0 > observe12 & observe0 > observe13 & observe0 > observe14 & observe0 > observe15 & observe0 > observe16 & observe0 > observe17 & observe0 > observe18 & observe0 > observe19)]
-
-// Detection (metric B)
-//Pmax=?[true U (newInstance & runCount=0 & observe0 > 1) ]
-P=? [true U (observe0 > 1) ]
-
-// False positive (metric B)
-//Pmax=?[true U (newInstance & runCount=0 & observe0 <=1 & (observe1 > 1 | observe2 > 1 |  observe3 > 1 |  observe4 > 1 | observe5 > 1 |  observe6 > 1 |  observe7 > 1 |  observe8 > 1 |  observe9 > 1 |  observe10 > 1 |  observe11 > 1 |  observe12 > 1 |  observe13 > 1 |  observe14 > 1 | observe15 > 1 | observe16 > 1 |  observe17 > 1 | observe18 > 1 | observe19 > 1))]
