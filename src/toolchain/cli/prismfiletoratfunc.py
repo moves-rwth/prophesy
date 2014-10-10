@@ -20,20 +20,23 @@ if __name__ == "__main__":
     parser.add_argument('--pctl-file',  help='a file with a pctl property', required=True)
     
     solver_group = parser.add_mutually_exclusive_group(required=True)
-    solver_group.add_argument('--param-bin',help='the location of the param binary')
-    solver_group.add_argument('--pstorm-bin', help='the location of the pstorm binary')
-    solver_group.add_argument('--comics-bin',  help='the location of the comics binary')
+    solver_group.add_argument('--param', help='call the param tool')
+    solver_group.add_argument('--pstorm', help='the location of the pstorm binary')
+    solver_group.add_argument('--comics',  help='the location of the comics binary')
     cmdargs = parser.parse_args()
     
     print(vars(cmdargs))
     
-    if vars(cmdargs)["param_bin"] != None:
+    if vars(cmdargs)["param"] != None:
         raise NotImplementedError
-    elif vars(cmdargs)["pstorm_bin"] != None:
-        tool = ProphesyParametricModelChecker(vars(cmdargs)["pstorm_bin"])
-    elif vars(cmdargs)["comics_bin"] != None:
+    elif vars(cmdargs)["pstorm"] != None:
+        tool = ProphesyParametricModelChecker(vars(cmdargs)["pstorm"])
+    elif vars(cmdargs)["comics"] != None:
         raise NotImplementedError
     else:
         raise RuntimeError("No supported solver available")
           
-    print(tool.name())
+    print("Compute the rational function using " + tool.version())
+    tool.get_rational_function(vars(cmdargs)["file"], vars(cmdargs)["pctl_file"])
+    
+    

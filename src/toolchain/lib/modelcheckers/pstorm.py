@@ -1,5 +1,12 @@
 from modelcheckers.ppmc import *
+from input.pctl import *
+from input.resultfile import *
+from util import *
+import config
+import tempfile
 import subprocess
+
+
 
 class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
     def __init__(self, location):
@@ -31,15 +38,18 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         #TODO make sure the pctl formula is supported.
         
         #create a temporary file for the result.
-        resultfile = tempfile.mkstemp(text=True)
-        resultfile[0].close()
+        ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
+        resultfile = tempfile.mkstemp(dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
+        
         
         args = [self.location,
-                '--symbolic', prism_file,
-                '--pctl', str(pctl_formulas.front),
+                '--symbolic', prism_filepath,
+                '--pctl', str(pctl_formulas[0]),
                 '--parametric:resultfile', resultfile[1] ]
+        run_tool(args)
         
         parse_result_file(resultfile[1])
+        
        
         #/pstorm --symbolic examples/pdtmc/brp/brp_32-4.pm --pctl "P=? [F target]"
         

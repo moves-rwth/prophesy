@@ -1,5 +1,6 @@
 import os
 import errno
+import subprocess
 
 def ensure_dir_exists(path):
     try:
