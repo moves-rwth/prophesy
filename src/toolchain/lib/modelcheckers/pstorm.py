@@ -1,4 +1,5 @@
 from modelcheckers.ppmc import *
+import subprocess
 
 class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
     def __init__(self, location):
@@ -11,7 +12,9 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         args = [self.location, '--version']
         pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
         #pipe.communicate()
-        return pipe.communicate()[0]
+        outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
+        output = outputstr.split("\n")
+        return output[len(output)-2]
     
     
     def get_rational_function(self, prism_filepath, pctl_filepath): 
@@ -36,6 +39,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
                 '--pctl', str(pctl_formulas.front),
                 '--parametric:resultfile', resultfile[1] ]
         
+        parse_result_file(resultfile[1])
        
         #/pstorm --symbolic examples/pdtmc/brp/brp_32-4.pm --pctl "P=? [F target]"
         
