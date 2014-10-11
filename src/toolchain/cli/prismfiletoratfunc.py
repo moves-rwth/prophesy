@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 from modelcheckers.pstorm import *
+from input.prismfile import *
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Transform a prism file to a rational function.')
@@ -25,7 +26,8 @@ if __name__ == "__main__":
     solver_group.add_argument('--comics',  help='the location of the comics binary')
     cmdargs = parser.parse_args()
     
-    print(vars(cmdargs))
+    
+    prism_file = PrismFile(vars(cmdargs)["file"])
     
     if vars(cmdargs)["param"] != None:
         raise NotImplementedError
@@ -35,8 +37,8 @@ if __name__ == "__main__":
         raise NotImplementedError
     else:
         raise RuntimeError("No supported solver available")
-          
+    
     print("Compute the rational function using " + tool.version())
-    tool.get_rational_function(vars(cmdargs)["file"], vars(cmdargs)["pctl_file"])
+    tool.get_rational_function(prism_file.location, vars(cmdargs)["pctl_file"])
     
     
