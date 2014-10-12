@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 from modelcheckers.pstorm import *
+from modelcheckers.param import *
 from input.prismfile import *
 
 if __name__ == "__main__":
@@ -30,7 +31,9 @@ if __name__ == "__main__":
     prism_file = PrismFile(vars(cmdargs)["file"])
     
     if vars(cmdargs)["param"] != None:
-        raise NotImplementedError
+        prism_file = prism_file.make_temporary_copy()
+        prism_file.replace_parameter_keyword("param float")
+        tool = ParamParametricModelChecker(vars(cmdargs)["param"])
     elif vars(cmdargs)["pstorm"] != None:
         tool = ProphesyParametricModelChecker(vars(cmdargs)["pstorm"])
     elif vars(cmdargs)["comics"] != None:
