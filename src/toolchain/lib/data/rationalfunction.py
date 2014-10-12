@@ -17,4 +17,4 @@ class RationalFunction:
         return evalVal
     
     def __str__(self):
-        return "(" + sstr(self.nominator) + "/" + sstr(self.denominator) + ")"
+        return "(" + str(self.nominator)[5:].split(",")[0] + ") / (" + str(self.denominator)[5:].split(",")[0] + ")"

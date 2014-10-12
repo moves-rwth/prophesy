@@ -38,4 +38,9 @@ def parse_result_file(path):
     return [parameters, wdconstraints, gpconstraints, RationalFunction(nominator, denominator)] 
 
 def write_result_file(parameters, wdconstraints, gpconstraints, rationalfunction, path):
-    pass
+    with open(path, "w") as f:
+        f.write("!Parameters: {0}\n".format(", ".join([p.name for p in parameters])))
+        f.write("!Result: {0}\n".format(str(rationalfunction)))
+        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in wdconstraints])))
+        f.write("!Graph-preserving Constraints:\n{0}".format("\n".join([str(c) for c in gpconstraints])))
+                

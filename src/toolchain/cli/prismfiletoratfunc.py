@@ -20,6 +20,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--file',  help='the input file containing the prism file', required=True)
     parser.add_argument('--pctl-file',  help='a file with a pctl property', required=True)
+    parser.add_argument('--result-file', help='resulting file',default="result.out")
     
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--param', help='call the param tool')
@@ -42,6 +43,7 @@ if __name__ == "__main__":
         raise RuntimeError("No supported solver available")
     
     print("Compute the rational function using " + tool.version())
-    tool.get_rational_function(prism_file.location, vars(cmdargs)["pctl_file"])
+    result = tool.get_rational_function(prism_file.location, vars(cmdargs)["pctl_file"])
+    write_result_file(result[0], result[1], result[2], result[3], vars(cmdargs)["result_file"])
     
     
