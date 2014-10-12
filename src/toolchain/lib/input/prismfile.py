@@ -7,10 +7,10 @@ import shutil
 def findParametersInPrismFile(path, replace_keyword=None):
         with open(path, 'r') as f:
             inputstring = f.read()
-        parameters = re.findall("^const double (.*\s*);", inputstring, re.MULTILINE)
+        parameters = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
         print(parameters)
         if replace_keyword != None:
-            (outputstring, subs) = re.subn("(?<!//)(const double) (.*\s*;)", r"{0} \2".format(replace_keyword), inputstring, re.MULTILINE)
+            (outputstring, subs) = re.subn("(?<!// )(const double) (\w*\s*;)", r"{0} \2".format(replace_keyword), inputstring, re.MULTILINE)
             print(outputstring)
             if subs != len(parameters): 
                 raise RuntimeError("Number of substitutions does not match number of parameters")
