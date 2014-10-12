@@ -49,10 +49,10 @@ class Constraint:
     return self.__str__().__eq__(other.__str__())
   
   def __str__(self):
-    return str(self.polynomial) + " " + self.relation + " 0"
+    return str(self.polynomial)[5:].split(",")[0] + " " + self.relation + " 0"
   
   def __repr__(self):
-    return self.__str__()
+    return str(self.polynomial) + " " + self.relation + " 0"
   
   def __hash__(self): # exclude identical constraints
     return self.__str__().__hash__()

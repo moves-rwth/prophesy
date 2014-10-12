@@ -1,3 +1,6 @@
+from data.pretty_polynomial import *
+from sympy import sstr
+
 class RationalFunction:
     evaluation_precision = 10
     def __init__(self, nominator, denominator):
@@ -14,4 +17,4 @@ class RationalFunction:
         return evalVal
     
     def __str__(self):
-        return "(" + str(self.nominator) + "/" + str(self.denominator) + ")"
+        return "(" + sstr(self.nominator) + "/" + sstr(self.denominator) + ")"
