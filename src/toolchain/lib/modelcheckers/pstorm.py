@@ -44,8 +44,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         
         #create a temporary file for the result.
         ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
-        resultfile = tempfile.mkstemp(dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
-        
+        resultfile = tempfile.mkstemp(suffix=".txt",dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
         
         args = [self.location,
                 '--symbolic', prism_filepath,
@@ -53,7 +52,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
                 '--parametric:resultfile', resultfile[1] ]
         run_tool(args)
         
-        parse_result_file(resultfile[1])
+        return parse_result_file(resultfile[1])
         
        
         #/pstorm --symbolic examples/pdtmc/brp/brp_32-4.pm --pctl "P=? [F target]"
