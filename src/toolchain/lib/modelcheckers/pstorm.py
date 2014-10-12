@@ -11,6 +11,7 @@ import subprocess
 class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
     def __init__(self, location):
         self.location = location
+        self.bisimulation = BisimulationType.none;
     
     def name(self):
         return "pstorm"
@@ -23,6 +24,10 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         output = outputstr.split("\n")
         return output[len(output)-2]
     
+    def set_bisimulation_type(self, t):
+        assert(isinstance(t, BisimulationType))
+        self.bisimulation = t
+        
     
     def get_rational_function(self, prism_filepath, pctl_filepath): 
         check_filepath_for_reading(prism_filepath, "Prism file")
