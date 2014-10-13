@@ -10,6 +10,9 @@ def perform_uniform_sampling_by_mc(tool, prism_file, pctl_filepath, intervals, s
     
     return tool.uniform_sample_pctl_formula(prism_file, pctl_filepath, prism_file.parameters, ranges)
 
+def perform_sampling_by_mc(tool, prism_file, pctl_filepath, samplepoints):
+    return tool.sample_pctl_formula(prism_file, pctl_filepath, samplepoints)
+
 def _recursive_substitution(rational_function, parameters, ranges, samples, point=None):
     assert(len(parameters) == len(ranges))
     if len(parameters) > 1:
@@ -32,7 +35,7 @@ def perform_uniform_sampling_by_rf(parameters, rational_function, intervals, sam
     ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
     return _recursive_substitution(rational_function, parameters, ranges, dict())
     
-    
+
 
     
     

@@ -36,13 +36,13 @@ class PrismModelChecker(ProbablisticModelChecker):
         #pipe.communicate()
         return pipe.communicate()[0].decode(encoding='UTF-8')
     
-    def uniform_sample_pctl_formula(self, prism_file, pctl_filepath, parameters, ranges):
-        assert(len(parameters) == len(ranges))
+    def uniform_sample_pctl_formula(self, prism_file, pctl_filepath, ranges):
+        assert(len(prism_file.parameters) == len(ranges))
         check_filepath_for_reading(pctl_filepath, "pctl file")
         
         
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
-        const_values_string = ",".join(["{0}={1}".format(p, r) for (p,r) in zip(parameters, range_strings)])
+        const_values_string = ",".join(["{0}={1}".format(p, r) for (p,r) in zip(prism_file.parameters, range_strings)])
         
         ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
         (resultfd, resultpath) = tempfile.mkstemp(suffix=".txt",dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
@@ -56,6 +56,21 @@ class PrismModelChecker(ProbablisticModelChecker):
             raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
         return samples
         
+    def sample_pctl_formula(self, prism_file, pctl_filepath, samplepoints):
+        check_filepath_for_reading(pctl_filepath, "pctl file")
         
-        
+        ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
+        (resultfd, resultpath) = tempfile.mkstemp(suffix=".txt",dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
+        samples = dict()
+        for pt in samplepoints:
+            const_values_string = ",".join(["{0}={1}".format(p, v) for (p,v) in zip(prism_file.parameters, pt)])
+            args = [self.location, prism_file.location, pctl_filepath, 
+                    "-const",  const_values_string,
+                    "-exportresults", resultpath]
+            run_tool(args)
+            with open(resultpath) as f:
+                f.readline()
+                sample_value = float(f.readline())
+            samples[pt] = sample_value
+        return samples
         
