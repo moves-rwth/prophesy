@@ -16,5 +16,10 @@ class RationalFunction:
         evalVal = (evaluationNom/evaluationDen).evalf(RationalFunction.evaluation_precision)
         return evalVal
     
+    def substitute(self, parameter, value):
+        newNom = self.nominator.subs(parameter, value)
+        newDen = self.denominator.subs(parameter, value)
+        return RationalFunction(newNom, newDen)
+    
     def __str__(self):
         return "(" + str(self.nominator)[5:].split(",")[0] + ") / (" + str(self.denominator)[5:].split(",")[0] + ")"
