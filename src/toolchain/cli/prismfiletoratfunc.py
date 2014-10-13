@@ -43,7 +43,7 @@ if __name__ == "__main__":
         raise RuntimeError("No supported solver available")
     
     print("Compute the rational function using " + tool.version())
-    result = tool.get_rational_function(prism_file.location, vars(cmdargs)["pctl_file"])
+    result = tool.get_rational_function(prism_file, vars(cmdargs)["pctl_file"])
     write_result_file(result[0], result[1], result[2], result[3], vars(cmdargs)["result_file"])
     
     

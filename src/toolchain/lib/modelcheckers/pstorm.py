@@ -29,8 +29,8 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         self.bisimulation = t
         
     
-    def get_rational_function(self, prism_filepath, pctl_filepath): 
-        check_filepath_for_reading(prism_filepath, "Prism file")
+    def get_rational_function(self, prism_file, pctl_filepath): 
+        assert(isinstance(prism_file, PrismFile))
         check_filepath_for_reading(pctl_filepath, "pctl file")
         
         #get the pctl string from the file.
@@ -47,7 +47,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         resultfile = tempfile.mkstemp(suffix=".txt",dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
         
         args = [self.location,
-                '--symbolic', prism_filepath,
+                '--symbolic', prism_file.location,
                 '--pctl', str(pctl_formulas[0]),
                 '--parametric:resultfile', resultfile[1] ]
         run_tool(args)
