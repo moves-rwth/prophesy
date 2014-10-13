@@ -35,11 +35,12 @@ def perform_uniform_sampling_by_rf(parameters, rational_function, intervals, sam
     ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
     return _recursive_substitution(rational_function, parameters, ranges, dict())
     
-
-
+def perform_sampling_by_rf(rational_function, parameters, samplepoints):
+    samples = dict()
+    for pt in samplepoints:
+        samples[pt] = rational_function.evaluate(zip(parameters, pt))
+    return samples
     
-    
-
 def write_samples_file(parameters, samples_dict, path):
     with open(path, "w") as f:
         f.write(" ".join(parameters)+"\n")

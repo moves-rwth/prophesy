@@ -28,5 +28,6 @@ if __name__ == "__main__":
     [parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
     intervals = [(0.01, 0.99)] * len(parameters)
     samples = sampling.perform_uniform_sampling_by_rf(parameters, ratfunc, intervals, vars(cmdargs)['samplingnr'])
+    #samples = sampling.perform_sampling_by_rf(ratfunc, parameters, [(0.3, 0.3), (0.4, 0.4)])
     sampling.write_samples_file([p.name for p in parameters], samples, vars(cmdargs)["samples_file"])
     
