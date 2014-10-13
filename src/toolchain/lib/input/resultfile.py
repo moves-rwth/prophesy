@@ -12,16 +12,21 @@ def read_result_file(input_path):
    
     parameters = re.findall('!Parameters:\s(.*)', inputstring)[0].split(", ")
     
-    match = re.search('!Result:\s*((\w|[)(\+\*\^-])*?)(\s?/\s?((\w|[)(\+\*\^-])*?))?\n', inputstring)
-    resultingRatFunNom = match.group(1)
-    resultingRatFunDen = match.group(4)
+    match = re.findall('!Result:\s(.*)', inputstring)[0].split("/")
+    resultingRatFunNom = match[0]
+    if len(match) > 1:
+        resultingRatFunDen = match[1]
+    
     
     welldefined_constraintsString = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     welldefined_constraintsStrings = welldefined_constraintsString.split("\n")[:-1]
     
     
-    graphpreserving_constraintsString = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
-    graphpreserving_constraintsStrings = graphpreserving_constraintsString.split("\n")[:-1]
+    graphpreserving_constraintsStringList = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
+    if len(graphpreserving_constraintsStringList) > 0:
+        graphpreserving_constraintsStrings = graphpreserving_constraintsString[0].split("\n")[:-1]
+    else:
+        graphpreserving_constraintsStrings = []
     
     return [parameters, welldefined_constraintsStrings, graphpreserving_constraintsStrings, resultingRatFunNom, resultingRatFunDen]
 
@@ -34,7 +39,8 @@ def parse_result_file(path):
     denominator = Poly(1, parameters)
     if denominator_string != None:
         denominator = Poly(denominator_string, parameters)
-        
+    print(nominator)
+    print(denominator)
     return [parameters, wdconstraints, gpconstraints, RationalFunction(nominator, denominator)] 
 
 def write_result_file(parameters, wdconstraints, gpconstraints, rationalfunction, path):

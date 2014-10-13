@@ -31,6 +31,9 @@ class PrismFile():
     def replace_parameter_keyword(self, new_keyword):
         findParametersInPrismFile(self.location, new_keyword)
         
+    def nr_parameters(self):
+        return len(self.parameters)
+        
         
 
 

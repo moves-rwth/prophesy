@@ -56,8 +56,8 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
         output = outputstr.split("\n")
         return output[2][1:-1].strip()
     
-    def get_rational_function(self, prism_filepath, pctl_filepath): 
-        check_filepath_for_reading(prism_filepath, "Prism file")
+    def get_rational_function(self, prism_file, pctl_filepath): 
+        assert(isinstance(prism_file, PrismFile))
         check_filepath_for_reading(pctl_filepath, "pctl file")
         
         #create a temporary file for the result.
@@ -65,7 +65,7 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
         resultfile = tempfile.mkstemp(suffix=".txt",dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
         
         args = [self.location,
-                prism_filepath,
+                prism_file.location,
                 pctl_filepath, 
                 "--result-file", resultfile[1],
                 "--no-startup-message"]
