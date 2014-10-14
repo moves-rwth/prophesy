@@ -12,6 +12,8 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 
+from sympy import Symbol
+
 import util
 import sampling
 import constraint_generation
@@ -31,5 +33,6 @@ if __name__ == "__main__":
     
     (samples, parameters) = sampling.parse_samples_file(vars(cmdargs)["samples_file"])
     print(samples)
-    constraint_generation.create_halfspace_constraint(samples, vars(cmdargs)["threshold"], safe_above_threshold)
+    symbols = [Symbol(name) for name in parameters]
+    print(constraint_generation.create_halfspace_constraint(samples, symbols, vars(cmdargs)["threshold"], safe_above_threshold))
     
