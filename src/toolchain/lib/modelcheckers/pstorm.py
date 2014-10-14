@@ -30,7 +30,6 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         
     
     def get_rational_function(self, prism_file, pctl_filepath): 
-        assert(isinstance(prism_file, PrismFile))
         check_filepath_for_reading(pctl_filepath, "pctl file")
         
         #get the pctl string from the file.
