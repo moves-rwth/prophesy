@@ -46,7 +46,7 @@ def __toggle_selector(event):
 
 
     
-def plot_results_bool(parameters, samples_qualitative):
+def plot_results_bool(parameters, samples_qualitative, additional_lines = []):
     if len(parameters) == 2:
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
@@ -61,15 +61,18 @@ def plot_results_bool(parameters, samples_qualitative):
             else:
                 xInvalid.append(key[0])
                 yInvalid.append(key[1])
-                
+        
         ax1.scatter(xValid,yValid, marker='o', c='green')
         ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
+        for line in additional_lines:
+            ax1.quiver(line[0][0],line[0][1],line[1][0],line[1][1],angles='xy',scale_units='xy',scale=1)
         pylab.ylim([0,1])
         pylab.xlim([0,1])
         ax1.set_xlabel(str(parameters[0]))
         ax1.set_ylabel(str(parameters[1]))
-        __toggle_selector.RS = RectangleSelector(ax1, __onselect, drawtype='line')
-        plt.connect('key_press_event', __toggle_selector)
+        #__toggle_selector.RS = RectangleSelector(ax1, __onselect, drawtype='line')
+        #plt.connect('key_press_event', __toggle_selector)
+        
         plt.show()    
 
         
