@@ -52,7 +52,7 @@ class PrismModelChecker(ProbablisticModelChecker):
                 "-exportresults", resultpath]
         run_tool(args)
         (found_parameters, samples) = parse_prism_result_file(resultpath)
-        if found_parameters != parameters:
+        if found_parameters != prism_file.parameters:
             raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
         return samples
         
