@@ -1,3 +1,5 @@
+import re
+
 from data.range import *
 
 def perform_uniform_sampling_by_mc(tool, prism_file, pctl_filepath, intervals, samples_per_dimension):
@@ -53,17 +55,18 @@ def parse_samples_file(path):
         firstLine = True
         lineNumber = 0
         for line in f:
+            line = line.strip()
             lineNumber = lineNumber + 1
             if firstLine:
                 firstLine = False
-                parameters = line.split(" ")
+                parameters = re.split("\s+", line)
             else:
-                lvec = line.split(" ")
-                point = tuple(lvec[:-1])
+                lvec = re.split("\s+", line)
+                point = tuple([float(c) for c in lvec[:-1]])
                 if len(point) != len(parameters):
-                    raise RuntimeError("Invalid input on line " + lineNr)
-                samples[point] = lvec[-1]
-    return samples
+                    raise RuntimeError("Invalid input on line " + str(lineNumber))
+                samples[point] = float(lvec[-1])
+    return (samples, parameters)
 
     
 def split_samples(samples, threshold, greaterEqualSafe=True):
@@ -73,6 +76,7 @@ def split_samples(samples, threshold, greaterEqualSafe=True):
         return (below_threshold, above_threshold)
     else:
         return (above_threshold, below_threshold)
+    
     
     
     
