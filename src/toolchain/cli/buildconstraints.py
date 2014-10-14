@@ -14,6 +14,7 @@ import argparse
 
 import util
 import sampling
+import constraint_generation
 from input.resultfile import *
 
 if __name__ == "__main__":
@@ -30,7 +31,5 @@ if __name__ == "__main__":
     
     (samples, parameters) = sampling.parse_samples_file(vars(cmdargs)["samples_file"])
     print(samples)
-    (safe_samples, bad_samples) = sampling.split_samples(samples, vars(cmdargs)["threshold"], safe_above_threshold)
-    print(safe_samples)
-    print(bad_samples)
+    constraint_generation.create_halfspace_constraint(samples, vars(cmdargs)["threshold"], safe_above_threshold)
     
