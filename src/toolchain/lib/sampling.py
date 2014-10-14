@@ -1,3 +1,5 @@
+import re
+
 from data.range import *
 
 def perform_uniform_sampling_by_mc(tool, prism_file, pctl_filepath, intervals, samples_per_dimension):
@@ -8,7 +10,7 @@ def perform_uniform_sampling_by_mc(tool, prism_file, pctl_filepath, intervals, s
     
     ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
     
-    return tool.uniform_sample_pctl_formula(prism_file, pctl_filepath, prism_file.parameters, ranges)
+    return tool.uniform_sample_pctl_formula(prism_file, pctl_filepath, ranges)
 
 def perform_sampling_by_mc(tool, prism_file, pctl_filepath, samplepoints):
     return tool.sample_pctl_formula(prism_file, pctl_filepath, samplepoints)
@@ -46,6 +48,35 @@ def write_samples_file(parameters, samples_dict, path):
         f.write(" ".join(parameters)+"\n")
         for k,v in samples_dict.items():
             f.write("\t".join([("%.4f" % (c)) for c in k ]) + "\t\t" + "%.4f" % (v) + "\n")
+
+def parse_samples_file(path):
+    samples = dict()
+    with open(path, "r") as f:
+        firstLine = True
+        lineNumber = 0
+        for line in f:
+            line = line.strip()
+            lineNumber = lineNumber + 1
+            if firstLine:
+                firstLine = False
+                parameters = re.split("\s+", line)
+            else:
+                lvec = re.split("\s+", line)
+                point = tuple([float(c) for c in lvec[:-1]])
+                if len(point) != len(parameters):
+                    raise RuntimeError("Invalid input on line " + str(lineNumber))
+                samples[point] = float(lvec[-1])
+    return (samples, parameters)
+
+    
+def split_samples(samples, threshold, greaterEqualSafe=True):
+    below_threshold = dict([(k, v) for k,v in samples.items() if v < threshold])
+    above_threshold = dict([(k, v) for k,v in samples.items() if v >= threshold])
+    if greaterEqualSafe:
+        return (below_threshold, above_threshold)
+    else:
+        return (above_threshold, below_threshold)
+    
     
     
     

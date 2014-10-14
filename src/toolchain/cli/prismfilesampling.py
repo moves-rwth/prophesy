@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('--file',  help='the input file containing the prism file', required=True)
     parser.add_argument('--pctl-file',  help='a file with a pctl property', required=True)
     parser.add_argument('--samples-file', help='resulting file',default="samples.out")
-    parser.add_argument('--samplingnr', help='number of samples per dimension', default=4)
+    parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
     
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--prism', help='the location of the prism binary')
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     
     intervals = [(0, 1)] * prism_file.nr_parameters()
     
-    samples = perform_unifom_sampling_by_mc(tool, prism_file, vars(cmdargs)["pctl_file"], intervals, vars(cmdargs)['samplingnr'])
+    samples = perform_uniform_sampling_by_mc(tool, prism_file, vars(cmdargs)["pctl_file"], intervals, vars(cmdargs)['samplingnr'])
     #samples = perform_sampling_mc(tool, prism_file, vars(cmdargs)["pctl_file"], [(0.3, 0.3), (0.4, 0.4)])
     write_samples_file(prism_file.parameters, samples, vars(cmdargs)["samples_file"])
     
