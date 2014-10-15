@@ -63,7 +63,8 @@ if __name__ == "__main__":
     smt2interface.print_calls()        
     
     (samples, parameters) = sampling.parse_samples_file(vars(cmdargs)["samples_file"])
-    print(samples)
+    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold)
+    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold)
     
     if cmdargs.planes:
         print(constraint_generation.create_halfspace_constraint(samples, ratfunc_parameters, vars(cmdargs)["threshold"], cmdargs.safe_above_threshold))

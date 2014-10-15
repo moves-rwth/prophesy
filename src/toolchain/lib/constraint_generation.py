@@ -191,7 +191,6 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
     samples = samples_input.copy()
     
     
-    print(safe_above_threshold)
     anchor_points = [([(0,0)], True, True),
                      ([(1,0)], False, True), 
                      ([(1,1)], False, False),
@@ -212,8 +211,6 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
         for (anchor_points_for_a_dir, pos_x, pos_y)  in anchor_points:
             for anchor_point in anchor_points_for_a_dir:
                 for pt, v in samples.items():
-                    print("pt = {0}".format(pt))
-                    print(v)
                     if not ((pos_x and pt[0] > anchor_point[0]) or (not pos_x and pt[0] < anchor_point[0])):
                         continue;
                     if not ((pos_y and pt[1] > anchor_point[1]) or (not pos_y and pt[1] < anchor_point[1])):
@@ -241,15 +238,20 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             max_pt = pt
                             best_anchor = anchor_point
                             best_anchor_points_for_dir = anchor_points_for_a_dir
+                            best_pos_x = pos_x
+                            best_pos_y = pos_y
                             
         if max_pt != None:
-            print(smt2interface.version())
-            print("max_pt: {0}".format(max_pt))
-            print("best_anchor: {0}".format(best_anchor))
-            print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
+            #print(smt2interface.version())
+            #print("max_pt: {0}".format(max_pt))
+            #print("best_anchor: {0}".format(best_anchor))
+            #print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
             succesfull_elimination = True
             smt2interface.push()
-            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes = [(best_anchor, max_pt)], path_to_save = "tryout.png", display=True)
+            if max_area_safe:
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = [(best_anchor, max_pt)], path_to_save = "tryout.png", display=True)
+            else:
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_red = [(best_anchor, max_pt)], path_to_save = "tryout.png", display=True)
             constraintset = rectangle_constraints(best_anchor, max_pt, parameters)
             for constraint in constraintset:
                 smt2interface.assert_constraint(constraint)
@@ -268,12 +270,33 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             fullfillsAllConstraints = False
                             break;
                     if fullfillsAllConstraints:
-                        del samples[pt]
+                        #del samples[pt]
+                        pass
+                #print("anchor_points before: {0}".format(anchor_points))
+                for (anchor_points_for_a_dir, pos_x, pos_y) in anchor_points:
+                    if anchor_points_for_a_dir == best_anchor_points_for_dir:
+                        continue
+                    for anchor_point in anchor_points_for_a_dir:
+                        if inside_rectangle(anchor_point, best_anchor, max_pt, best_pos_x, best_pos_y):
+                            print(anchor_point)
+                            print(max_pt)
+                            anchor_points_for_a_dir.remove(anchor_point)
+                            new_anchor = [0, 0]
+                            if pos_x:
+                                new_anchor[0] = max(anchor_point[0], max_pt[0]) 
+                            else:
+                                new_anchor[0] = min(anchor_point[0], max_pt[0])
+                            if pos_y:
+                                new_anchor[1] = max(anchor_point[1], max_pt[1]) 
+                            else:
+                                new_anchor[1] = min(anchor_point[1], max_pt[1]) 
+                            anchor_points_for_a_dir.append(new_anchor)
+                #print("anchor_points after: {0}".format(anchor_points))
                 if max_area_safe:
                     safe_boxes.append((best_anchor, max_pt))
                 else: 
                     unsafe_boxes.append((best_anchor, max_pt))
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes = safe_boxes + unsafe_boxes, path_to_save = "tryout.png", display=True)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = "tryout.png", display=True)
             elif checkresult == smt.smt.Answer.sat:
                 model = smt2interface.get_model()
                 modelPoint = tuple([model[p.name] for p in parameters])

@@ -46,7 +46,7 @@ def __toggle_selector(event):
 
 
     
-def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], additional_lines = [], additional_boxes = [], path_to_save=None, display=False):
+def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], path_to_save=None, display=False):
     if len(parameters) == 2:
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
@@ -69,11 +69,13 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
         for line in additional_lines:
             print(line)
             ax1.plot([line[0][0], line[0][1]], [line[1][0], line[1][1]], color='blue', linestyle='-', linewidth=2)
-        for box in additional_boxes:
-            print(box[0])
-            print(box[1])
-            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="orange", edgecolor="red")
+        for box in additional_boxes_green:
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="green", edgecolor="black", hatch="o")
             ax1.add_patch(p)
+        for box in additional_boxes_red:
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="red", edgecolor="black", hatch="x")
+            ax1.add_patch(p)
+        
         pylab.ylim([0,1])
         pylab.xlim([0,1])
         ax1.set_xlabel(str(parameters[0]))

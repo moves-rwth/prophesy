@@ -1,19 +1,27 @@
 import re
+import math
 
 from data.range import *
 
-def perform_uniform_sampling_by_mc(tool, prism_file, pctl_filepath, intervals, samples_per_dimension):
-    assert(samples_per_dimension > 0)
-    if samples_per_dimension == 1: raise NotImplementedError
-    if prism_file.nr_parameters() != len(intervals):
-        raise RuntimeError("Number of ranges does not match number of parameters")
-    
-    ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
-    
-    return tool.uniform_sample_pctl_formula(prism_file, pctl_filepath, ranges)
+class McSampling():
+    def __init__(self, tool):
+        self.tool = tool
+        self.prism_file = prism_file
+        self.pctl_filepath = pctl_filepath
+        
 
-def perform_sampling_by_mc(tool, prism_file, pctl_filepath, samplepoints):
-    return tool.sample_pctl_formula(prism_file, pctl_filepath, samplepoints)
+    def perform_uniform_sampling(self, intervals, samples_per_dimension):
+        assert(samples_per_dimension > 0)
+        if samples_per_dimension == 1: raise NotImplementedError
+        if prism_file.nr_parameters() != len(intervals):
+            raise RuntimeError("Number of ranges does not match number of parameters")
+        
+        ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
+        
+        return tool.uniform_sample_pctl_formula(prism_file, pctl_filepath, ranges)
+
+    def perform_sampling(self, samplepoints):
+        return tool.sample_pctl_formula(prism_file, pctl_filepath, samplepoints)
 
 def _recursive_substitution(rational_function, parameters, ranges, samples, point=None):
     assert(len(parameters) == len(ranges))
@@ -33,15 +41,24 @@ def _recursive_substitution(rational_function, parameters, ranges, samples, poin
                 samples[point + (v,)] = res        
     return samples
     
-def perform_uniform_sampling_by_rf(parameters, rational_function, intervals, samples_per_dimension):
-    ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
-    return _recursive_substitution(rational_function, parameters, ranges, dict())
+class RatFuncSampling():
+    def __init__(self, ratfunc, parameters):
+        self.parameters = parameters
+        self.ratfunc = ratfunc
+        
     
-def perform_sampling_by_rf(rational_function, parameters, samplepoints):
-    samples = dict()
-    for pt in samplepoints:
-        samples[pt] = rational_function.evaluate(zip(parameters, pt))
-    return samples
+    def perform_uniform_sampling(self,intervals, samples_per_dimension):
+        ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
+        return _recursive_substitution(self.ratfunc, self.parameters, ranges, dict())
+        
+    def perform_sampling(self, samplepoints):
+        samples = dict()
+        for pt in samplepoints:
+            samples[pt] = self.ratfunc.evaluate(zip(self.parameters, pt))
+        return samples
+    
+    
+    
     
 def write_samples_file(parameters, samples_dict, path):
     with open(path, "w") as f:
@@ -80,5 +97,42 @@ def split_samples(samples, threshold, greaterEqualSafe=True):
     else:
         return (below_threshold, above_threshold)
     
+def _distance(p1, p2):
+    return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
+
+
+def filter_sampling(samples, threshold):
+    pass
+
+def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True):
+    bd = 0.1
+    samplenr = math.sqrt(len(samples))
+    (safe_samples, bad_samples) = split_samples(samples, threshold, greaterEqualSafe)
+    epsilon = (1-2*bd)/(samplenr-1)
+    delta = math.sqrt(2*(epsilon*epsilon) + epsilon/2)
+    #print("delta: {0}".format(delta))
+    for safe_pt, safe_v in safe_samples.items():
+        for bad_pt, bad_v in bad_samples.items():
+            dist = _distance(safe_pt, bad_pt)
+            #print("safe_pt: {0}".format(safe_pt))
+            #print("bad_pt: {0}".format(bad_pt))
+            #print("distance: {0}".format( dist))   
+            if dist < delta and dist > 0.01:
+                dist_to_safe = abs(safe_v - threshold)
+                dist_to_bad = abs(threshold - bad_v)
+                
+                safe_weight = (dist_to_safe + 0.2) / (dist_to_safe + dist_to_bad + 0.4)
+                bad_weight  = (dist_to_bad  + 0.2) / (dist_to_safe + dist_to_bad + 0.4)
+                #print("safe_weight: {0}".format(safe_weight))
+                #print("bad_weight: {0}".format(bad_weight))
+                assert( abs(safe_weight + bad_weight - 1) < 0.05 )
+                
+                p = tuple([(safe_weight*i_gs + bad_weight* i_bs)for i_gs, i_bs in zip(safe_pt,bad_pt)])
+                #print("p: {0}".format(p))
+                #print(samples)
+                samples.update(sampling_interface.perform_sampling([p]))
+                #print(samples)
+    return samples
     
-    
+                
+            
