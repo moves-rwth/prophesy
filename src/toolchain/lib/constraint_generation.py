@@ -56,7 +56,7 @@ def rotate_vector(x, rad):
 def normalize_vector(x):
     return x / np.linalg.norm(x)
     
-def create_halfspace_constraint(samples, parameters, threshold, safe_above_threshold, steps=2):
+def create_halfspace_constraint(samples, parameters, threshold, safe_above_threshold, steps=3):
     if len(parameters) != 2:
         raise NotImplementedError
     (safe_samples, bad_samples) = sampling.split_samples(samples, threshold, safe_above_threshold)
@@ -119,5 +119,59 @@ def create_halfspace_constraint(samples, parameters, threshold, safe_above_thres
         print("line is described by {0}x + {1} = 0".format(a, b))
         return (best_safety, Constraint(sympy.Poly(b*parameters[0] - a*parameters[1] + a*b, parameters), rel, parameters))
     
-
+def inside_rectangle(point, anchor_1, anchor_2, pos_x, pos_y):
+    if (pos_x and anchor_1[0] <= point[0] and point[0] <= anchor_2[0]) or (not pos_x and anchor_2[0] <= point[0] and point[0] <= anchor_1[0]):
+        if (pos_y and anchor_1[1] <= point[1] and point[1] <= anchor_2[1]) or (not pos_y and anchor_2[1] <= point[1] and point[1] <= anchor_1[1]):
+            return True
+        else:
+            return False
+    else:
+        return False
     
+def growing_rectangle_constraints(samples, parameters, threshold, safe_above_threshold):  
+    if len(parameters) != 2:
+        raise NotImplementedError
+    (safe_samples, bad_samples) = sampling.split_samples(samples, threshold, safe_above_threshold)
+    assert(len(safe_samples) + len(bad_samples) == len(samples))
+    print(bad_samples)
+    print(safe_samples)
+    
+    print(safe_above_threshold)
+    anchor_points = [[np.array([0,0])],[np.array([1,0])], [np.array([1,1])], [np.array([0,1])]]
+    
+    anchor_point = anchor_points[2][0]
+    pos_x = False
+    pos_y = False
+    
+    max_size = 0
+    
+    for pt, v in samples.items():
+        print("pt = {0}".format(pt))
+        print(v)
+        if not ((pos_x and pt[0] > anchor_point[0]) or (not pos_x and pt[0] < anchor_point[0])):
+            continue;
+        if not ((pos_y and pt[1] > anchor_point[1]) or (not pos_y and pt[1] < anchor_point[1])):
+            continue;
+        
+        size = abs(pt[0] - anchor_point[0]) * abs(pt[1] - anchor_point[0])
+        if size > max_size:
+            break_attempt = False
+            # check if nothing of other polarity is inbetween.
+            if (v > threshold and safe_above_threshold) or (v <= threshold and not safe_above_threshold):
+                for pt2, v2 in bad_samples.items():
+                    print("\tpt2 = {0}".format(pt2))
+                    if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
+                        break_attempt = True
+                        break
+            else:
+                for pt2, v2 in safe_samples.items():
+                    print("\tpt2 = {0}".format(pt2))
+                    if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
+                        break_attempt = True
+                        break 
+            if not break_attempt:
+                max_size = size
+                max_pt = pt
+    print(max_pt)            
+    plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), [], [(anchor_point, max_pt)])
+        

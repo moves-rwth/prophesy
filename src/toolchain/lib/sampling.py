@@ -70,13 +70,15 @@ def parse_samples_file(path):
 
     
 def split_samples(samples, threshold, greaterEqualSafe=True):
+    """
+    returns (safe, bad)
+    """
     below_threshold = dict([(k, v) for k,v in samples.items() if v < threshold])
     above_threshold = dict([(k, v) for k,v in samples.items() if v >= threshold])
     if greaterEqualSafe:
-        return (below_threshold, above_threshold)
-    else:
         return (above_threshold, below_threshold)
-    
+    else:
+        return (below_threshold, above_threshold)
     
     
     
