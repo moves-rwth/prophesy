@@ -4,7 +4,7 @@
 from sympy import Symbol
 from sympy import Rational, Integer, Float
 from sympy.polys import Poly
-from data.pretty_polynomial import *
+from data.polynomial_to_smt2 import *
 
 ##################################################################################################
 # Class representing a polynomial constraint.
@@ -57,6 +57,9 @@ class Constraint:
   def __hash__(self): # exclude identical constraints
     return self.__str__().__hash__()
   
+  def to_smt2_string(self):
+      return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols)  + " 0)"
+  
   def subs(self, substitutions):
     """ Performs the given list of substitutions on the polynomial of the constraint and adds all variables given by the substitutions to the new constraint. """
     for substitution in substitutions:
@@ -76,7 +79,3 @@ class Constraint:
       assert isinstance(self.polynomial, Poly)
     return self
   
-def degree(t):
-  """ Returns the degree of the given term (as tuple ((exp_0, exp_1, ..., exp_k), coeff)."""
-  assert isinstance(t, tuple)
-  return sum(t[0])
