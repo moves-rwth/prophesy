@@ -137,52 +137,58 @@ def growing_rectangle_constraints(samples, parameters, threshold, safe_above_thr
     print(safe_samples)
     
     print(safe_above_threshold)
-    anchor_points = [[np.array([0,0])],[np.array([1,0])], [np.array([1,1])], [np.array([0,1])]]
+    anchor_points = [([np.array([0,0])], True, True),
+                     ([np.array([1,0])], False, True), 
+                     ([np.array([1,1])], False, False),
+                     ([np.array([0,1])], True, False)]
     
     anchor_points_for_a_dir = anchor_points[0]
-    pos_x = True
-    pos_y = True
     succesfull_elimination = True
     while succesfull_elimination:
         succesfull_elimination = False
         max_size = 0
         max_pt = None
         best_anchor = None
-        for anchor_point in anchor_points_for_a_dir:
-            for pt, v in samples.items():
-                print("pt = {0}".format(pt))
-                print(v)
-                if not ((pos_x and pt[0] > anchor_point[0]) or (not pos_x and pt[0] < anchor_point[0])):
-                    continue;
-                if not ((pos_y and pt[1] > anchor_point[1]) or (not pos_y and pt[1] < anchor_point[1])):
-                    continue;
-                
-                size = abs(pt[0] - anchor_point[0]) * abs(pt[1] - anchor_point[1])
-                if size > max_size:
-                    break_attempt = False
-                    # check if nothing of other polarity is inbetween.
-                    if (v > threshold and safe_above_threshold) or (v <= threshold and not safe_above_threshold):
-                        for pt2, v2 in bad_samples.items():
-                            print("\tpt2 = {0}".format(pt2))
-                            if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
-                                break_attempt = True
-                                break
-                    else:
-                        for pt2, v2 in safe_samples.items():
-                            print("\tpt2 = {0}".format(pt2))
-                            if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
-                                break_attempt = True
-                                break 
-                    if not break_attempt:
-                        max_size = size
-                        max_pt = pt
-                        best_anchor = anchor_point
+        best_anchor_points_for_dir = None
+        for (anchor_points_for_a_dir, pos_x, pos_y)  in anchor_points:
+            for anchor_point in anchor_points_for_a_dir:
+                for pt, v in samples.items():
+                    print("pt = {0}".format(pt))
+                    print(v)
+                    if not ((pos_x and pt[0] > anchor_point[0]) or (not pos_x and pt[0] < anchor_point[0])):
+                        continue;
+                    if not ((pos_y and pt[1] > anchor_point[1]) or (not pos_y and pt[1] < anchor_point[1])):
+                        continue;
+                    
+                    size = abs(pt[0] - anchor_point[0]) * abs(pt[1] - anchor_point[1])
+                    if size > max_size:
+                        break_attempt = False
+                        # check if nothing of other polarity is inbetween.
+                        if (v > threshold and safe_above_threshold) or (v <= threshold and not safe_above_threshold):
+                            for pt2, v2 in bad_samples.items():
+                                print("\tpt2 = {0}".format(pt2))
+                                if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
+                                    break_attempt = True
+                                    break
+                        else:
+                            for pt2, v2 in safe_samples.items():
+                                print("\tpt2 = {0}".format(pt2))
+                                if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
+                                    break_attempt = True
+                                    break 
+                        if not break_attempt:
+                            max_size = size
+                            max_pt = pt
+                            best_anchor = anchor_point
+                            best_anchor_points_for_dir = anchor_points_for_a_dir
+                            
         if max_pt != None:
-            print(max_pt)            
+            print(max_pt)
+            print("best_anchor: {0}".format(best_anchor))
             plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), [], [(best_anchor, max_pt)])
             succesfull_elimination = True
-            anchor_points_for_a_dir.remove(best_anchor)
-            anchor_points_for_a_dir.append(np.array([max_pt[0], best_anchor[1]]))
-            anchor_points_for_a_dir.append(np.array([best_anchor[0], max_pt[1]]))
+            best_anchor_points_for_dir.remove(best_anchor)
+            best_anchor_points_for_dir.append(np.array([max_pt[0], best_anchor[1]]))
+            best_anchor_points_for_dir.append(np.array([best_anchor[0], max_pt[1]]))
             
             
