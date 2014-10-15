@@ -137,10 +137,10 @@ def growing_rectangle_constraints(samples, parameters, threshold, safe_above_thr
     print(safe_samples)
     
     print(safe_above_threshold)
-    anchor_points = [([np.array([0,0])], True, True),
-                     ([np.array([1,0])], False, True), 
-                     ([np.array([1,1])], False, False),
-                     ([np.array([0,1])], True, False)]
+    anchor_points = [([(0,0)], True, True),
+                     ([(1,0)], False, True), 
+                     ([(1,1)], False, False),
+                     ([(0,1)], True, False)]
     
     anchor_points_for_a_dir = anchor_points[0]
     succesfull_elimination = True
@@ -183,12 +183,14 @@ def growing_rectangle_constraints(samples, parameters, threshold, safe_above_thr
                             best_anchor_points_for_dir = anchor_points_for_a_dir
                             
         if max_pt != None:
-            print(max_pt)
+            print("max_pt: {0}".format(max_pt))
             print("best_anchor: {0}".format(best_anchor))
-            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), [], [(best_anchor, max_pt)])
+            print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
+            #plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), [], [(best_anchor, max_pt)])
             succesfull_elimination = True
+            best_anchor_points_for_dir.append((max_pt[0], best_anchor[1]))
+            best_anchor_points_for_dir.append((best_anchor[0], max_pt[1]))
+            print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
             best_anchor_points_for_dir.remove(best_anchor)
-            best_anchor_points_for_dir.append(np.array([max_pt[0], best_anchor[1]]))
-            best_anchor_points_for_dir.append(np.array([best_anchor[0], max_pt[1]]))
             
             
