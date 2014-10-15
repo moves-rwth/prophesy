@@ -1,4 +1,5 @@
 import re
+from math import hypot
 import math
 
 from data.range import *
@@ -98,26 +99,42 @@ def split_samples(samples, threshold, greaterEqualSafe=True):
         return (below_threshold, above_threshold)
     
 def _distance(p1, p2):
-    return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
+    return hypot(p1[0]-p2[0], p1[1]-p2[1])
 
 
 def filter_sampling(samples, threshold):
-    pass
+    for samplept, sampleval in list(samples.items()):
+        if abs(threshold - sampleval) > 0.2:
+            del samples[samplept]
+    return samples
+    
 
-def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True):
+def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True, use_filter = False):
     bd = 0.1
     samplenr = math.sqrt(len(samples))
-    (safe_samples, bad_samples) = split_samples(samples, threshold, greaterEqualSafe)
+    
+    if use_filter:
+        fsamples = filter_sampling(samples.copy(), threshold)
+        (safe_samples, bad_samples) = split_samples(fsamples, threshold, greaterEqualSafe)
+    else:
+        fsamples = samples
+        (safe_samples, bad_samples) = split_samples(samples, threshold, greaterEqualSafe)
     epsilon = (1-2*bd)/(samplenr-1)
     delta = math.sqrt(2*(epsilon*epsilon) + epsilon/2)
+    skipCount = 0
+    prod = len(safe_samples) * len(bad_samples)
     #print("delta: {0}".format(delta))
     for safe_pt, safe_v in safe_samples.items():
         for bad_pt, bad_v in bad_samples.items():
+            #print(totalCount/prod)
             dist = _distance(safe_pt, bad_pt)
             #print("safe_pt: {0}".format(safe_pt))
             #print("bad_pt: {0}".format(bad_pt))
             #print("distance: {0}".format( dist))   
-            if dist < delta and dist > 0.01:
+            if dist < delta and dist > 0.06:
+                #constructCount = constructCount + 1
+                #if constructCount % 10  == 0:
+                    #print("constructCount {0}".format(constructCount))
                 dist_to_safe = abs(safe_v - threshold)
                 dist_to_bad = abs(threshold - bad_v)
                 
@@ -128,9 +145,29 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 assert( abs(safe_weight + bad_weight - 1) < 0.05 )
                 
                 p = tuple([(safe_weight*i_gs + bad_weight* i_bs)for i_gs, i_bs in zip(safe_pt,bad_pt)])
+                skip = False
+                i = 0
+                for samplept in fsamples.keys():
+                    d = _distance(samplept, p)
+                    if d < 0.01:
+                        skip = True
+                        skipCount = skipCount + 1
+                        break
+                    elif d < 0.05:
+                        i = i + 1
+                        if i > 2:
+                            skip = True
+                            skipCount = skipCount + 1
+                            break
+                        
+                        
                 #print("p: {0}".format(p))
                 #print(samples)
-                samples.update(sampling_interface.perform_sampling([p]))
+                
+                if not skip:
+                    samples.update(sampling_interface.perform_sampling([p]))
+                
+                print("skipCount {0}".format(skipCount))
                 #print(samples)
     return samples
     
