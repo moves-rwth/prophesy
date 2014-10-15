@@ -1,5 +1,6 @@
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from matplotlib.widgets import  RectangleSelector
 import pylab
 from data.constraint import Constraint
@@ -44,9 +45,8 @@ def __toggle_selector(event):
         toggle_selector.RS.set_active(True)
 
 
-
     
-def plot_results_bool(parameters, samples_qualitative, additional_lines = []):
+def plot_results_bool(parameters, samples_qualitative, additional_lines = [], additional_boxes = []):
     if len(parameters) == 2:
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
@@ -66,6 +66,11 @@ def plot_results_bool(parameters, samples_qualitative, additional_lines = []):
         ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
         for line in additional_lines:
             ax1.quiver(line[0][0],line[0][1],line[1][0],line[1][1],angles='xy',scale_units='xy',scale=1)
+        for box in additional_boxes:
+            print(box[0])
+            print(box[1])
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="orange", edgecolor="red")
+        ax1.add_patch(p)
         pylab.ylim([0,1])
         pylab.xlim([0,1])
         ax1.set_xlabel(str(parameters[0]))
