@@ -83,9 +83,10 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
         #__toggle_selector.RS = RectangleSelector(ax1, __onselect, drawtype='line')
         #plt.connect('key_press_event', __toggle_selector)
         if path_to_save != None:
-            plt.savefig(path_to_save)
+            plt.savefig(path_to_save, format="PDF")
         if display:
             plt.show()    
+        plt.close(fig)
 
         
 def plot_results_val(parameters, result):

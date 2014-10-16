@@ -14,6 +14,7 @@ TMP_DIR = os.path.join(thisfilepath, "../tmp/")
 WEBSESSIONS_DIR = os.path.join(TMP_DIR, "web/sessions/")
 WEB_INTERMEDIATE_FILES_DIR = os.path.join(TMP_DIR, "web/intermediate/")
 CLI_INTERMEDIATE_FILES_DIR = os.path.join(TMP_DIR, "cli/intermediate")
+PLOT_FILES_DIR = os.path.join(TMP_DIR, "cli/intermediate/plots")
 
 
 # directory with webinterface
