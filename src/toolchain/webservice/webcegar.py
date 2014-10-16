@@ -27,7 +27,7 @@ from output.samplepoints import *
 
 
 
-RESULTFILES_DIR = os.path.join(INTERMEDIATE_FILES_DIR, "results/")
+RESULTFILES_DIR = os.path.join(WEB_INTERMEDIATE_FILES_DIR, "results/")
 
 
 
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     parser.add_argument('--server-quiet', type=bool, help='run the server in quiet mode', default=False)
     cmdargs = parser.parse_args()    
     
-    ensure_dir_exists(INTERMEDIATE_FILES_DIR)
+    ensure_dir_exists(WEB_INTERMEDIATE_FILES_DIR)
     ensure_dir_exists(RESULTFILES_DIR)
 
     session_opts = {
@@ -238,4 +238,6 @@ if __name__ == "__main__":
     }
 
     app = StripPathMiddleware(beaker.middleware.SessionMiddleware(bottle.app(), session_opts))
+    if(vars(cmdargs)['server_quiet']):
+        print("Starting webservice...")
     bottle.run(app=app,host=vars(cmdargs)['server_host'], port=vars(cmdargs)['server_port'], debug=vars(cmdargs)['server_debug'], quiet=vars(cmdargs)['server_quiet'])
