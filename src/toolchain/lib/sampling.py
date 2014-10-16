@@ -108,7 +108,10 @@ def filter_sampling(samples, threshold):
             del samples[samplept]
     return samples
     
-
+def near_sampling(samples, threshold, rectangles, limit = 0.1, added_dist = 0.05):
+    pass
+    
+    
 def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True, use_filter = False):
     bd = 0.1
     samplenr = math.sqrt(len(samples))
@@ -149,13 +152,13 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 i = 0
                 for samplept in fsamples.keys():
                     d = _distance(samplept, p)
-                    if d < 0.01:
+                    if d < 0.005:
                         skip = True
                         skipCount = skipCount + 1
                         break
-                    elif d < 0.05:
+                    elif d < 0.03:
                         i = i + 1
-                        if i > 2:
+                        if i > 3:
                             skip = True
                             skipCount = skipCount + 1
                             break

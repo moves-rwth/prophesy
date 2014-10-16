@@ -188,9 +188,14 @@ def rectangle_constraints(p1, p2, parameters):
     
 def _print_benchmark_output(benchmark_output):
     i = 1
-    print("call,\t result,\t seconds,\t,area")
+    print("call,\t result,\t seconds,\t cum. seconds, \t,area, \tcum. area")
+    total_sec = 0
+    total_area = 0
     for benchmark in benchmark_output:
-        print(str(i) + ",\t" + benchmark[0].name +",\t" + "%.2f" % benchmark[1] + ",\t" + "%.3f" % benchmark[2])
+        total_sec  =  total_sec + benchmark[1]
+        if benchmark[0] == smt.smt.Answer.unsat:
+            total_area =  total_area + benchmark[2]
+        print(str(i) + ",\t" + benchmark[0].name +",\t" + "%.2f" % benchmark[1] + ",\t" + "%.2f" % total_sec + ",\t" + "%.3f" % benchmark[2] + ",\t" + "%.3f" % total_area)
         i = i + 1
         
 def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, smt2interface, ratfunc):  
@@ -288,8 +293,7 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             fullfillsAllConstraints = False
                             break;
                     if fullfillsAllConstraints:
-                        #del samples[pt]
-                        pass
+                        del samples[pt]
                 #print("anchor_points before: {0}".format(anchor_points))
                 for (anchor_points_for_a_dir, pos_x, pos_y) in anchor_points:
                     if anchor_points_for_a_dir == best_anchor_points_for_dir:
