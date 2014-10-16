@@ -7,9 +7,13 @@ import sampling
 import sympy
 
 import smt.smt
+from config import *
+import time
+import tempfile
 
 from data.constraint import *
 from output.plot import *
+
 
 def _halfspace_constraint(safe_samples, bad_samples, orientation_vector, anchor_point):
     assert(np.linalg.norm(orientation_vector) == 1)
@@ -182,8 +186,13 @@ def rectangle_constraints(p1, p2, parameters):
                    Constraint(Poly( parameters[1] - ph[1], parameters), "<=", parameters)]
     return constraints
     
-    
-    
+def _print_benchmark_output(benchmark_output):
+    i = 1
+    print("call,\t result,\t seconds,\t,area")
+    for benchmark in benchmark_output:
+        print(str(i) + ",\t" + benchmark[0].name +",\t" + "%.2f" % benchmark[1] + ",\t" + "%.3f" % benchmark[2])
+        i = i + 1
+        
 def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, smt2interface, ratfunc):  
     if len(parameters) != 2:
         raise NotImplementedError
@@ -200,7 +209,11 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
     succesfull_elimination = True
     safe_boxes = []
     unsafe_boxes = []
+    benchmark_output = []
+    plotdir = tempfile.mkdtemp(dir=PLOT_FILES_DIR)
+    check_nr = 0
     while succesfull_elimination:
+        check_nr = check_nr + 1
         succesfull_elimination = False
         max_size = 0
         max_pt = None
@@ -241,24 +254,29 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             best_pos_x = pos_x
                             best_pos_y = pos_y
                             
-        if max_pt != None:
+        if max_pt != None and max_size > 0.0001:
             #print(smt2interface.version())
             #print("max_pt: {0}".format(max_pt))
             #print("best_anchor: {0}".format(best_anchor))
             #print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
             succesfull_elimination = True
             smt2interface.push()
+            
             if max_area_safe:
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = [(best_anchor, max_pt)], path_to_save = "tryout.png", display=True)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
             else:
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_red = [(best_anchor, max_pt)], path_to_save = "tryout.png", display=True)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
             constraintset = rectangle_constraints(best_anchor, max_pt, parameters)
             for constraint in constraintset:
                 smt2interface.assert_constraint(constraint)
             smt2interface.set_guard("_safe_", not max_area_safe)
             smt2interface.set_guard("_bad_", max_area_safe)
             print("Calling smt solver")
+            start = time.time()
             checkresult = smt2interface.check()
+            duration = time.time() - start
+            print("Call took {0} seconds".format(duration))
+            benchmark_output.append((checkresult, duration, max_size))
             if checkresult == smt.smt.Answer.unsat:
                 best_anchor_points_for_dir.append((max_pt[0], best_anchor[1]))
                 best_anchor_points_for_dir.append((best_anchor[0], max_pt[1]))
@@ -296,14 +314,14 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                     safe_boxes.append((best_anchor, max_pt))
                 else: 
                     unsafe_boxes.append((best_anchor, max_pt))
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = "tryout.png", display=True)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
             elif checkresult == smt.smt.Answer.sat:
                 model = smt2interface.get_model()
                 modelPoint = tuple([model[p.name] for p in parameters])
                 samples[modelPoint] = ratfunc.evaluate(list(model.items()))
-        
+            
             smt2interface.pop()
-    
+            _print_benchmark_output(benchmark_output)
     smt2interface.stop()
     smt2interface.print_calls()
     
