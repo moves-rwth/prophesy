@@ -42,17 +42,21 @@ class SmtlibSolver(SMTSolver):
 
     def version(self): 
         args = [self.location, "--version"]
-        p = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr= subprocess.PIPE, universal_newlines=True)
         return p.communicate()[0].rstrip()
 
     def check(self): 
-        self.string += "(check-sat)\n"
-        self.process.stdin.write("(check-sat)\n")
+        s = "(check-sat)\n"
+        self.string += s
+        print(self.string)
+        self.process.stdin.write(s)
         self.process.stdin.flush()
+        
         for line in iter(self.process.stdout.readline, ""):
-            if self.process.poll() != None:
+            if not line and self.process.poll() != None:
                 break
             output = line.rstrip()
+            print("**\t " + output)
             if output == "unsat":
                 print("returns unsat")
                 return Answer.unsat
@@ -61,6 +65,11 @@ class SmtlibSolver(SMTSolver):
                 return Answer.sat
             else: 
                 raise NotImplementedError
+        print("err")
+        print(self.process.stderr)
+        print("out")
+        print(self.process.stdout.read().rstrip())
+        return Answer.killed
         #for line in iter(self.process.stdout.readline, ""):
             #if not line and self.process.poll() != None:
                 #break
@@ -111,10 +120,11 @@ class SmtlibSolver(SMTSolver):
             if self.process.poll() != None:
                 break
             output += line.rstrip()
+            print(output)
             if output.count('(') == output.count(')'):
                 break
         model = {}
-        modelValues = re.compile(r"\(define-fun\s(\w+)\s\(\)\sReal.*?\(/\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\)\)",re.MULTILINE)
+        modelValues = re.compile(r"\(define-fun\s+([\w|_]+)\s+\(\)\sReal.*?\(/\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\)\)",re.MULTILINE)
         for match in modelValues.finditer(str(output)):
             print(match.group(1))
             print(match.group(2))

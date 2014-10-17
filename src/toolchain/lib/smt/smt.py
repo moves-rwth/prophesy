@@ -6,6 +6,7 @@ class Answer(Enum):
     sat = 0
     unsat = 1
     unknown = 2
+    killed = 3
     
 class VariableDomain(Enum):
     Bool = 0
