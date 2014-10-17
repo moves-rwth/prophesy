@@ -12,12 +12,14 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 import sympy
+from sympy import Poly
 
 import util
 import sampling
 import constraint_generation
 from input.resultfile import *
 from smt.smtlib import SmtlibSolver
+from smt.isat import IsatSolver
 from smt.smt import VariableDomain
 
 if __name__ == "__main__":
@@ -35,17 +37,29 @@ if __name__ == "__main__":
     method_group.add_argument('--growing-rectangles', action='store_false', dest="planes")
     solvers_group = parser.add_mutually_exclusive_group(required=True)
     solvers_group.add_argument('--z3', dest="z3location", help="location of z3")
+    solvers_group.add_argument('--isat', dest="isatlocation", help="location of isat")
     cmdargs = parser.parse_args()
     
     threshold = vars(cmdargs)["threshold"]
     [ratfunc_parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
-    
-    smt2interface = SmtlibSolver(cmdargs.z3location)
+    if cmdargs.z3location:
+        smt2interface = SmtlibSolver(cmdargs.z3location)
+    elif cmdargs.isatlocation:
+        smt2interface = IsatSolver(cmdargs.isatlocation)
     smt2interface.run()
+    threshold_symbol = Symbol("T")
+    
     for p in ratfunc_parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
-    smt2interface.add_variable("_safe_", VariableDomain.Bool)
-    smt2interface.add_variable("_bad_", VariableDomain.Bool)
+    smt2interface.add_variable(threshold_symbol.name, VariableDomain.Real)
+    smt2interface.add_variable("safe", VariableDomain.Bool)
+    smt2interface.add_variable("bad", VariableDomain.Bool)
+    
+    symbols = list(ratfunc_parameters)
+    symbols.append(threshold_symbol)
+    
+    print(symbols)
+    
     
     if cmdargs.safe_above_threshold:
         safe_relation = ">="
@@ -54,11 +68,19 @@ if __name__ == "__main__":
         safe_relation = "<="
         bad_relation = ">"
         
-    safe_objective_constraint = Constraint(ratfunc.nominator - threshold * ratfunc.denominator, safe_relation, ratfunc_parameters)
-    bad_objective_constraint = Constraint(ratfunc.nominator - threshold * ratfunc.denominator, bad_relation ,ratfunc_parameters)
+    threshold_pol = Poly(threshold_symbol, symbols)
+    tpol = threshold_pol.unify(ratfunc.nominator)
+    print(tpol)
+    ratfunc.nominator = Poly(ratfunc.nominator, symbols)
+    ratfunc.denominator = Poly(ratfunc.denominator, symbols)
+    print(ratfunc.nominator - threshold_pol * ratfunc.denominator)
+    safe_objective_constraint = Constraint(ratfunc.nominator - threshold_pol * ratfunc.denominator, safe_relation, symbols)
+    bad_objective_constraint = Constraint(ratfunc.nominator - threshold_pol * ratfunc.denominator, bad_relation ,symbols)
+    threshold_value_constraint = Constraint(threshold_pol - threshold, "=", symbols) 
     
-    smt2interface.assert_guarded_constraint("_safe_", safe_objective_constraint)
-    smt2interface.assert_guarded_constraint("_bad_", bad_objective_constraint)
+    smt2interface.assert_guarded_constraint("safe", safe_objective_constraint)
+    smt2interface.assert_guarded_constraint("bad", bad_objective_constraint)
+    smt2interface.assert_constraint(threshold_value_constraint)
             
     smt2interface.print_calls()        
     

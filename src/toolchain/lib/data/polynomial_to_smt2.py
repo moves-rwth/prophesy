@@ -11,12 +11,14 @@ def degree(t):
 def smt2strPoly( p, variables ):
   """Returns a string representation of the Poly p in prefix notation."""
   assert isinstance(p, Poly)
+  print(variables)
   poly_str = "(+"
   poly_close_str = ")"
   if p.terms().__len__() == 1:
     poly_str = ""
     poly_close_str = ""
   for term in p.terms():
+    print("term {0}".format(term))
     assert term[1] != 0
     closing = ""
     d = degree(term)

@@ -22,7 +22,9 @@ class Constraint:
   RELATIONS = ["<",">","=",">=","<=","<>"] # the relations have to be ordered by size since otherwise parsing constraints would fail
 
   def __init__(self, pol, rel, syms):
-    assert isinstance(pol, Poly) and isinstance(syms, list) and self.RELATIONS.__contains__(rel)
+    assert isinstance(pol, Poly)
+    assert isinstance(syms, list) 
+    assert self.RELATIONS.__contains__(rel)
     self.polynomial = pol
     self.relation = rel
     self.symbols = syms

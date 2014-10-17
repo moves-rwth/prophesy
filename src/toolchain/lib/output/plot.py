@@ -70,10 +70,10 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
             print(line)
             ax1.plot([line[0][0], line[0][1]], [line[1][0], line[1][1]], color='blue', linestyle='-', linewidth=2)
         for box in additional_boxes_green:
-            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="green", edgecolor="black", hatch="o")
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="#4AA02C", edgecolor="black", hatch="o")
             ax1.add_patch(p)
         for box in additional_boxes_red:
-            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="red", edgecolor="black", hatch="x")
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="#C11B17", edgecolor="black", hatch="x")
             ax1.add_patch(p)
         
         pylab.ylim([0,1])

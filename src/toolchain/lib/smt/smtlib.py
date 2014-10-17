@@ -17,16 +17,22 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location):
+    def __init__(self, location, memout=1000, timeout=100):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
         self.string = self.formula
+        self.memout = memout * 1000 * 1000
+        self.timeout = timeout * 1000
+        self.status = ""
     
     def run(self):
         if self.process == None:
-            args = [self.location, "-smt2", "-in"]
-            self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
+            args = [self.location, "-smt2", "-in", "-t:"+str(self.timeout), "-memory:" + str(self.memout)]
+            self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            self.process.stdin.write(self.status)
+            self.process.stdin.flush()
+            
         else: 
             raise RuntimeError("The solver can only be started once")
         
@@ -34,7 +40,6 @@ class SmtlibSolver(SMTSolver):
         if self.process != None:
             self.string += "(exit)\n"
             self.process.stdin.write("(exit)\n")
-            print(self.process.communicate()[0])
             self.process = None
     
     def name(self): 
@@ -46,9 +51,9 @@ class SmtlibSolver(SMTSolver):
         return p.communicate()[0].rstrip()
 
     def check(self): 
+        assert self.process != None
         s = "(check-sat)\n"
         self.string += s
-        print(self.string)
         self.process.stdin.write(s)
         self.process.stdin.flush()
         
@@ -63,12 +68,24 @@ class SmtlibSolver(SMTSolver):
             elif output == "sat":
                 print("returns sat")
                 return Answer.sat
-            else: 
+            elif self.process.stderr.read() == "(error \"out of memory\")":
+                print("MemOut")
+                stop()
+                run()
+                return Answer.memout
+            elif output == "Killed":
+                stop()
+                run()
+                return Answer.killed
+            else:
                 raise NotImplementedError
-        print("err")
-        print(self.process.stderr)
-        print("out")
-        print(self.process.stdout.read().rstrip())
+
+        self.stop()
+        self.run()
+        #print("err")
+        #print(self.process.stderr)
+        #print("out")
+        #print(self.process.stdout.read().rstrip())
         return Answer.killed
         #for line in iter(self.process.stdout.readline, ""):
             #if not line and self.process.poll() != None:
@@ -81,26 +98,31 @@ class SmtlibSolver(SMTSolver):
         s = "(push)\n"
         self.string += s
         self.process.stdin.write(s)
+        self.status += s
 
     def pop(self): 
         s = "(pop)\n"
         self.string += s
         self.process.stdin.write(s)
+        self.status += s
 
     def add_variable(self, symbol, domain=VariableDomain.Real): 
         s = "(declare-fun " + symbol + " () "+ domain.name +")\n"
         self.string += s
         self.process.stdin.write(s)
+        self.status += s
 
     def assert_constraint(self, constraint): 
         s = "(assert " +  constraint.to_smt2_string() + " )\n"
         self.string += s
         self.process.stdin.write(s)
+        self.status += s
     
     def assert_guarded_constraint(self, guard, constraint):
         s = "(assert (=> " + guard + " " + constraint.to_smt2_string() + " ))\n"
         self.string += s
         self.process.stdin.write(s)
+        self.status += s
         
     def set_guard(self, guard, value):
         if value:
@@ -109,6 +131,7 @@ class SmtlibSolver(SMTSolver):
             s = "(assert (not " + guard + " ))\n"
         self.string += s
         self.process.stdin.write(s)
+        self.status += s
         
     def get_model(self):
         s = "(get-model)\n"
