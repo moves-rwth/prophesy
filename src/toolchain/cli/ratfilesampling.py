@@ -21,13 +21,14 @@ if __name__ == "__main__":
     
     parser.add_argument('--rat-file',  help='the input file containing the prism file', required=True)
     parser.add_argument('--samples-file', help='resulting file',default="samples.out")
-    parser.add_argument('--samplingnr', help='number of samples per dimension', default=4)
+    parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
     cmdargs = parser.parse_args()
     
     
     [parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
     intervals = [(0.01, 0.99)] * len(parameters)
-    samples = sampling.perform_uniform_sampling_by_rf(parameters, ratfunc, intervals, vars(cmdargs)['samplingnr'])
+    sampling_interface = sampling.RatFuncSampling(ratfunc, parameters)
+    samples = sampling_interface.perform_uniform_sampling(intervals, vars(cmdargs)['samplingnr'])
     #samples = sampling.perform_sampling_by_rf(ratfunc, parameters, [(0.3, 0.3), (0.4, 0.4)])
     sampling.write_samples_file([p.name for p in parameters], samples, vars(cmdargs)["samples_file"])
     
