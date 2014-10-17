@@ -5,7 +5,7 @@ import math
 from data.range import *
 
 class McSampling():
-    def __init__(self, tool):
+    def __init__(self, tool, prism_file, pctl_filepath):
         self.tool = tool
         self.prism_file = prism_file
         self.pctl_filepath = pctl_filepath
@@ -14,12 +14,12 @@ class McSampling():
     def perform_uniform_sampling(self, intervals, samples_per_dimension):
         assert(samples_per_dimension > 0)
         if samples_per_dimension == 1: raise NotImplementedError
-        if prism_file.nr_parameters() != len(intervals):
+        if self.prism_file.nr_parameters() != len(intervals):
             raise RuntimeError("Number of ranges does not match number of parameters")
         
         ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
         
-        return tool.uniform_sample_pctl_formula(prism_file, pctl_filepath, ranges)
+        return self.tool.uniform_sample_pctl_formula(self.prism_file, self.pctl_filepath, ranges)
 
     def perform_sampling(self, samplepoints):
         return tool.sample_pctl_formula(prism_file, pctl_filepath, samplepoints)

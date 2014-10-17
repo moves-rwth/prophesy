@@ -38,9 +38,9 @@ if __name__ == "__main__":
     print("Perform sampling using " + tool.version())
     
     
-    intervals = [(0, 1)] * prism_file.nr_parameters()
-    
-    samples = perform_uniform_sampling_by_mc(tool, prism_file, vars(cmdargs)["pctl_file"], intervals, vars(cmdargs)['samplingnr'])
+    intervals = [(0.01, 0.99)] * prism_file.nr_parameters()
+    sampling_interface = McSampling(tool, prism_file, vars(cmdargs)["pctl_file"])
+    samples = sampling_interface.perform_uniform_sampling(intervals, vars(cmdargs)['samplingnr'])
     #samples = perform_sampling_mc(tool, prism_file, vars(cmdargs)["pctl_file"], [(0.3, 0.3), (0.4, 0.4)])
     write_samples_file(prism_file.parameters, samples, vars(cmdargs)["samples_file"])
     
