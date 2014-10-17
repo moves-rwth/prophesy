@@ -4,6 +4,20 @@ from sympy.polys import Poly
 from data.constraint import Constraint
 from data.rationalfunction import RationalFunction
 
+def _find_nominator(string):
+    parenthesesCount = 0
+    nominatorstring = ""
+    for char in string:
+        nominatorstring += char
+        if char == "(":
+            parenthesesCount = parenthesesCount + 1
+        if char == ")":
+            if parenthesesCount == 0:
+                raise RuntimeError("Unmatched closing parenthesis")
+            parenthesesCount = parenthesesCount - 1
+            if parenthesesCount == 0:
+                return nominatorstring
+                
 
 def read_result_file(input_path):
     inputfile = open(input_path)
@@ -12,11 +26,16 @@ def read_result_file(input_path):
    
     parameters = re.findall('!Parameters:\s(.*)', inputstring)[0].split(", ")
     
-    match = re.findall('!Result:\s(.*)', inputstring)[0].split("/")
-    resultingRatFunNom = match[0]
-    if len(match) > 1:
-        resultingRatFunDen = match[1]
     
+    match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
+    print(match)
+    resultingRatFunNom = _find_nominator(match)
+    print(resultingRatFunNom)
+    match = match[len(resultingRatFunNom):]
+    print("Denominator match {0}".format(match))
+    if len(match) > 1:
+        resultingRatFunDen = match.split("/")[1]
+    print(resultingRatFunDen)
     
     welldefined_constraintsString = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     welldefined_constraintsStrings = welldefined_constraintsString.split("\n")[:-1]
@@ -24,7 +43,7 @@ def read_result_file(input_path):
     
     graphpreserving_constraintsStringList = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
     if len(graphpreserving_constraintsStringList) > 0:
-        graphpreserving_constraintsStrings = graphpreserving_constraintsString[0].split("\n")[:-1]
+        graphpreserving_constraintsStrings = graphpreserving_constraintsStringList[0].split("\n")[:-1]
     else:
         graphpreserving_constraintsStrings = []
     
