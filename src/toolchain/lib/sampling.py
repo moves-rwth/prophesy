@@ -152,13 +152,13 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 i = 0
                 for samplept in fsamples.keys():
                     d = _distance(samplept, p)
-                    if d < 0.005:
+                    if d < 0.01:
                         skip = True
                         skipCount = skipCount + 1
                         break
-                    elif d < 0.03:
+                    elif d < 0.05:
                         i = i + 1
-                        if i > 3:
+                        if i > 2:
                             skip = True
                             skipCount = skipCount + 1
                             break
