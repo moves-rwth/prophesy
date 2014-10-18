@@ -24,6 +24,7 @@ from output.output import *
 from output.smt2 import *
 from output.plot import *
 from output.samplepoints import *
+import sampling
 
 
 
@@ -131,41 +132,18 @@ def calculateSamples(iterations, nrsamples):
     parameters = request.session['parameters']
     print(parameters)
     threshold = request.session['threshold']
-    samples = {}
-       
-    i = 0
-    bd = 0.1
-    while(i < iterations):
-        print("iteration {0} / {1}".format(i+1, iterations))
-        if len(samples) == 0: 
-            #evaluate rational function at specific points    
-            for p in iterable_param.IterableParam(parameters,nrsamples, bound_distance=bd):
-                evalVal = ratfunc.evaluate(p)
-                point = tuple([value for [variable, value] in p])
-                print(point)
-                samples[point] = evalVal
-        epsilon = (1-2*bd)/(nrsamples-1)
-        delta = math.sqrt(2*(epsilon*epsilon) + epsilon/2)
-        j = 0
-        while j < 2:
-            good_samples = [k for k,v in samples.items() if v > threshold]
-            bad_samples = [k for k,v in samples.items() if v <= threshold]
-            for gs in good_samples:
-                for bs in bad_samples:
-                    distance = math.hypot(gs[0]-bs[0], gs[1]-bs[1])
-                    #print(str(gs) + " -- " + str(bs) + ": " + str(distance))   
-                    if distance < delta:
-                        p = tuple([(i_gs + i_bs)/2 for i_gs, i_bs in zip(gs,bs)])
-                        samples[p] = ratfunc.evaluate(zip(parameters, p))
-            j = j + 1
-            delta = delta * 0.7
-        i = i + 1    
-        #print(samples)    
-        # display
-        #if vars(cmdargs)['display'] == 'val' or  vars(cmdargs)['display'] == 'all':
-            #plot_results_val(parameters, samples)        
-        #if vars(cmdargs)['display'] == 'bool' or  vars(cmdargs)['display'] == 'all':
-            #plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()])) 
+    sampling_interface = sampling.RatFuncSampling(ratfunc, parameters)
+    intervals = [(0.01, 0.99)] * len(parameters)
+    samples = request.session['samples']
+    unif_samples = sampling_interface.perform_uniform_sampling( intervals, 4)
+    for us,usv in unif_samples.items():
+        samples[us] = usv
+    print('refine')
+    samples = sampling.refine_sampling(samples, threshold,sampling_interface , True)
+    print('refine')
+    samples = sampling.refine_sampling(samples, threshold, sampling_interface,  True, use_filter=True)
+    samples = sampling.refine_sampling(samples, threshold, sampling_interface,  True, use_filter=True)
+    print('done')
     request.session['samples'] = samples
     flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in samples.items()])
     print(flattenedsamples)
