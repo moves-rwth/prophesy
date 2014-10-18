@@ -17,7 +17,7 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location, memout=1000, timeout=100):
+    def __init__(self, location, memout=2000, timeout=100):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
@@ -57,10 +57,12 @@ class SmtlibSolver(SMTSolver):
         self.process.stdin.write(s)
         self.process.stdin.flush()
         
+        errstreamout = ""
         for line in iter(self.process.stdout.readline, ""):
             if not line and self.process.poll() != None:
                 break
             output = line.rstrip()
+           #errstreamout += self.process.stderr.read()
             print("**\t " + output)
             if output == "unsat":
                 print("returns unsat")
@@ -68,14 +70,15 @@ class SmtlibSolver(SMTSolver):
             elif output == "sat":
                 print("returns sat")
                 return Answer.sat
-            elif self.process.stderr.read() == "(error \"out of memory\")":
+            elif errstreamout == "(error \"out of memory\")":
+                
                 print("MemOut")
-                stop()
-                run()
+                self.stop()
+                self.run()
                 return Answer.memout
             elif output == "Killed":
-                stop()
-                run()
+                self.stop()
+                self.run()
                 return Answer.killed
             else:
                 raise NotImplementedError
