@@ -180,6 +180,7 @@ def rectangle_constraints(p1, p2, parameters):
     pl = (min(p1[0], p2[0]), min(p1[1], p2[1]))
     ph = (max(p1[0], p2[0]), max(p1[1], p2[1]))
     
+    
     constraints = [Constraint(Poly( parameters[0] - pl[0], parameters), ">=", parameters),
                    Constraint(Poly( parameters[1] - pl[1], parameters), ">=", parameters),
                    Constraint(Poly( parameters[0] - ph[0], parameters), "<=", parameters),
@@ -265,36 +266,56 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
             #print("best_anchor: {0}".format(best_anchor))
             #print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
             succesfull_elimination = True
-            smt2interface.push()
             
             if max_area_safe:
                 plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
             else:
                 plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
-            constraintset = rectangle_constraints(best_anchor, max_pt, parameters)
-            for constraint in constraintset:
-                smt2interface.assert_constraint(constraint)
-            smt2interface.set_guard("_safe_", not max_area_safe)
-            smt2interface.set_guard("_bad_", max_area_safe)
-            print("Calling smt solver")
-            start = time.time()
-            checkresult = smt2interface.check()
-            duration = time.time() - start
-            print("Call took {0} seconds".format(duration))
-            benchmark_output.append((checkresult, duration, max_size))
+            
+            while True:
+                smt2interface.push()
+                curr_constraints = rectangle_constraints(best_anchor, max_pt ,parameters)
+                for constraint in curr_constraints:
+                    smt2interface.assert_constraint(constraint)
+                
+                smt2interface.set_guard("safe", not max_area_safe)
+                smt2interface.set_guard("bad", max_area_safe)
+                print("Calling smt solver")
+                start = time.time()
+                checkresult = smt2interface.check()
+                duration = time.time() - start
+                print("Call took {0} seconds".format(duration))
+                benchmark_output.append((checkresult, duration, abs(best_anchor[0] - max_pt[0])*abs(best_anchor[1] - max_pt[1])))
+                if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
+                    smt2interface.pop()
+                    if best_pos_x:
+                        new_max_pt_x =  best_anchor[0] +  abs(best_anchor[0] - max_pt[0])/2
+                    else:
+                        new_max_pt_x =  best_anchor[0] -  abs(best_anchor[0] - max_pt[0])/2
+                    if best_pos_y:
+                        new_max_pt_y =  best_anchor[1] +  abs(best_anchor[1] - max_pt[1])/2
+                    else:
+                        new_max_pt_y =  best_anchor[1] -  abs(best_anchor[1] - max_pt[1])/2
+                        
+                    max_pt = (new_max_pt_x, new_max_pt_y)   
+                    print("BBB max pt: {0}".format(max_pt))
+                else: 
+                    break
+               
             if checkresult == smt.smt.Answer.unsat:
+                print("AAA max pt: {0}".format(max_pt))
                 best_anchor_points_for_dir.append((max_pt[0], best_anchor[1]))
                 best_anchor_points_for_dir.append((best_anchor[0], max_pt[1]))
                 best_anchor_points_for_dir.remove(best_anchor)
                 for pt, v in list(samples.items()):
                     fullfillsAllConstraints = True
-                    for constraint in constraintset:
+                    for constraint in curr_constraints:
                         if not point_fulfills_constraint(pt, parameters, constraint):
                             fullfillsAllConstraints = False
                             break;
                     if fullfillsAllConstraints:
                         del samples[pt]
-                #print("anchor_points before: {0}".format(anchor_points))
+                print("anchor_points before: {0}".format(anchor_points))
                 for (anchor_points_for_a_dir, pos_x, pos_y) in anchor_points:
                     if anchor_points_for_a_dir == best_anchor_points_for_dir:
                         continue

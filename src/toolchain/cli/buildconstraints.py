@@ -86,7 +86,8 @@ if __name__ == "__main__":
     
     (samples, parameters) = sampling.parse_samples_file(vars(cmdargs)["samples_file"])
     samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold)
-    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold, use_filter=True)
+    while len(samples) < 60:
+        samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold, use_filter=True)
     
     if cmdargs.planes:
         print(constraint_generation.create_halfspace_constraint(samples, ratfunc_parameters, vars(cmdargs)["threshold"], cmdargs.safe_above_threshold))

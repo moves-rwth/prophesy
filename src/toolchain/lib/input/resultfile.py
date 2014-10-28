@@ -28,14 +28,13 @@ def read_result_file(input_path):
     
     
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
-    print(match)
     resultingRatFunNom = _find_nominator(match)
-    print(resultingRatFunNom)
+    print("nominator string {0}".format(resultingRatFunNom))
     match = match[len(resultingRatFunNom):]
-    print("Denominator match {0}".format(match))
+    #print("Denominator match {0}".format(match))
     if len(match) > 1:
         resultingRatFunDen = match.split("/")[1]
-    print(resultingRatFunDen)
+    print("denominator string {0}".format(resultingRatFunDen))
     
     welldefined_constraintsString = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     welldefined_constraintsStrings = welldefined_constraintsString.split("\n")[:-1]
@@ -58,8 +57,8 @@ def parse_result_file(path):
     denominator = Poly(1, parameters)
     if denominator_string != None:
         denominator = Poly(denominator_string, parameters)
-    print(nominator)
-    print(denominator)
+    print("nominator {0}".format(nominator))
+    print("denominator {0}".format(denominator))
     return [parameters, wdconstraints, gpconstraints, RationalFunction(nominator, denominator)] 
 
 def write_result_file(parameters, wdconstraints, gpconstraints, rationalfunction, path):
