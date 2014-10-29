@@ -51,7 +51,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
                 '--symbolic', prism_file.location,
                 '--pctl', str(pctl_formulas[0]),
                 '--parametric:resultfile', resultfile[1]]
-        if self.bisimimulation == BisimulationType.strong:
+        if self.bisimulation == BisimulationType.strong:
             args.append('--bisimimulation')
         run_tool(args)
         
@@ -59,6 +59,3 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         
        
         #/pstorm --symbolic examples/pdtmc/brp/brp_32-4.pm --pctl "P=? [F target]"
-        
-        
-        
