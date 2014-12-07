@@ -24,6 +24,24 @@ class McSampling():
     def perform_sampling(self, samplepoints):
         return tool.sample_pctl_formula(prism_file, pctl_filepath, samplepoints)
 
+# Sampling for rational function
+class RatFuncSampling():
+    def __init__(self, ratfunc, parameters):
+        self.parameters = parameters
+        self.ratfunc = ratfunc
+
+
+    def perform_uniform_sampling(self,intervals, samples_per_dimension):
+        ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
+        return _recursive_substitution(self.ratfunc, self.parameters, ranges, dict())
+
+    def perform_sampling(self, samplepoints):
+        samples = dict()
+        for pt in samplepoints:
+            samples[pt] = self.ratfunc.evaluate(zip(self.parameters, pt))
+        return samples
+
+
 def _recursive_substitution(rational_function, parameters, ranges, samples, point=None):
     assert(len(parameters) == len(ranges))
     if len(parameters) > 1:
@@ -41,25 +59,6 @@ def _recursive_substitution(rational_function, parameters, ranges, samples, poin
             else:
                 samples[point + (v,)] = res        
     return samples
-    
-class RatFuncSampling():
-    def __init__(self, ratfunc, parameters):
-        self.parameters = parameters
-        self.ratfunc = ratfunc
-        
-    
-    def perform_uniform_sampling(self,intervals, samples_per_dimension):
-        ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
-        return _recursive_substitution(self.ratfunc, self.parameters, ranges, dict())
-        
-    def perform_sampling(self, samplepoints):
-        samples = dict()
-        for pt in samplepoints:
-            samples[pt] = self.ratfunc.evaluate(zip(self.parameters, pt))
-        return samples
-    
-    
-    
     
 def write_samples_file(parameters, samples_dict, path):
     with open(path, "w") as f:
@@ -173,6 +172,3 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 print("skipCount {0}".format(skipCount))
                 #print(samples)
     return samples
-    
-                
-            

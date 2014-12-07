@@ -57,7 +57,6 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
         return output[2][1:-1].strip()
     
     def get_rational_function(self, prism_file, pctl_filepath): 
-        assert(isinstance(prism_file, PrismFile))
         check_filepath_for_reading(pctl_filepath, "pctl file")
         
         #create a temporary file for the result.

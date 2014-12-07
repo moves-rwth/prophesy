@@ -26,6 +26,8 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
     
     def set_bisimulation_type(self, t):
         assert(isinstance(t, BisimulationType))
+        if t == BisimulationType.weak:
+            raise RuntimeError("pstorm does not support weak bisimimulation")
         self.bisimulation = t
         
     
@@ -42,19 +44,18 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         #TODO make sure the pctl formula is supported.
         
         #create a temporary file for the result.
-        ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
-        resultfile = tempfile.mkstemp(suffix=".txt",dir=config.CLI_INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
+        resultfile = tempfile.mkstemp(suffix=".txt",dir=config.INTERMEDIATE_FILES_DIR, text=True)
         
         args = [self.location,
                 '--symbolic', prism_file.location,
                 '--pctl', str(pctl_formulas[0]),
-                '--parametric:resultfile', resultfile[1] ]
+                '--parametric:resultfile', resultfile[1]]
+        if self.bisimulation == BisimulationType.strong:
+            args.append('--bisimimulation')
         run_tool(args)
         
         return parse_result_file(resultfile[1])
         
        
         #/pstorm --symbolic examples/pdtmc/brp/brp_32-4.pm --pctl "P=? [F target]"
-        
-        
-        

@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.colors import *
 from matplotlib.widgets import  RectangleSelector
 import pylab
 from data.constraint import Constraint
@@ -64,16 +65,18 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
         
         ax1.scatter(xValid,yValid, marker='o', c='green')
         ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
+        colorc = ColorConverter()
         for line in additional_arrows:
             ax1.quiver(line[0][0],line[0][1],line[1][0],line[1][1],angles='xy',scale_units='xy',scale=1)
         for line in additional_lines:
             print(line)
             ax1.plot([line[0][0], line[0][1]], [line[1][0], line[1][1]], color='blue', linestyle='-', linewidth=2)
+
         for box in additional_boxes_green:
-            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="#4AA02C", edgecolor="black", hatch="o")
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
             ax1.add_patch(p)
         for box in additional_boxes_red:
-            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor="#C11B17", edgecolor="black", hatch="x")
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#c11b17", 0.6), edgecolor="black", hatch="x")
             ax1.add_patch(p)
         
         pylab.ylim([0,1])
