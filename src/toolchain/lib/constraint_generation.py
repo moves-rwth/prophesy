@@ -147,6 +147,7 @@ def create_halfspace_constraint(samples, parameters, threshold, safe_above_thres
         return (best_safety, Constraint(sympy.Poly(b*parameters[0] - a*parameters[1] + a*b, parameters), rel, parameters))
     
 def inside_rectangle(point, anchor_1, anchor_2, pos_x, pos_y):
+    #checks if point lies in rectangle spanned by anchor_1
     if (pos_x and anchor_1[0] <= point[0] and point[0] <= anchor_2[0]) or (not pos_x and anchor_2[0] <= point[0] and point[0] <= anchor_1[0]):
         if (pos_y and anchor_1[1] <= point[1] and point[1] <= anchor_2[1]) or (not pos_y and anchor_2[1] <= point[1] and point[1] <= anchor_1[1]):
             return True
@@ -189,14 +190,14 @@ def rectangle_constraints(p1, p2, parameters):
     
 def _print_benchmark_output(benchmark_output):
     i = 1
-    print("call,\t result,\t seconds,\t cum. seconds, \t,area, \tcum. area")
+    print("no.  result   time  tot. time   area  tot. area")
     total_sec = 0
     total_area = 0
     for benchmark in benchmark_output:
         total_sec  =  total_sec + benchmark[1]
         if benchmark[0] == smt.smt.Answer.unsat:
             total_area =  total_area + benchmark[2]
-        print(str(i) + ",\t" + benchmark[0].name +",\t" + "%.2f" % benchmark[1] + ",\t" + "%.2f" % total_sec + ",\t" + "%.3f" % benchmark[2] + ",\t" + "%.3f" % total_area)
+        print("{:3}".format(i) + "   {:5}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "      {:5.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
         i = i + 1
         
 def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, smt2interface, ratfunc):  
@@ -229,32 +230,36 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
         assert(len(safe_samples) + len(bad_samples) == len(samples))
         for (anchor_points_for_a_dir, pos_x, pos_y)  in anchor_points:
             for anchor_point in anchor_points_for_a_dir:
-                for pt, v in samples.items():
-                    if not ((pos_x and pt[0] > anchor_point[0]) or (not pos_x and pt[0] < anchor_point[0])):
+                for point, value in samples.items():
+                    # check if point lies in correct direction from anchor point
+                    if not ((pos_x and point[0] > anchor_point[0]) or (not pos_x and point[0] < anchor_point[0])):
                         continue;
-                    if not ((pos_y and pt[1] > anchor_point[1]) or (not pos_y and pt[1] < anchor_point[1])):
+                    if not ((pos_y and point[1] > anchor_point[1]) or (not pos_y and point[1] < anchor_point[1])):
                         continue;
                     
-                    size = abs(pt[0] - anchor_point[0]) * abs(pt[1] - anchor_point[1])
+                    size = abs(point[0] - anchor_point[0]) * abs(point[1] - anchor_point[1])
                     if size > max_size:
                         break_attempt = False
                         # check if nothing of other polarity is inbetween.
-                        if (v > threshold and safe_above_threshold) or (v <= threshold and not safe_above_threshold):
+                        if (value > threshold and safe_above_threshold) or (value <= threshold and not safe_above_threshold):
                             safe_area = True
-                            for pt2, v2 in bad_samples.items():
-                                if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
+                            for point2, value2 in bad_samples.items():
+                                if inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
+                                    # bad sample in safe area
                                     break_attempt = True
                                     break
                         else:
                             safe_area = False
-                            for pt2, v2 in safe_samples.items():
-                                if inside_rectangle(pt2, anchor_point, pt, pos_x, pos_y):
+                            for point2, value2 in safe_samples.items():
+                                if inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
+                                    # safe sample in bad area
                                     break_attempt = True
                                     break 
                         if not break_attempt:
+                            # can extend area
                             max_size = size
                             max_area_safe = safe_area
-                            max_pt = pt
+                            max_pt = point
                             best_anchor = anchor_point
                             best_anchor_points_for_dir = anchor_points_for_a_dir
                             best_pos_x = pos_x
@@ -274,7 +279,7 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
             
             while True:
                 smt2interface.push()
-                curr_constraints = rectangle_constraints(best_anchor, max_pt ,parameters)
+                curr_constraints = rectangle_constraints(best_anchor, max_pt, parameters)
                 for constraint in curr_constraints:
                     smt2interface.assert_constraint(constraint)
                 
@@ -301,12 +306,16 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                     print("BBB max pt: {0}".format(max_pt))
                 else: 
                     break
-               
+
             if checkresult == smt.smt.Answer.unsat:
                 print("AAA max pt: {0}".format(max_pt))
+
+                # update anchor points for direction
                 best_anchor_points_for_dir.append((max_pt[0], best_anchor[1]))
                 best_anchor_points_for_dir.append((best_anchor[0], max_pt[1]))
                 best_anchor_points_for_dir.remove(best_anchor)
+
+                # remove unnecessary samples which are covered already by rectangle
                 for pt, v in list(samples.items()):
                     fullfillsAllConstraints = True
                     for constraint in curr_constraints:
@@ -315,6 +324,8 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             break;
                     if fullfillsAllConstraints:
                         del samples[pt]
+
+                # update anchor points
                 print("anchor_points before: {0}".format(anchor_points))
                 for (anchor_points_for_a_dir, pos_x, pos_y) in anchor_points:
                     if anchor_points_for_a_dir == best_anchor_points_for_dir:
@@ -334,6 +345,8 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             else:
                                 new_anchor[1] = min(anchor_point[1], max_pt[1]) 
                             anchor_points_for_a_dir.append(new_anchor)
+                            print("updated {0} with {1}".format(anchor_point, new_anchor))
+
                 #print("anchor_points after: {0}".format(anchor_points))
                 if max_area_safe:
                     safe_boxes.append((best_anchor, max_pt))
@@ -344,9 +357,12 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                 model = smt2interface.get_model()
                 modelPoint = tuple([model[p.name] for p in parameters])
                 samples[modelPoint] = ratfunc.evaluate(list(model.items()))
+                print("updated {0} with new value {1}".format(modelPoint, samples[modelPoint]))
             
             smt2interface.pop()
             _print_benchmark_output(benchmark_output)
+            #input("Wait")
+
     smt2interface.stop()
     smt2interface.print_calls()
     
