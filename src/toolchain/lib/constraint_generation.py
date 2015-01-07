@@ -14,6 +14,9 @@ import tempfile
 from data.constraint import *
 from output.plot import *
 
+#needed for pdf merging for debugging
+from subprocess import call
+
 
 def _halfspace_constraint(safe_samples, bad_samples, orientation_vector, anchor_point):
     assert(np.linalg.norm(orientation_vector) == 1)
@@ -197,7 +200,7 @@ def _print_benchmark_output(benchmark_output):
         total_sec  =  total_sec + benchmark[1]
         if benchmark[0] == smt.smt.Answer.unsat:
             total_area =  total_area + benchmark[2]
-        print("{:3}".format(i) + "   {:5}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "      {:5.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
+        print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "      {:5.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
         i = i + 1
         
 def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, smt2interface, ratfunc):  
@@ -218,6 +221,8 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
     unsafe_boxes = []
     benchmark_output = []
     plotdir = tempfile.mkdtemp(dir=PLOT_FILES_DIR)
+    result_file = str(os.path.join(plotdir, "result.pdf"))
+    result_tmp_file = str(os.path.join(plotdir, "result_tmp.pdf"))
     check_nr = 0
     while succesfull_elimination:
         check_nr = check_nr + 1
@@ -272,11 +277,17 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
             #print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
             succesfull_elimination = True
             
+            # plot result
             if max_area_safe:
                 plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
             else:
                 plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
-            
+            if check_nr == 1:
+                call(["cp", str(os.path.join(plotdir, "call{0}.pdf".format(check_nr))), result_file])
+            else:
+                call(["pdfunite", result_file, str(os.path.join(plotdir, "call{0}.pdf".format(check_nr))), result_tmp_file])
+                call(["mv", result_tmp_file, result_file])
+
             while True:
                 smt2interface.push()
                 curr_constraints = rectangle_constraints(best_anchor, max_pt, parameters)
@@ -352,7 +363,12 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                     safe_boxes.append((best_anchor, max_pt))
                 else: 
                     unsafe_boxes.append((best_anchor, max_pt))
+
+                # plot result
                 plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
+                call(["pdfunite", result_file, str(os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr))), result_tmp_file])
+                call(["mv", result_tmp_file, result_file])
+
             elif checkresult == smt.smt.Answer.sat:
                 model = smt2interface.get_model()
                 modelPoint = tuple([model[p.name] for p in parameters])
