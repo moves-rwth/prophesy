@@ -150,7 +150,7 @@ def create_halfspace_constraint(samples, parameters, threshold, safe_above_thres
         return (best_safety, Constraint(sympy.Poly(b*parameters[0] - a*parameters[1] + a*b, parameters), rel, parameters))
     
 def inside_rectangle(point, anchor_1, anchor_2, pos_x, pos_y):
-    #checks if point lies in rectangle spanned by anchor_1
+    # checks if the point lies in the rectangle spanned by anchor_1
     if (pos_x and anchor_1[0] <= point[0] and point[0] <= anchor_2[0]) or (not pos_x and anchor_2[0] <= point[0] and point[0] <= anchor_1[0]):
         if (pos_y and anchor_1[1] <= point[1] and point[1] <= anchor_2[1]) or (not pos_y and anchor_2[1] <= point[1] and point[1] <= anchor_1[1]):
             return True
@@ -190,6 +190,38 @@ def rectangle_constraints(p1, p2, parameters):
                    Constraint(Poly( parameters[0] - ph[0], parameters), "<=", parameters),
                    Constraint(Poly( parameters[1] - ph[1], parameters), "<=", parameters)]
     return constraints
+
+def intersects(rectangle1, rectangle2):
+    # checks if the two rectangles intersect
+    # returns the intersection as rectangle, None if there is no intersection
+    p11 = rectangle1[0]
+    p12 = rectangle1[1]
+    p21 = rectangle2[0]
+    p22 = rectangle2[1]
+
+    rec1_left = min(p11[0], p12[0])
+    rec1_right = max(p11[0], p12[0])
+    rec1_bottom = min(p11[1], p12[1])
+    rec1_top = max(p11[1], p12[1])
+    rec2_left = min(p21[0], p22[0])
+    rec2_right = max(p21[0], p22[0])
+    rec2_bottom = min(p21[1], p22[1])
+    rec2_top = max(p21[1], p22[1])
+
+    rec_new_left = max(rec1_left, rec2_left);
+    rec_new_bottom = max(rec1_bottom, rec2_bottom);
+    rec_new_right = min(rec1_right, rec2_right);
+    rec_new_top = min(rec1_top, rec2_top);
+    pt1 = (rec_new_left, rec_new_bottom)
+    pt2 = (rec_new_right, rec_new_top)
+    rectangle_intersect = (pt1, pt2)
+
+    overlap = rec_new_left < rec_new_right and rec_new_bottom < rec_new_top
+    print("Intersection of {0} and {1} is: {2}".format(rectangle1, rectangle2, overlap))
+    if overlap:
+        return rectangle_intersect
+    else:
+        return None
     
 def _print_benchmark_output(benchmark_output):
     i = 1
@@ -359,13 +391,27 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             print("updated {0} with {1}".format(anchor_point, new_anchor))
 
                 #print("anchor_points after: {0}".format(anchor_points))
+
+                # check intersection
+                rectangle1 = (best_anchor, max_pt)
+                if max_area_safe:
+                    for rectangle2 in safe_boxes:
+                        intersection = intersects(rectangle1, rectangle2)
+                        if (intersection != None):
+                            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
+                else:
+                    for rectangle2 in unsafe_boxes:
+                        intersection = intersects(rectangle1, rectangle2)
+                        if (intersection != None):
+                           plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
+
                 if max_area_safe:
                     safe_boxes.append((best_anchor, max_pt))
                 else: 
                     unsafe_boxes.append((best_anchor, max_pt))
 
                 # plot result
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
                 call(["pdfunite", result_file, str(os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr))), result_tmp_file])
                 call(["mv", result_tmp_file, result_file])
 
@@ -377,7 +423,6 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
             
             smt2interface.pop()
             _print_benchmark_output(benchmark_output)
-            #input("Wait")
 
     smt2interface.stop()
     smt2interface.print_calls()
