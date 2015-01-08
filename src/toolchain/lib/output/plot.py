@@ -47,7 +47,7 @@ def __toggle_selector(event):
 
 
     
-def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], path_to_save=None, display=False):
+def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
     if len(parameters) == 2:
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
@@ -77,6 +77,9 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
             ax1.add_patch(p)
         for box in additional_boxes_red:
             p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#c11b17", 0.6), edgecolor="black", hatch="x")
+            ax1.add_patch(p)
+        for box in additional_boxes_blue:
+            p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
             ax1.add_patch(p)
         
         pylab.ylim([0,1])

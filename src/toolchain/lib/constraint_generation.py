@@ -217,12 +217,55 @@ def intersects(rectangle1, rectangle2):
     rectangle_intersect = (pt1, pt2)
 
     overlap = rec_new_left < rec_new_right and rec_new_bottom < rec_new_top
-    print("Intersection of {0} and {1} is: {2}".format(rectangle1, rectangle2, overlap))
+    print("Intersection of {0} and {1} is: {2} with {3}".format(rectangle1, rectangle2, overlap, rectangle_intersect))
     if overlap:
         return rectangle_intersect
     else:
         return None
     
+def rectangle_subtract(rectangle_original, rectangle2):
+    # returns rectangle_original without rectangle2, None if the remaining rectangle is empty
+    # rectangle2 has to lie completely in rectangle_original
+    p11 = rectangle_original[0]
+    p12 = rectangle_original[1]
+    p21 = rectangle2[0]
+    p22 = rectangle2[1]
+
+    rec_original_left = min(p11[0], p12[0])
+    rec_original_right = max(p11[0], p12[0])
+    rec_original_bottom = min(p11[1], p12[1])
+    rec_original_top = max(p11[1], p12[1])
+    rec2_left = min(p21[0], p22[0])
+    rec2_right = max(p21[0], p22[0])
+    rec2_bottom = min(p21[1], p22[1])
+    rec2_top = max(p21[1], p22[1])
+
+    rec_new_left = rec_original_left
+    rec_new_right = rec_original_right
+    rec_new_bottom = rec_original_bottom
+    rec_new_top = rec_original_top
+
+    if (rec_original_left < rec2_left):
+        assert rec_original_right == rec2_right
+        rec_new_right = rec2_left
+    if (rec_original_right > rec2_right):
+        assert rec_original_left == rec2_left
+        rec_new_left = rec2_right
+    if (rec_original_bottom < rec2_bottom):
+        assert rec_original_top == rec2_top
+        rec_new_top = rec2_bottom
+    if (rec_original_top > rec2_top):
+        assert rec_original_bottom == rec2_bottom
+        rec_new_bottom = rec2_top
+
+    if (rec_original_left == rec_new_left and rec_original_right == rec_new_right and rec_original_bottom == rec_new_bottom and rec_original_top == rec_new_top):
+        return None
+
+    pt1 = (rec_new_left, rec_new_bottom)
+    pt2 = (rec_new_right, rec_new_top)
+    rectangle_intersect = (pt1, pt2)
+    return rectangle_intersect
+
 def _print_benchmark_output(benchmark_output):
     i = 1
     print("no.  result   time  tot. time   area  tot. area")
@@ -232,7 +275,7 @@ def _print_benchmark_output(benchmark_output):
         total_sec  =  total_sec + benchmark[1]
         if benchmark[0] == smt.smt.Answer.unsat:
             total_area =  total_area + benchmark[2]
-        print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "      {:5.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
+        print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
         i = i + 1
         
 def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, smt2interface, ratfunc):  
@@ -398,12 +441,18 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                     for rectangle2 in safe_boxes:
                         intersection = intersects(rectangle1, rectangle2)
                         if (intersection != None):
-                            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
+                            rectangle_new = rectangle_subtract(rectangle1, intersection)
+                            if (rectangle_new == None):
+                                rectangle_new = ((1,1), (1,1))
+                            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection], additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
                 else:
                     for rectangle2 in unsafe_boxes:
                         intersection = intersects(rectangle1, rectangle2)
                         if (intersection != None):
-                           plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
+                            rectangle_new = rectangle_subtract(rectangle1, intersection)
+                            if (rectangle_new == None):
+                                rectangle_new = ((1,1), (1,1))
+                            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
 
                 if max_area_safe:
                     safe_boxes.append((best_anchor, max_pt))
