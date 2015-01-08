@@ -47,7 +47,7 @@ def __toggle_selector(event):
 
 
     
-def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
+def plot_results_bool(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
     if len(parameters) == 2:
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
@@ -65,6 +65,14 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
         
         ax1.scatter(xValid,yValid, marker='o', c='green')
         ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
+
+        for (anchor_points_for_a_dir, pos_x, pos_y) in anchor_points:
+            d = 0.01
+            dx = d if pos_x else -d
+            dy = d if pos_y else -d
+            for (x,y) in anchor_points_for_a_dir:
+                ax1.arrow(x, y, dx, dy, head_width=d/2, head_length=d/2, color='blue')
+
         colorc = ColorConverter()
         for line in additional_arrows:
             ax1.quiver(line[0][0],line[0][1],line[1][0],line[1][1],angles='xy',scale_units='xy',scale=1)
@@ -81,7 +89,6 @@ def plot_results_bool(parameters, samples_qualitative, additional_arrows = [], a
         for box in additional_boxes_blue:
             p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
             ax1.add_patch(p)
-        
         pylab.ylim([0,1])
         pylab.xlim([0,1])
         ax1.set_xlabel(str(parameters[0]))

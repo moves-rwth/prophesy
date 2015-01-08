@@ -191,9 +191,7 @@ def rectangle_constraints(p1, p2, parameters):
                    Constraint(Poly( parameters[1] - ph[1], parameters), "<=", parameters)]
     return constraints
 
-def intersects(rectangle1, rectangle2):
-    # checks if the two rectangles intersect
-    # returns the intersection as rectangle, None if there is no intersection
+def is_intersection(rectangle1, rectangle2):
     p11 = rectangle1[0]
     p12 = rectangle1[1]
     p21 = rectangle2[0]
@@ -208,63 +206,53 @@ def intersects(rectangle1, rectangle2):
     rec2_bottom = min(p21[1], p22[1])
     rec2_top = max(p21[1], p22[1])
 
-    rec_new_left = max(rec1_left, rec2_left);
-    rec_new_bottom = max(rec1_bottom, rec2_bottom);
-    rec_new_right = min(rec1_right, rec2_right);
-    rec_new_top = min(rec1_top, rec2_top);
-    pt1 = (rec_new_left, rec_new_bottom)
-    pt2 = (rec_new_right, rec_new_top)
-    rectangle_intersect = (pt1, pt2)
+    return rec1_left < rec2_right and rec2_left < rec1_right and rec1_bottom < rec2_top and rec2_bottom < rec1_top
 
-    overlap = rec_new_left < rec_new_right and rec_new_bottom < rec_new_top
-    print("Intersection of {0} and {1} is: {2} with {3}".format(rectangle1, rectangle2, overlap, rectangle_intersect))
-    if overlap:
-        return rectangle_intersect
-    else:
-        return None
-    
-def rectangle_subtract(rectangle_original, rectangle2):
-    # returns rectangle_original without rectangle2, None if the remaining rectangle is empty
+def rectangle_subtract(fixed_point, point, rectangle2):
+    # subtracts rectangle2 from rectangle spanned by fixed_point and point
+    # fixed_point has to stay the same after subtraction
     # rectangle2 has to lie completely in rectangle_original
-    p11 = rectangle_original[0]
-    p12 = rectangle_original[1]
+    # returns None if resulting rectangle is empty
+
+    rec_original_left = min(fixed_point[0], point[0])
+    rec_original_right = max(fixed_point[0], point[0])
+    rec_original_bottom = min(fixed_point[1], point[1])
+    rec_original_top = max(fixed_point[1], point[1])
     p21 = rectangle2[0]
     p22 = rectangle2[1]
-
-    rec_original_left = min(p11[0], p12[0])
-    rec_original_right = max(p11[0], p12[0])
-    rec_original_bottom = min(p11[1], p12[1])
-    rec_original_top = max(p11[1], p12[1])
     rec2_left = min(p21[0], p22[0])
     rec2_right = max(p21[0], p22[0])
     rec2_bottom = min(p21[1], p22[1])
     rec2_top = max(p21[1], p22[1])
 
-    rec_new_left = rec_original_left
-    rec_new_right = rec_original_right
-    rec_new_bottom = rec_original_bottom
-    rec_new_top = rec_original_top
+    # compute intersection
+    rec_intersect_left = max(rec_original_left, rec2_left);
+    rec_intersect_bottom = max(rec_original_bottom, rec2_bottom);
+    rec_intersect_right = min(rec_original_right, rec2_right);
+    rec_intersect_top = min(rec_original_top, rec2_top);
 
-    if (rec_original_left < rec2_left):
-        assert rec_original_right == rec2_right
-        rec_new_right = rec2_left
-    if (rec_original_right > rec2_right):
-        assert rec_original_left == rec2_left
-        rec_new_left = rec2_right
-    if (rec_original_bottom < rec2_bottom):
-        assert rec_original_top == rec2_top
-        rec_new_top = rec2_bottom
-    if (rec_original_top > rec2_top):
-        assert rec_original_bottom == rec2_bottom
-        rec_new_bottom = rec2_top
+    rec_remaining_left = rec_original_left
+    rec_remaining_right = rec_original_right
+    rec_remaining_bottom = rec_original_bottom
+    rec_remaining_top = rec_original_top
 
-    if (rec_original_left == rec_new_left and rec_original_right == rec_new_right and rec_original_bottom == rec_new_bottom and rec_original_top == rec_new_top):
+    if (rec_original_left < rec_intersect_left):
+        assert rec_original_right == rec_intersect_right
+        rec_remaining_right = rec_intersect_left
+    if (rec_original_right > rec_intersect_right):
+        assert rec_original_left == rec_intersect_left
+        rec_remaining_left = rec_intersect_right
+    if (rec_original_bottom < rec_intersect_bottom):
+        assert rec_original_top == rec_intersect_top
+        rec_remaining_top = rec_intersect_bottom
+    if (rec_original_top > rec_intersect_top):
+        assert rec_original_bottom == rec_intersect_bottom
+        rec_remaining_bottom = rec_intersect_top
+
+    if (rec_original_left == rec_remaining_left and rec_original_right == rec_remaining_right and rec_original_bottom == rec_remaining_bottom and rec_original_top == rec_remaining_top):
         return None
 
-    pt1 = (rec_new_left, rec_new_bottom)
-    pt2 = (rec_new_right, rec_new_top)
-    rectangle_intersect = (pt1, pt2)
-    return rectangle_intersect
+    return ((rec_remaining_left, rec_remaining_bottom), (rec_remaining_right, rec_remaining_top))
 
 def _print_benchmark_output(benchmark_output):
     i = 1
@@ -317,9 +305,24 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                     if not ((pos_y and point[1] > anchor_point[1]) or (not pos_y and point[1] < anchor_point[1])):
                         continue;
                     
+                    break_attempt = False
+                    # check for intersection with existing rectangles
+                    for rectangle2 in safe_boxes + unsafe_boxes:
+                        intersection = is_intersection((anchor_point, point), rectangle2)
+                        if (intersection):
+                            break_attempt = True
+                            break
+                            # TODO improve rectangle subtraction
+                            ## reduce rectangle to part outside of existing rectangles
+                            #rectangle_new = rectangle_subtract(anchor_point, point, rectangle2)
+                            #if (rectangle_new != None):
+                            #    plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(anchor_point, point)], additional_boxes_red = [rectangle2],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
+                            #    point = rectangle_new[0]
+                            #    anchor_point = rectangle_new[1]
+
+                    # choose largest rectangle
                     size = abs(point[0] - anchor_point[0]) * abs(point[1] - anchor_point[1])
-                    if size > max_size:
-                        break_attempt = False
+                    if size > max_size and not break_attempt:
                         # check if nothing of other polarity is inbetween.
                         if (value > threshold and safe_above_threshold) or (value <= threshold and not safe_above_threshold):
                             safe_area = True
@@ -334,7 +337,7 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                                 if inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
                                     # safe sample in bad area
                                     break_attempt = True
-                                    break 
+                                    break
                         if not break_attempt:
                             # can extend area
                             max_size = size
@@ -354,9 +357,9 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
             
             # plot result
             if max_area_safe:
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
             else:
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]),  additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
             if check_nr == 1:
                 call(["cp", str(os.path.join(plotdir, "call{0}.pdf".format(check_nr))), result_file])
             else:
@@ -435,32 +438,13 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
 
                 #print("anchor_points after: {0}".format(anchor_points))
 
-                # check intersection
-                rectangle1 = (best_anchor, max_pt)
-                if max_area_safe:
-                    for rectangle2 in safe_boxes:
-                        intersection = intersects(rectangle1, rectangle2)
-                        if (intersection != None):
-                            rectangle_new = rectangle_subtract(rectangle1, intersection)
-                            if (rectangle_new == None):
-                                rectangle_new = ((1,1), (1,1))
-                            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection], additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
-                else:
-                    for rectangle2 in unsafe_boxes:
-                        intersection = intersects(rectangle1, rectangle2)
-                        if (intersection != None):
-                            rectangle_new = rectangle_subtract(rectangle1, intersection)
-                            if (rectangle_new == None):
-                                rectangle_new = ((1,1), (1,1))
-                            plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = [rectangle1, rectangle2], additional_boxes_red = [intersection],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
-
                 if max_area_safe:
                     safe_boxes.append((best_anchor, max_pt))
                 else: 
                     unsafe_boxes.append((best_anchor, max_pt))
 
                 # plot result
-                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
+                plot_results_bool(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
                 call(["pdfunite", result_file, str(os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr))), result_tmp_file])
                 call(["mv", result_tmp_file, result_file])
 
