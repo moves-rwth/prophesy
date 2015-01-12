@@ -14,6 +14,20 @@ from subprocess import call
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
 
+    def __init__(self):
+        self.plotdir = tempfile.mkdtemp(dir=PLOT_FILES_DIR)
+        self.result_file = str(os.path.join(self.plotdir, "result.pdf"))
+        self.result_tmp_file = str(os.path.join(self.plotdir, "result_tmp.pdf"))
+
+    def add_pdf(self, name, first):
+        # Adds pdf with name to result.pdf in tmp directory
+        # first indicates if resultfile exists already
+        if first:
+            call(["cp", str(os.path.join(self.plotdir, "{0}.pdf".format(name))), self.result_file])
+        else:
+            call(["pdfunite", self.result_file, str(os.path.join(self.plotdir, "{0}.pdf".format(name))), self.result_tmp_file])
+            call(["mv", self.result_tmp_file, self.result_file])
+
     @classmethod
     def is_point_fulfilling_constraint(cls, pt, parameters, constraint):
         pol = constraint.polynomial

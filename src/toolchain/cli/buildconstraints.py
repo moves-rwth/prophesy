@@ -11,12 +11,9 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 
 import argparse
-import sympy
 from sympy import Poly
 
-import util
 import sampling
-import constraint_generation
 from input.resultfile import *
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver

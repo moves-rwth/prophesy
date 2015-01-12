@@ -1,13 +1,13 @@
 from constraint_generation import *
 
+#TODO own rectangle class?
+
 class ConstraintRectangles(ConstraintGeneration):
     
-    
-    
     def __init__(self, _smt2interface, _ratfunc):
+        ConstraintGeneration.__init__(self)
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
-        print("test")
 
     def is_inside_rectangle(self, point, anchor_1, anchor_2, pos_x, pos_y):
         # checks if the point lies in the rectangle spanned by anchor_1
@@ -110,9 +110,6 @@ class ConstraintRectangles(ConstraintGeneration):
         safe_boxes = []
         unsafe_boxes = []
         benchmark_output = []
-        plotdir = tempfile.mkdtemp(dir=PLOT_FILES_DIR)
-        result_file = str(os.path.join(plotdir, "result.pdf"))
-        result_tmp_file = str(os.path.join(plotdir, "result_tmp.pdf"))
         check_nr = 0
         while succesfull_elimination:
             check_nr = check_nr + 1
@@ -121,6 +118,7 @@ class ConstraintRectangles(ConstraintGeneration):
             max_pt = None
             best_anchor = None
             best_anchor_points_for_dir = None
+            #TODO splitting not in loop?
             (safe_samples, bad_samples) = sampling.split_samples(samples, threshold, safe_above_threshold)
             assert(len(safe_samples) + len(bad_samples) == len(samples))
             for (anchor_points_for_a_dir, pos_x, pos_y)  in anchor_points:
@@ -144,7 +142,7 @@ class ConstraintRectangles(ConstraintGeneration):
                                 ## reduce rectangle to part outside of existing rectangles
                                 #rectangle_new = self.rectangle_subtract(anchor_point, point, rectangle2)
                                 #if (rectangle_new != None):
-                                #    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(anchor_point, point)], additional_boxes_red = [rectangle2],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(plotdir, "intersect.pdf"), display=True)
+                                #    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(anchor_point, point)], additional_boxes_red = [rectangle2],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(self.plotdir, "intersect.pdf"), display=True)
                                 #    point = rectangle_new[0]
                                 #    anchor_point = rectangle_new[1]
 
@@ -185,14 +183,10 @@ class ConstraintRectangles(ConstraintGeneration):
 
                 # plot result
                 if max_area_safe:
-                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
+                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(self.plotdir, "call{0}.pdf".format(check_nr)), display=False)
                 else:
-                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(plotdir, "call{0}.pdf".format(check_nr)), display=False)
-                if check_nr == 1:
-                    call(["cp", str(os.path.join(plotdir, "call{0}.pdf".format(check_nr))), result_file])
-                else:
-                    call(["pdfunite", result_file, str(os.path.join(plotdir, "call{0}.pdf".format(check_nr))), result_tmp_file])
-                    call(["mv", result_tmp_file, result_file])
+                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(self.plotdir, "call{0}.pdf".format(check_nr)), display=False)
+                self.add_pdf("call{0}".format(check_nr), check_nr == 1)
 
                 while True:
                     self.smt2interface.push()
@@ -272,9 +266,8 @@ class ConstraintRectangles(ConstraintGeneration):
                         unsafe_boxes.append((best_anchor, max_pt))
 
                     # plot result
-                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
-                    call(["pdfunite", result_file, str(os.path.join(plotdir, "intermediate{0}.pdf".format(check_nr))), result_tmp_file])
-                    call(["mv", result_tmp_file, result_file])
+                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(self.plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
+                    self.add_pdf("intermediate{0}".format(check_nr), False)
 
                 elif checkresult == smt.smt.Answer.sat:
                     model = self.smt2interface.get_model()
@@ -289,5 +282,3 @@ class ConstraintRectangles(ConstraintGeneration):
         self.smt2interface.print_calls()
 
         return
-
-            
