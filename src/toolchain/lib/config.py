@@ -28,6 +28,8 @@ PARAMETRIC_STORM_COMMAND = "pstorm"
 PARAM_COMMAND = "param"
 PRISM_COMMAND = "prism"
 
+# epsilon for constraint generation
+EPS = 0.0001
 
 
 #CONSTRAINT_GENERATION_COMMAND = "./polyCreator.py"

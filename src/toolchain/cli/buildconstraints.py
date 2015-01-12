@@ -21,6 +21,8 @@ from input.resultfile import *
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
 from smt.smt import VariableDomain
+from constraints.constraint_rectangles import ConstraintRectangles
+from constraints.constraint_planes import ConstraintPlanes
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Build constraints based on a sample file')
@@ -92,7 +94,7 @@ if __name__ == "__main__":
         samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold, use_filter=True)
     
     if cmdargs.planes:
-        print(constraint_generation.create_halfspace_constraint(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area))
+        ConstraintPlanes().generate_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area)
     else:
-        constraint_generation.growing_rectangle_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, ratfunc)
+        ConstraintRectangles(smt2interface, ratfunc).generate_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area)
     
