@@ -17,6 +17,7 @@ from output.plot import *
 #needed for pdf merging for debugging
 from subprocess import call
 
+EPS = 0.001
 
 def _halfspace_constraint(safe_samples, bad_samples, orientation_vector, anchor_point):
     assert(np.linalg.norm(orientation_vector) == 1)
@@ -84,7 +85,7 @@ def rotate_vector(x, rad):
 def normalize_vector(x):
     return x / np.linalg.norm(x)
     
-def create_halfspace_constraint(samples, parameters, threshold, safe_above_threshold, steps=3):
+def create_halfspace_constraint(samples, parameters, threshold, safe_above_threshold, threshold_area, steps=3):
     if len(parameters) != 2:
         raise NotImplementedError
     (safe_samples, bad_samples) = sampling.split_samples(samples, threshold, safe_above_threshold)
@@ -112,11 +113,11 @@ def create_halfspace_constraint(samples, parameters, threshold, safe_above_thres
                 best_anchor = anchor
                 
             orientation_vector = normalize_vector(rotate_vector(orientation_vector, -1/(2*steps)*np.pi))
-            if abs(orientation_vector.item(0)) < 0.001:
+            if abs(orientation_vector.item(0)) < EPS:
                 n0 = 0
             else:
                 n0 = orientation_vector.item(0)
-            if abs(orientation_vector.item(1)) < 0.001:
+            if abs(orientation_vector.item(1)) < EPS:
                 n1 = 0
             else:
                 n1 = orientation_vector.item(1)
@@ -164,10 +165,10 @@ def point_fulfills_constraint(pt, parameters, constraint):
     evaluation = zip(parameters, pt)
     
     for [variable, value] in evaluation:
-        pol = pol.subs(variable, value).evalf(0.001)
+        pol = pol.subs(variable, value).evalf(EPS)
     
     if constraint.relation == "=":
-        return abs(pol) < 0.001
+        return abs(pol) < EPS
     elif constraint.relation == "<":
         return pol < 0
     elif constraint.relation == ">":
@@ -177,7 +178,7 @@ def point_fulfills_constraint(pt, parameters, constraint):
     elif constraint.relation == ">=":
         return pol >= 0
     elif constraint.relation == "<>":
-        return abs(pol) > 0.001
+        return abs(pol) > EPS
     
     
 def rectangle_constraints(p1, p2, parameters):
@@ -266,7 +267,7 @@ def _print_benchmark_output(benchmark_output):
         print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
         i = i + 1
         
-def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, smt2interface, ratfunc):  
+def growing_rectangle_constraints(samples_input, parameters, threshold, safe_above_threshold, threshold_area, smt2interface, ratfunc):
     if len(parameters) != 2:
         raise NotImplementedError
 
@@ -348,7 +349,7 @@ def growing_rectangle_constraints(samples_input, parameters, threshold, safe_abo
                             best_pos_x = pos_x
                             best_pos_y = pos_y
                             
-        if max_pt != None and max_size > 0.0001:
+        if max_pt != None and max_size > threshold_area:
             #print(smt2interface.version())
             #print("max_pt: {0}".format(max_pt))
             #print("best_anchor: {0}".format(best_anchor))

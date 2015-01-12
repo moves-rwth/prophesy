@@ -38,9 +38,11 @@ if __name__ == "__main__":
     solvers_group = parser.add_mutually_exclusive_group(required=True)
     solvers_group.add_argument('--z3', dest="z3location", help="location of z3")
     solvers_group.add_argument('--isat', dest="isatlocation", help="location of isat")
+    parser.add_argument('--threshold-area', type=float, help='threshold for minimial size of new area', default=0.001)
     cmdargs = parser.parse_args()
     
     threshold = vars(cmdargs)["threshold"]
+    threshold_area = vars(cmdargs)["threshold_area"]
     [ratfunc_parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
     if cmdargs.z3location:
         smt2interface = SmtlibSolver(cmdargs.z3location)
@@ -90,7 +92,7 @@ if __name__ == "__main__":
         samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold, use_filter=True)
     
     if cmdargs.planes:
-        print(constraint_generation.create_halfspace_constraint(samples, ratfunc_parameters, vars(cmdargs)["threshold"], cmdargs.safe_above_threshold))
+        print(constraint_generation.create_halfspace_constraint(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area))
     else:
-        constraint_generation.growing_rectangle_constraints(samples, ratfunc_parameters, vars(cmdargs)["threshold"], cmdargs.safe_above_threshold, smt2interface, ratfunc)
+        constraint_generation.growing_rectangle_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, ratfunc)
     
