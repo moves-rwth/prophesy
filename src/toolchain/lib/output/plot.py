@@ -73,10 +73,14 @@ class Plot(object):
 
             colorc = ColorConverter()
             for line in additional_arrows:
-                ax1.quiver(line[0][0],line[0][1],line[1][0],line[1][1],angles='xy',scale_units='xy',scale=1)
+                arrow_anchor_x = np.float64(line[0][0])
+                arrow_anchor_y = np.float64(line[0][1])
+                arrow_dx = np.float64(line[1][0])
+                arrow_dy = np.float64(line[1][1])
+                ax1.arrow(arrow_anchor_x, arrow_anchor_y, arrow_dx, arrow_dy, head_width=0.01, head_length=0.01, color='gray')
             for line in additional_lines:
                 print(line)
-                ax1.plot([line[0][0], line[0][1]], [line[1][0], line[1][1]], color='blue', linestyle='-', linewidth=2)
+                ax1.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], color='blue', linestyle='-', linewidth=2)
 
             for box in additional_boxes_green:
                 p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
