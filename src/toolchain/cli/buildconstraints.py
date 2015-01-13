@@ -11,16 +11,15 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 
 import argparse
-import sympy
 from sympy import Poly
 
-import util
 import sampling
-import constraint_generation
 from input.resultfile import *
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
 from smt.smt import VariableDomain
+from constraints.constraint_rectangles import ConstraintRectangles
+from constraints.constraint_planes import ConstraintPlanes
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Build constraints based on a sample file')
@@ -38,9 +37,11 @@ if __name__ == "__main__":
     solvers_group = parser.add_mutually_exclusive_group(required=True)
     solvers_group.add_argument('--z3', dest="z3location", help="location of z3")
     solvers_group.add_argument('--isat', dest="isatlocation", help="location of isat")
+    parser.add_argument('--threshold-area', type=float, help='threshold for minimial size of new area', default=0.001)
     cmdargs = parser.parse_args()
     
     threshold = vars(cmdargs)["threshold"]
+    threshold_area = vars(cmdargs)["threshold_area"]
     [ratfunc_parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
     if cmdargs.z3location:
         smt2interface = SmtlibSolver(cmdargs.z3location)
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold, use_filter=True)
     
     if cmdargs.planes:
-        print(constraint_generation.create_halfspace_constraint(samples, ratfunc_parameters, vars(cmdargs)["threshold"], cmdargs.safe_above_threshold))
+        ConstraintPlanes().generate_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area)
     else:
-        constraint_generation.growing_rectangle_constraints(samples, ratfunc_parameters, vars(cmdargs)["threshold"], cmdargs.safe_above_threshold, smt2interface, ratfunc)
+        ConstraintRectangles(smt2interface, ratfunc).generate_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area)
     
