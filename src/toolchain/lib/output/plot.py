@@ -79,9 +79,9 @@ class Plot(object):
                 arrow_dy = np.float64(line[1][1])
                 ax1.arrow(arrow_anchor_x, arrow_anchor_y, arrow_dx, arrow_dy, head_width=0.01, head_length=0.01, color='gray')
             for line in additional_lines:
-                print(line)
-                ax1.plot([line[0][0], line[1][0]], [line[0][1], line[1][1]], color='blue', linestyle='-', linewidth=2)
-
+                point1 = line[0]
+                point2 = line[1]
+                ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
             for box in additional_boxes_green:
                 p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
                 ax1.add_patch(p)
