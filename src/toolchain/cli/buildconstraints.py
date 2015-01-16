@@ -90,8 +90,10 @@ if __name__ == "__main__":
     while len(samples) < 60:
         samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters),  cmdargs.safe_above_threshold, use_filter=True)
     
+    generator = None
     if cmdargs.planes:
-        ConstraintPlanes().generate_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area)
+        generator = ConstraintPlanes(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, ratfunc)
     else:
-        ConstraintRectangles(smt2interface, ratfunc).generate_constraints(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area)
+        generator = ConstraintRectangles(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, ratfunc)
+    generator.generate_constraints()
     

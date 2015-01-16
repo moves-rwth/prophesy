@@ -4,10 +4,26 @@ from constraint_generation import *
 
 class ConstraintRectangles(ConstraintGeneration):
     
-    def __init__(self, _smt2interface, _ratfunc):
-        ConstraintGeneration.__init__(self)
-        self.smt2interface = _smt2interface
-        self.ratfunc = _ratfunc
+    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
+        ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
+
+        self.anchor_points = [([(0,0)], True, True),
+                         ([(1,0)], False, True),
+                         ([(1,1)], False, False),
+                         ([(0,1)], True, False)]
+
+        self.safe_boxes = []
+        self.unsafe_boxes = []
+
+        self.max_size = 0
+        self.max_pt = None
+        self.max_area_safe = None
+        self.best_anchor = None
+        self.best_anchor_points_for_dir = None
+        self.best_pos_x = None
+        self.best_pos_y = None
+
+        self.nr = 0
 
     def is_inside_rectangle(self, point, anchor_1, anchor_2, pos_x, pos_y):
         # checks if the point lies in the rectangle spanned by anchor_1
@@ -93,192 +109,138 @@ class ConstraintRectangles(ConstraintGeneration):
 
         return ((rec_remaining_left, rec_remaining_bottom), (rec_remaining_right, rec_remaining_top))
 
-    def generate_constraints(self, samples_input, parameters, threshold, safe_above_threshold, threshold_area):
-        if len(parameters) != 2:
-            raise NotImplementedError
+    def change_current_constraint(self):
+        # change current constraint to avoid memout in smt
+        # returns (new_constraint, new_covered_area)
+        if self.best_pos_x:
+            new_max_pt_x =  self.best_anchor[0] +  abs(self.best_anchor[0] - self.max_pt[0])/2
+        else:
+            new_max_pt_x =  self.best_anchor[0] -  abs(self.best_anchor[0] - self.max_pt[0])/2
 
-        samples = samples_input.copy()
+        if self.best_pos_y:
+            new_max_pt_y =  self.best_anchor[1] +  abs(self.best_anchor[1] - self.max_pt[1])/2
+        else:
+            new_max_pt_y =  self.best_anchor[1] -  abs(self.best_anchor[1] - self.max_pt[1])/2
 
+        self.max_pt = (new_max_pt_x, new_max_pt_y)
+        self.max_size = abs(self.best_anchor[0] - self.max_pt[0]) * abs(self.best_anchor[1] - self.max_pt[1])
+        new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, parameters)
+        return (new_constraints, self.max_size, self.max_area_safe)
 
-        anchor_points = [([(0,0)], True, True),
-                         ([(1,0)], False, True), 
-                         ([(1,1)], False, False),
-                         ([(0,1)], True, False)]
+    def update_anchors(self):
+        # update anchor points for direction
+        self.best_anchor_points_for_dir.append((self.max_pt[0], self.best_anchor[1]))
+        self.best_anchor_points_for_dir.append((self.best_anchor[0], self.max_pt[1]))
+        self.best_anchor_points_for_dir.remove(self.best_anchor)
 
-        anchor_points_for_a_dir = anchor_points[0]
-        succesfull_elimination = True
-        safe_boxes = []
-        unsafe_boxes = []
-        benchmark_output = []
-        check_nr = 0
-        while succesfull_elimination:
-            check_nr = check_nr + 1
-            succesfull_elimination = False
-            max_size = 0
-            max_pt = None
-            best_anchor = None
-            best_anchor_points_for_dir = None
-            #TODO splitting not in loop?
-            (safe_samples, bad_samples) = sampling.split_samples(samples, threshold, safe_above_threshold)
-            assert(len(safe_samples) + len(bad_samples) == len(samples))
-            for (anchor_points_for_a_dir, pos_x, pos_y)  in anchor_points:
-                for anchor_point in anchor_points_for_a_dir:
-                    for point, value in samples.items():
-                        # check if point lies in correct direction from anchor point
-                        if not ((pos_x and point[0] > anchor_point[0]) or (not pos_x and point[0] < anchor_point[0])):
-                            continue;
-                        if not ((pos_y and point[1] > anchor_point[1]) or (not pos_y and point[1] < anchor_point[1])):
-                            continue;
+        # update anchor points
+        print("anchor_points before: {0}".format(self.anchor_points))
+        for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
+            if anchor_points_for_a_dir == self.best_anchor_points_for_dir:
+                continue
+            for anchor_point in anchor_points_for_a_dir:
+                if self.is_inside_rectangle(anchor_point, self.best_anchor, self.max_pt, self.best_pos_x, self.best_pos_y):
+                    print(anchor_point)
+                    print(self.max_pt)
+                    anchor_points_for_a_dir.remove(anchor_point)
+                    new_anchor = [0, 0]
+                    if pos_x:
+                        new_anchor[0] = max(anchor_point[0], self.max_pt[0])
+                    else:
+                        new_anchor[0] = min(anchor_point[0], self.max_pt[0])
+                    if pos_y:
+                        new_anchor[1] = max(anchor_point[1], self.max_pt[1])
+                    else:
+                        new_anchor[1] = min(anchor_point[1], self.max_pt[1])
+                    anchor_points_for_a_dir.append(new_anchor)
+                    print("updated {0} with {1}".format(anchor_point, new_anchor))
 
-                        break_attempt = False
-                        # check for intersection with existing rectangles
-                        # TODO make more efficient
-                        for rectangle2 in safe_boxes + unsafe_boxes:
-                            intersection = self.is_intersection((anchor_point, point), rectangle2)
-                            if (intersection):
-                                break_attempt = True
-                                break
-                                # TODO improve rectangle subtraction
-                                ## reduce rectangle to part outside of existing rectangles
-                                #rectangle_new = self.rectangle_subtract(anchor_point, point, rectangle2)
-                                #if (rectangle_new != None):
-                                #    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(anchor_point, point)], additional_boxes_red = [rectangle2],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(self.plotdir, "intersect.pdf"), display=True)
-                                #    point = rectangle_new[0]
-                                #    anchor_point = rectangle_new[1]
+        print("anchor_points after: {0}".format(self.anchor_points))
 
-                        # choose largest rectangle
-                        size = abs(point[0] - anchor_point[0]) * abs(point[1] - anchor_point[1])
-                        if size > max_size and not break_attempt:
-                            # check if nothing of other polarity is inbetween.
-                            if (value > threshold and safe_above_threshold) or (value <= threshold and not safe_above_threshold):
-                                safe_area = True
-                                for point2, value2 in bad_samples.items():
-                                    if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
-                                        # bad sample in safe area
-                                        break_attempt = True
-                                        break
-                            else:
-                                safe_area = False
-                                for point2, value2 in safe_samples.items():
-                                    if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
-                                        # safe sample in bad area
-                                        break_attempt = True
-                                        break
-                            if not break_attempt:
-                                # can extend area
-                                max_size = size
-                                max_area_safe = safe_area
-                                max_pt = point
-                                best_anchor = anchor_point
-                                best_anchor_points_for_dir = anchor_points_for_a_dir
-                                best_pos_x = pos_x
-                                best_pos_y = pos_y
+        if self.max_area_safe:
+            self.safe_boxes.append((self.best_anchor, self.max_pt))
+        else:
+            self.unsafe_boxes.append((self.best_anchor, self.max_pt))
 
-            if max_pt != None and max_size > threshold_area:
-                #print(smt2interface.version())
-                #print("max_pt: {0}".format(max_pt))
-                #print("best_anchor: {0}".format(best_anchor))
-                #print("best_anchor_points_for_a_dir: {0}".format(best_anchor_points_for_dir))
-                succesfull_elimination = True
+        self.plot_results(self.anchor_points, additional_boxes_green = self.safe_boxes, additional_boxes_red = self.unsafe_boxes, name = "intermediate{0}".format(self.nr), display=False)
 
-                # plot result
-                if max_area_safe:
-                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(best_anchor, max_pt)], path_to_save = os.path.join(self.plotdir, "call{0}.pdf".format(check_nr)), display=False)
-                else:
-                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_red = [(best_anchor, max_pt)], path_to_save = os.path.join(self.plotdir, "call{0}.pdf".format(check_nr)), display=False)
-                self.add_pdf("call{0}".format(check_nr), check_nr == 1)
+    def next_constraint(self):
+        # computes next rectangle constraint
+        # returns (new_constraint, new_covered_area)
 
-                while True:
-                    self.smt2interface.push()
-                    curr_constraints = self.create_rectangle_constraints(best_anchor, max_pt, parameters)
-                    for constraint in curr_constraints:
-                        self.smt2interface.assert_constraint(constraint)
+        # reset
+        self.max_size = 0
+        self.max_pt = None
+        self.max_area_safe = None
+        self.best_anchor = None
+        self.best_anchor_points_for_dir = None
+        self.best_pos_x = None
+        self.best_pos_y = None
 
-                    self.smt2interface.set_guard("safe", not max_area_safe)
-                    self.smt2interface.set_guard("bad", max_area_safe)
-                    print("Calling smt solver")
-                    start = time.time()
-                    checkresult = self.smt2interface.check()
-                    duration = time.time() - start
-                    print("Call took {0} seconds".format(duration))
-                    benchmark_output.append((checkresult, duration, abs(best_anchor[0] - max_pt[0])*abs(best_anchor[1] - max_pt[1])))
-                    if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
-                        self.smt2interface.pop()
-                        if best_pos_x:
-                            new_max_pt_x =  best_anchor[0] +  abs(best_anchor[0] - max_pt[0])/2
+        self.nr += 1
+
+        for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
+            for anchor_point in anchor_points_for_a_dir:
+                for point, value in self.samples.items():
+                    # check if point lies in correct direction from anchor point
+                    if not ((pos_x and point[0] > anchor_point[0]) or (not pos_x and point[0] < anchor_point[0])):
+                        continue;
+                    if not ((pos_y and point[1] > anchor_point[1]) or (not pos_y and point[1] < anchor_point[1])):
+                        continue;
+
+                    break_attempt = False
+                    # check for intersection with existing rectangles
+                    # TODO make more efficient
+                    for rectangle2 in self.safe_boxes + self.unsafe_boxes:
+                        intersection = self.is_intersection((anchor_point, point), rectangle2)
+                        if (intersection):
+                            break_attempt = True
+                            break
+                            # TODO improve rectangle subtraction
+                            ## reduce rectangle to part outside of existing rectangles
+                            #rectangle_new = self.rectangle_subtract(anchor_point, point, rectangle2)
+                            #if (rectangle_new != None):
+                            #    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(anchor_point, point)], additional_boxes_red = [rectangle2],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(self.plotdir, "intersect.pdf"), display=True)
+                            #    point = rectangle_new[0]
+                            #    anchor_point = rectangle_new[1]
+
+                    # choose largest rectangle
+                    size = abs(point[0] - anchor_point[0]) * abs(point[1] - anchor_point[1])
+                    if size > self.max_size and not break_attempt:
+                        # check if nothing of other polarity is inbetween.
+                        if (value > self.threshold and self.safe_above_threshold) or (value <= self.threshold and not self.safe_above_threshold):
+                            safe_area = True
+                            for point2, value2 in self.bad_samples.items():
+                                if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
+                                    # bad sample in safe area
+                                    break_attempt = True
+                                    break
                         else:
-                            new_max_pt_x =  best_anchor[0] -  abs(best_anchor[0] - max_pt[0])/2
-                        if best_pos_y:
-                            new_max_pt_y =  best_anchor[1] +  abs(best_anchor[1] - max_pt[1])/2
-                        else:
-                            new_max_pt_y =  best_anchor[1] -  abs(best_anchor[1] - max_pt[1])/2
+                            safe_area = False
+                            for point2, value2 in self.safe_samples.items():
+                                if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
+                                    # safe sample in bad area
+                                    break_attempt = True
+                                    break
 
-                        max_pt = (new_max_pt_x, new_max_pt_y)   
-                        print("BBB max pt: {0}".format(max_pt))
-                    else: 
-                        break
+                        if not break_attempt:
+                            # can extend area
+                            self.max_size = size
+                            self.max_area_safe = safe_area
+                            self.max_pt = point
+                            self.best_anchor = anchor_point
+                            self.best_anchor_points_for_dir = anchor_points_for_a_dir
+                            self.best_pos_x = pos_x
+                            self.best_pos_y = pos_y
 
-                if checkresult == smt.smt.Answer.unsat:
-                    print("AAA max pt: {0}".format(max_pt))
-
-                    # update anchor points for direction
-                    best_anchor_points_for_dir.append((max_pt[0], best_anchor[1]))
-                    best_anchor_points_for_dir.append((best_anchor[0], max_pt[1]))
-                    best_anchor_points_for_dir.remove(best_anchor)
-
-                    # remove unnecessary samples which are covered already by rectangle
-                    for pt, v in list(samples.items()):
-                        fullfillsAllConstraints = True
-                        for constraint in curr_constraints:
-                            if not self.is_point_fulfilling_constraint(pt, parameters, constraint):
-                                fullfillsAllConstraints = False
-                                break;
-                        if fullfillsAllConstraints:
-                            del samples[pt]
-
-                    # update anchor points
-                    print("anchor_points before: {0}".format(anchor_points))
-                    for (anchor_points_for_a_dir, pos_x, pos_y) in anchor_points:
-                        if anchor_points_for_a_dir == best_anchor_points_for_dir:
-                            continue
-                        for anchor_point in anchor_points_for_a_dir:
-                            if self.is_inside_rectangle(anchor_point, best_anchor, max_pt, best_pos_x, best_pos_y):
-                                print(anchor_point)
-                                print(max_pt)
-                                anchor_points_for_a_dir.remove(anchor_point)
-                                new_anchor = [0, 0]
-                                if pos_x:
-                                    new_anchor[0] = max(anchor_point[0], max_pt[0]) 
-                                else:
-                                    new_anchor[0] = min(anchor_point[0], max_pt[0])
-                                if pos_y:
-                                    new_anchor[1] = max(anchor_point[1], max_pt[1]) 
-                                else:
-                                    new_anchor[1] = min(anchor_point[1], max_pt[1]) 
-                                anchor_points_for_a_dir.append(new_anchor)
-                                print("updated {0} with {1}".format(anchor_point, new_anchor))
-
-                    #print("anchor_points after: {0}".format(anchor_points))
-
-                    if max_area_safe:
-                        safe_boxes.append((best_anchor, max_pt))
-                    else: 
-                        unsafe_boxes.append((best_anchor, max_pt))
-
-                    # plot result
-                    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = safe_boxes, additional_boxes_red = unsafe_boxes, path_to_save = os.path.join(self.plotdir, "intermediate{0}.pdf".format(check_nr)), display=False)
-                    self.add_pdf("intermediate{0}".format(check_nr), False)
-
-                elif checkresult == smt.smt.Answer.sat:
-                    model = self.smt2interface.get_model()
-                    modelPoint = tuple([model[p.name] for p in parameters])
-                    samples[modelPoint] = self.ratfunc.evaluate(list(model.items()))
-                    print("updated {0} with new value {1}".format(modelPoint, samples[modelPoint]))
-
-                self.smt2interface.pop()
-                self.print_benchmark_output(benchmark_output)
-
-        self.smt2interface.stop()
-        self.smt2interface.print_calls()
-
-        return
+        if self.max_pt is not None and self.max_size > self.threshold_area:
+            # plot result
+            bFirst = (self.nr == 1)
+            if self.max_area_safe:
+                self.plot_results(self.anchor_points, additional_boxes_green = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display=False, first = bFirst)
+            else:
+                self.plot_results(self.anchor_points, additional_boxes_red = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display=False, first = bFirst)
+            new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
+            return (new_constraints, self.max_size, self.max_area_safe)
+        else:
+            return None
