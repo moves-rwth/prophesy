@@ -31,6 +31,7 @@ class ConstraintGeneration(object):
 
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
+        self.nr = 0
 
     def add_pdf(self, name, first):
         # Adds pdf with name to result.pdf in tmp directory
@@ -81,7 +82,7 @@ class ConstraintGeneration(object):
         self.add_pdf(name, first)
 
     @abstractmethod
-    def next_constraint(self, samples_input, parameters, threshold, safe_above_threshold, threshold_area):
+    def next_constraint(self):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
@@ -89,7 +90,7 @@ class ConstraintGeneration(object):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def update_anchors(self):
+    def finalize_step(self):
         raise NotImplementedError("Abstract parent method")
 
     def generate_constraints(self):
@@ -97,6 +98,8 @@ class ConstraintGeneration(object):
         benchmark_output = []
 
         while constraint_available:
+            self.nr += 1
+
             # split samples into safe and bad
             (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
             assert(len(self.safe_samples) + len(self.bad_samples) == len(self.samples))
@@ -145,7 +148,7 @@ class ConstraintGeneration(object):
                         del self.samples[pt]
 
                 # update everything in the algorithm according to correct new area
-                self.update_anchors()
+                self.finalize_step()
 
             elif checkresult == smt.smt.Answer.sat:
                 model = self.smt2interface.get_model()

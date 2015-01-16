@@ -23,8 +23,6 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_pos_x = None
         self.best_pos_y = None
 
-        self.nr = 0
-
     def is_inside_rectangle(self, point, anchor_1, anchor_2, pos_x, pos_y):
         # checks if the point lies in the rectangle spanned by anchor_1
         if (pos_x and anchor_1[0] <= point[0] and point[0] <= anchor_2[0]) or (not pos_x and anchor_2[0] <= point[0] and point[0] <= anchor_1[0]):
@@ -127,7 +125,7 @@ class ConstraintRectangles(ConstraintGeneration):
         new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, parameters)
         return (new_constraints, self.max_size, self.max_area_safe)
 
-    def update_anchors(self):
+    def finalize_step(self):
         # update anchor points for direction
         self.best_anchor_points_for_dir.append((self.max_pt[0], self.best_anchor[1]))
         self.best_anchor_points_for_dir.append((self.best_anchor[0], self.max_pt[1]))
@@ -176,8 +174,6 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_anchor_points_for_dir = None
         self.best_pos_x = None
         self.best_pos_y = None
-
-        self.nr += 1
 
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
             for anchor_point in anchor_points_for_a_dir:
@@ -235,11 +231,10 @@ class ConstraintRectangles(ConstraintGeneration):
 
         if self.max_pt is not None and self.max_size > self.threshold_area:
             # plot result
-            bFirst = (self.nr == 1)
             if self.max_area_safe:
-                self.plot_results(self.anchor_points, additional_boxes_green = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display=False, first = bFirst)
+                self.plot_results(self.anchor_points, additional_boxes_green = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
             else:
-                self.plot_results(self.anchor_points, additional_boxes_red = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display=False, first = bFirst)
+                self.plot_results(self.anchor_points, additional_boxes_red = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
             new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
             return (new_constraints, self.max_size, self.max_area_safe)
         else:

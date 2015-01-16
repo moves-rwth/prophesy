@@ -6,10 +6,19 @@ import sympy
 
 class ConstraintPlanes(ConstraintGeneration):
     
-    def __init__(self, _steps=3):
-        ConstraintGeneration.__init__(self)
+    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc, _steps=3):
+        ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
         self.steps = _steps
         self.deg90 = 1/2 * np.pi;
+        self.step_radius = -self.deg90/self.steps
+
+        self.anchor_points = [np.array([0,0]), np.array([1,0]), np.array([1,1]), np.array([0,1])]
+        self.best_orientation_vector = None
+        self.best_dpt = 0
+        self.max_area_safe = False
+        self.max_size = 0
+        self.best_rad = None
+        self.best_anchor = None
 
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
@@ -128,68 +137,80 @@ class ConstraintPlanes(ConstraintGeneration):
         else:
             return (num / denom) * vector_b + anchor_b
 
-    def generate_constraints(self, samples, parameters, threshold, safe_above_threshold, threshold_area):
-        if len(parameters) != 2:
-            raise NotImplementedError
-        (safe_samples, bad_samples) = sampling.split_samples(samples, threshold, safe_above_threshold)
+    def change_current_constraint(self):
+        #TODO implement
+        return
 
-        anchor_points = [np.array([0,0]), np.array([1,0]), np.array([1,1]), np.array([0,1])]
+    def finalize_step(self):
+        #TODO implement more
+        result_bounding = self.create_bounding_line(self.best_anchor, self.best_orientation_vector*self.best_dpt)
+        if result_bounding is not None:
+            (bound1, bound2) = result_bounding
+            print("bounding line: {0}, {1}".format(bound1, bound2))
+            self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "intermediate{0}".format(self.nr), display=False)
 
-        best_orientation_vector = np.array([0,0])
-        best_dpt = 0
-        best_safety = False
+    def next_constraint(self):
+        # reset
+        self.best_orientation_vector = np.array([1, 0])
+        self.best_dpt = 0
+        self.max_area_safe = False
+        self.best_rad = None
+        self.best_anchor = None
+        self.max_size = 0
 
-        orientation_vector = np.array([1,0])
-        nr = 0
-        step_radius = -self.deg90/self.steps
-        for anchor in anchor_points:
+        for anchor in self.anchor_points:
             print("anchor: {0}".format(anchor))
             for i in range(0, self.steps):
-                nr += 1
                 # orientation vector according to 90°/steps
-                orientation_vector = self.normalize_vector(self.rotate_vector(np.array([1,0]), i*step_radius))
+                degree = i * self.step_radius
+                orientation_vector = self.normalize_vector(self.rotate_vector(np.array([1,0]), degree))
                 print("\to-vec: {0}".format(orientation_vector))
 
-                (safety, dpt) =  self.create_halfspace_depth(safe_samples, bad_samples, anchor, orientation_vector)
+                (area_safe, dpt) =  self.create_halfspace_depth(self.safe_samples, self.bad_samples, anchor, orientation_vector)
                 if abs(dpt) < EPS:
                     continue
                 result_bounding = self.create_bounding_line(anchor, orientation_vector*dpt)
-                if result_bounding is None:
+                if result_bounding is None:            bFirst = (self.nr == 1)
+
                     continue
                 (bound1, bound2) = result_bounding
                 print("bounding line: {0}, {1}".format(bound1, bound2))
-                Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt), (anchor, orientation_vector)], path_to_save = os.path.join(self.plotdir, "call{0}.pdf".format(nr)), display=True)
-                self.add_pdf("call{0}".format(nr), nr == 1)
-
+                self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
+                self.nr += 1
                 # chooose best
-                if dpt > best_dpt:
-                    best_orientation_vector = orientation_vector
-                    best_dpt = dpt
-                    best_safety = safety
-                    best_rad = step_radius
-                    best_anchor = anchor
+                if dpt > self.best_dpt:
+                    self.best_orientation_vector = orientation_vector
+                    self.best_dpt = dpt
+                    self.max_area_safe = area_safe
+                    self.best_rad = degree
+                    self.best_anchor = anchor
+                    #TODO compute maximal size
+                    self.max_size = 0
 
-        print(best_orientation_vector)
-        print(best_dpt)
-        print(best_safety)
-        print(best_anchor)
+        print(self.best_orientation_vector)
+        print(self.best_dpt)
+        print(self.max_area_safe)
+        print(self.best_anchor)
 
-        if best_anchor[0] == 0:
+        if self.best_anchor[0] == 0:
             rel = "<"
         else:
             rel = ">="
 
-        if best_orientation_vector.item(0) == 0:
-            return (best_safety, Constraint(sympy.Poly(parameters[1] - best_dpt, parameters), rel, parameters))
-        elif best_orientation_vector.item(1) == 0:
-            return (best_safety, Constraint(sympy.Poly(parameters[0] - best_dpt, parameters), rel, parameters))
+        if self.best_orientation_vector.item(0) == 0:
+            new_constraints =  [Constraint(Poly(self.parameters[1] - self.best_dpt, self.parameters), rel, self.parameters)]
+            return (new_constraints, self.max_size, self.max_area_safe)
+        elif self.best_orientation_vector.item(1) == 0:
+            new_constraints = [Constraint(Poly(self.parameters[0] - self.best_dpt, self.parameters), rel, self.parameters)]
+            return (new_constraints, self.max_size, self.max_area_safe)
         else:    
-            b =  best_dpt/cos(best_rad)
-            e =  best_dpt/cos(self.deg90 - best_rad)
+            b =  self.best_dpt/cos(self.best_rad)
+            e =  self.best_dpt/cos(self.deg90 - self.best_rad)
             print(b)
             print(e)
 
             a =  -b / e
             print("constraint is {1}*x - {0}*y + {0}*{1} {2} 0".format(a,b,rel))
             print("line is described by {0}x + {1} = 0".format(a, b))
-            return (best_safety, Constraint(sympy.Poly(b*parameters[0] - a*parameters[1] + a*b, parameters), rel, parameters))
+            new_constraints = [Constraint(Poly(b*self.parameters[0] - a*self.parameters[1] + a*b, self.parameters), rel, self.parameters)]
+            return (new_constraints, self.max_size, self.max_area_safe)
