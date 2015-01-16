@@ -170,8 +170,7 @@ class ConstraintPlanes(ConstraintGeneration):
                 if abs(dpt) < EPS:
                     continue
                 result_bounding = self.create_bounding_line(anchor, orientation_vector*dpt)
-                if result_bounding is None:            bFirst = (self.nr == 1)
-
+                if result_bounding is None:
                     continue
                 (bound1, bound2) = result_bounding
                 print("bounding line: {0}, {1}".format(bound1, bound2))
