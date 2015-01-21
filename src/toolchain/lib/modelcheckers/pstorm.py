@@ -3,9 +3,8 @@ import tempfile
 import subprocess
 from modelcheckers.ppmc import ParametricProbablisticModelChecker,\
     BisimulationType
-from util import check_filepath_for_reading, run_tool
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 from input.pctl import parse_pctl_file
-from checks import ensure_dir_exists
 from input.resultfile import parse_result_file
 
 class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):

@@ -8,8 +8,7 @@ from sympy.polys import Poly
 from data.constraint import Constraint
 from data.rationalfunction import RationalFunction
 from modelcheckers.ppmc import ParametricProbablisticModelChecker
-from util import check_filepath_for_reading, run_tool
-from checks import ensure_dir_exists
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
 def parse_param_result_file(path):
     with open(path) as f:

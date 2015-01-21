@@ -1,8 +1,7 @@
 import config
 import tempfile
 from smt.smt import SMTSolver, VariableDomain
-from checks import ensure_dir_exists
-from util import run_tool
+from util import run_tool, ensure_dir_exists
 
 def _constraint_to_isat(constraint):
     return str(constraint.polynomial)[5:].split(",")[0].replace("**", "^") + " " + constraint.relation + " 0"

@@ -3,8 +3,7 @@ import re
 import subprocess
 import config
 from modelcheckers.pmc import ProbablisticModelChecker
-from util import check_filepath_for_reading, run_tool
-from checks import ensure_dir_exists
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
 def parse_prism_result_file(path):
     samples = {}

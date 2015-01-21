@@ -2,7 +2,7 @@ import re
 import config
 import tempfile
 import shutil
-from checks import ensure_dir_exists
+from util import ensure_dir_exists
 
 def findParametersInPrismFile(path, replace_keyword = None):
         with open(path, 'r') as f:
