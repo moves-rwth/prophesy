@@ -176,7 +176,7 @@ class ConstraintPlanes(ConstraintGeneration):
                     continue
                 (bound1, bound2) = result_bounding
                 print("\t\tbounding line: {0}, {1}".format(bound1, bound2))
-                self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
+                #self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
                 self.nr += 1
                 # chooose best
                 if dpt > self.best_dpt:
@@ -195,6 +195,7 @@ class ConstraintPlanes(ConstraintGeneration):
         print("Best anchor: {0}".format(self.best_anchor))
         (best_bound1, best_bound2) = self.best_bounding
         print("Best bounds: {0}".format(self.best_bounding))
+        self.plot_results(additional_lines = [(best_bound1, best_bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
 
         if (abs(best_bound1[0] - best_bound2[0]) < EPS):
             # vertical line
@@ -228,5 +229,5 @@ class ConstraintPlanes(ConstraintGeneration):
 
             new_constraints = [Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters)]
             print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
-            print("constraint is {m}x - y + {c} {r} 0".format(m=m, c=c, r=rel))
+            print("constraint: {0}".format(new_constraints))
             return (new_constraints, self.max_size, self.max_area_safe)

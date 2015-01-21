@@ -97,6 +97,13 @@ class ConstraintGeneration(object):
         constraint_available = True
         benchmark_output = []
 
+        # initial constraints
+        self.smt2interface.push()
+        for param in self.parameters:
+            # add constraints 0 <= param <= 1
+            self.smt2interface.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
+            self.smt2interface.assert_constraint(Constraint(Poly(param - 1, self.parameters), ">=", self.parameters))
+
         while constraint_available:
             self.nr += 1
 
@@ -153,9 +160,16 @@ class ConstraintGeneration(object):
             elif checkresult == smt.smt.Answer.sat:
                 model = self.smt2interface.get_model()
                 # add new point as counter example to existing constraints
-                modelPoint = tuple([model[p.name] for p in self.parameters])
-                self.samples[modelPoint] = self.ratfunc.evaluate(model.items())
+                modelPoint = ()
+                for p in self.parameters:
+                    if p.name in model:
+                        modelPoint = modelPoint + (model[p.name],)
+                    else:
+                        # if parameter is undefined set as 0.5
+                        modelPoint = modelPoint + (0.5,)
+                        model[p.name] = 0.5
 
+                self.samples[modelPoint] = self.ratfunc.evaluate(model.items())
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 
             self.smt2interface.pop()
