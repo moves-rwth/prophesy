@@ -1,18 +1,18 @@
-from constraint_generation import *
-
-import numpy as np
-from numpy import cos, sin
-import sympy
+import numpy
+from constraint_generation import ConstraintGeneration
+from config import EPS
+from data.constraint import Constraint
+from sympy.polys.polytools import Poly
 
 class ConstraintPlanes(ConstraintGeneration):
-    
-    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc, _steps=3):
+
+    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc, _steps = 3):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
         self.steps = _steps
-        self.deg90 = 1/2 * np.pi;
-        self.step_radius = -self.deg90/self.steps
+        self.deg90 = 1 / 2 * numpy.pi;
+        self.step_radius = -self.deg90 / self.steps
 
-        self.anchor_points = [np.array([0,0]), np.array([1,0]), np.array([1,1]), np.array([0,1])]
+        self.anchor_points = [numpy.array([0, 0]), numpy.array([1, 0]), numpy.array([1, 1]), numpy.array([0, 1])]
         self.best_orientation_vector = None
         self.best_dpt = 0
         self.max_area_safe = False
@@ -23,17 +23,17 @@ class ConstraintPlanes(ConstraintGeneration):
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
         # see https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Vector_formulation
-        difference = anchor-point
+        difference = anchor - point
         tmp = difference - difference.dot(orientation_vector) * orientation_vector
-        distance = np.array([np.float64(tmp.item(0)), np.float64(tmp.item(1))])
-        return np.linalg.norm(distance)
+        distance = numpy.array([numpy.float64(tmp.item(0)), numpy.float64(tmp.item(1))])
+        return numpy.linalg.norm(distance)
 
     def compute_orthogonal_vector(self, vector):
         # computes one of the orthogonal vectors to vector
-        return np.array([vector.item(1), -vector.item(0)])
+        return numpy.array([vector.item(1), -vector.item(0)])
 
     def create_halfspace_depth(self, safe_samples, bad_samples, anchor_point, orientation_vector):
-        assert(np.linalg.norm(orientation_vector) == 1)
+        assert(numpy.linalg.norm(orientation_vector) == 1)
 
         # compute minimal/maximal safe/bad distances
         min_safe_dist = 1000
@@ -44,18 +44,18 @@ class ConstraintPlanes(ConstraintGeneration):
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
         print(orthogonal_vec)
 
-        for k,v in safe_samples.items():
+        for k, v in safe_samples.items():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
             weighted_dist = dist
-            #weighted_dist = np.dot(k - anchor_point, orientation_vector)
+            # weighted_dist = numpy.dot(k - anchor_point, orientation_vector)
             if abs(weighted_dist) < abs(min_safe_dist):
                 min_safe_dist = weighted_dist
             if abs(weighted_dist) > abs(max_safe_dist):
                 max_safe_dist = weighted_dist
-        for k,v in bad_samples.items():
+        for k, v in bad_samples.items():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
             weighted_dist = dist
-            #weighted_dist = np.dot(k - anchor_point, orientation_vector)
+            # weighted_dist = numpy.dot(k - anchor_point, orientation_vector)
             if abs(weighted_dist) < abs(min_bad_dist):
                 min_bad_dist = weighted_dist
             if abs(weighted_dist) > abs(max_bad_dist):
@@ -65,7 +65,7 @@ class ConstraintPlanes(ConstraintGeneration):
             return (True, 0)
         elif abs(min_safe_dist) < abs(min_bad_dist):
             safe = True
-        else: 
+        else:
             assert(abs(min_safe_dist) > abs(min_bad_dist))
             safe = False
 
@@ -90,10 +90,10 @@ class ConstraintPlanes(ConstraintGeneration):
         print("orthogonal vector: {0}".format(orthogonal_vec))
 
         # intersection with borders
-        down = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([0,0]), np.array([1,0]))
-        left = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([0,0]), np.array([0,1]))
-        top = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([0,1]), np.array([1,0]))
-        right = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([1,0]), np.array([0,1]))
+        down = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 0]), numpy.array([1, 0]))
+        left = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 0]), numpy.array([0, 1]))
+        top = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 1]), numpy.array([1, 0]))
+        right = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([1, 0]), numpy.array([0, 1]))
         print("Borders: {0}, {1}, {2}, {3}".format(down, left, top, right))
         bounds = []
         if down is not None and self.is_valid(down):
@@ -119,39 +119,39 @@ class ConstraintPlanes(ConstraintGeneration):
             return False
 
     def rotate_vector(self, x, rad):
-        R = np.matrix([[np.cos(rad), -np.sin(rad)],[np.sin(rad), np.cos(rad)]])
+        R = numpy.matrix([[numpy.cos(rad), -numpy.sin(rad)], [numpy.sin(rad), numpy.cos(rad)]])
         result = x * R
-        return np.array([result.item(0), result.item(1)])
+        return numpy.array([result.item(0), result.item(1)])
 
     def normalize_vector(self, x):
-        return x / np.linalg.norm(x)
+        return x / numpy.linalg.norm(x)
 
     def get_intersection(self, anchor_a, vector_a, anchor_b, vector_b) :
         # computes intersection of two lines anchor_a + vector_a*x and anchor_b + vector_b*x
         # returns None if there is no intersection
-        dap = np.array([-vector_a[1], vector_a[0]])
-        denom = np.dot( dap, vector_b)
-        num = np.dot( dap, anchor_a - anchor_b )
+        dap = numpy.array([-vector_a[1], vector_a[0]])
+        denom = numpy.dot(dap, vector_b)
+        num = numpy.dot(dap, anchor_a - anchor_b)
         if abs(denom) < EPS:
             return None
         else:
             return (num / denom) * vector_b + anchor_b
 
     def change_current_constraint(self):
-        #TODO implement
+        # TODO implement
         return
 
     def finalize_step(self):
-        #TODO implement more
-        result_bounding = self.create_bounding_line(self.best_anchor, self.best_orientation_vector*self.best_dpt)
+        # TODO implement more
+        result_bounding = self.create_bounding_line(self.best_anchor, self.best_orientation_vector * self.best_dpt)
         if result_bounding is not None:
             (bound1, bound2) = result_bounding
             print("bounding line: {0}, {1}".format(bound1, bound2))
-            self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "intermediate{0}".format(self.nr), display=False)
+            self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector * self.best_dpt)], name = "intermediate{0}".format(self.nr), display = False)
 
     def next_constraint(self):
         # reset
-        self.best_orientation_vector = np.array([1, 0])
+        self.best_orientation_vector = numpy.array([1, 0])
         self.best_dpt = 0
         self.max_area_safe = False
         self.best_rad = None
@@ -163,27 +163,27 @@ class ConstraintPlanes(ConstraintGeneration):
             for i in range(0, self.steps):
                 # orientation vector according to 90°/steps
                 degree = i * self.step_radius
-                orientation_vector = self.normalize_vector(self.rotate_vector(np.array([1,0]), degree))
+                orientation_vector = self.normalize_vector(self.rotate_vector(numpy.array([1, 0]), degree))
                 print("\to-vec: {0}".format(orientation_vector))
 
-                (area_safe, dpt) =  self.create_halfspace_depth(self.safe_samples, self.bad_samples, anchor, orientation_vector)
+                (area_safe, dpt) = self.create_halfspace_depth(self.safe_samples, self.bad_samples, anchor, orientation_vector)
                 if abs(dpt) < EPS:
                     continue
-                result_bounding = self.create_bounding_line(anchor, orientation_vector*dpt)
+                result_bounding = self.create_bounding_line(anchor, orientation_vector * dpt)
                 if result_bounding is None:
                     continue
                 (bound1, bound2) = result_bounding
                 print("bounding line: {0}, {1}".format(bound1, bound2))
-                self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
+                self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector * dpt)], name = "call{0}".format(self.nr), display = True, first = (self.nr == 1))
                 self.nr += 1
-                # chooose best
+                # choose best
                 if dpt > self.best_dpt:
                     self.best_orientation_vector = orientation_vector
                     self.best_dpt = dpt
                     self.max_area_safe = area_safe
                     self.best_rad = degree
                     self.best_anchor = anchor
-                    #TODO compute maximal size
+                    # TODO compute maximal size
                     self.max_size = 0
 
         print(self.best_orientation_vector)
@@ -197,19 +197,19 @@ class ConstraintPlanes(ConstraintGeneration):
             rel = ">="
 
         if self.best_orientation_vector.item(0) == 0:
-            new_constraints =  [Constraint(Poly(self.parameters[1] - self.best_dpt, self.parameters), rel, self.parameters)]
+            new_constraints = [Constraint(Poly(self.parameters[1] - self.best_dpt, self.parameters), rel, self.parameters)]
             return (new_constraints, self.max_size, self.max_area_safe)
         elif self.best_orientation_vector.item(1) == 0:
             new_constraints = [Constraint(Poly(self.parameters[0] - self.best_dpt, self.parameters), rel, self.parameters)]
             return (new_constraints, self.max_size, self.max_area_safe)
-        else:    
-            b =  self.best_dpt/cos(self.best_rad)
-            e =  self.best_dpt/cos(self.deg90 - self.best_rad)
+        else:
+            b = self.best_dpt / numpy.cos(self.best_rad)
+            e = self.best_dpt / numpy.cos(self.deg90 - self.best_rad)
             print(b)
             print(e)
 
-            a =  -b / e
-            print("constraint is {1}*x - {0}*y + {0}*{1} {2} 0".format(a,b,rel))
+            a = -b / e
+            print("constraint is {1}*x - {0}*y + {0}*{1} {2} 0".format(a, b, rel))
             print("line is described by {0}x + {1} = 0".format(a, b))
-            new_constraints = [Constraint(Poly(b*self.parameters[0] - a*self.parameters[1] + a*b, self.parameters), rel, self.parameters)]
+            new_constraints = [Constraint(Poly(b * self.parameters[0] - a * self.parameters[1] + a * b, self.parameters), rel, self.parameters)]
             return (new_constraints, self.max_size, self.max_area_safe)

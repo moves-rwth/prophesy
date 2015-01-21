@@ -17,35 +17,34 @@ def _find_nominator(string):
             parenthesesCount = parenthesesCount - 1
             if parenthesesCount == 0:
                 return nominatorstring
-                
 
 def read_result_file(input_path):
     inputfile = open(input_path)
     inputstring = inputfile.read()
     inputfile.close()
-   
+
     parameters = re.findall('!Parameters:\s(.*)', inputstring)[0].split(", ")
-    
-    
+
+
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     resultingRatFunNom = _find_nominator(match)
     print("nominator string {0}".format(resultingRatFunNom))
     match = match[len(resultingRatFunNom):]
-    #print("Denominator match {0}".format(match))
+    # print("Denominator match {0}".format(match))
     if len(match) > 1:
         resultingRatFunDen = match.split("/")[1]
     print("denominator string {0}".format(resultingRatFunDen))
-    
+
     welldefined_constraintsString = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     welldefined_constraintsStrings = welldefined_constraintsString.split("\n")[:-1]
-    
-    
+
+
     graphpreserving_constraintsStringList = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
     if len(graphpreserving_constraintsStringList) > 0:
         graphpreserving_constraintsStrings = graphpreserving_constraintsStringList[0].split("\n")[:-1]
     else:
         graphpreserving_constraintsStrings = []
-    
+
     return [parameters, welldefined_constraintsStrings, graphpreserving_constraintsStrings, resultingRatFunNom, resultingRatFunDen]
 
 def parse_result_file(path):
@@ -59,7 +58,7 @@ def parse_result_file(path):
         denominator = Poly(denominator_string, parameters)
     print("nominator {0}".format(nominator))
     print("denominator {0}".format(denominator))
-    return [parameters, wdconstraints, gpconstraints, RationalFunction(nominator, denominator)] 
+    return [parameters, wdconstraints, gpconstraints, RationalFunction(nominator, denominator)]
 
 def write_result_file(parameters, wdconstraints, gpconstraints, rationalfunction, path):
     with open(path, "w") as f:
@@ -67,4 +66,4 @@ def write_result_file(parameters, wdconstraints, gpconstraints, rationalfunction
         f.write("!Result: {0}\n".format(str(rationalfunction)))
         f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in wdconstraints])))
         f.write("!Graph-preserving Constraints:\n{0}".format("\n".join([str(c) for c in gpconstraints])))
-                
+

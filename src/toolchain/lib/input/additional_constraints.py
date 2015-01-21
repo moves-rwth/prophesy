@@ -1,6 +1,4 @@
-from sympy import Symbol
 from data.constraint import Constraint
-
 
 def constraints_from_file(filepath, parameters):
     inputfile = open(filepath, 'r')

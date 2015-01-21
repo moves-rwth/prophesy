@@ -1,8 +1,8 @@
-from smt.smt import SMTSolver
-from smt.smt import *
 import config
 import tempfile
-from util import *
+from smt.smt import SMTSolver, VariableDomain
+from checks import ensure_dir_exists
+from util import run_tool
 
 def _constraint_to_isat(constraint):
     return str(constraint.polynomial)[5:].split(",")[0].replace("**", "^") + " " + constraint.relation + " 0"
@@ -78,9 +78,9 @@ class IsatSolver(SMTSolver):
         else:
             self.constraintstack[-1].append("!"+guard)
 
-    def from_file(p): raise NotImplementedError
+    def from_file(self, p): raise NotImplementedError
 
-    def to_file(p): raise NotImplementedError
+    def to_file(self, p): raise NotImplementedError
 
     def print_calls(self): 
         pass

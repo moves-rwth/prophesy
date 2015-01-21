@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-
 from enum import Enum
 
 class Answer(Enum):
@@ -8,13 +7,11 @@ class Answer(Enum):
     unknown = 2
     killed = 3
     memout = 4
-    
+
 class VariableDomain(Enum):
     Bool = 0
     Real = 1
     Int = 2
-    
-
 
 class SMTSolver():
     __metaclass__ = ABCMeta
@@ -26,34 +23,28 @@ class SMTSolver():
     def version(self): raise NotImplementedError
 
     @abstractmethod
-    def check(): raise NotImplementedError
+    def check(self): raise NotImplementedError
 
     @abstractmethod
-    def push(): raise NotImplementedError
+    def push(self): raise NotImplementedError
 
     @abstractmethod
-    def pop(): raise NotImplementedError
+    def pop(self): raise NotImplementedError
 
     @abstractmethod
-    def add_variable(): raise NotImplementedError
+    def add_variable(self): raise NotImplementedError
 
     @abstractmethod
-    def assert_constraint(c): raise NotImplementedError
+    def assert_constraint(self, c): raise NotImplementedError
 
     @abstractmethod
-    def assert_guarded_constraint(c): raise NotImplementedError
+    def assert_guarded_constraint(self, c): raise NotImplementedError
 
     @abstractmethod
-    def set_guard(g, v): raise NotImplementedError
+    def set_guard(self, g, v): raise NotImplementedError
 
     @abstractmethod
-    def from_file(p): raise NotImplementedError
+    def from_file(self, p): raise NotImplementedError
 
     @abstractmethod
-    def to_file(p): raise NotImplementedError
-
-
-        
-        
-        
-        
+    def to_file(self, p): raise NotImplementedError

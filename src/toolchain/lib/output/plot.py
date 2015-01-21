@@ -1,39 +1,37 @@
+import pylab
+import numpy
+import sympy
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.colors import *
-import pylab
-import numpy as np
-import sympy
+from matplotlib.colors import ColorConverter
 
 class Plot(object):
 
     def __plot_constraints(self, parameters, region, color):
         for constraints in reversed(region):
             for c in constraints:
-                xs = np.linspace(0,1,11)
+                xs = numpy.linspace(0,1,11)
                 print(xs)
                 ys = [sympy.solve(c.polynomial.subs(parameters[0],x))[0].evalf() for x in xs]
 
                 print(ys)
                 if c.relation == ">=" or c.relation == ">":
-                    plt.fill_between(np.array(xs,dtype=float), np.array(ys,dtype=float), 1, facecolor=color)
+                    plt.fill_between(numpy.array(xs,dtype=float), numpy.array(ys,dtype=float), 1, facecolor=color)
                 else:
-                    plt.fill_between(np.array(xs,dtype=float), 0, np.array(ys,dtype=float), facecolor=color)
+                    plt.fill_between(numpy.array(xs,dtype=float), 0, numpy.array(ys,dtype=float), facecolor=color)
                 pylab.ylim([0,1])
                 pylab.xlim([0,1])
 
 
     def plot_constraints(self, parameters, saferegion, badregion):
-       __plot_constraints(parameters, saferegion, 'green')
-       __plot_constraints(parameters, badregion, 'red')
-
-
+        self.__plot_constraints(parameters, saferegion, 'green')
+        self.__plot_constraints(parameters, badregion, 'red')
 
     def __onselect(self, eclick, erelease):
-      'eclick and erelease are matplotlib events at press and release'
-      print(' startposition : (%f, %f)' % (eclick.xdata, eclick.ydata))
-      print(' endposition   : (%f, %f)' % (erelease.xdata, erelease.ydata))
-      print(' used button   : ', eclick.button)
+        'eclick and erelease are matplotlib events at press and release'
+        print(' startposition : (%f, %f)' % (eclick.xdata, eclick.ydata))
+        print(' endposition   : (%f, %f)' % (erelease.xdata, erelease.ydata))
+        print(' used button   : ', eclick.button)
 
     def __toggle_selector(self, event):
         print(' Key pressed.')
@@ -73,10 +71,10 @@ class Plot(object):
 
             colorc = ColorConverter()
             for line in additional_arrows:
-                arrow_anchor_x = np.float64(line[0][0])
-                arrow_anchor_y = np.float64(line[0][1])
-                arrow_dx = np.float64(line[1][0])
-                arrow_dy = np.float64(line[1][1])
+                arrow_anchor_x = numpy.float64(line[0][0])
+                arrow_anchor_y = numpy.float64(line[0][1])
+                arrow_dx = numpy.float64(line[1][0])
+                arrow_dy = numpy.float64(line[1][1])
                 ax1.arrow(arrow_anchor_x, arrow_anchor_y, arrow_dx, arrow_dy, head_width=0.01, head_length=0.01, color='gray')
             for line in additional_lines:
                 point1 = line[0]
@@ -105,7 +103,7 @@ class Plot(object):
 
 
     def plot_results_val(self, parameters, result):
-         if len(parameters) == 2:
+        if len(parameters) == 2:
 
             x = []
             y = []

@@ -1,15 +1,13 @@
-from config import *
-import sampling
-from data.constraint import *
-import smt.smt
-from output.plot import Plot
-
 import tempfile
 import time
+import os
+import sampling
+import smt.smt
+from output.plot import Plot
 from abc import ABCMeta, abstractmethod
-
 #needed for pdf merging for debugging
 from subprocess import call
+from config import PLOT_FILES_DIR, EPS
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta

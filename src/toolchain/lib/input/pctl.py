@@ -5,6 +5,6 @@ def parse_pctl_file(path):
         for line in f:
             comment_stripped = line.split("#")[0].rstrip();
             if comment_stripped != "":
-                #TODO use pctl_formula object
+                # TODO use pctl_formula object
                 pctl_formulas.append(comment_stripped)
     return pctl_formulas
