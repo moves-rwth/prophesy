@@ -29,7 +29,7 @@ if __name__ == "__main__":
     prism_file = PrismFile(vars(cmdargs)["file"])
 
     if vars(cmdargs)["param"] != None:
-        prism_file = prism_file.make_temporary_copy()
+        prism_file.make_temporary_copy()
         prism_file.replace_parameter_keyword("param float")
         tool = ParamParametricModelChecker(vars(cmdargs)["param"])
     elif vars(cmdargs)["pstorm"] != None:
