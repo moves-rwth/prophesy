@@ -2,6 +2,7 @@
 
 import sys
 import os
+from input.resultfile import read_pstorm_result
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
@@ -11,7 +12,6 @@ import sampling
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import Poly
 from data.constraint import Constraint
-from input.resultfile import parse_result_file
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
 from smt.smt import VariableDomain
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     threshold = vars(cmdargs)["threshold"]
     threshold_area = vars(cmdargs)["threshold_area"]
-    [ratfunc_parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
+    result = read_pstorm_result(vars(cmdargs)['rat_file'])
     if cmdargs.z3location:
         smt2interface = SmtlibSolver(cmdargs.z3location)
     elif cmdargs.isatlocation:
@@ -47,13 +47,13 @@ if __name__ == "__main__":
     smt2interface.run()
     threshold_symbol = Symbol("T")
 
-    for p in ratfunc_parameters:
+    for p in result.parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
     smt2interface.add_variable(threshold_symbol.name, VariableDomain.Real)
     smt2interface.add_variable("safe", VariableDomain.Bool)
     smt2interface.add_variable("bad", VariableDomain.Bool)
 
-    symbols = list(ratfunc_parameters)
+    symbols = list(result.parameters)
     symbols.append(threshold_symbol)
 
     print(symbols)
@@ -67,13 +67,13 @@ if __name__ == "__main__":
         bad_relation = ">"
 
     threshold_pol = Poly(threshold_symbol, symbols)
-    tpol = threshold_pol.unify(ratfunc.nominator)
+    tpol = threshold_pol.unify(result.ratfunc.nominator)
     print(tpol)
-    ratfunc.nominator = Poly(ratfunc.nominator, symbols)
-    ratfunc.denominator = Poly(ratfunc.denominator, symbols)
-    print(ratfunc.nominator - threshold_pol * ratfunc.denominator)
-    safe_objective_constraint = Constraint(ratfunc.nominator - threshold_pol * ratfunc.denominator, safe_relation, symbols)
-    bad_objective_constraint = Constraint(ratfunc.nominator - threshold_pol * ratfunc.denominator, bad_relation , symbols)
+    result.ratfunc.nominator = Poly(result.ratfunc.nominator, symbols)
+    result.ratfunc.denominator = Poly(result.ratfunc.denominator, symbols)
+    print(result.ratfunc.nominator - threshold_pol * result.ratfunc.denominator)
+    safe_objective_constraint = Constraint(result.ratfunc.nominator - threshold_pol * result.ratfunc.denominator, safe_relation, symbols)
+    bad_objective_constraint = Constraint(result.ratfunc.nominator - threshold_pol * result.ratfunc.denominator, bad_relation , symbols)
     threshold_value_constraint = Constraint(threshold_pol - threshold, "=", symbols)
 
     smt2interface.assert_guarded_constraint("safe", safe_objective_constraint)
@@ -83,13 +83,13 @@ if __name__ == "__main__":
     smt2interface.print_calls()
 
     (samples, parameters) = sampling.parse_samples_file(vars(cmdargs)["samples_file"])
-    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters), cmdargs.safe_above_threshold)
+    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(result.ratfunc, result.parameters), cmdargs.safe_above_threshold)
     while len(samples) < 60:
-        samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ratfunc, ratfunc_parameters), cmdargs.safe_above_threshold, use_filter = True)
+        samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(result.ratfunc, result.parameters), cmdargs.safe_above_threshold, use_filter = True)
 
     generator = None
     if cmdargs.planes:
-        generator = ConstraintPlanes(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, ratfunc)
+        generator = ConstraintPlanes(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     else:
-        generator = ConstraintRectangles(samples, ratfunc_parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, ratfunc)
+        generator = ConstraintRectangles(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     generator.generate_constraints()

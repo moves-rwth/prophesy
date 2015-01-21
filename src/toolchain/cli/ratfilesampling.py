@@ -7,9 +7,8 @@ thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
-
 import sampling
-from input.resultfile import parse_result_file
+from input.resultfile import read_pstorm_result
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Perform sampling based on a rational function.')
@@ -20,12 +19,12 @@ if __name__ == "__main__":
     cmdargs = parser.parse_args()
 
 
-    [parameters, wdconstraints, gpconstraints, ratfunc] = parse_result_file(vars(cmdargs)['rat_file'])
-    intervals = [(0.01, 0.99)] * len(parameters)
-    sampling_interface = sampling.RatFuncSampling(ratfunc, parameters)
-    print(parameters)
+    result = read_pstorm_result(vars(cmdargs)['rat_file'])
+    intervals = [(0.01, 0.99)] * len(result.parameters)
+    sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
+    print(result.parameters)
     samples = sampling_interface.perform_uniform_sampling(intervals, vars(cmdargs)['samplingnr'])
     print(samples)
 
     # samples = sampling.perform_sampling_by_rf(ratfunc, parameters, [(0.3, 0.3), (0.4, 0.4)])
-    sampling.write_samples_file([p.name for p in parameters], samples, vars(cmdargs)["samples_file"])
+    sampling.write_samples_file([p.name for p in result.parameters], samples, vars(cmdargs)["samples_file"])

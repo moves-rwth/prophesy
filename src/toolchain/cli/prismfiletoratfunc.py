@@ -2,6 +2,7 @@
 
 import sys
 import os
+from input.resultfile import write_pstorm_result
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
@@ -10,7 +11,6 @@ import argparse
 from input.prismfile import PrismFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.pstorm import ProphesyParametricModelChecker
-from input.resultfile import write_result_file
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Transform a prism file to a rational function.')
@@ -41,5 +41,5 @@ if __name__ == "__main__":
 
     print("Compute the rational function using " + tool.version())
     result = tool.get_rational_function(prism_file, vars(cmdargs)["pctl_file"])
-    write_result_file(result[0], result[1], result[2], result[3], vars(cmdargs)["result_file"])
+    write_pstorm_result(vars(cmdargs)["result_file"], result)
 

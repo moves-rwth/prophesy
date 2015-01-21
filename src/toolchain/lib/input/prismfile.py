@@ -3,6 +3,7 @@ import config
 import tempfile
 import shutil
 import os
+from util import ensure_dir_exists
 
 class PrismFile():
     def __init__(self, location):
@@ -24,7 +25,7 @@ class PrismFile():
         Does nothing if already a temporary copy"""
         if self.is_temp:
             return
-        self.is_temp = True
+        ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
         tmpfile = tempfile.mkstemp(suffix = ".pm", dir = config.CLI_INTERMEDIATE_FILES_DIR, text = True)
         try:
             shutil.copyfile(self.location, tmpfile[1])

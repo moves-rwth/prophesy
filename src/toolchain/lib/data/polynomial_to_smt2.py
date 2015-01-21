@@ -1,46 +1,34 @@
 from sympy.polys import Poly
 from sympy import Rational, Integer, Float
 
-def degree(t):
-    """ Returns the degree of the given term (as tuple ((exp_0, exp_1, ..., exp_k), coeff)."""
-    assert isinstance(t, tuple)
-    return sum(t[0])
+def print_term(term, variables):
+    """Prints ((v1=2,v2=3),c1) as (* c v1 v1  v2 v2 v2)"""
+    factors = []
+    for var, power in zip(variables,term[0]):
+        # repeat var power times
+        factors += [str(var)] * power
+    if term[1] > 1:
+        factors += term[1]
 
+    poly_str = " ".join(factors)
+    if len(factors) > 1:
+        poly_str = "(* " + poly_str + ")"
+    return poly_str
+
+def print_terms(terms, variables):
+    """Prints [t, t, t] as (+ t t t)"""
+    poly_str = " ".join(map(print_term, terms))
+    if len(terms) > 1:
+        poly_str = "(+ " + poly_str + ")"
+    else:
+        pass
+    return poly_str
 
 def smt2strPoly(p, variables):
     """Returns a string representation of the Poly p in prefix notation."""
     assert isinstance(p, Poly)
     print(variables)
-    poly_str = "(+"
-    poly_close_str = ")"
-    if p.terms().__len__() == 1:
-        poly_str = ""
-        poly_close_str = ""
-    for term in p.terms():
-        print("term {0}".format(term))
-        assert term[1] != 0
-        closing = ""
-        d = degree(term)
-        if d > 1:
-            poly_str += " (*"
-            closing = ")"
-            if term[1] != 1:
-                poly_str += " " + strNum(term[1])
-        elif d == 1:
-            if term[1] != 1:
-                poly_str += " (*"
-                closing = ")"
-                poly_str += " " + strNum(term[1])
-        else:
-            poly_str += " " + strNum(term[1])
-        i = 0
-        for power in term[0]:
-            assert i < variables.__len__()
-            for e in range(power):
-                    poly_str += " " + variables[i].__str__()
-            i = i + 1
-        poly_str += closing
-    poly_str += poly_close_str
+    poly_str = print_terms(p.terms())
     return poly_str
 
 def strNum(n):
@@ -48,12 +36,13 @@ def strNum(n):
     num_str = ""
     if n.is_integer:
         if n >= 0:
-            num_str = n.__str__()
+            num_str = str(n)
         else:
-            num_str = "(- " + abs(n).__str__() + ")"
+            num_str = "(- " + str(abs(n)) + ")"
     else:
+        (nom, den) = n.as_numer_denom()
         if n >= 0:
-            num_str = "(/ " + n.as_numer_denom()[0].__str__() + " " + n.as_numer_denom()[1].__str__() + ")"
+            num_str = "(/ " + str(nom) + " " + str(den) + ")"
         else:
-            num_str = "(/ (- " + abs(n.as_numer_denom()[0]).__str__() + ") " + abs(n.as_numer_denom()[1]).__str__() + ")"
+            num_str = "(/ (- " + abs(str(nom)) + ") " + abs(str(den)) + ")"
     return num_str

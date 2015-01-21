@@ -1,4 +1,6 @@
 class RationalFunction:
+    """Represents rational function, consisting of
+    a Poly nominator and Poly denominator"""
     evaluation_precision = 10
     def __init__(self, nominator, denominator):
         self.nominator = nominator

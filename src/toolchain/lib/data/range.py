@@ -13,6 +13,8 @@ class Range():
         return value_list
 
 def create_range_from_interval(interval, nr_samples):
+    """Given closed interval [l,h], generate nr_sample
+    steps in this interval"""
     assert(nr_samples > 1)
     assert(interval[0] <= interval[1])
     return Range(interval[0], interval[1], (interval[1] - interval[0]) / (nr_samples - 1))

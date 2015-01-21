@@ -1,8 +1,8 @@
 #
 # -*- coding: utf-8 -*-
 from sympy.polys.polytools import Poly
-from sympy.core.symbol import Symbol
 from data.polynomial_to_smt2 import smt2strPoly
+import sympy
 
 ##################################################################################################
 # Class representing a polynomial constraint.
@@ -28,21 +28,16 @@ class Constraint:
         self.symbols = syms
 
     @classmethod
-    def __from_str__(cls, string, variables):
+    def __from_str__(cls, string, symbols):
         assert isinstance(string, str)
-        assert isinstance(variables, set) or isinstance(variables, list)
-        variables = list(variables)
-        relations1 = [ rel for rel in Constraint.RELATIONS if rel.__len__() == 1 ]
-        relations2 = [ rel for rel in Constraint.RELATIONS if rel.__len__() == 2 ]
-        tokens = []
-        for rel in relations2:  # first try the longer relations to not distort the splits by relations1
+        assert isinstance(symbols, set) or isinstance(symbols, list)
+        symbols = list(symbols)
+        # Sort in reverse order of length, matching longest symbol first
+        rels = sorted(Constraint.RELATIONS, key=len, reverse=True)
+        for rel in rels:
             tokens = string.split(rel)
-            if tokens.__len__() == 2:
-                return cls(Poly(tokens[0] + "-" + tokens[1], variables), rel, variables)
-        for rel in relations1:
-            tokens = string.split(rel)
-            if tokens.__len__() == 2:
-                return cls(Poly(tokens[0] + "-" + tokens[1], variables), rel, variables)
+            if len(tokens) == 2:
+                return cls(Poly(tokens[0] + "-" + tokens[1], symbols), rel, symbols)
 
     def __eq__(self, other):
         if not isinstance(other, Constraint): return False
@@ -61,21 +56,19 @@ class Constraint:
             return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols) + " 0)"
 
     def subs(self, substitutions):
-        """ Performs the given list of substitutions on the polynomial of the constraint and adds all variables given by the substitutions to the new constraint. """
-        for substitution in substitutions:
-            if not self.symbols.__contains__(substitution[0]):
-                self.symbols += [substitution[0]]
+        """ Performs the given list of substitutions on the polynomial of the constraint and
+        adds all variables given by the substitutions to the new constraint. """
+        self.symbols += [substitution[0] for substitution in substitutions if not substitution[0] in self.symbols]
         constraint = Constraint(self.polynomial.subs(substitutions), self.relation, self.symbols)
         return constraint
 
-    def switchVariableNames(self, new_symbol_names):
-        """ Switches the names of the current variables by the names given, where new_symbol_names needs to have the same length as the current list of variables. """
-        assert new_symbol_names.__len__() == self.symbols.__len__()
-        for i in range(self.symbols.__len__()):
-            v = Symbol(new_symbol_names[i])
-            x = self.symbols[i]
-            self.symbols[i] = v
-            self.polynomial = Poly(self.polynomial.subs([(x, v)]), self.symbols)
-            assert isinstance(self.polynomial, Poly)
+    def switch_variable_names(self, new_symbol_names):
+        """ Switches the names of the current variables by the names given,
+        where new_symbol_names needs to have the same length as the current list of variables. """
+        assert len(new_symbol_names) == len(self.symbols)
+        new_symbols = sympy.symbols(new_symbol_names)
+        switch_list = zip(self.symbols, new_symbols)
+        self.symbols = new_symbols
+        self.polynomial = Poly(self.polynomial.subs(switch_list, simultaneous=True), self.symbols)
         return self
 
