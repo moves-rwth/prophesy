@@ -76,9 +76,9 @@ class ConstraintGeneration(object):
             print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
             i = i + 1
 
-    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], name="tmp", display=False, first=False):
+    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], name="tmp", display=False, first=False):
         # plot result
-        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines, additional_boxes_green, additional_boxes_red, additional_boxes_blue, os.path.join(self.plotdir, "{0}.pdf".format(name)), display)
+        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines_green, additional_lines_red, additional_lines_blue, additional_boxes_green, additional_boxes_red, additional_boxes_blue, os.path.join(self.plotdir, "{0}.pdf".format(name)), display)
         self.add_pdf(name, first)
 
     @abstractmethod
@@ -90,7 +90,7 @@ class ConstraintGeneration(object):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def finalize_step(self):
+    def finalize_step(self, new_constraints):
         raise NotImplementedError("Abstract parent method")
 
     def generate_constraints(self):
@@ -155,7 +155,7 @@ class ConstraintGeneration(object):
                         del self.samples[pt]
 
                 # update everything in the algorithm according to correct new area
-                self.finalize_step()
+                self.finalize_step(new_constraints)
 
             elif checkresult == smt.smt.Answer.sat:
                 model = self.smt2interface.get_model()

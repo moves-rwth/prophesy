@@ -12,6 +12,9 @@ class ConstraintPlanes(ConstraintGeneration):
         self.deg90 = 1/2 * np.pi;
         self.step_radius = -self.deg90/self.steps
 
+        self.safe_planes = []
+        self.unsafe_planes = []
+
         self.anchor_points = [np.array([0,0]), np.array([1,0]), np.array([1,1]), np.array([0,1])]
         self.best_orientation_vector = None
         self.best_dpt = 0
@@ -138,17 +141,49 @@ class ConstraintPlanes(ConstraintGeneration):
         else:
             return (num / denom) * vector_b + anchor_b
 
+    def remove_array(self, L, arr):
+        print("array: {0}".format(arr))
+        ind = 0
+        size = len(L)
+        while ind != size and not np.array_equal(L[ind],arr):
+            ind += 1
+        if ind != size:
+            L.pop(ind)
+        else:
+            raise ValueError('array not found in list.')
+
     def change_current_constraint(self):
         #TODO implement
         return
 
-    def finalize_step(self):
-        #TODO implement more
-        result_bounding = self.create_bounding_line(self.best_anchor, self.best_orientation_vector*self.best_dpt)
-        if result_bounding is not None:
-            (bound1, bound2) = result_bounding
-            print("bounding line: {0}, {1}".format(bound1, bound2))
-            self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "intermediate{0}".format(self.nr), display=False)
+    def finalize_step(self, new_constraints):
+        (best_bound1, best_bound2) = self.best_bounding
+
+        # update anchor points
+        self.anchor_points.append(best_bound1)
+        self.anchor_points.append(best_bound2)
+        self.remove_array(self.anchor_points, self.best_anchor)
+
+        # remove additonal anchor points already in area
+        print("anchor_points before: {0}".format(self.anchor_points))
+        for anchor in self.anchor_points:
+            fullfillsAllConstraints = True
+            for constraint in new_constraints:
+                if not self.is_point_fulfilling_constraint(anchor, self.parameters, constraint):
+                    fullfillsAllConstraints = False
+                    break;
+            if fullfillsAllConstraints:
+                print(self.best_anchor)
+                print(anchor)
+                self.remove_array(self.anchor_points, anchor)
+        print("anchor_points after: {0}".format(self.anchor_points))
+
+        if self.max_area_safe:
+            self.safe_planes.append(self.best_bounding)
+        else:
+            self.unsafe_planes.append(self.best_bounding)
+
+        self.plot_results(additional_lines_green = self.safe_planes, additional_lines_red= self.unsafe_planes, additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "intermediate{0}".format(self.nr), display=True)
 
     def next_constraint(self):
         # reset
@@ -176,8 +211,7 @@ class ConstraintPlanes(ConstraintGeneration):
                     continue
                 (bound1, bound2) = result_bounding
                 print("\t\tbounding line: {0}, {1}".format(bound1, bound2))
-                #self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
-                self.nr += 1
+                #self.plot_results(additional_lines_blue = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
                 # chooose best
                 if dpt > self.best_dpt:
                     self.best_orientation_vector = orientation_vector
@@ -195,7 +229,7 @@ class ConstraintPlanes(ConstraintGeneration):
         print("Best anchor: {0}".format(self.best_anchor))
         (best_bound1, best_bound2) = self.best_bounding
         print("Best bounds: {0}".format(self.best_bounding))
-        self.plot_results(additional_lines = [(best_bound1, best_bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
+        self.plot_results(additional_lines_blue = [(best_bound1, best_bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
 
         if (abs(best_bound1[0] - best_bound2[0]) < EPS):
             # vertical line
@@ -203,7 +237,10 @@ class ConstraintPlanes(ConstraintGeneration):
                 rel = "<"
             else:
                 rel = ">="
-            new_constraints =  [Constraint(Poly(self.parameters[0] - best_bound1, self.parameters), rel, self.parameters)]
+            print(self.parameters)
+            print(best_bound1)
+            print(rel)
+            new_constraints =  [Constraint(Poly(self.parameters[0] - best_bound1[0], self.parameters), rel, self.parameters)]
             print("line is described by x = {0}".format(best_bound1))
             print("constraint is x - {0} {1} 0".format(best_bound1, rel))
             return (new_constraints, self.max_size, self.max_area_safe)
@@ -227,6 +264,9 @@ class ConstraintPlanes(ConstraintGeneration):
             else:
                 rel = "<="
 
+            print(self.parameters)
+            print(best_bound1)
+            print(rel)
             new_constraints = [Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters)]
             print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
             print("constraint: {0}".format(new_constraints))
