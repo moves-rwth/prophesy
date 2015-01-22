@@ -23,6 +23,7 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_rad = None
         self.best_anchor = None
         self.best_bounding = None
+        self.all_constraints_neg = []
 
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
@@ -42,45 +43,31 @@ class ConstraintPlanes(ConstraintGeneration):
         # compute minimal/maximal safe/bad distances
         min_safe_dist = 1000
         min_bad_dist = 1000
-        max_safe_dist = 0
-        max_bad_dist = 0
 
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
         print("\t\torthogonal: {0}".format(orthogonal_vec))
 
         for k,v in safe_samples.items():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
-            weighted_dist = dist
-            #weighted_dist = np.dot(k - anchor_point, orientation_vector)
-            if abs(weighted_dist) < abs(min_safe_dist):
-                min_safe_dist = weighted_dist
-            if abs(weighted_dist) > abs(max_safe_dist):
-                max_safe_dist = weighted_dist
+            if abs(dist) < abs(min_safe_dist):
+                min_safe_dist = dist
         for k,v in bad_samples.items():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
-            weighted_dist = dist
-            #weighted_dist = np.dot(k - anchor_point, orientation_vector)
-            if abs(weighted_dist) < abs(min_bad_dist):
-                min_bad_dist = weighted_dist
-            if abs(weighted_dist) > abs(max_bad_dist):
-                max_bad_dist = weighted_dist
-
-        if abs(min_safe_dist) == abs(min_bad_dist):
-            return (True, 0)
-        elif abs(min_safe_dist) < abs(min_bad_dist):
-            safe = True
-        else: 
-            assert(abs(min_safe_dist) > abs(min_bad_dist))
-            safe = False
+            if abs(dist) < abs(min_bad_dist):
+                min_bad_dist = dist
 
         print("\t\tmin_safe_dist: {0}".format(min_safe_dist))
         print("\t\tmin_bad_dist: {0}".format(min_bad_dist))
 
-        if safe:
-            depth_pt = min_bad_dist
+        if abs(min_safe_dist) == abs(min_bad_dist):
+            return (True, 0)
+        elif abs(min_safe_dist) < abs(min_bad_dist):
+            # safe area
+            return (True, min_bad_dist)
         else:
-            depth_pt = min_safe_dist
-        return (safe, depth_pt)
+            # unsafe area
+            assert(abs(min_safe_dist) > abs(min_bad_dist))
+            return (False, min_safe_dist)
 
     def create_bounding_line(self, anchor, orientation_vector):
         # computes the bounding line orthogonal to the orientatation vector
@@ -235,15 +222,14 @@ class ConstraintPlanes(ConstraintGeneration):
             # vertical line
             if (self.best_orientation_vector[0] > 0):
                 rel = "<"
+                neg_rel = ">="
             else:
                 rel = ">="
-            print(self.parameters)
-            print(best_bound1)
-            print(rel)
-            new_constraints =  [Constraint(Poly(self.parameters[0] - best_bound1[0], self.parameters), rel, self.parameters)]
+                neg_rel = "<"
+            new_constraint =  Constraint(Poly(self.parameters[0] - best_bound1[0], self.parameters), rel, self.parameters)
+            new_constraint_neg = Constraint(Poly(self.parameters[0] - best_bound1[0], self.parameters), rel, self.parameters)
             print("line is described by x = {0}".format(best_bound1))
-            print("constraint is x - {0} {1} 0".format(best_bound1, rel))
-            return (new_constraints, self.max_size, self.max_area_safe)
+
         else:
             # asserted x2 != x1
             # slope m = (y2-y1) / (x2-x1)
@@ -258,16 +244,22 @@ class ConstraintPlanes(ConstraintGeneration):
             if (self.best_orientation_vector[0] > 0):
                 # part left of line is in constraint
                 rel = ">"
+                neg_rel = "<="
             elif abs(self.best_orientation_vector[0]) < EPS and self.best_orientation_vector[1] > 0:
                 # part below line is in constraint
                 rel = ">"
+                neg_rel = "<="
             else:
                 rel = "<="
+                neg_rel = ">"
 
-            print(self.parameters)
-            print(best_bound1)
-            print(rel)
-            new_constraints = [Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters)]
+            new_constraint = Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters)
+            new_constraint_neg = Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), neg_rel, self.parameters)
             print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
-            print("constraint: {0}".format(new_constraints))
-            return (new_constraints, self.max_size, self.max_area_safe)
+
+        # new constraints + negation of previous constraints
+        print("constraint: {0}".format(new_constraint))
+        new_constraint_list = self.all_constraints_neg.copy()
+        new_constraint_list.append(new_constraint)
+        self.all_constraints_neg.append(new_constraint_neg)
+        return (new_constraint_list, self.max_size, self.max_area_safe)
