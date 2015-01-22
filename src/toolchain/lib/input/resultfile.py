@@ -44,8 +44,8 @@ def read_pstorm_result(location):
 
     # Build parameters
     print("Reading parameters...")
-    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(", ")
-    parameters = [ Symbol(name.rstrip()) for name in parameter_strings ]
+    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(",")
+    parameters = [ Symbol(name.strip()) for name in parameter_strings if name.strip() ]
 
     # Build well-defined constraints
     print("Reading constraints...")

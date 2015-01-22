@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 #needed for pdf merging for debugging
 from subprocess import call
 from config import PLOT_FILES_DIR, EPS
+from util import ensure_dir_exists
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -16,6 +17,7 @@ class ConstraintGeneration(object):
         if len(parameters) != 2:
             raise NotImplementedError
 
+        ensure_dir_exists(PLOT_FILES_DIR)
         self.plotdir = tempfile.mkdtemp(dir=PLOT_FILES_DIR)
         self.result_file = str(os.path.join(self.plotdir, "result.pdf"))
         self.result_tmp_file = str(os.path.join(self.plotdir, "result_tmp.pdf"))
@@ -152,7 +154,7 @@ class ConstraintGeneration(object):
                 model = self.smt2interface.get_model()
                 # add new point as counter example to existing constraints
                 modelPoint = tuple([model[p.name] for p in self.parameters])
-                self.samples[modelPoint] = self.ratfunc.evaluate(model.items())
+                self.samples[modelPoint] = self.ratfunc.subs(model.items()).evalf()
 
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 

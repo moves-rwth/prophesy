@@ -3,8 +3,8 @@
 import sys
 import os
 # import library. Using this instead of appends prevents naming clashes..
-sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 import sampling
@@ -23,8 +23,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')
 
     parser.add_argument('--rat-file', help = "file containing rational function", required = True)
-    parser.add_argument('--samples-file', help = 'file containing the sample points')
-    parser.add_argument('--constraint-file', help = 'the file in which the constraints are stored')
+    parser.add_argument('--samples-file', help = 'file containing the sample points', required = True)
+    parser.add_argument('--constraint-file', help = 'the file in which the constraints are stored', default = "constraints.out")
     parser.add_argument('--threshold', type = float, help = 'the threshold', required = True)
     group = parser.add_mutually_exclusive_group(required = True)
     group.add_argument('--safe-above-threshold', action = 'store_true', dest = "safe_above_threshold")
@@ -49,7 +49,6 @@ if __name__ == "__main__":
 
     threshold_symbol = Symbol("T")
     symbols = result.parameters + [threshold_symbol]
-    print(symbols)
 
     for p in result.parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
@@ -77,16 +76,19 @@ if __name__ == "__main__":
     smt2interface.assert_guarded_constraint("bad", bad_objective_constraint)
     smt2interface.assert_constraint(threshold_value_constraint)
 
+    print("Executed SMT commands:")
     smt2interface.print_calls()
-    
+
     print("Performing sample refinement")
-
     (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
-    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ext_ratfunc, result.parameters), cmdargs.safe_above_threshold)
-    while len(samples) < 60:
-        print('.', end="")
-        samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ext_ratfunc, result.parameters), cmdargs.safe_above_threshold, use_filter = True)
+    sampler = sampling.RatFuncSampling(ext_ratfunc, result.parameters)
+    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
+    while len(new_samples) < 60 and len(new_samples) != len(samples):
+        samples = new_samples
+        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
+    samples = new_samples
 
+    print("Generating constraints")
     generator = None
     if cmdargs.planes:
         generator = ConstraintPlanes(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)

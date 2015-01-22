@@ -1,8 +1,8 @@
 import subprocess
-
-import re
+import functools
 from config import TOOLNAME
 from smt.smt import SMTSolver, Answer, VariableDomain
+
 
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"
@@ -144,18 +144,16 @@ class SmtlibSolver(SMTSolver):
             if self.process.poll() != None:
                 break
             output += line.rstrip()
-            print(output)
             if output.count('(') == output.count(')'):
                 break
+        print("output::" , output)
         model = {}
-        modelValues = re.compile(r"\(define-fun\s+([\w|_]+)\s+\(\)\sReal.*?\(/\s(\d+(\.\d+)?)\s(\d+(\.\d+)?)\)\)", re.MULTILINE)
-        for match in modelValues.finditer(str(output)):
-            print(match.group(1))
-            print(match.group(2))
-            print(match.group(4))
-            model[match.group(1)] = float(match.group(2)) / float(match.group(4))
+        (_, model_cmds) = parse_smt_command(output)
+        for cmd in model_cmds:
+            (_, args) = parse_smt_command(cmd)
+            if args[2] == "Real":
+                model[args[0]] = parse_smt_expr(args[3])
         return model
-
 
     def from_file(self, path): raise NotImplementedError
 
@@ -164,4 +162,51 @@ class SmtlibSolver(SMTSolver):
     def print_calls(self):
         print(self.string)
 
+def parse_smt_expr(expr):
+    """Calculates given SMT expression "(OP ARG ARG)" as ARG OP ARG.
+    Expression may be of arbitrary arity"""
+    (cmd, args) = parse_smt_command(expr)
+    args = map(parse_smt_expr, args)
+    if cmd == "+":
+        return functools.reduce(lambda x, y: x+y, args, 0)
+    elif cmd == "-":
+        return functools.reduce(lambda x, y: x-y, args, 0)
+    elif cmd == "*":
+        return functools.reduce(lambda x, y: x*y, args, 1)
+    elif cmd == "/":
+        return functools.reduce(lambda x, y: x/y, args)
+    else:
+        return float(cmd)
 
+def parse_smt_command(command):
+    """Breaks the given SMT command "(CMD ARG ARG ARG)" into tuple (CMD, [ARG]),
+    where ARG again can be a (non-parsed) command"""
+    command = command.strip()
+    if command[0] != "(":
+        return (command, [])
+    command = command[1:-1].split(maxsplit=1)
+    if len(command) == 1:
+        return (command[0], [])
+    (command, arguments) = command
+    args = [""]
+    paren = 0
+    while len(arguments) > 0:
+        c = arguments[0]
+        arguments = arguments[1:]
+        if c == '(':
+            paren += 1
+        elif c == ')':
+            paren -= 1
+            if paren < 0:
+                raise RuntimeError("Unmatched closing brace in SMT output")
+        elif c == " ":
+            if paren == 0:
+                arguments = arguments.strip()
+                args.append("")
+                continue
+        args[-1] += c
+    if not args[-1]:
+        # Do not end with empty string
+        args = args[:-1]
+
+    return (command, args)
