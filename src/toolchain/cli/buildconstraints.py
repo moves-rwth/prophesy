@@ -2,10 +2,9 @@
 
 import sys
 import os
-from input.resultfile import read_pstorm_result
 # import library. Using this instead of appends prevents naming clashes..
-thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
+thisfilepath = os.path.dirname(os.path.realpath(__file__))
 
 import argparse
 import sampling
@@ -17,6 +16,8 @@ from smt.isat import IsatSolver
 from smt.smt import VariableDomain
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
+from input.resultfile import read_pstorm_result
+from data.rationalfunction import RationalFunction
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')
@@ -45,19 +46,16 @@ if __name__ == "__main__":
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     smt2interface.run()
+
     threshold_symbol = Symbol("T")
+    symbols = result.parameters + [threshold_symbol]
+    print(symbols)
 
     for p in result.parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
     smt2interface.add_variable(threshold_symbol.name, VariableDomain.Real)
     smt2interface.add_variable("safe", VariableDomain.Bool)
     smt2interface.add_variable("bad", VariableDomain.Bool)
-
-    symbols = list(result.parameters)
-    symbols.append(threshold_symbol)
-
-    print(symbols)
-
 
     if cmdargs.safe_above_threshold:
         safe_relation = ">="
@@ -69,11 +67,10 @@ if __name__ == "__main__":
     threshold_pol = Poly(threshold_symbol, symbols)
     tpol = threshold_pol.unify(result.ratfunc.nominator)
     print(tpol)
-    result.ratfunc.nominator = Poly(result.ratfunc.nominator, symbols)
-    result.ratfunc.denominator = Poly(result.ratfunc.denominator, symbols)
-    print(result.ratfunc.nominator - threshold_pol * result.ratfunc.denominator)
-    safe_objective_constraint = Constraint(result.ratfunc.nominator - threshold_pol * result.ratfunc.denominator, safe_relation, symbols)
-    bad_objective_constraint = Constraint(result.ratfunc.nominator - threshold_pol * result.ratfunc.denominator, bad_relation , symbols)
+    ext_ratfunc = RationalFunction(Poly(result.ratfunc.nominator, symbols), Poly(result.ratfunc.denominator, symbols))
+    print(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator)
+    safe_objective_constraint = Constraint(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator, safe_relation, symbols)
+    bad_objective_constraint = Constraint(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator, bad_relation , symbols)
     threshold_value_constraint = Constraint(threshold_pol - threshold, "=", symbols)
 
     smt2interface.assert_guarded_constraint("safe", safe_objective_constraint)
@@ -81,11 +78,14 @@ if __name__ == "__main__":
     smt2interface.assert_constraint(threshold_value_constraint)
 
     smt2interface.print_calls()
+    
+    print("Performing sample refinement")
 
-    (samples, parameters) = sampling.parse_samples_file(vars(cmdargs)["samples_file"])
-    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(result.ratfunc, result.parameters), cmdargs.safe_above_threshold)
+    (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
+    samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ext_ratfunc, result.parameters), cmdargs.safe_above_threshold)
     while len(samples) < 60:
-        samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(result.ratfunc, result.parameters), cmdargs.safe_above_threshold, use_filter = True)
+        print('.', end="")
+        samples = sampling.refine_sampling(samples, threshold, sampling.RatFuncSampling(ext_ratfunc, result.parameters), cmdargs.safe_above_threshold, use_filter = True)
 
     generator = None
     if cmdargs.planes:

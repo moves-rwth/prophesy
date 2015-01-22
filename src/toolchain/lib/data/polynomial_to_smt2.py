@@ -8,7 +8,7 @@ def print_term(term, variables):
         # repeat var power times
         factors += [str(var)] * power
     if term[1] > 1:
-        factors += term[1]
+        factors.append(str(term[1]))
 
     poly_str = " ".join(factors)
     if len(factors) > 1:
@@ -17,7 +17,7 @@ def print_term(term, variables):
 
 def print_terms(terms, variables):
     """Prints [t, t, t] as (+ t t t)"""
-    poly_str = " ".join(map(print_term, terms))
+    poly_str = " ".join([print_term(term, variables) for term in terms])
     if len(terms) > 1:
         poly_str = "(+ " + poly_str + ")"
     else:
@@ -27,8 +27,7 @@ def print_terms(terms, variables):
 def smt2strPoly(p, variables):
     """Returns a string representation of the Poly p in prefix notation."""
     assert isinstance(p, Poly)
-    print(variables)
-    poly_str = print_terms(p.terms())
+    poly_str = print_terms(p.terms(), variables)
     return poly_str
 
 def strNum(n):
