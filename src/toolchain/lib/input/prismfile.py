@@ -8,7 +8,8 @@ from util import ensure_dir_exists
 class PrismFile():
     def __init__(self, location):
         self.location = location
-        self.parameters = self._get_parameters()
+        self.parameters = []
+        self._get_parameters()
         self.is_temp = False
 
     def __del__(self):
@@ -26,13 +27,13 @@ class PrismFile():
         if self.is_temp:
             return
         ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
-        tmpfile = tempfile.mkstemp(suffix = ".pm", dir = config.CLI_INTERMEDIATE_FILES_DIR, text = True)
+        (_, tmpfile) = tempfile.mkstemp(suffix = ".pm", dir = config.CLI_INTERMEDIATE_FILES_DIR, text = True)
         try:
-            shutil.copyfile(self.location, tmpfile[1])
-            self.location = tmpfile[1]
+            shutil.copyfile(self.location, tmpfile)
+            self.location = tmpfile
             self.is_temp = True
         except:
-            os.unlink(tmpfile[1])
+            os.unlink(tmpfile)
             raise
 
     def replace_parameter_keyword(self, new_keyword):

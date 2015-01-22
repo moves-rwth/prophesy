@@ -41,4 +41,7 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
         resultfile = resultfile + ".out"
         paramResult = read_param_result(resultfile)
         os.unlink(resultfile)
+        # Param also generates a states and regions file, delete those too
+        os.unlink("states")
+        os.unlink("regions.tex")
         return paramResult

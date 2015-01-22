@@ -89,29 +89,33 @@ def write_pstorm_result(location, result):
 
 def read_param_result(location):
     with open(location) as f:
-        inputs = f.readlines()
+        inputs = [l.strip() for l in f.readlines()]
 
     # Build parameters
+    print("Reading parameters")
     parameter_strings = inputs[1][1:-1].split(", ")
-    print(parameter_strings)
+    parameters = [ Symbol(name.rstrip()) for name in parameter_strings ]
+    #print(parameter_strings)
+
+    print("Reading constraints")
     ranges = re.split(r"(?<=]) (?=\[)", inputs[2][1:-1])
     ranges = [r[1:-1].split(", ") for r in ranges]
-    print(ranges)
+    #print(ranges)
     if len(parameter_strings) != len(ranges):
         raise RuntimeError("Number of ranges does not match number of parameters")
-    pols = inputs[3].split(" / ")
-    if len(pols) > 2:
-        raise RuntimeError("Problems parsing param result file")
-    parameters = [ Symbol(name.rstrip()) for name in parameter_strings ]
-
     # Build well-defined constraints
     wdconstraints = []
     for (p, ran) in zip(parameters, ranges):
         wdconstraints.append(Constraint(Poly(p, [p]) - Poly(ran[0], [p]), ">=", [p]))
         wdconstraints.append(Constraint(Poly(p, [p]) - Poly(ran[1], [p]), "<=", [p]))
-    print(wdconstraints)
+    #print(wdconstraints)
 
+    print("Reading rational function")
+    pols = inputs[3].split(" / ")
+    if len(pols) > 2:
+        raise RuntimeError("Problems parsing param result file")
     # Build rational function
+    print("Parsing rational function")
     nominator = Poly(pols[0], parameters)
     if len(pols) == 2:
         denominator = Poly(pols[1], parameters)

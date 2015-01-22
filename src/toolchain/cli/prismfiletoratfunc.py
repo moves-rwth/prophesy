@@ -2,13 +2,13 @@
 
 import sys
 import os
-from input.resultfile import write_pstorm_result
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 from input.prismfile import PrismFile
+from input.resultfile import write_pstorm_result
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.pstorm import ProphesyParametricModelChecker
 
