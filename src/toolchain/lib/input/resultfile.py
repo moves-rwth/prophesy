@@ -6,17 +6,25 @@ from data.rationalfunction import RationalFunction
 
 class ParametricResult(object):
     """Wraps the results of pstorm and param
-    self.params: List of Symbol()
+    self.parameters: List of Symbol()
     self.wdconstraints: List of Constraint()
     self.gpconstraint: List of Constraint()
     self.ratfunc: Instance of RationalFunction"""
     def __init__(self, params, wdconstraints, gpconstraints, ratfunc):
-        self.params = params
+        self.parameters = params
         self.wdconstraints = wdconstraints
         self.gpconstraints = gpconstraints
         self.ratfunc = ratfunc
 
-def _find_nominator(self, string):
+    def __str__(self):
+        return "Parameters: {0}\nWell-formed Constraints:      {0}\nGraph-preserving Constraints: {0}\nResult: {0}\n".format(
+                ", ".join(map(str, self.parameters)),
+                "\n                             ".join(map(str, self.wdconstraints)),
+                "\n                             ".join(map(str, self.gpconstraints)),
+                self.ratfunc
+                )
+
+def _find_nominator(string):
     parenthesesCount = 0
     nominatorstring = ""
     for char in string:
@@ -35,10 +43,12 @@ def read_pstorm_result(location):
         inputstring = f.read()
 
     # Build parameters
+    print("Reading parameters...")
     parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(", ")
     parameters = [ Symbol(name.rstrip()) for name in parameter_strings ]
 
     # Build well-defined constraints
+    print("Reading constraints...")
     welldefined_constraintsString = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     welldefined_constraintsStrings = welldefined_constraintsString.split("\n")[:-1]
     wdconstraints = [ Constraint.__from_str__(cond, parameters) for cond in welldefined_constraintsStrings[1:] ]
@@ -52,23 +62,22 @@ def read_pstorm_result(location):
     gpconstraints = [ Constraint.__from_str__(cond, parameters) for cond in graphpreserving_constraintsStrings[1:] ]
 
     # Build rational function
+    print("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     resultingRatFunNom = _find_nominator(match)
-    print("nominator string {0}".format(resultingRatFunNom))
     match = match[len(resultingRatFunNom):]
     # print("Denominator match {0}".format(match))
     if len(match) > 1:
         resultingRatFunDen = match.split("/")[1]
-    print("denominator string {0}".format(resultingRatFunDen))
 
+    print("Building rational function...")
     nominator = Poly(resultingRatFunNom, parameters)
     denominator = Poly(1, parameters)
     if resultingRatFunDen != None:
         denominator = Poly(resultingRatFunDen, parameters)
-    print("nominator {0}".format(nominator))
-    print("denominator {0}".format(denominator))
     ratfunc = RationalFunction(nominator, denominator)
 
+    print("Parsing complete")
     return ParametricResult(parameters, wdconstraints, gpconstraints, ratfunc)
 
 def write_pstorm_result(location, result):

@@ -2,6 +2,8 @@ import re
 from math import hypot
 import math
 from data.range import create_range_from_interval
+import itertools
+from collections import OrderedDict
 
 class McSampling():
     def __init__(self, tool, prism_file, pctl_filepath):
@@ -31,33 +33,20 @@ class RatFuncSampling():
 
 
     def perform_uniform_sampling(self, intervals, samples_per_dimension):
-        ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
-        return _recursive_substitution(self.ratfunc, self.parameters, ranges, dict())
+        samples = {}
+        ranges = [create_range_from_interval(i, samples_per_dimension).values() for i in intervals]
+        all_points = itertools.product(*ranges)
+        for pt in all_points:
+            # Somehow sympy does not like zip, so generate a list
+            l = [i for i in zip(self.parameters, pt)]
+            samples[pt] = self.ratfunc.subs(l).evalf()
+        return OrderedDict(sorted(samples.items()))
 
     def perform_sampling(self, samplepoints):
-        samples = dict()
+        samples = {}
         for pt in samplepoints:
             samples[pt] = self.ratfunc.evaluate(zip(self.parameters, pt))
-        return samples
-
-
-def _recursive_substitution(rational_function, parameters, ranges, samples, point = None):
-    assert(len(parameters) == len(ranges))
-    if len(parameters) > 1:
-        for v in ranges[0].values():
-            if point == None:
-                pt = (v,)
-            else:
-                pt = point + (v,)
-            samples = _recursive_substitution(rational_function.substitute(parameters[0], v), parameters[1:], ranges[1:], samples, pt)
-    else:
-        for v in ranges[0].values():
-            res = rational_function.evaluate([[parameters[0], v]])
-            if point == None:
-                samples[(v,)] = res
-            else:
-                samples[point + (v,)] = res
-    return samples
+        return OrderedDict(sorted(samples.items()))
 
 def write_samples_file(parameters, samples_dict, path):
     with open(path, "w") as f:

@@ -18,13 +18,14 @@ if __name__ == "__main__":
     parser.add_argument('--samplingnr', type = int, help = 'number of samples per dimension', default = 4)
     cmdargs = parser.parse_args()
 
-
+    # Read previously generated result
     result = read_pstorm_result(vars(cmdargs)['rat_file'])
+    print(result)
+    # Generate sample points (uniform grid)
     intervals = [(0.01, 0.99)] * len(result.parameters)
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    print(result.parameters)
+    # Calculate probabilities at sample points, and write to disk
     samples = sampling_interface.perform_uniform_sampling(intervals, vars(cmdargs)['samplingnr'])
     print(samples)
-
     # samples = sampling.perform_sampling_by_rf(ratfunc, parameters, [(0.3, 0.3), (0.4, 0.4)])
     sampling.write_samples_file([p.name for p in result.parameters], samples, vars(cmdargs)["samples_file"])
