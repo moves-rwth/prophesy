@@ -19,6 +19,7 @@ class ConstraintPlanes(ConstraintGeneration):
         self.max_size = 0
         self.best_rad = None
         self.best_anchor = None
+        self.best_bounding = None
 
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
@@ -42,7 +43,7 @@ class ConstraintPlanes(ConstraintGeneration):
         max_bad_dist = 0
 
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
-        print(orthogonal_vec)
+        print("\t\torthogonal: {0}".format(orthogonal_vec))
 
         for k, v in safe_samples.items():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
@@ -83,18 +84,18 @@ class ConstraintPlanes(ConstraintGeneration):
         # returns two point composing the bounding line on borders
         # returns None if no intersection or intersections are out of borders
 
-        print("orientation: {0}".format(orientation_vector))
+        print("\t\torientation: {0}".format(orientation_vector))
         orthogonal_anchor = anchor + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
-        print("orthogonal anchor: {0}".format(orthogonal_anchor))
-        print("orthogonal vector: {0}".format(orthogonal_vec))
+        print("\t\torthogonal anchor: {0}".format(orthogonal_anchor))
+        print("\t\torthogonal vector: {0}".format(orthogonal_vec))
 
         # intersection with borders
-        down = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 0]), numpy.array([1, 0]))
-        left = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 0]), numpy.array([0, 1]))
-        top = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 1]), numpy.array([1, 0]))
-        right = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([1, 0]), numpy.array([0, 1]))
-        print("Borders: {0}, {1}, {2}, {3}".format(down, left, top, right))
+        down = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0,0]), numpy.array([1,0]))
+        left = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0,0]), numpy.array([0,1]))
+        top = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0,1]), numpy.array([1,0]))
+        right = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([1,0]), numpy.array([0,1]))
+        print("\t\tBorders: {0}, {1}, {2}, {3}".format(down, left, top, right))
         bounds = []
         if down is not None and self.is_valid(down):
             bounds.append(down)
@@ -157,6 +158,7 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_rad = None
         self.best_anchor = None
         self.max_size = 0
+        self.best_bounding = None
 
         for anchor in self.anchor_points:
             print("anchor: {0}".format(anchor))
@@ -173,8 +175,8 @@ class ConstraintPlanes(ConstraintGeneration):
                 if result_bounding is None:
                     continue
                 (bound1, bound2) = result_bounding
-                print("bounding line: {0}, {1}".format(bound1, bound2))
-                self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector * dpt)], name = "call{0}".format(self.nr), display = True, first = (self.nr == 1))
+                print("\t\tbounding line: {0}, {1}".format(bound1, bound2))
+                #self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
                 self.nr += 1
                 # choose best
                 if dpt > self.best_dpt:
@@ -183,33 +185,49 @@ class ConstraintPlanes(ConstraintGeneration):
                     self.max_area_safe = area_safe
                     self.best_rad = degree
                     self.best_anchor = anchor
-                    # TODO compute maximal size
+                    self.best_bounding = (bound1, bound2)
+                    #TODO compute maximal size
                     self.max_size = 0
 
-        print(self.best_orientation_vector)
-        print(self.best_dpt)
-        print(self.max_area_safe)
-        print(self.best_anchor)
+        print("Best orientation: {0}".format(self.best_orientation_vector))
+        print("Best distance: {0}".format(self.best_dpt))
+        print("Best area: {0}".format(self.max_area_safe))
+        print("Best anchor: {0}".format(self.best_anchor))
+        (best_bound1, best_bound2) = self.best_bounding
+        print("Best bounds: {0}".format(self.best_bounding))
+        self.plot_results(additional_lines = [(best_bound1, best_bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
 
-        if self.best_anchor[0] == 0:
-            rel = "<"
-        else:
-            rel = ">="
-
-        if self.best_orientation_vector.item(0) == 0:
-            new_constraints = [Constraint(Poly(self.parameters[1] - self.best_dpt, self.parameters), rel, self.parameters)]
+        if (abs(best_bound1[0] - best_bound2[0]) < EPS):
+            # vertical line
+            if (self.best_orientation_vector[0] > 0):
+                rel = "<"
+            else:
+                rel = ">="
+            new_constraints =  [Constraint(Poly(self.parameters[0] - best_bound1, self.parameters), rel, self.parameters)]
+            print("line is described by x = {0}".format(best_bound1))
+            print("constraint is x - {0} {1} 0".format(best_bound1, rel))
             return (new_constraints, self.max_size, self.max_area_safe)
-        elif self.best_orientation_vector.item(1) == 0:
-            new_constraints = [Constraint(Poly(self.parameters[0] - self.best_dpt, self.parameters), rel, self.parameters)]
-            return (new_constraints, self.max_size, self.max_area_safe)
         else:
-            b = self.best_dpt / numpy.cos(self.best_rad)
-            e = self.best_dpt / numpy.cos(self.deg90 - self.best_rad)
-            print(b)
-            print(e)
+            # asserted x2 != x1
+            # slope m = (y2-y1) / (x2-x1)
+            m = (best_bound2[1] - best_bound1[1]) / (best_bound2[0] - best_bound1[0])
+            # two-point form
+            #     y-y1 = m * (x-x1)
+            # <=> 0 = mx - mx1 - y + y1
+            # <=> 0 = mx - y + c with c = y1 - mx1
+            c = best_bound1[1] - m * best_bound1[0]
 
-            a = -b / e
-            print("constraint is {1}*x - {0}*y + {0}*{1} {2} 0".format(a, b, rel))
-            print("line is described by {0}x + {1} = 0".format(a, b))
-            new_constraints = [Constraint(Poly(b * self.parameters[0] - a * self.parameters[1] + a * b, self.parameters), rel, self.parameters)]
+            #TODO correct?
+            if (self.best_orientation_vector[0] > 0):
+                # part left of line is in constraint
+                rel = ">"
+            elif abs(self.best_orientation_vector[0]) < EPS and self.best_orientation_vector[1] > 0:
+                # part below line is in constraint
+                rel = ">"
+            else:
+                rel = "<="
+
+            new_constraints = [Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters)]
+            print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
+            print("constraint: {0}".format(new_constraints))
             return (new_constraints, self.max_size, self.max_area_safe)
