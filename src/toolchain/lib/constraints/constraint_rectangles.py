@@ -205,20 +205,13 @@ class ConstraintRectangles(ConstraintGeneration):
                     size = abs(point[0] - anchor_point[0]) * abs(point[1] - anchor_point[1])
                     if size > self.max_size and not break_attempt:
                         # check if nothing of other polarity is inbetween.
-                        if (value > self.threshold and self.safe_above_threshold) or (value <= self.threshold and not self.safe_above_threshold):
-                            safe_area = True
-                            for point2, value2 in self.bad_samples.items():
-                                if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
-                                    # bad sample in safe area
-                                    break_attempt = True
-                                    break
-                        else:
-                            safe_area = False
-                            for point2, value2 in self.safe_samples.items():
-                                if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
-                                    # safe sample in bad area
-                                    break_attempt = True
-                                    break
+                        safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
+                        other_points = self.bad_samples.items() if safe_area else self.safe_samples.items()
+                        for point2, value2 in other_points:
+                            if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
+                                # bad sample in safe area
+                                break_attempt = True
+                                break
 
                         if not break_attempt:
                             # can extend area
