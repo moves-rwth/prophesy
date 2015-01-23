@@ -1,7 +1,7 @@
 #
 # -*- coding: utf-8 -*-
 from sympy.polys.polytools import Poly
-from data.polynomial_to_smt2 import smt2strPoly
+from smt.polynomial_to_smt2 import smt2strPoly
 import sympy
 
 ##################################################################################################
@@ -41,7 +41,7 @@ class Constraint:
 
     def __eq__(self, other):
         if not isinstance(other, Constraint): return False
-        return self.__str__().__eq__(other.__str__())
+        return str(self) == str(other)
 
     def __str__(self):
         return str(self.polynomial)[5:].split(",")[0] + " " + self.relation + " 0"
@@ -50,7 +50,7 @@ class Constraint:
         return str(self.polynomial) + " " + self.relation + " 0"
 
     def __hash__(self):  # exclude identical constraints
-        return self.__str__().__hash__()
+        return hash(str(self))
 
     def to_smt2_string(self):
             return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols) + " 0)"

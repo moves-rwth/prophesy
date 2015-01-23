@@ -2,16 +2,16 @@
 import sys
 import os
 from input.comics import get_polynomials_from_comics_file
-from output.smt2 import smt2_to_file, call_smt_solver
 from symbol import parameters
 from buildconstraints import samples
 from util import ensure_dir_exists
+import tempfile
+from input.resultfile import read_param_result, read_pstorm_result
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
-from config import WEB_INTERMEDIATE_FILES_DIR, WEB_INTERFACE_DIR, TOOLNAME, \
-    WEBSESSIONS_DIR
+import config
 
 import bottle
 from bottle import request, route, hook, static_file, redirect, abort
@@ -19,10 +19,7 @@ import beaker.middleware
 import json
 
 import argparse
-from data.rationalfunction import RationalFunction
 import sampling
-
-RESULTFILES_DIR = os.path.join(WEB_INTERMEDIATE_FILES_DIR, "results/")
 
 @hook('before_request')
 def setup_request():
@@ -30,9 +27,22 @@ def setup_request():
     if 'threshold' not in request.session:
         request.session['threshold'] = 0.5
 
+def _json_error(message):
+    """Aborts the current request with the given message"""
+    abort(409, json.dumps({'status':'failed', 'reason':message}))
+
+def _json_ok(data = []):
+    """Returns JSON OK with formatted data"""
+    return json.dumps({'status':'ok', 'data':data})
+
+def _get_session(item, default = None):
+    if not item in request.session:
+        request.session[item] = default
+    return request.session[item]
+
 @route('/ui/<filepath:path>')
 def server_static(filepath):
-    return static_file(filepath, root = WEB_INTERFACE_DIR)
+    return static_file(filepath, root = config.WEB_INTERFACE_DIR)
 
 @route('/')
 def index():
@@ -40,59 +50,92 @@ def index():
 
 @route('/invalidateSession')
 def invalidateSession():
+    # Delete temporary files
+    result_files = _get_session('result_files', {})
+    for fname in result_files.values():
+        try:
+            os.unlink(fname)
+        except:
+            pass
     request.session.invalidate()
+    return _json_ok()
 
-@route('/uploadComicsResult', method = 'POST')
-def uploadComicsResult():
+@route('/uploadParamResult', method = 'POST')
+def uploadParamResult():
     upload = bottle.request.files.get('upload')
-#    name, ext = os.path.splitext(upload.filename)
-#    if ext not in ('.png','.jpg','.jpeg'):
-#        return 'File extension not allowed.'
 
-#    save_path = get_save_path_for_category(category)
-    save_path = os.path.join(RESULTFILES_DIR, upload.filename)
-    inputfile = open(save_path, 'wb')
-    inputfile.write(upload.file.read())
-    inputfile.close()
-    return 'OK'
+    result_files = _get_session('result_files', {})
+    results = _get_session('results', {})
+    
+    (_, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
+    with open(res_file, 'wb') as result_file:
+        result_file.write(upload.file.read())
 
+    try:
+        result = read_param_result(res_file)
+    except:
+        os.unlink(res_file)
+        _json_error("Unable to parse result file")
+
+    if upload.filename in result_files:
+        os.unlink(result_files[upload.filename])
+    result_files[upload.filename] = res_file
+    results[upload.filename] = result
+    request.session['current_result'] = result
+
+    return _json_ok({"file" : upload.filename})
+
+@route('/uploadStormResult', method = 'POST')
+def uploadStormResult():
+    upload = bottle.request.files.get('upload')
+
+    result_files = _get_session('result_files', {})
+    results = _get_session('results', {})
+    
+    (_, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
+    with open(res_file, 'wb') as result_file:
+        result_file.write(upload.file.read())
+
+    try:
+        result = read_pstorm_result(res_file)
+    except:
+        os.unlink(res_file)
+        _json_error("Unable to parse result file")
+
+    if upload.filename in result_files:
+        os.unlink(result_files[upload.filename])
+    result_files[upload.filename] = res_file
+    results[upload.filename] = result
+    request.session['current_result'] = result
+
+    return _json_ok({"file" : upload.filename})
 
 @route('/listAvailableResultFiles')
-def loadAvailableResults():
-    files = [f for f in os.listdir(RESULTFILES_DIR) if f.endswith('.pol')]
-    files.sort()
-    return json.dumps(files)
-
-@route('/loadComicsResult/<filename>')
-def loadComicsResult(filename):
-    filepath = os.path.join(RESULTFILES_DIR, filename)
-    [parameters, constraints, nominator, denominator] = get_polynomials_from_comics_file(filepath)
-
-    request.session['name'] = filename
-    request.session['constraints'] = constraints
-    request.session['parameters'] = parameters
-    request.session['ratfunc'] = RationalFunction(nominator, denominator)
-    request.session['samples'] = {}
-    print(str(request.session['ratfunc']))
-    return json.dumps([str(request.session['ratfunc'])])
+def listAvailableResults():
+    return _json_ok({"result_files" : _get_session('result_files', {})})
 
 @route('/setThreshold/<threshold:float>')
 def setThreshold(threshold):
     request.session['threshold'] = threshold
 
-@route('/showRationalFunction')
-def showRationalFunction():
-    if 'ratfunc' in request.session:
-        return json.dumps([str(request.session['ratfunc'])])
+@route('/getThreshold')
+def getThreshold():
+    return _json_ok({"threshold" : _get_session('threshold', {})})
+
+@route('/getCurrentResult')
+def getCurrentResult():
+    return _json_ok({"result" : _get_session('current_result', None)})
 
 @route('/manualCheckSamples', method = "POST")
 def manualCheckSamples():
     spots = bottle.request.json
+    if spots is None:
+        return json.dumps('fail')
     print(spots)
     if 'ratfunc' not in request.session:
-        return 'fail'
+        return json.dumps('fail')
     if 'parameters' not in request.session:
-        return 'fail'
+        return json.dumps('fail')
     ratfunc = request.session['ratfunc']
     parameters = request.session['parameters']
     samples = request.session.get('samples', {})
@@ -104,7 +147,13 @@ def manualCheckSamples():
 
     return json.dumps('ok')
 
-
+@route('/getSamples')
+def getSamples():
+    if 'samples' in request.session:
+        flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
+        return json.dumps(flattenedsamples)
+    else:
+        return json.dumps([])
 
 @route('/calculateSamples/<iterations:int>/<nrsamples:int>')
 def calculateSamples(iterations, nrsamples):
@@ -167,14 +216,6 @@ def checkConstraints():
         print(safe)
         print(bad)
 
-@route('/getSamples')
-def getSamples():
-    if 'samples' in request.session:
-        flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
-        return json.dumps(flattenedsamples)
-    else:
-        return json.dumps([])
-
 # strips trailing slashes from requests
 class StripPathMiddleware(object):
     def __init__(self, app):
@@ -185,19 +226,19 @@ class StripPathMiddleware(object):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Start a webservice for ' + TOOLNAME)
+    parser = argparse.ArgumentParser(description = 'Start a webservice for ' + config.TOOLNAME)
     parser.add_argument('--server-port', type = int, help = 'the port the server listens on', default = 4242)
     parser.add_argument('--server-host', help = "server host name", default = "localhost")
     parser.add_argument('--server-debug', type = bool, help = 'run the server in debug mode', default = True)
     parser.add_argument('--server-quiet', type = bool, help = 'run the server in quiet mode', default = False)
     cmdargs = parser.parse_args()
 
-    ensure_dir_exists(WEB_INTERMEDIATE_FILES_DIR)
-    ensure_dir_exists(RESULTFILES_DIR)
+    ensure_dir_exists(config.WEB_SESSIONS_DIR)
+    ensure_dir_exists(config.WEB_RESULTFILES_DIR)
 
     session_opts = {
         'session.type': 'file',
-        'session.data_dir': WEBSESSIONS_DIR,
+        'session.data_dir': config.WEB_SESSIONS_DIR,
         'session.auto': True,
     }
 
