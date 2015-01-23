@@ -1,3 +1,8 @@
+Requirements:
+- shapely (https://github.com/Toblerity/Shapely)
+    - needs geos
+    - then pip install shapely
+
 To run the web interface execute
 
 $ ./run_server.sh
