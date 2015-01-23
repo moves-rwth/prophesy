@@ -26,8 +26,8 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
 
         # create a temporary file for the result. Note: Param will create its own file
         # based on given prefix, so need to unlink twice
-        ensure_dir_exists(config.CLI_INTERMEDIATE_FILES_DIR)
-        (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.CLI_INTERMEDIATE_FILES_DIR, text = True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
+        (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
         os.unlink(resultfile)
 
         args = [self.location,

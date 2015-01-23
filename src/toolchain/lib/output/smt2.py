@@ -1,12 +1,12 @@
 import subprocess
 import re
 import os
-from config import TMP_DIR, Z3_COMMAND, SUPPORT
+from config import TMP_DIR, Z3_COMMAND, SUPPORT, INTERMEDIATE_FILES_DIR
 from sympy.polys.polytools import Poly
 from data.constraint import Constraint
 
 def __smt2_filepath_from_name(name):
-    path = os.path.join(INTERMEDIATE_FILES, SMT2_SUBDIR)
+    path = os.path.join(INTERMEDIATE_FILES_DIR)
     if not os.path.exists(path):
         os.makedirs(path)
     return os.path.join(path, name) + '.smt2'
