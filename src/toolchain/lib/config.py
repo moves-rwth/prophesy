@@ -12,10 +12,8 @@ thisfilepath =  os.path.dirname(os.path.realpath(__file__))
 # temporary directories, change if you want the files to reside elsewhere.
 TMP_DIR = os.path.join(thisfilepath, "../tmp/")
 WEBSESSIONS_DIR = os.path.join(TMP_DIR, "web/sessions/")
-WEB_INTERMEDIATE_FILES_DIR = os.path.join(TMP_DIR, "web/intermediate/")
-CLI_INTERMEDIATE_FILES_DIR = os.path.join(TMP_DIR, "cli/intermediate")
 INTERMEDIATE_FILES_DIR = os.path.join(TMP_DIR, "intermediate")
-PLOT_FILES_DIR = os.path.join(TMP_DIR, "cli/intermediate/plots")
+PLOT_FILES_DIR = os.path.join(TMP_DIR, "plots")
 
 
 # directory with webinterface

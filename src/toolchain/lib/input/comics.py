@@ -3,7 +3,6 @@ from sympy import Symbol
 from sympy.polys import Poly
 from data.constraint import Constraint
 
-
 def read_comics_file(input_path):
     inputfile = open(input_path)
     inputstring = inputfile.read()
@@ -11,7 +10,7 @@ def read_comics_file(input_path):
 
     parameters = re.findall('Parameters:\n(.*)', inputstring)[0].split(", ")
     print(parameters)
-    
+
     constraintsString = re.findall('Constraints:\n((.*?\n)*?)\n', inputstring)[0][0]
     constraintsStrings = constraintsString.split("\n")[:-1]
     print(constraintsStrings)
@@ -30,4 +29,4 @@ def get_polynomials_from_comics_file(path):
     denominator = Poly(1, parameters)
     if denominator_string != None:
         denominator = Poly(denominator_string, parameters)
-    return [parameters, constraints, nominator, denominator]  
+    return [parameters, constraints, nominator, denominator]
