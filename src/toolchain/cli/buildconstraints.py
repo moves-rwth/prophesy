@@ -87,6 +87,9 @@ if __name__ == "__main__":
         samples = new_samples
         new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
     samples = new_samples
+    
+    for pt, v in samples.items():
+        print(pt, v)
 
     print("Generating constraints")
     generator = None

@@ -1,12 +1,11 @@
 import pylab
 import numpy
 import sympy
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+from matplotlib import pyplot
+from matplotlib import patches
 from matplotlib.colors import ColorConverter
 
 class Plot(object):
-
     def __plot_constraints(self, parameters, region, color):
         for constraints in reversed(region):
             for c in constraints:
@@ -16,9 +15,9 @@ class Plot(object):
 
                 print(ys)
                 if c.relation == ">=" or c.relation == ">":
-                    plt.fill_between(numpy.array(xs,dtype=float), numpy.array(ys,dtype=float), 1, facecolor=color)
+                    pyplot.fill_between(numpy.array(xs,dtype=float), numpy.array(ys,dtype=float), 1, facecolor=color)
                 else:
-                    plt.fill_between(numpy.array(xs,dtype=float), 0, numpy.array(ys,dtype=float), facecolor=color)
+                    pyplot.fill_between(numpy.array(xs,dtype=float), 0, numpy.array(ys,dtype=float), facecolor=color)
                 pylab.ylim([0,1])
                 pylab.xlim([0,1])
 
@@ -26,6 +25,7 @@ class Plot(object):
     def plot_constraints(self, parameters, saferegion, badregion):
         self.__plot_constraints(parameters, saferegion, 'green')
         self.__plot_constraints(parameters, badregion, 'red')
+
 
     def __onselect(self, eclick, erelease):
         'eclick and erelease are matplotlib events at press and release'
@@ -42,10 +42,11 @@ class Plot(object):
             print (' RectangleSelector activated.')
             toggle_selector.RS.set_active(True)
 
+
     @staticmethod
     def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
         if len(parameters) == 2:
-            fig = plt.figure()
+            fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
             xValid = []
             yValid = []
@@ -81,25 +82,25 @@ class Plot(object):
                 point2 = line[1]
                 ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
             for box in additional_boxes_green:
-                p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
+                p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
                 ax1.add_patch(p)
             for box in additional_boxes_red:
-                p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#c11b17", 0.6), edgecolor="black", hatch="x")
+                p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#c11b17", 0.6), edgecolor="black", hatch="x")
                 ax1.add_patch(p)
             for box in additional_boxes_blue:
-                p = mpatches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
+                p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
                 ax1.add_patch(p)
             pylab.ylim([0,1])
             pylab.xlim([0,1])
             ax1.set_xlabel(str(parameters[0]))
             ax1.set_ylabel(str(parameters[1]))
             #__toggle_selector.RS = RectangleSelector(ax1, __onselect, drawtype='line')
-            #plt.connect('key_press_event', __toggle_selector)
+            #pyplot.connect('key_press_event', __toggle_selector)
             if path_to_save != None:
-                plt.savefig(path_to_save, format="PDF")
+                pyplot.savefig(path_to_save, format="PDF")
             if display:
-                plt.show()
-            plt.close(fig)
+                pyplot.show()
+            pyplot.close(fig)
 
 
     def plot_results_val(self, parameters, result):
@@ -113,10 +114,10 @@ class Plot(object):
                 y.append(key[1])
                 z.append(val)
 
-            cm = plt.get_cmap("RdYlGn")
+            cm = pyplot.get_cmap("RdYlGn")
             col = [cm(float(i)) for i in z]
-            plt.scatter(x,y,s=30,c=col,marker='o')
+            pyplot.scatter(x,y,s=30,c=col,marker='o')
             pylab.ylim([0,1])
             pylab.xlim([0,1])
-            plt.show()
+            pyplot.show()
 

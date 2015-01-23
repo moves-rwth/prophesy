@@ -11,6 +11,7 @@ from config import PLOT_FILES_DIR, EPS
 from util import ensure_dir_exists
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
+import shutil
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -19,10 +20,10 @@ class ConstraintGeneration(object):
         if len(parameters) != 2:
             raise NotImplementedError
 
-        ensure_dir_exists(PLOT_FILES_DIR)
-        self.plotdir = tempfile.mkdtemp(dir=PLOT_FILES_DIR)
-        self.result_file = str(os.path.join(self.plotdir, "result.pdf"))
-        self.result_tmp_file = str(os.path.join(self.plotdir, "result_tmp.pdf"))
+        self.plotdir = PLOT_FILES_DIR
+        ensure_dir_exists(self.plotdir)
+        (_, self.result_file) = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=self.plotdir)
+        self.first_pdf = True
         self.samples = samples.copy()
         self.safe_samples = None
         self.bad_samples = None
@@ -35,22 +36,29 @@ class ConstraintGeneration(object):
         self.ratfunc = _ratfunc
         self.nr = 0
 
-    def add_pdf(self, name, first):
-        # Adds pdf with name to result.pdf in tmp directory
-        # first indicates if resultfile exists already
-        if first:
-            call(["cp", str(os.path.join(self.plotdir, "{0}.pdf".format(name))), self.result_file])
+    def add_pdf(self, name):
+        """Adds pdf with name to result.pdf in tmp directory
+        first indicates if resultfile exists already"""
+        if self.first_pdf:
+            self.first_pdf = False
+            shutil.copyfile(name, self.result_file)
         else:
-            call(["pdfunite", self.result_file, str(os.path.join(self.plotdir, "{0}.pdf".format(name))), self.result_tmp_file])
-            call(["mv", self.result_tmp_file, self.result_file])
+            (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir=self.plotdir)
+            call(["pdfunite", self.result_file, name, result_tmp_file])
+            try:
+                shutil.move(result_tmp_file, self.result_file)
+            except:
+                os.unlink(result_tmp_file)
 
     @classmethod
-    def is_point_fulfilling_constraint(cls, pt, parameters, constraint):
+    def is_point_fulfilling_constraint(cls, pt, constraint):
+        """Check wether the given point is satisfied by the constraints
+        (i.e. is contained by it)"""
         pol = constraint.polynomial
-        evaluation = zip(parameters, pt)
+        parameters = constraint.symbols
+        evaluation = [e for e in zip(parameters, pt)]
 
-        for [variable, value] in evaluation:
-            pol = pol.subs(variable, value).evalf(EPS)
+        pol = pol.subs(evaluation).evalf(EPS)
 
         if constraint.relation == "=":
             return abs(pol) < EPS
@@ -78,25 +86,33 @@ class ConstraintGeneration(object):
             print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
             i = i + 1
 
-    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], name="tmp", display=False, first=False):
+    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], name="tmp", display=False):
         # plot result
-        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines, additional_boxes_green, additional_boxes_red, additional_boxes_blue, os.path.join(self.plotdir, "{0}.pdf".format(name)), display)
-        self.add_pdf(name, first)
+        (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir=self.plotdir)
+        Plot.plot_results(self.parameters, {p : v > self.threshold for p,v in self.samples.items()}, anchor_points, additional_arrows, additional_lines, additional_boxes_green, additional_boxes_red, additional_boxes_blue, result_tmp_file, display)
+        self.add_pdf(result_tmp_file)
+        os.unlink(result_tmp_file)
 
     @abstractmethod
     def next_constraint(self):
+        """Generate a new set of constraints ([constraints], area_size, area_safe),
+        where [constraints] is a list of Constraint, area_size indicated the area covered
+        and area_safe indicated whether the area should be determined safe (or not)"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
     def change_current_constraint(self):
+        """Update current set of constraints (see next_constraint), usually to avoid mem or time out"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
     def finalize_step(self):
+        """Final steps to execute after last call of next_constraint, usually plots things"""
         raise NotImplementedError("Abstract parent method")
 
     def generate_constraints(self):
-        constraint_available = True
+        """Iteratively generates new constraints, heuristically, attempting to
+        find the largest safe or unsafe area"""
         benchmark_output = []
 
         # initial constraints
@@ -104,9 +120,9 @@ class ConstraintGeneration(object):
         for param in self.parameters:
             # add constraints 0 <= param <= 1
             self.smt2interface.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
-            self.smt2interface.assert_constraint(Constraint(Poly(param - 1, self.parameters), ">=", self.parameters))
+            self.smt2interface.assert_constraint(Constraint(Poly(param - 1, self.parameters), "<=", self.parameters))
 
-        while constraint_available:
+        while True:
             self.nr += 1
 
             # split samples into safe and bad
@@ -117,7 +133,6 @@ class ConstraintGeneration(object):
             result_constraint = self.next_constraint()
             if (result_constraint is None):
                 # no new constraint available
-                constraint_available = False
                 break
 
             (new_constraints, area, area_safe) = result_constraint
@@ -136,23 +151,23 @@ class ConstraintGeneration(object):
                 checkresult = self.smt2interface.check()
                 duration = time.time() - start
                 print("Call took {0} seconds".format(duration))
+                self.smt2interface.pop()
                 benchmark_output.append((checkresult, duration, area))
                 if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
-                    self.smt2interface.pop()
                     # smt call not finished -> change constraint to make it better computable
-                    (new_constraints, area) = self.change_current_constraint()
+                    result_update = self.change_current_constraint()
+                    if result_update == None:
+                        break
+                    (new_constraints, area) = result_update
                 else:
                     smt_successful = True
                     break
 
             if checkresult == smt.smt.Answer.unsat:
                 # remove unnecessary samples which are covered already by constraints
-                for pt, v in list(self.samples.items()):
-                    fullfillsAllConstraints = True
-                    for constraint in new_constraints:
-                        if not self.is_point_fulfilling_constraint(pt, self.parameters, constraint):
-                            fullfillsAllConstraints = False
-                            break;
+                for pt in list(self.samples.keys()):
+                    fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(pt, constraint) for constraint in new_constraints])
+                    #TODO: Why delete, what if threshold changes?
                     if fullfillsAllConstraints:
                         del self.samples[pt]
 
@@ -171,13 +186,15 @@ class ConstraintGeneration(object):
                         modelPoint = modelPoint + (0.5,)
                         model[p.name] = 0.5
 
-                self.samples[modelPoint] = self.ratfunc.evaluate(model.items())
+                self.samples[modelPoint] = self.ratfunc.subs(model.items()).evalf()
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 
-            self.smt2interface.pop()
             self.print_benchmark_output(benchmark_output)
 
+        self.smt2interface.pop()
         self.smt2interface.stop()
         self.smt2interface.print_calls()
+
+        print("Generation complete, plot located at {0}".format(self.result_file))
 
         return

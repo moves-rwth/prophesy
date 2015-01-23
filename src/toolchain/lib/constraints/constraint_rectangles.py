@@ -123,7 +123,7 @@ class ConstraintRectangles(ConstraintGeneration):
 
         self.max_pt = (new_max_pt_x, new_max_pt_y)
         self.max_size = abs(self.best_anchor[0] - self.max_pt[0]) * abs(self.best_anchor[1] - self.max_pt[1])
-        new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, parameters)
+        new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
         return (new_constraints, self.max_size, self.max_area_safe)
 
     def finalize_step(self):

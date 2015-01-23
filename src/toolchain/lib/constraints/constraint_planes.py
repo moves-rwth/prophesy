@@ -108,9 +108,7 @@ class ConstraintPlanes(ConstraintGeneration):
         if len(bounds) != 2:
             return None
         else:
-            bound1 = bounds[0]
-            bound2 = bounds[1]
-            return (bound1, bound2)
+            return tuple(bounds)
 
     def is_valid(self, point):
         # checks if point is in rectangle [0,0] to [1,1]
@@ -140,7 +138,7 @@ class ConstraintPlanes(ConstraintGeneration):
 
     def change_current_constraint(self):
         # TODO implement
-        return
+        return None
 
     def finalize_step(self):
         # TODO implement more
@@ -148,7 +146,7 @@ class ConstraintPlanes(ConstraintGeneration):
         if result_bounding is not None:
             (bound1, bound2) = result_bounding
             print("bounding line: {0}, {1}".format(bound1, bound2))
-            self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector * self.best_dpt)], name = "intermediate{0}".format(self.nr), display = False)
+            self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector * self.best_dpt)], display = False)
 
     def next_constraint(self):
         # reset
@@ -159,6 +157,8 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_anchor = None
         self.max_size = 0
         self.best_bounding = None
+
+        #TODO: Remove used anchor points, and create new one at boundary intersections
 
         for anchor in self.anchor_points:
             print("anchor: {0}".format(anchor))
@@ -179,15 +179,23 @@ class ConstraintPlanes(ConstraintGeneration):
                 #self.plot_results(additional_lines = [(bound1, bound2)], additional_arrows = [(anchor, orientation_vector*dpt)], name = "call{0}".format(self.nr), display=False, first = (self.nr == 1))
                 self.nr += 1
                 # choose best
+                print("\t\tdpt, self_dpt: {0}, {1}".format(dpt, self.best_dpt))
                 if dpt > self.best_dpt:
                     self.best_orientation_vector = orientation_vector
                     self.best_dpt = dpt
                     self.max_area_safe = area_safe
                     self.best_rad = degree
                     self.best_anchor = anchor
-                    self.best_bounding = (bound1, bound2)
+                    self.best_bounding = result_bounding
                     #TODO compute maximal size
                     self.max_size = 0
+
+        #TODO: Clear list as to avoid infinite loops
+        self.anchor_points = []
+
+        if self.best_bounding is None:
+            # Everything safe or bad, no bounds found
+            return None
 
         print("Best orientation: {0}".format(self.best_orientation_vector))
         print("Best distance: {0}".format(self.best_dpt))
@@ -195,7 +203,7 @@ class ConstraintPlanes(ConstraintGeneration):
         print("Best anchor: {0}".format(self.best_anchor))
         (best_bound1, best_bound2) = self.best_bounding
         print("Best bounds: {0}".format(self.best_bounding))
-        self.plot_results(additional_lines = [(best_bound1, best_bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], name = "call{0}".format(self.nr), display=True, first = (self.nr == 1))
+        self.plot_results(additional_lines = [(best_bound1, best_bound2)], additional_arrows = [(self.best_anchor, self.best_orientation_vector*self.best_dpt)], display=True)
 
         if (abs(best_bound1[0] - best_bound2[0]) < EPS):
             # vertical line
