@@ -32,6 +32,7 @@ class ConstraintGeneration(object):
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
         self.nr = 0
+        self.all_constraints = []
 
     def add_pdf(self, name, first):
         # Adds pdf with name to result.pdf in tmp directory
@@ -97,13 +98,6 @@ class ConstraintGeneration(object):
         constraint_available = True
         benchmark_output = []
 
-        # initial constraints
-        self.smt2interface.push()
-        for param in self.parameters:
-            # add constraints 0 <= param <= 1
-            self.smt2interface.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
-            self.smt2interface.assert_constraint(Constraint(Poly(param - 1, self.parameters), ">=", self.parameters))
-
         while constraint_available:
             self.nr += 1
 
@@ -142,6 +136,9 @@ class ConstraintGeneration(object):
                 else:
                     smt_successful = True
                     break
+
+            # update list of all constraints
+            self.all_constraints.append(new_constraints)
 
             if checkresult == smt.smt.Answer.unsat:
                 # remove unnecessary samples which are covered already by constraints

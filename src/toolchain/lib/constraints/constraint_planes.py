@@ -45,7 +45,7 @@ class ConstraintPlanes(ConstraintGeneration):
         min_bad_dist = 1000
 
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
-        print("\t\torthogonal: {0}".format(orthogonal_vec))
+        #print("\t\torthogonal: {0}".format(orthogonal_vec))
 
         for k,v in safe_samples.items():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
@@ -56,8 +56,8 @@ class ConstraintPlanes(ConstraintGeneration):
             if abs(dist) < abs(min_bad_dist):
                 min_bad_dist = dist
 
-        print("\t\tmin_safe_dist: {0}".format(min_safe_dist))
-        print("\t\tmin_bad_dist: {0}".format(min_bad_dist))
+        #print("\t\tmin_safe_dist: {0}".format(min_safe_dist))
+        #print("\t\tmin_bad_dist: {0}".format(min_bad_dist))
 
         if abs(min_safe_dist) == abs(min_bad_dist):
             return (True, 0)
@@ -74,18 +74,18 @@ class ConstraintPlanes(ConstraintGeneration):
         # returns two point composing the bounding line on borders
         # returns None if no intersection or intersections are out of borders
 
-        print("\t\torientation: {0}".format(orientation_vector))
+        #print("\t\torientation: {0}".format(orientation_vector))
         orthogonal_anchor = anchor + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
-        print("\t\torthogonal anchor: {0}".format(orthogonal_anchor))
-        print("\t\torthogonal vector: {0}".format(orthogonal_vec))
+        #print("\t\torthogonal anchor: {0}".format(orthogonal_anchor))
+        #print("\t\torthogonal vector: {0}".format(orthogonal_vec))
 
         # intersection with borders
         down = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([0,0]), np.array([1,0]))
         left = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([0,0]), np.array([0,1]))
         top = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([0,1]), np.array([1,0]))
         right = self.get_intersection(orthogonal_anchor, orthogonal_vec, np.array([1,0]), np.array([0,1]))
-        print("\t\tBorders: {0}, {1}, {2}, {3}".format(down, left, top, right))
+        #print("\t\tBorders: {0}, {1}, {2}, {3}".format(down, left, top, right))
         bounds = []
         if down is not None and self.is_valid(down):
             bounds.append(down)
@@ -129,7 +129,6 @@ class ConstraintPlanes(ConstraintGeneration):
             return (num / denom) * vector_b + anchor_b
 
     def remove_array(self, L, arr):
-        print("array: {0}".format(arr))
         ind = 0
         size = len(L)
         while ind != size and not np.array_equal(L[ind],arr):
@@ -144,6 +143,7 @@ class ConstraintPlanes(ConstraintGeneration):
         return
 
     def finalize_step(self, new_constraints):
+        print("anchor_points before: {0}".format(self.anchor_points))
         (best_bound1, best_bound2) = self.best_bounding
 
         # update anchor points
@@ -152,7 +152,6 @@ class ConstraintPlanes(ConstraintGeneration):
         self.remove_array(self.anchor_points, self.best_anchor)
 
         # remove additonal anchor points already in area
-        print("anchor_points before: {0}".format(self.anchor_points))
         for anchor in self.anchor_points:
             fullfillsAllConstraints = True
             for constraint in new_constraints:
@@ -160,8 +159,6 @@ class ConstraintPlanes(ConstraintGeneration):
                     fullfillsAllConstraints = False
                     break;
             if fullfillsAllConstraints:
-                print(self.best_anchor)
-                print(anchor)
                 self.remove_array(self.anchor_points, anchor)
         print("anchor_points after: {0}".format(self.anchor_points))
 
