@@ -148,7 +148,11 @@ class SmtlibSolver(SMTSolver):
                 break
         print("output::" , output)
         model = {}
-        (_, model_cmds) = parse_smt_command(output)
+        (cmd, model_cmds) = parse_smt_command(output)
+        if cmd == "error":
+            print("Error occured in SMT evaluation, input:")
+            print(self.string)
+            raise RuntimeError("SMT Error")
         for cmd in model_cmds:
             (_, args) = parse_smt_command(cmd)
             if args[2] == "Real":

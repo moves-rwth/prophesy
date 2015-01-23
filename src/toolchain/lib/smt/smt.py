@@ -48,3 +48,10 @@ class SMTSolver():
 
     @abstractmethod
     def to_file(self, p): raise NotImplementedError
+
+    def __enter__(self):
+        self.push()
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.pop()

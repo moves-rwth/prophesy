@@ -138,30 +138,32 @@ class ConstraintGeneration(object):
             (new_constraints, area, area_safe) = result_constraint
 
             smt_successful = False
+            smt_model = None
             while not smt_successful:
                 # check constraint with smt
-                self.smt2interface.push()
-                for constraint in new_constraints:
-                    self.smt2interface.assert_constraint(constraint)
+                with self.smt2interface as smt_context:
+                    for constraint in new_constraints:
+                        smt_context.assert_constraint(constraint)
 
-                self.smt2interface.set_guard("safe", not area_safe)
-                self.smt2interface.set_guard("bad", area_safe)
-                print("Calling smt solver")
-                start = time.time()
-                checkresult = self.smt2interface.check()
-                duration = time.time() - start
-                print("Call took {0} seconds".format(duration))
-                self.smt2interface.pop()
-                benchmark_output.append((checkresult, duration, area))
-                if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
-                    # smt call not finished -> change constraint to make it better computable
-                    result_update = self.change_current_constraint()
-                    if result_update == None:
+                    smt_context.set_guard("safe", not area_safe)
+                    smt_context.set_guard("bad", area_safe)
+                    print("Calling smt solver")
+                    start = time.time()
+                    checkresult = smt_context.check()
+                    duration = time.time() - start
+                    print("Call took {0} seconds".format(duration))
+                    benchmark_output.append((checkresult, duration, area))
+                    if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
+                        # smt call not finished -> change constraint to make it better computable
+                        result_update = self.change_current_constraint()
+                        if result_update == None:
+                            break
+                        (new_constraints, area) = result_update
+                    else:
+                        smt_successful = True
+                        if checkresult == smt.smt.Answer.sat:
+                            smt_model = smt_context.get_model()
                         break
-                    (new_constraints, area) = result_update
-                else:
-                    smt_successful = True
-                    break
 
             if checkresult == smt.smt.Answer.unsat:
                 # remove unnecessary samples which are covered already by constraints
@@ -175,18 +177,17 @@ class ConstraintGeneration(object):
                 self.finalize_step()
 
             elif checkresult == smt.smt.Answer.sat:
-                model = self.smt2interface.get_model()
                 # add new point as counter example to existing constraints
                 modelPoint = ()
                 for p in self.parameters:
-                    if p.name in model:
-                        modelPoint = modelPoint + (model[p.name],)
+                    if p.name in smt_model:
+                        modelPoint = modelPoint + (smt_model[p.name],)
                     else:
                         # if parameter is undefined set as 0.5
                         modelPoint = modelPoint + (0.5,)
-                        model[p.name] = 0.5
+                        smt_model[p.name] = 0.5
 
-                self.samples[modelPoint] = self.ratfunc.subs(model.items()).evalf()
+                self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 
             self.print_benchmark_output(benchmark_output)

@@ -161,7 +161,7 @@ class ConstraintRectangles(ConstraintGeneration):
         else:
             self.unsafe_boxes.append((self.best_anchor, self.max_pt))
 
-        self.plot_results(self.anchor_points, additional_boxes_green = self.safe_boxes, additional_boxes_red = self.unsafe_boxes, name = "intermediate{0}".format(self.nr), display = False)
+        self.plot_results(self.anchor_points, additional_boxes_green = self.safe_boxes, additional_boxes_red = self.unsafe_boxes, display = False)
 
     def next_constraint(self):
         # computes next rectangle constraint
@@ -233,9 +233,9 @@ class ConstraintRectangles(ConstraintGeneration):
         if self.max_pt is not None and self.max_size > self.threshold_area:
             # plot result
             if self.max_area_safe:
-                self.plot_results(self.anchor_points, additional_boxes_green = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display = False, first = (self.nr == 1))
+                self.plot_results(self.anchor_points, additional_boxes_green = [(self.best_anchor, self.max_pt)], display = False)
             else:
-                self.plot_results(self.anchor_points, additional_boxes_red = [(self.best_anchor, self.max_pt)], name = "call{0}".format(self.nr), display = False, first = (self.nr == 1))
+                self.plot_results(self.anchor_points, additional_boxes_red = [(self.best_anchor, self.max_pt)], display = False)
             new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
             return (new_constraints, self.max_size, self.max_area_safe)
         else:
