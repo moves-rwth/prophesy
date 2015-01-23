@@ -44,7 +44,7 @@ class Plot(object):
 
 
     @staticmethod
-    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
+    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
         if len(parameters) == 2:
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
@@ -77,10 +77,20 @@ class Plot(object):
                 arrow_dx = numpy.float64(line[1][0])
                 arrow_dy = numpy.float64(line[1][1])
                 ax1.arrow(arrow_anchor_x, arrow_anchor_y, arrow_dx, arrow_dy, head_width=0.01, head_length=0.01, color='gray')
-            for line in additional_lines:
+
+            for line in additional_lines_green:
+                point1 = line[0]
+                point2 = line[1]
+                ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='green')
+            for line in additional_lines_red:
+                point1 = line[0]
+                point2 = line[1]
+                ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='red')
+            for line in additional_lines_blue:
                 point1 = line[0]
                 point2 = line[1]
                 ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
+
             for box in additional_boxes_green:
                 p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
                 ax1.add_patch(p)

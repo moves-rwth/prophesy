@@ -35,6 +35,7 @@ class ConstraintGeneration(object):
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
         self.nr = 0
+        self.all_constraints = []
 
     def add_pdf(self, name):
         """Adds pdf with name to result.pdf in tmp directory
@@ -86,10 +87,10 @@ class ConstraintGeneration(object):
             print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
             i = i + 1
 
-    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], name="tmp", display=False):
+    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], display=False, first=False):
         # plot result
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir=self.plotdir)
-        Plot.plot_results(self.parameters, {p : v > self.threshold for p,v in self.samples.items()}, anchor_points, additional_arrows, additional_lines, additional_boxes_green, additional_boxes_red, additional_boxes_blue, result_tmp_file, display)
+        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines_green, additional_lines_red, additional_lines_blue, additional_boxes_green, additional_boxes_red, additional_boxes_blue, result_tmp_file, display)
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
@@ -106,7 +107,7 @@ class ConstraintGeneration(object):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def finalize_step(self):
+    def finalize_step(self, new_constraints):
         """Final steps to execute after last call of next_constraint, usually plots things"""
         raise NotImplementedError("Abstract parent method")
 
@@ -165,6 +166,9 @@ class ConstraintGeneration(object):
                             smt_model = smt_context.get_model()
                         break
 
+            # update list of all constraints
+            self.all_constraints.append(new_constraints)
+
             if checkresult == smt.smt.Answer.unsat:
                 # remove unnecessary samples which are covered already by constraints
                 for pt in list(self.samples.keys()):
@@ -174,7 +178,7 @@ class ConstraintGeneration(object):
                         del self.samples[pt]
 
                 # update everything in the algorithm according to correct new area
-                self.finalize_step()
+                self.finalize_step(new_constraints)
 
             elif checkresult == smt.smt.Answer.sat:
                 # add new point as counter example to existing constraints

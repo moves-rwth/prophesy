@@ -126,7 +126,7 @@ class ConstraintRectangles(ConstraintGeneration):
         new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
         return (new_constraints, self.max_size, self.max_area_safe)
 
-    def finalize_step(self):
+    def finalize_step(self, new_constraints):
         # update anchor points for direction
         self.best_anchor_points_for_dir.append((self.max_pt[0], self.best_anchor[1]))
         self.best_anchor_points_for_dir.append((self.best_anchor[0], self.max_pt[1]))
