@@ -1,25 +1,22 @@
 #!/usr/bin/env python3
-import sys
 import os
-from input.comics import get_polynomials_from_comics_file
-from symbol import parameters
-from buildconstraints import samples
-from util import ensure_dir_exists
-import tempfile
-from input.resultfile import read_param_result, read_pstorm_result
+import sys
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
-import config
 
 import bottle
+import json
+import tempfile
+import argparse
+import config
+import sampling
 from bottle import request, route, hook, static_file, redirect, abort
 import beaker.middleware
-import json
-
-import argparse
-import sampling
+from symbol import parameters
+from util import ensure_dir_exists
+from input.resultfile import read_param_result, read_pstorm_result
 
 @hook('before_request')
 def setup_request():
@@ -117,6 +114,7 @@ def listAvailableResults():
 @route('/setThreshold/<threshold:float>')
 def setThreshold(threshold):
     request.session['threshold'] = threshold
+    return _json_ok({'threshold': threshold})
 
 @route('/getThreshold')
 def getThreshold():
@@ -145,44 +143,45 @@ def manualCheckSamples():
         samples[point] = value
     request.session['samples'] = samples
 
-    return json.dumps('ok')
+    return _json_ok()
 
 @route('/getSamples')
 def getSamples():
-    if 'samples' in request.session:
-        flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
-        return json.dumps(flattenedsamples)
-    else:
-        return json.dumps([])
+    flattenedsamples = [{"coordinate" : k, "value" : v} for k, v in _get_session('samples', {}).items()]
+    return _json_ok(flattenedsamples)
+
+@route('/addSample/<x:float>/<y:float>')
+def addSample(x, y):
+    result = _get_session('current_result', None)
+    if result is None:
+        _json_error("No active model loaded")
+    value = result.ratfunc.subs([i for i in zip(result.parameters, (x,y))]).evalf()
+    samples = _get_session('samples', {})
+    samples[(x,y)] = value
+    return _json_ok({"coordinate" : (x,y), "value" : value})
 
 @route('/calculateSamples/<iterations:int>/<nrsamples:int>')
 def calculateSamples(iterations, nrsamples):
+    if nrsamples < 2:
+        _json_error("Number of samples must be >= 2")
+    result = _get_session('current_result', None)
+    if result is None:
+        _json_error("No active model loaded")
+    threshold = _get_session('threshold', 0.5)
+    samples = _get_session('samples', {})
 
-    if 'ratfunc' not in request.session:
-        abort(409, 'rational function required')
-    if 'parameters' not in request.session:
-        abort(409, 'parameters required')
-    ratfunc = request.session['ratfunc']
-    print(ratfunc)
-    parameters = request.session['parameters']
-    print(parameters)
-    threshold = request.session['threshold']
-    sampling_interface = sampling.RatFuncSampling(ratfunc, parameters)
-    intervals = [(0.01, 0.99)] * len(parameters)
-    samples = request.session['samples']
-    unif_samples = sampling_interface.perform_uniform_sampling(intervals, 4)
+    intervals = [(0.01, 0.99)] * len(result.parameters)
+    sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
+    unif_samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
     for us, usv in unif_samples.items():
         samples[us] = usv
-    print('refine')
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface , True)
-    print('refine')
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
-    print('done')
+    samples = sampling.refine_sampling(unif_samples, threshold, sampling_interface , True)
+    for _ in range(iterations):
+        samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
+
     request.session['samples'] = samples
-    flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in samples.items()])
-    print(flattenedsamples)
-    return json.dumps(flattenedsamples)
+    flattenedsamples = [{"coordinate" : k, "value" : v} for k, v in _get_session('samples', {}).items()]
+    return _json_ok(flattenedsamples)
 
 @route('/checkConstraints', method = 'POST')
 def checkConstraints():
