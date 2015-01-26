@@ -17,12 +17,14 @@ WEB_RESULTFILES_DIR = os.path.join(TMP_DIR, "web/results")
 # directory with webinterface
 WEB_INTERFACE_DIR = os.path.join(thisfilepath, "../../webinterface/")
 
+TOOL_DIR = os.path.join(thisfilepath, "../../../benchmarkfiles/")
+
 # external tools
-Z3_COMMAND = "z3"
-SMTRAT_COMMAND = "smtrat"
-PARAMETRIC_STORM_COMMAND = "pstorm"
-PARAM_COMMAND = "param"
-PRISM_COMMAND = "prism"
+Z3_COMMAND = os.path.join(TOOL_DIR, "z3")
+SMTRAT_COMMAND = os.path.join(TOOL_DIR, "smtrat")
+PARAMETRIC_STORM_COMMAND = os.path.join(TOOL_DIR, "pstorm")
+PARAM_COMMAND = os.path.join(TOOL_DIR, "param")
+PRISM_COMMAND = os.path.join(TOOL_DIR, "prism")
 
 # epsilon for constraint generation
 EPS = 0.0001

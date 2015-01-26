@@ -1,5 +1,4 @@
-<!--<?xml version="1.0" encoding="iso-8859-1"?>-->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>Prophesy UI</title>
@@ -13,20 +12,18 @@
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
+    <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript">
     
     
-  var d1 = [[0,1],[1,2],[3,8],[5,4],[2,10],[1.2,9],[9,2],[46,41],[22,14],[20,12],[20,25],[7,5],[18,11],[31,20]];
+var d1 = [[0,1],[1,2],[3,8],[5,4],[2,10],[1.2,9],[9,2],[46,41],[22,14],[20,12],[20,25],[7,5],[18,11],[31,20]];
 var d2 = [[50,40],[24,36],[20,42],[33,41],[51,39],[11,28],[32,16],[38,40],[35,22],[41,30],[21,18]];
 var threshold = "0.5";
 
-var data = [];
-data.push([]);
-data.push([]);
+var safeData = [];
+var badData = [];
 var newSamples = [];
 var newConstraint = [];
-var plotpoints = [];
-
 
 var options = {
         axisLabels: {
@@ -74,31 +71,28 @@ var options = {
         }};
 
 function plotSamples(newConstraintFixed = false) {
-    plotpoints = [{label: "< " + threshold, data: data[0], points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
-                  {label: "> " + threshold, data: data[1], points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+    plotpoints = [{label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
+                  {label: "> " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: newConstraintFixed}, color: "black"}];
     $.plot("#placeholder", plotpoints, options);
 }
         
 function drawSamples() {
-
-
     function onDataReceived(series) {
-        data[0] = [];
-        data[1] = [];
+        safeData = [];
+        badData = [];
         $.each(series, function() {
             if(this.value < threshold)
             {
-                data[0].push(this.coordinates);
+                safeData.push(this.coordinates);
             }
             else
             {
-                data[1].push(this.coordinates);
+                badData.push(this.coordinates);
             }
         });
         plotSamples();
-
     };
 
     $.ajax({
@@ -107,47 +101,34 @@ function drawSamples() {
         dataType: "json",
         success: onDataReceived
     });
-} 
- 
+}
+
 $(document).ready(function() {
-    drawSamples();
-    
-    $.getJSON("../listAvailableResultFiles/", function(result) {
-        var availableFiles = $("#ratFiles");
-        $.each(result, function() {
-            availableFiles.append($("<option />").val(this).text(this));
+    // Install handler for tabs
+    $('.tab-links a').on('click', function(e)  {
+        var currentAttrValue = jQuery(this).attr('href');
+        jQuery(currentAttrValue).show().siblings().hide();
+        jQuery(this).parent('li').addClass('active').siblings().removeClass('active');
+        e.preventDefault();
+    });
+
+    $( "#drawSamples" ).click(drawSamples());
+
+    $( "#manualSamples" ).click(function() {
+        function onDataReceived(series) {
+            drawSamples();
+            newSamples = [];
+        };
+
+        $.ajax({
+            url: "../manualCheckSamples/",
+            type: "POST",
+            contentType: "application/json;charset=utf-8",
+            data: JSON.stringify(newSamples),
+            dataType: "json",
+            success: onDataReceived
         });
     });
-
-    
-    $.getJSON("../showRationalFunction/", function(result) {
-        $("#info_ratfunc").text(result);
-    });
-    
-
-    
-    
-    var alreadyFetched = {};
-
-  $( "#drawSamples" ).click(drawSamples());
-  $( "#manualSamples" ).click(function() {
-    function onDataReceived(series) {
-        drawSamples();
-        newSamples = [];
-        
-    };
-
-    $.ajax({
-        url: "../manualCheckSamples/",
-        type: "POST",
-        contentType: "application/json;charset=utf-8",
-        data: JSON.stringify(newSamples),
-        dataType: "json",
-        success: onDataReceived
-    });
-  });
-
-  
   
     $( "#fNewSamples" ).submit(function( event ) {
         event.preventDefault();
@@ -166,27 +147,15 @@ $(document).ready(function() {
                     }
         });
     });
-
-
-    $( "#fSelectRatFile" ).submit(function( event ) {
-        event.preventDefault();
-        filename = $("#ratFiles").val();
-        function onDataReceived(func) {
-            $("#info_ratfunc").text(func);
-            drawSamples();
+    $("#addSamples").change(function() {
+        if($("#addSamples:checked").length == 0) {
+            newSamples = [];
+            plotSamples();
+        } else {
+            $("#addConstraint").attr("checked", false);
         }
-        $.ajax({
-                    url: "/loadComicsResult/" + filename,
-                    type: "GET",
-                    dataType: "json",
-                    success: onDataReceived,
-                    fail: function(bla) {
-                        alert(bla);
-                    }
-        });
     });
-// 
-//         
+  
     $("#placeholder").bind("plothover", function (event, pos, item) {
 
         var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
@@ -283,6 +252,7 @@ $(document).ready(function() {
     });    
     
     $("#addConstraint").change(function() {
+        loadResult();
         if($("#addConstraint:checked").length == 0) {
             newConstraint = [];
             plotSamples();
@@ -291,31 +261,95 @@ $(document).ready(function() {
         }
     });
     
-    $("#addSamples").change(function() {
-        if($("#addSamples:checked").length == 0) {
-            newSamples = [];
-            plotSamples();
-        } else {
-            $("#addConstraint").attr("checked", false);
+
+
+
+
+    // Handler for upload of PRISM
+    $('#upload-prism').click(function(e){
+        function progressHandlingFunction(e){
+            if(e.lengthComputable){
+                $('#prism-progress').attr({value:e.loaded,max:e.total});
+            }
         }
+        var formData = new FormData($('#form-prism')[0]);
+        $.ajax({
+            url: '../uploadPrism',
+            type: 'POST',
+            xhr: function() {  // Custom XMLHttpRequest
+                var myXhr = $.ajaxSettings.xhr();
+                if(myXhr.upload){ // Check if upload property exists
+                    myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+                }
+                return myXhr;
+            },
+            //Ajax events
+            success: function() {alert('done');},
+            error: function() {alert('error');},
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+        getCurrentResult();
+        listAvailableResults();
+        e.preventDefault();
+    });
+
+    // Handler for upload of result
+    $('#upload-result').click(function(e){
+        function progressHandlingFunction(e){
+            if(e.lengthComputable){
+                $('#upload-progress').attr({value:e.loaded,max:e.total});
+            }
+        }
+        var formData = new FormData($('#form-result')[0]);
+        $.ajax({
+            url: '../uploadResult',
+            type: 'POST',
+            xhr: function() {  // Custom XMLHttpRequest
+                var myXhr = $.ajaxSettings.xhr();
+                if(myXhr.upload){ // Check if upload property exists
+                    myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+                }
+                return myXhr;
+            },
+            //Ajax events
+            success: function() {alert('done');},
+            error: function() {alert('error');},
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        }).fail(function(a, b, c) {print(a);});
+        getCurrentResult();
+        listAvailableResults();
+        e.preventDefault();
+    });
+
+    // Handler for changing active result
+    $('#select-result').click(function(e) {
+        result_name = $("#result-files").val();
+        setCurrentResult(result_name);
+        getCurrentResult();
     });
     
-    $('.cpheader').on("click", function() {
-            var divId = $( this ).closest("div").attr('id') + "Content";
-            
-            $("#" +  divId).toggle();
+    // Handler for change of settings
+    $("#thresholdSlider").on('change', function() {
+        threshold = $('#thresholdSlider').val()/1000;
+        $("#thresvalue").text(threshold);
+        setThreshold(threshold);
     });
     
-    
-    
-     $("#thresholdSlider").on('change', function() {
-        threshold = $('#thresholdSlider').val()/1000;        
-        drawSamples();
-     });
-//         
-//         //
-//         alert('change');
-//     });​
+    // Load initial settings
+    getCurrentResult();
+    listAvailableResults();
+    getThreshold();
+    drawSamples();
 });
 
 
@@ -326,100 +360,122 @@ $(document).ready(function() {
 <div id="header"><h1>Prophesy UI</h1></div>
 
 <div id="plotsurround">
-
-<div id="placeholder"></div>
-<span id="mousePos">Mouse position</span>
-<span>Threshold:</span>
-<input type="range" min="0" max="1000" value="500" id="thresholdSlider" />
+    <div id="placeholder"></div>
+    <span id="mousePos">(0.00, 0.00)</span>
 </div>
-
 
 <div id="controlpanel">
-    <h2>Control</h2>
-    <div id="rComics" class="cp"> 
-        <h3 class="cpheader">Run Model Checker</h3>
-        <div id="rComicsContent">
-        <form id="rTool">
-            <span>Path to prism file:</span>
-            <input id="prismfile" type="file" />
-            <span>Run with:</span>
-            <select id="mctool">
-                <option>comics</option>
-                <option selected="selected">Prophesy</option>
-                <option>param</option>
-                <option>prism</option>
-            </select><br/>
-            <input type="submit" value="Calculate" class="submit"/>
-        </form>
-        </div>
-    </div>
-    
-    <div id="dUploadRatFile"  class="cp">
-        <h3 class="cpheader">Upload result file</h3>
-        <div id="dUploadRatFileContent">
-        <form id="fUploadRatFile" action="../uploadComicsResult/"  method="post" enctype="multipart/form-data">
-            <span>Path to result file:</span><input id="ratfile" type="file" name="upload" />
-            <input type="submit" value="Submit" class="submit"/>
-        </form>
-        </div>
-    </div>
-    
-    <div id="dSelectRatFile" class="cp">
-        <h3 class="cpheader">Select result file</h3>
-        <div id=dSelectRatFileContent>
-        <form id="fSelectRatFile">
-            <select id="ratFiles">
+    <div id="input">
+        <h2>Input</h2>
+        <ul class="tab-links">
+            <li class="active" ><a href="#tab-prism">Upload Prism</a></li>
+            <li><a href="#tab-upload">Upload result</a></li>
+            <li><a href="#tab-select">Select result</a></li>
+        </ul>
+        <div class="tab-contents">
+            <div id="tab-prism" class="tab active cp">
+                <form id="form-prism">
+                    <span>Path to prism file:</span><input type="file" name="file" />
+                    <span>Path to PCTL file:</span><input type="file" name="pctl-file" />
+                    <br>
+                    <span>Run with:</span>
+                    <select name="mctool">
+                        <option selected="selected" value="pstorm">Prophesy</option>
+                        <option value="param">param</option>
+                        <!--<option>prism</option>-->
+                    </select>
+                    <br/>
+                    <span>Upload progress:</span><progress id="prism-progress" max="100" value="0"></progress>
+                    <input id="upload-prism" type="button" value="Upload" class="upload"/>
+                </form>
+            </div>
             
-            </select>
-            <input type="submit" value="Load"/>
-        </form>
+            <div id="tab-upload"  class="tab cp">
+                <form id="form-result">
+                    <span>Path to result file:</span><input type="file" name="file"/>
+                    <br>
+                    <select name="result-type">
+                        <option value="pstorm" selected="selected">pstorm</option>
+                        <option value="param">param</option>
+                    </select>
+                    <br/>
+                    <span>Upload progress:</span><progress id="result-progress" max="100" value="0"></progress>
+                    <input id="upload-result" type="button" value="Upload" class="upload"/>
+                </form>
+            </div>
+            
+            <div id="tab-select" class="tab cp">
+                <form id="form-select">
+                    <select id="result-files">
+                    </select>
+                    <input id="select-result" type="button" value="Load" class="upload"/>
+                </form>
+            </div>
         </div>
-    </div>
+    </div> <!-- Input -->
     
-    <div id="dNewSamples"  class="cp">
-        <h3 class="cpheader">New samples</h3>
-        <div id="dNewSamplesContent">
-        <h4>Manual Sampling</h4>
-        <label><input id="addSamples" type="checkbox" checked="checked"></input>Add samples by mouse clicks</label>
-        <button id="manualSamples" class="submit">Check New</button>
-        <h4>Auto Sampling</h4>
-        <form id="fNewSamples">
-            <span>Number of iterations:</span> <input id="iterations" type="text" value="2" /><br/>
-            <span>Sampling number:</span> <input id="sampling" type="text" value="2" />
-            <input type="submit" value="Go" class="submit" />
-        </form>
+    <div id="sampling">
+        <h2>Sampling</h2>
+        <ul class="tab-links">
+            <li class="active" ><a href="#tab-manual">Manual Sampling</a></li>
+            <li><a href="#tab-auto">Auto Sampling</a></li>
+        </ul>
+        <div class="tab-contents">
+            <div id="tab-manual" class="tab active cp">
+                <div id="dNewSamplesContent">
+                    <form id="fManualSamples"><label><input id="addSamples" type="checkbox" checked="checked">Add samples by mouse clicks</label>
+                    <button id="manualSamples" class="submit">Check New</button>
+                    </form>
+                </div>
+            </div>
+            <div id="tab-auto" class="tab cp">
+                <form id="fNewSamples">
+                    <span>Number of iterations:</span> <input id="iterations" type="text" value="2" /><br/>
+                    <span>Sampling number:</span> <input id="sampling" type="text" value="2" />
+                    <input type="submit" value="Go" class="submit" />
+                </form>
+            </div>
         </div>
-        <!--<button id="drawSamples">Draw</button></br>-->
-        
-    </div>    
+    </div> <!-- Sampling -->
     
-    <div id="dNewConstraints" class="cp">
-        <h3 class="cpheader">New constraints</h3>
-        <div id="dNewConstraintsContent">
-        <span>SMT Solver:</span><select id="smtsolver"><option selected="selected">SMT-RAT</option><option>Z3</option></select>
-        <h4>Manual Constraints</h4>
-        <label><input id="addConstraint" type="checkbox"></input>Add constraints by mouse clicks</label>
+    
+    <div id="constraints">
+        <h2>Constraints</h2>
+        <ul class="tab-links">
+            <li class="active" ><a href="#tab-constr-manual">Manual Constraints</a></li>
+            <li><a href="#tab-constr-auto">Auto Constraints</a></li>
+        </ul>
+        <div class="tab-contents">
+            <div id="tab-constr-manual" class="tab active cp">
+                <div id="dNewSamplesContent">
+                    <form id="fManualConstr"><label><input id="addConstraint" type="checkbox">Add constraints by mouse clicks</label>
         <button id="manualConstraints" class="submit">Check New</button>
-        <h4>Auto Constraints</h4>
-    </div>
+                    </form>
+                </div>
+            </div>
+            <div id="tab-constr-auto" class="tab cp">
+                <form id="fAutoConstr">
+                    
+                </form>
+            </div>
+        </div>
+    </div> <!-- Constraints -->
     
-</div>
+    <div id="settings">
+        <h2>Settings</h2>
+        <span>Threshold:</span>
+        <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.50</span>
+        <br>
+        <span>SMT Solver:</span>
+        <select id="smtsolver"><option selected="selected">SMT-RAT</option><option>Z3</option></select>
+    </div>
+</div> <!-- Control panel -->
 
 <div id="infopanel">
     <h2>Info</h2>
-    
     <h3>Rational Function</h3>
-    <div id="info_ratfunc">
-    </div>
-    
+    <div id="info_ratfunc">Not loaded</div>
 </div>
-
-
-<div id="settings">
-   <h2>Settings</h2>
-   
-</div>
-
 
 </body>
   

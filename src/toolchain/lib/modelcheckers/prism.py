@@ -8,7 +8,7 @@ from collections import OrderedDict
 from sampling import read_samples_file
 
 class PrismModelChecker(ProbablisticModelChecker):
-    def __init__(self, location):
+    def __init__(self, location = config.PRISM_COMMAND):
         self.location = location
 
     def name(self):

@@ -8,7 +8,7 @@ from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 from input.resultfile import read_pstorm_result
 
 class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
-    def __init__(self, location):
+    def __init__(self, location = config.PARAMETRIC_STORM_COMMAND):
         self.location = location
         self.bisimulation = BisimulationType.none;
 

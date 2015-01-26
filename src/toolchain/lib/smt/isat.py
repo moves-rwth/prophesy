@@ -8,7 +8,7 @@ def _constraint_to_isat(constraint):
     return str(constraint.polynomial)[5:].split(",")[0].replace("**", "^") + " " + constraint.relation + " 0"
 
 class IsatSolver(SMTSolver):
-    def __init__(self, location):
+    def __init__(self, location = config.SMTRAT_COMMAND):
         self.location = location
         self.declstack = [list()]
         self.constraintstack = [list()]

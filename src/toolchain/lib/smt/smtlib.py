@@ -1,8 +1,8 @@
 import subprocess
 import functools
+import config
 from config import TOOLNAME
 from smt.smt import SMTSolver, Answer, VariableDomain
-
 
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"
@@ -15,7 +15,7 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location, memout = 2000, timeout = 100):
+    def __init__(self, location = config.Z3_COMMAND, memout = 2000, timeout = 100):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None

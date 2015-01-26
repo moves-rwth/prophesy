@@ -7,35 +7,56 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 
 import bottle
-import json
 import tempfile
 import argparse
 import config
 import sampling
-from bottle import request, route, hook, static_file, redirect, abort
+from bottle import request, route, static_file, redirect
 import beaker.middleware
 from symbol import parameters
 from util import ensure_dir_exists
-from input.resultfile import read_param_result, read_pstorm_result
+from input.resultfile import read_param_result, read_pstorm_result, \
+    write_pstorm_result
+from input.prismfile import PrismFile
+from modelcheckers.param import ParamParametricModelChecker
+from modelcheckers.pstorm import ProphesyParametricModelChecker
 
-@hook('before_request')
-def setup_request():
-    request.session = request.environ['beaker.session']
-    if 'threshold' not in request.session:
-        request.session['threshold'] = 0.5
-
-def _json_error(message):
+def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
-    abort(409, json.dumps({'status':'failed', 'reason':message}))
+    from bottle import response
+    import json
+    # response.charset = 'UTF-8'
+    response.content_type = 'application/json; charset=UTF-8'
+    response.status = status
+    return json.dumps({'status':'failed', 'reason':message})
+    # abort(409, json.dumps({'status':'failed', 'reason':message}))
 
 def _json_ok(data = []):
     """Returns JSON OK with formatted data"""
+    from bottle import response
+    import json
+    # response.charset = 'UTF-8'
+    response.content_type = 'application/json; charset=UTF-8'
     return json.dumps({'status':'ok', 'data':data})
 
 def _get_session(item, default = None):
-    if not item in request.session:
-        request.session[item] = default
-    return request.session[item]
+    try:
+        # Attempt to access session, set-up if fails
+        rqsession = request.session
+    except:
+        rqsession = request.session = request.environ['beaker.session']
+    if not item in rqsession:
+        rqsession[item] = default
+    return rqsession[item]
+
+def _set_session(item, data):
+    try:
+        # Attempt to access session, set-up if fails
+        rqsession = request.session
+    except:
+        rqsession = request.session = request.environ['beaker.session']
+    rqsession[item] = data
+    return data
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -57,72 +78,121 @@ def invalidateSession():
     request.session.invalidate()
     return _json_ok()
 
-@route('/uploadParamResult', method = 'POST')
-def uploadParamResult():
-    upload = bottle.request.files.get('upload')
+@route('/uploadPrism', method = 'POST')
+def uploadPrism():
+    tool = bottle.request.forms.get('mctool')
+    upload_prism = bottle.request.files.get('file')
+    upload_pctl = bottle.request.files.get('pctl-file')
+    if tool not in ['pstorm', 'param'] or upload_prism is None or upload_pctl is None:
+        return _json_error("Invalid form POST'ed")
+
+    (_, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTFILES_DIR)
+    upload_prism.save(prism_path, overwrite = True)
+    prism_file = PrismFile(prism_path)
+
+    (_, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTFILES_DIR)
+    upload_pctl.save(pctl_path, overwrite = True)
+
+    if tool == "param":
+        prism_file.replace_parameter_keyword("param float")
+        tool = ParamParametricModelChecker()
+    elif tool == "pstorm":
+        tool = ProphesyParametricModelChecker()
+    else:
+        raise RuntimeError("No supported solver available")
+
+    result = tool.get_rational_function(prism_file, pctl_path)
+
+    os.unlink(pctl_path)
+    os.unlink(prism_path)
+
+    (_, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
+    write_pstorm_result(res_file, result)
 
     result_files = _get_session('result_files', {})
-    results = _get_session('results', {})
-    
-    (_, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
-    with open(res_file, 'wb') as result_file:
-        result_file.write(upload.file.read())
+
+    if upload_prism.filename in result_files:
+        os.unlink(result_files[upload_prism.filename])
+    result_files[upload_prism.filename] = res_file
+    _set_session('current_result', upload_prism.filename)
+
+    return _json_ok({"file" : upload_prism.filename})
+
+@route('/uploadResult', method = 'POST')
+def uploadResult():
+    tool = bottle.request.forms.get('result-type')
+    upload = bottle.request.files.get('file')
+    if tool not in ['pstorm', 'param'] or upload is None:
+        return _json_error("Invalid form POST'ed")
+
+    result_files = _get_session('result_files', {})
+
+    (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+    upload.save(res_file, overwrite = True)
 
     try:
-        result = read_param_result(res_file)
+        if tool == 'pstorm':
+            result = read_pstorm_result(res_file)
+        elif tool == 'param':
+            result = read_param_result(res_file)
+        else:
+            raise RuntimeError("Bad tool")
     except:
+        return _json_error("Unable to parse result file")
+    finally:
         os.unlink(res_file)
-        _json_error("Unable to parse result file")
+
+    # Write pstorm result as canonical
+    (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+    write_pstorm_result(res_file, result)
 
     if upload.filename in result_files:
         os.unlink(result_files[upload.filename])
     result_files[upload.filename] = res_file
-    results[upload.filename] = result
-    request.session['current_result'] = result
+    _set_session('current_result', upload.filename)
 
     return _json_ok({"file" : upload.filename})
 
-@route('/uploadStormResult', method = 'POST')
-def uploadStormResult():
-    upload = bottle.request.files.get('upload')
-
-    result_files = _get_session('result_files', {})
-    results = _get_session('results', {})
-    
-    (_, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
-    with open(res_file, 'wb') as result_file:
-        result_file.write(upload.file.read())
-
-    try:
-        result = read_pstorm_result(res_file)
-    except:
-        os.unlink(res_file)
-        _json_error("Unable to parse result file")
-
-    if upload.filename in result_files:
-        os.unlink(result_files[upload.filename])
-    result_files[upload.filename] = res_file
-    results[upload.filename] = result
-    request.session['current_result'] = result
-
-    return _json_ok({"file" : upload.filename})
-
-@route('/listAvailableResultFiles')
+@route('/listAvailableResults')
 def listAvailableResults():
-    return _json_ok({"result_files" : _get_session('result_files', {})})
+    return _json_ok({"results" : [k for k in _get_session('result_files', {}).keys()]})
 
 @route('/setThreshold/<threshold:float>')
 def setThreshold(threshold):
-    request.session['threshold'] = threshold
+    _set_session('threshold', threshold)
     return _json_ok({'threshold': threshold})
 
 @route('/getThreshold')
 def getThreshold():
-    return _json_ok({"threshold" : _get_session('threshold', {})})
+    return _json_ok({"threshold" : _get_session('threshold', 0.5)})
+
+@route('/getResultData/<name>')
+def getResultData(name):
+    result_files = _get_session('result_files', {})
+    if not name in result_files:
+        return _json_error("Result data not found", 404)
+    try:
+        result = read_pstorm_result(result_files[name])
+        print(result.ratfunc)
+        return _json_ok({"result_data" : str(result)})
+    except:
+        return _json_error("Error reading result data")
 
 @route('/getCurrentResult')
 def getCurrentResult():
-    return _json_ok({"result" : _get_session('current_result', None)})
+    name = _get_session('current_result', None)
+    if name is None:
+        return _json_error("No result loaded", 412)
+    return _json_ok({"result" : name})
+
+@route('/setCurrentResult/<name>')
+def setCurrentResult(name):
+    results = _get_session('result_files', {})
+    if name in results:
+        _set_session('current_result', name)
+        return _json_ok({"result" : name})
+
+    return _json_error("No result found", 404)
 
 @route('/manualCheckSamples', method = "POST")
 def manualCheckSamples():
@@ -154,19 +224,19 @@ def getSamples():
 def addSample(x, y):
     result = _get_session('current_result', None)
     if result is None:
-        _json_error("No active model loaded")
-    value = result.ratfunc.subs([i for i in zip(result.parameters, (x,y))]).evalf()
+        return _json_error("No active model loaded")
+    value = result.ratfunc.subs([i for i in zip(result.parameters, (x, y))]).evalf()
     samples = _get_session('samples', {})
-    samples[(x,y)] = value
-    return _json_ok({"coordinate" : (x,y), "value" : value})
+    samples[(x, y)] = value
+    return _json_ok({"coordinate" : (x, y), "value" : value})
 
 @route('/calculateSamples/<iterations:int>/<nrsamples:int>')
 def calculateSamples(iterations, nrsamples):
     if nrsamples < 2:
-        _json_error("Number of samples must be >= 2")
+        return _json_error("Number of samples must be >= 2")
     result = _get_session('current_result', None)
     if result is None:
-        _json_error("No active model loaded")
+        return _json_error("No active model loaded")
     threshold = _get_session('threshold', 0.5)
     samples = _get_session('samples', {})
 
@@ -239,6 +309,7 @@ if __name__ == "__main__":
         'session.type': 'file',
         'session.data_dir': config.WEB_SESSIONS_DIR,
         'session.auto': True,
+        'session.invalidate_corrupt':False
     }
 
     app = StripPathMiddleware(beaker.middleware.SessionMiddleware(bottle.app(), session_opts))
