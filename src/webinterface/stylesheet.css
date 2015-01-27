@@ -53,6 +53,11 @@ input[type=checkbox] {
     color: #eee;
 }
 
+#busy-indicator {
+    float: right;
+    display: none;
+}
+
 #infopanel {
     display:inline-block;
     width: 400px;

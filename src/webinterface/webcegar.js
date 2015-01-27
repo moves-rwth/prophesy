@@ -1,6 +1,7 @@
 var currentResult = "";
 
 function listAvailableResults() {
+    setBusy(true);
     $.getJSON("../listAvailableResults/", function(result) {
         if (result.status == "ok") {
             var availableFiles = $("#result-files");
@@ -16,11 +17,12 @@ function listAvailableResults() {
     }).fail(function(jqXHR) {
         //result = $.parseJSON(jqXHR.responseText);
         //alert("Ajax Failure: " + result.reason);
-    });
+    }).always(function() {setBusy(false);});
 }
 
 // Update display to show the active result information
 function getResultData(name) {
+    setBusy(true);
     function fail() {
         $("#info_ratfunc").text("Failed to retrieve data");
     };
@@ -35,10 +37,11 @@ function getResultData(name) {
         //result = $.parseJSON(jqXHR.responseText);
         //alert("Failed getting result data: " + result.reason);
         fail();
-    });
+    }).always(function() {setBusy(false);});
 }
 
 function getCurrentResult() {
+    setBusy(true);
     $.getJSON("../getCurrentResult/", function(result) {
         if (result.status != "ok") {
             currentResult = "";
@@ -48,10 +51,11 @@ function getCurrentResult() {
         }
     }).fail(function(jqXHR) {
         currentResult = "";
-    });
+    }).always(function() {setBusy(false);});
 }
 
 function setCurrentResult(file) {
+    setBusy(true);
     $.getJSON("../setCurrentResult/"+file, function(result) {
         if (result.status == "ok") {
             $("#info_ratfunc").text(result.data.result.ratfunc);
@@ -61,20 +65,32 @@ function setCurrentResult(file) {
         //result = $.parseJSON(jqXHR.responseText);
         //alert("Failed getting result data: " + result.reason);
         $("#info_ratfunc").text("Not loaded");
-    });
+    }).always(function() {setBusy(false);});
 }
 
 function getThreshold() {
+    setBusy(true);
     $.getJSON("../getThreshold/", function(result) {
         if (result.status == "ok") {
             threshold = result.data.threshold;
             $('#thresholdSlider').val(threshold*1000);
             $("#thresvalue").text(threshold);
         }
-    });
+    }).always(function() {setBusy(false);});
 }
 
 function setThreshold(threshold) {
-    $.getJSON("../setThreshold/"+threshold);
+    setBusy(true);
+    $.getJSON("../setThreshold/"+threshold)
+    .always(function() {setBusy(false);});
 }
 
+function getSamples() {
+    setBusy(true);
+    $.getJSON("../getSamples", function(result) {
+        if (result.status == "ok") {
+            readSamples(result.data);
+            plotSamples();
+        }
+    }).always(function() {setBusy(false);});
+}

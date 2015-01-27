@@ -7,23 +7,22 @@
 
     </style>
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
     <script language="javascript" type="text/javascript" src="constraints.js"></script>
-    <script language="javascript" type="text/javascript" src="jquery.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript">
-    
-    
-var d1 = [[0,1],[1,2],[3,8],[5,4],[2,10],[1.2,9],[9,2],[46,41],[22,14],[20,12],[20,25],[7,5],[18,11],[31,20]];
-var d2 = [[50,40],[24,36],[20,42],[33,41],[51,39],[11,28],[32,16],[38,40],[35,22],[41,30],[21,18]];
-var threshold = "0.5";
 
-var safeData = [];
-var badData = [];
+var threshold = "0.5";
+var samples = [];
+
 var newSamples = [];
 var newConstraint = [];
+
+var PlotMode = Object.freeze({SAMPLE: 1, CONSTRAINT: 2});
+var currentPlotMode = PlotMode.SAMPLE;
 
 var options = {
         axisLabels: {
@@ -70,37 +69,48 @@ var options = {
             position: "right"
         }};
 
+function setBusy(busy) {
+    if (busy) {
+        jQuery("#busy-indicator").show();
+    } else {
+        jQuery("#busy-indicator").hide();
+    }
+}
+        
 function plotSamples(newConstraintFixed = false) {
+    safeData = [];
+    badData = [];
+    for (var key in samples) {
+        var sample = samples[key];
+        pt = [sample[0], sample[1]];
+        if (sample[2] < threshold) {
+            safeData.push(pt)
+        } else {
+            badData.push(pt)
+        }
+    };
     plotpoints = [{label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
                   {label: "> " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: newConstraintFixed}, color: "black"}];
     $.plot("#placeholder", plotpoints, options);
 }
-        
-function drawSamples() {
-    function onDataReceived(series) {
-        safeData = [];
-        badData = [];
-        $.each(series, function() {
-            if(this.value < threshold)
-            {
-                safeData.push(this.coordinates);
-            }
-            else
-            {
-                badData.push(this.coordinates);
-            }
-        });
-        plotSamples();
-    };
 
-    $.ajax({
-        url: "../getSamples/",
-        type: "GET",
-        dataType: "json",
-        success: onDataReceived
-    });
+function readSamples(new_samples) {
+    samples = [];
+    for (var key in new_samples) {
+        var sample = new_samples[key];
+        samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
+    };
+}
+
+function writeSamples(samples) {
+    data = [];
+    for (var key in samples) {
+        var sample = samples[key];
+        data.push({'coordinate':sample, 'value':-1.0});
+    };
+    return data;
 }
 
 $(document).ready(function() {
@@ -112,48 +122,41 @@ $(document).ready(function() {
         e.preventDefault();
     });
 
-    $( "#drawSamples" ).click(drawSamples());
-
-    $( "#manualSamples" ).click(function() {
-        function onDataReceived(series) {
-            drawSamples();
-            newSamples = [];
-        };
-
-        $.ajax({
-            url: "../manualCheckSamples/",
-            type: "POST",
-            contentType: "application/json;charset=utf-8",
-            data: JSON.stringify(newSamples),
-            dataType: "json",
-            success: onDataReceived
-        });
-    });
-  
-    $( "#fNewSamples" ).submit(function( event ) {
+    $( "#form-samples-manual" ).submit(function( event ) {
         event.preventDefault();
+
+        $.ajax("../addSamples", {
+            type: 'POST',
+            data: JSON.stringify(newSamples),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function(result) {
+                    if (result.status == "ok") {
+                        //Clear samples
+                        samples = [];
+                        newSamples = [];
+                        readSamples(result.data);
+                        plotSamples();
+                    }
+                },
+            processData: false
+            });        
+    });
+    
+    $( "#form-samples-auto" ).submit(function( event ) {
+        event.preventDefault();
+
         iterations = $("#iterations").val();
         sampling = $("#sampling").val();
-        function onDataReceived(func) {
-            drawSamples();
-        }
-        $.ajax({
-                    url: "/calculateSamples/" + iterations + "/" + sampling,
-                    type: "GET",
-                    dataType: "json",
-                    success: onDataReceived,
-                    fail: function(bla) {
-                        alert(bla);
-                    }
+        $.getJSON("../generateSamples/" + iterations + "/" + sampling, function(result) {
+            if (result.status == "ok") {
+                //Clear samples
+                samples = [];
+                newSamples = [];
+                readSamples(result.data);
+                plotSamples();
+            }
         });
-    });
-    $("#addSamples").change(function() {
-        if($("#addSamples:checked").length == 0) {
-            newSamples = [];
-            plotSamples();
-        } else {
-            $("#addConstraint").attr("checked", false);
-        }
     });
   
     $("#placeholder").bind("plothover", function (event, pos, item) {
@@ -176,28 +179,25 @@ $(document).ready(function() {
     });
 
     $("#placeholder").bind("plotclick", function (event, pos, item) {
-        if ($("#addSamples:checked").length > 0) {
-            newSamples.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+        var pt = [pos.x.toFixed(2), pos.y.toFixed(2)];
+
+        if (currentPlotMode == PlotMode.SAMPLE) {
+            newSamples.push(pt);
             plotSamples();
-//         if (item) {
-//             $("#clickdata").text(" - click point " + item.dataIndex + " in " + item.series.label);
-//             plot.highlight(item.series, item.datapoint);
-            
-        } else if ($("#addConstraint:checked").length > 0) {
-            var p = [pos.x.toFixed(2), pos.y.toFixed(2)];
+        } else if (currentPlotMode == PlotMode.CONSTRAINT) {
             var n = newConstraint.length;
             if(n < 2)
             {
-                newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+                newConstraint.push(pt);
                 plotSamples(fullCircle);
             }
             else
             {
-                var t = sideOfLine(newConstraint[n-2], newConstraint[n-1], p);
+                var t = sideOfLine(newConstraint[n-2], newConstraint[n-1], pt);
                 // If it is on a line with the last points, just change line.
                 if(t == 0) 
                 {
-                    newConstraint[n-1] = p;
+                    newConstraint[n-1] = pt;
                     plotSamples();
                     return;
                 }
@@ -231,7 +231,7 @@ $(document).ready(function() {
                         }
                     }
                 }
-                newConstraint.push([pos.x.toFixed(2), pos.y.toFixed(2)]);
+                newConstraint.push(pt);
                 plotSamples(fullCircle);
                 
                 if(fullCircle) 
@@ -250,41 +250,33 @@ $(document).ready(function() {
             
         }
     });    
-    
-    $("#addConstraint").change(function() {
-        loadResult();
-        if($("#addConstraint:checked").length == 0) {
-            newConstraint = [];
-            plotSamples();
-        } else {
-            $("#addSamples").attr("checked", false);
+
+    $("#addSamples").change(function(e) {
+        if ($(this).prop('checked')) {
+            $("#addConstraint").prop('checked', false);
+            currentPlotMode = PlotMode.SAMPLE;
         }
     });
-    
-
-
-
+    $("#addConstraint").change(function(e) {
+        if ($(this).prop('checked')) {
+            $("#addSamples").prop('checked', false);
+            currentPlotMode = PlotMode.SAMPLE;
+        }
+    });
 
     // Handler for upload of PRISM
-    $('#upload-prism').click(function(e){
-        function progressHandlingFunction(e){
-            if(e.lengthComputable){
-                $('#prism-progress').attr({value:e.loaded,max:e.total});
-            }
-        }
-        var formData = new FormData($('#form-prism')[0]);
+    $('#form-prism').submit(function(event){
+        event.preventDefault();
+
+        var formData = new FormData($(this)[0]);
         $.ajax({
             url: '../uploadPrism',
             type: 'POST',
-            xhr: function() {  // Custom XMLHttpRequest
-                var myXhr = $.ajaxSettings.xhr();
-                if(myXhr.upload){ // Check if upload property exists
-                    myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
-                }
-                return myXhr;
-            },
             //Ajax events
-            success: function() {alert('done');},
+            success: function() {
+                getCurrentResult();
+                listAvailableResults();
+            },
             error: function() {alert('error');},
             // Form data
             data: formData,
@@ -293,31 +285,21 @@ $(document).ready(function() {
             contentType: false,
             processData: false
         });
-        getCurrentResult();
-        listAvailableResults();
-        e.preventDefault();
     });
 
     // Handler for upload of result
-    $('#upload-result').click(function(e){
-        function progressHandlingFunction(e){
-            if(e.lengthComputable){
-                $('#upload-progress').attr({value:e.loaded,max:e.total});
-            }
-        }
-        var formData = new FormData($('#form-result')[0]);
+    $('#form-result').submit(function(event){
+        event.preventDefault();
+
+        var formData = new FormData($(this)[0]);
         $.ajax({
             url: '../uploadResult',
             type: 'POST',
-            xhr: function() {  // Custom XMLHttpRequest
-                var myXhr = $.ajaxSettings.xhr();
-                if(myXhr.upload){ // Check if upload property exists
-                    myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
-                }
-                return myXhr;
-            },
             //Ajax events
-            success: function() {alert('done');},
+            success: function() {
+                getCurrentResult();
+                listAvailableResults();
+            },
             error: function() {alert('error');},
             // Form data
             data: formData,
@@ -325,17 +307,16 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false
-        }).fail(function(a, b, c) {print(a);});
-        getCurrentResult();
-        listAvailableResults();
-        e.preventDefault();
+        });
     });
 
     // Handler for changing active result
-    $('#select-result').click(function(e) {
+    $('form-select').submit(function(event) {
         result_name = $("#result-files").val();
         setCurrentResult(result_name);
         getCurrentResult();
+
+        event.preventDefault();
     });
     
     // Handler for change of settings
@@ -343,13 +324,17 @@ $(document).ready(function() {
         threshold = $('#thresholdSlider').val()/1000;
         $("#thresvalue").text(threshold);
         setThreshold(threshold);
+        plotSamples();
     });
+    
+    // Show the empty graph immediately
+    plotSamples();
     
     // Load initial settings
     getCurrentResult();
     listAvailableResults();
     getThreshold();
-    drawSamples();
+    getSamples();
 });
 
 
@@ -357,7 +342,7 @@ $(document).ready(function() {
 </head>
  
 <body>
-<div id="header"><h1>Prophesy UI</h1></div>
+<div id="header"><h1>Prophesy UI</h1><span id="busy-indicator">Working...</span></div>
 
 <div id="plotsurround">
     <div id="placeholder"></div>
@@ -385,8 +370,7 @@ $(document).ready(function() {
                         <!--<option>prism</option>-->
                     </select>
                     <br/>
-                    <span>Upload progress:</span><progress id="prism-progress" max="100" value="0"></progress>
-                    <input id="upload-prism" type="button" value="Upload" class="upload"/>
+                    <button id="upload-prism" type="submit" class="upload">Upload</button>
                 </form>
             </div>
             
@@ -399,8 +383,7 @@ $(document).ready(function() {
                         <option value="param">param</option>
                     </select>
                     <br/>
-                    <span>Upload progress:</span><progress id="result-progress" max="100" value="0"></progress>
-                    <input id="upload-result" type="button" value="Upload" class="upload"/>
+                    <button id="upload-result" type="submit" class="upload">Upload</button>
                 </form>
             </div>
             
@@ -408,13 +391,13 @@ $(document).ready(function() {
                 <form id="form-select">
                     <select id="result-files">
                     </select>
-                    <input id="select-result" type="button" value="Load" class="upload"/>
+                    <button id="select-result" type="submit" class="upload">Load</button>
                 </form>
             </div>
         </div>
     </div> <!-- Input -->
     
-    <div id="sampling">
+    <div id="samples">
         <h2>Sampling</h2>
         <ul class="tab-links">
             <li class="active" ><a href="#tab-manual">Manual Sampling</a></li>
@@ -423,20 +406,22 @@ $(document).ready(function() {
         <div class="tab-contents">
             <div id="tab-manual" class="tab active cp">
                 <div id="dNewSamplesContent">
-                    <form id="fManualSamples"><label><input id="addSamples" type="checkbox" checked="checked">Add samples by mouse clicks</label>
-                    <button id="manualSamples" class="submit">Check New</button>
+                    <form id="form-samples-manual">
+                    <label><input id="addSamples" type="radio" checked="checked">Add samples by mouse clicks</label>
+                    <button id="submit-samples" type="submit" class="upload">Check New</button>
                     </form>
                 </div>
             </div>
             <div id="tab-auto" class="tab cp">
-                <form id="fNewSamples">
-                    <span>Number of iterations:</span> <input id="iterations" type="text" value="2" /><br/>
-                    <span>Sampling number:</span> <input id="sampling" type="text" value="2" />
-                    <input type="submit" value="Go" class="submit" />
+                <form id="form-samples-auto">
+                    <label>Number of iterations:<input id="iterations" type="text" value="2"/></label>
+                    <br/>
+                    <label>Sampling number:<input id="sampling" type="text" value="2"/></label>
+                    <button id="generate-samples" type="submit" class="upload">Go</button>
                 </form>
             </div>
         </div>
-    </div> <!-- Sampling -->
+    </div> <!-- Samples -->
     
     
     <div id="constraints">
@@ -448,13 +433,14 @@ $(document).ready(function() {
         <div class="tab-contents">
             <div id="tab-constr-manual" class="tab active cp">
                 <div id="dNewSamplesContent">
-                    <form id="fManualConstr"><label><input id="addConstraint" type="checkbox">Add constraints by mouse clicks</label>
-        <button id="manualConstraints" class="submit">Check New</button>
+                    <form id="form-constraints-manual"><label>
+                    <input id="addConstraint" type="radio">Add constraints by mouse clicks</label>
+                    <button id="manualConstraints" class="submit">Check New</button>
                     </form>
                 </div>
             </div>
             <div id="tab-constr-auto" class="tab cp">
-                <form id="fAutoConstr">
+                <form id="form-constraints-auto">
                     
                 </form>
             </div>

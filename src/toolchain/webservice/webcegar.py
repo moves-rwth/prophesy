@@ -58,6 +58,19 @@ def _set_session(item, data):
     rqsession[item] = data
     return data
 
+def _getResultData(name):
+    result_files = _get_session('result_files', {})
+    if not name in result_files:
+        return None
+    try:
+        result = read_pstorm_result(result_files[name])
+        return result
+    except:
+        return None
+
+def _jsonSamples(samples):
+    return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x,y), v in samples.items()]
+
 @route('/ui/<filepath:path>')
 def server_static(filepath):
     return static_file(filepath, root = config.WEB_INTERFACE_DIR)
@@ -173,7 +186,6 @@ def getResultData(name):
         return _json_error("Result data not found", 404)
     try:
         result = read_pstorm_result(result_files[name])
-        print(result.ratfunc)
         return _json_ok({"result_data" : str(result)})
     except:
         return _json_error("Error reading result data")
@@ -194,69 +206,68 @@ def setCurrentResult(name):
 
     return _json_error("No result found", 404)
 
-@route('/manualCheckSamples', method = "POST")
-def manualCheckSamples():
-    spots = bottle.request.json
-    if spots is None:
-        return json.dumps('fail')
-    print(spots)
-    if 'ratfunc' not in request.session:
-        return json.dumps('fail')
-    if 'parameters' not in request.session:
-        return json.dumps('fail')
-    ratfunc = request.session['ratfunc']
-    parameters = request.session['parameters']
+@route('/addSamples', method = "POST")
+def addSamples():
+    coordinates = bottle.request.json
+    if coordinates is None:
+        return _json_error("Unable to read coordinates", 400)
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
     samples = request.session.get('samples', {})
-    for spot in spots:
-        value = ratfunc.evaluate(zip(parameters, [float(x) for x in spot]))
-        point = tuple([float(x) for x in spot])
+    for x, y in coordinates:
+        point = (float(x), float(y))
+        value = result.ratfunc.subs([x for x in zip(result.parameters, point)]).evalf()
         samples[point] = value
-    request.session['samples'] = samples
+    _set_session('samples', samples)
 
-    return _json_ok()
+    return _json_ok(_jsonSamples(samples))
 
 @route('/getSamples')
 def getSamples():
-    flattenedsamples = [{"coordinate" : k, "value" : v} for k, v in _get_session('samples', {}).items()]
+    flattenedsamples = _jsonSamples(_get_session('samples', {}))
     return _json_ok(flattenedsamples)
 
 @route('/addSample/<x:float>/<y:float>')
 def addSample(x, y):
-    result = _get_session('current_result', None)
+    result = _getResultData(_get_session('current_result', None))
     if result is None:
-        return _json_error("No active model loaded")
+        return _json_error("Unable to load result data", 500)
     value = result.ratfunc.subs([i for i in zip(result.parameters, (x, y))]).evalf()
     samples = _get_session('samples', {})
     samples[(x, y)] = value
-    return _json_ok({"coordinate" : (x, y), "value" : value})
+    return _json_ok(_jsonSamples(samples))
 
-@route('/calculateSamples/<iterations:int>/<nrsamples:int>')
-def calculateSamples(iterations, nrsamples):
+@route('/generateSamples/<iterations:int>/<nrsamples:int>')
+def generateSamples(iterations, nrsamples):
+    if iterations < 1:
+        return _json_error("Number of iterations must be >= 1", 400)
     if nrsamples < 2:
-        return _json_error("Number of samples must be >= 2")
-    result = _get_session('current_result', None)
-    if result is None:
-        return _json_error("No active model loaded")
+        return _json_error("Number of samples must be >= 2", 400)
     threshold = _get_session('threshold', 0.5)
-    samples = _get_session('samples', {})
+
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
 
     intervals = [(0.01, 0.99)] * len(result.parameters)
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    unif_samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
-    for us, usv in unif_samples.items():
-        samples[us] = usv
-    samples = sampling.refine_sampling(unif_samples, threshold, sampling_interface , True)
+    samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
+    samples = sampling.refine_sampling(samples, threshold, sampling_interface , True)
     for _ in range(iterations):
         samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
 
-    request.session['samples'] = samples
-    flattenedsamples = [{"coordinate" : k, "value" : v} for k, v in _get_session('samples', {}).items()]
-    return _json_ok(flattenedsamples)
+    _set_session('samples', samples)
+    return _json_ok(_jsonSamples(samples))
 
 @route('/checkConstraints', method = 'POST')
 def checkConstraints():
-    check = bottle.request.json
-    print(check)
+    coordinates = bottle.request.json
+    if coordinates is None:
+        return _json_error("Unable to read coordinates", 400)
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
 
     # export problem as smt2
     smt2_to_file(request.session['name'],
