@@ -69,7 +69,6 @@ class SmtlibSolver(SMTSolver):
                 print("returns sat")
                 return Answer.sat
             elif errstreamout == "(error \"out of memory\")":
-
                 print("MemOut")
                 self.stop()
                 self.run()
@@ -79,6 +78,7 @@ class SmtlibSolver(SMTSolver):
                 self.run()
                 return Answer.killed
             else:
+                print(self.string)
                 raise NotImplementedError
 
         self.stop()

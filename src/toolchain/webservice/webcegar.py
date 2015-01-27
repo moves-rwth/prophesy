@@ -13,13 +13,22 @@ import config
 import sampling
 from bottle import request, route, static_file, redirect
 import beaker.middleware
-from symbol import parameters
 from util import ensure_dir_exists
 from input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from input.prismfile import PrismFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.pstorm import ProphesyParametricModelChecker
+
+
+from constraints.convex_constraint import poly_constraint
+import smt
+from smt.smtlib import SmtlibSolver
+from sympy.core.symbol import Symbol
+from smt.smt import VariableDomain
+from sympy.polys.polytools import Poly
+from data.rationalfunction import RationalFunction
+from data.constraint import Constraint
 
 def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
@@ -69,7 +78,7 @@ def _getResultData(name):
         return None
 
 def _jsonSamples(samples):
-    return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x,y), v in samples.items()]
+    return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -240,8 +249,8 @@ def addSample(x, y):
 
 @route('/generateSamples/<iterations:int>/<nrsamples:int>')
 def generateSamples(iterations, nrsamples):
-    if iterations < 1:
-        return _json_error("Number of iterations must be >= 1", 400)
+    if iterations < 0:
+        return _json_error("Number of iterations must be >= 0", 400)
     if nrsamples < 2:
         return _json_error("Number of samples must be >= 2", 400)
     threshold = _get_session('threshold', 0.5)
@@ -253,7 +262,6 @@ def generateSamples(iterations, nrsamples):
     intervals = [(0.01, 0.99)] * len(result.parameters)
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
     samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface , True)
     for _ in range(iterations):
         samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
 
@@ -269,32 +277,72 @@ def checkConstraints():
     if result is None:
         return _json_error("Unable to load result data", 500)
 
-    # export problem as smt2
-    smt2_to_file(request.session['name'],
-                 request.session['parameters'],
-                 request.session['constraints'] + extra_constraints,
-                 request.session['ratfunc'],
-                 request.session['ratfunc'],
-                 request.session['threshold'],
-                 request.session['excluded_regions'],
-                 safity)
-    # call smt solver
-    (smtres, model) = call_smt_solver("z3", request.session['name'])
+    # TODO: should the constraint check for good or bad-ness?
+    is_bad = False
 
-    if smtres == "sat":
-        modelPoint = tuple([model[p.name] for p in parameters])
-        print(modelPoint)
-        samples[modelPoint] = ratfunc.evaluate(list(model.items()))
-        print(samples)
+    coordinates = [(float(x), float(y)) for x, y in coordinates]
+    coordinates = coordinates[:-1]
+
+    constraints = poly_constraint(coordinates, result.parameters)
+
+    ###############################
+    ###############################
+    # This part should be put away in a function
+    ###############################
+    smt2interface = SmtlibSolver()
+    smt2interface.run()
+
+    threshold = _get_session('threshold', 0.5)
+
+    for p in result.parameters:
+        smt2interface.add_variable(p.name, VariableDomain.Real)
+        smt2interface.assert_constraint(Constraint(Poly(p - 1.0), "<=", result.parameters))
+        smt2interface.assert_constraint(Constraint(Poly(p), ">=", result.parameters))
+
+    #TODO: allow flipped assertion?
+    safe_relation = "<="
+    bad_relation = ">"
+    safe_objective_constraint = Constraint(Poly(result.ratfunc.nominator / result.ratfunc.denominator - threshold), safe_relation, result.parameters)
+    bad_objective_constraint = Constraint(Poly(result.ratfunc.nominator / result.ratfunc.denominator - threshold), bad_relation , result.parameters)
+
+    smt2interface.add_variable("safe", VariableDomain.Bool)
+    smt2interface.add_variable("bad", VariableDomain.Bool)
+    smt2interface.assert_guarded_constraint("safe", safe_objective_constraint)
+    smt2interface.assert_guarded_constraint("bad", bad_objective_constraint)
+
+    ###############################
+    ###############################
+    ###############################
+
+    # check constraint with smt
+    smt_model = None
+    for constraint in constraints:
+        smt2interface.assert_constraint(constraint)
+
+    smt2interface.set_guard("safe", is_bad)
+    smt2interface.set_guard("bad", not is_bad)
+    print("Calling smt solver")
+    checkresult = smt2interface.check()
+    if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
+        return _json_error("Solver DNF", 500)
     else:
-        samples = remove_covered_samples(parameters, samples, extra_constraints)
-        if safity:
-            safe.append(extra_constraints)
-        else:
-            bad.append(extra_constraints)
-        excluded_regions.append(extra_constraints)
-        print(safe)
-        print(bad)
+        if checkresult == smt.smt.Answer.sat:
+            smt_model = smt2interface.get_model()
+
+    smt2interface.stop()
+
+    if checkresult == smt.smt.Answer.sat:
+        # add new point as counter example to existing constraints
+        # NOTE: What if value not set? Default 0,5? Error?
+        pt = tuple([smt_model[p.name] for p in result.parameters])
+        value = result.ratfunc.subs(smt_model.items()).evalf()
+        samples = _get_session('samples', {})
+        samples[pt] = value
+        return _json_ok({'result':'sat', 'cex':{'coordinate':pt, 'value':float(value)}})
+    elif checkresult == smt.smt.Answer.unsat:
+        return _json_ok({'result':'unsat'})
+    else:
+        return _json_error('Solver Error')
 
 # strips trailing slashes from requests
 class StripPathMiddleware(object):

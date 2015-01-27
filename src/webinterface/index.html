@@ -90,7 +90,7 @@ function plotSamples(newConstraintFixed = false) {
         }
     };
     plotpoints = [{label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
-                  {label: "> " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+                  {label: ">=" + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new", data: newSamples, points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: newConstraintFixed}, color: "black"}];
     $.plot("#placeholder", plotpoints, options);
@@ -120,43 +120,6 @@ $(document).ready(function() {
         jQuery(currentAttrValue).show().siblings().hide();
         jQuery(this).parent('li').addClass('active').siblings().removeClass('active');
         e.preventDefault();
-    });
-
-    $( "#form-samples-manual" ).submit(function( event ) {
-        event.preventDefault();
-
-        $.ajax("../addSamples", {
-            type: 'POST',
-            data: JSON.stringify(newSamples),
-            dataType: 'json',
-            contentType: 'application/json',
-            success: function(result) {
-                    if (result.status == "ok") {
-                        //Clear samples
-                        samples = [];
-                        newSamples = [];
-                        readSamples(result.data);
-                        plotSamples();
-                    }
-                },
-            processData: false
-            });        
-    });
-    
-    $( "#form-samples-auto" ).submit(function( event ) {
-        event.preventDefault();
-
-        iterations = $("#iterations").val();
-        sampling = $("#sampling").val();
-        $.getJSON("../generateSamples/" + iterations + "/" + sampling, function(result) {
-            if (result.status == "ok") {
-                //Clear samples
-                samples = [];
-                newSamples = [];
-                readSamples(result.data);
-                plotSamples();
-            }
-        });
     });
   
     $("#placeholder").bind("plothover", function (event, pos, item) {
@@ -224,7 +187,7 @@ $(document).ready(function() {
                     
                     for(i = 0; i < checkbound; i++)
                     {
-                        if(t != sideOfLine(newConstraint[n-2-i], newConstraint[n-1-i], p))
+                        if(t != sideOfLine(newConstraint[n-2-i], newConstraint[n-1-i], pt))
                         {
                             alert("Constrainted area should be convex");
                             return;
@@ -260,7 +223,7 @@ $(document).ready(function() {
     $("#addConstraint").change(function(e) {
         if ($(this).prop('checked')) {
             $("#addSamples").prop('checked', false);
-            currentPlotMode = PlotMode.SAMPLE;
+            currentPlotMode = PlotMode.CONSTRAINT;
         }
     });
 
@@ -319,12 +282,82 @@ $(document).ready(function() {
         event.preventDefault();
     });
     
+
+    $( "#form-samples-manual" ).submit(function( event ) {
+        event.preventDefault();
+
+        setBusy(true);
+        $.ajax("../addSamples", {
+            type: 'POST',
+            data: JSON.stringify(newSamples),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function(result) {
+                    if (result.status == "ok") {
+                        //Clear samples
+                        samples = [];
+                        newSamples = [];
+                        readSamples(result.data);
+                        plotSamples();
+                    }
+                },
+            processData: false
+            }).always(function() {setBusy(false);});     
+    });
+    
+    $( "#form-samples-auto" ).submit(function( event ) {
+        event.preventDefault();
+
+        iterations = $("#iterations").val();
+        sampling = $("#sampling").val();
+        setBusy(true);
+        $.getJSON("../generateSamples/" + iterations + "/" + sampling, function(result) {
+            if (result.status == "ok") {
+                //Clear samples
+                samples = [];
+                newSamples = [];
+                readSamples(result.data);
+                plotSamples();
+            }
+        }).always(function() {setBusy(false);});
+    });
+    
     // Handler for change of settings
     $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val()/1000;
         $("#thresvalue").text(threshold);
         setThreshold(threshold);
         plotSamples();
+    });
+
+    $( "#form-constraints-manual" ).submit(function( event ) {
+        event.preventDefault();
+        
+        setBusy(true);
+        $.ajax("../checkConstraints", {
+            type: 'POST',
+            data: JSON.stringify(newConstraint),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function(result) {
+                    if (result.status == "ok") {
+                        var status = result.data.result
+                        if (status == "sat") {
+                            // Counterexample
+                            sample = result.data.cex
+                            samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
+                        } else if (status == "unsat") {
+                            // Constraint OK
+                        }
+                        plotSamples();
+                    }
+                },
+            processData: false
+            }).always(function() {setBusy(false);});  
+    });
+    
+    $( "#form-constraints-auto" ).submit(function( event ) {
+        event.preventDefault();
     });
     
     // Show the empty graph immediately
