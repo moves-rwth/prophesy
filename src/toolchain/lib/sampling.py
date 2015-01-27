@@ -88,10 +88,10 @@ def near_sampling(samples, threshold, rectangles, limit = 0.1, added_dist = 0.05
 
 def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True, use_filter = False):
     if use_filter:
-        samples = filter_sampling(samples, threshold)
+        samples_tmp = filter_sampling(samples, threshold)
     else:
-        samples = samples.copy()
-    (safe_samples, bad_samples) = split_samples(samples, threshold, greaterEqualSafe)
+        samples_tmp = samples.copy()
+    (safe_samples, bad_samples) = split_samples(samples_tmp, threshold, greaterEqualSafe)
     samplenr = math.sqrt(len(samples))
     bd = 0.1
     epsilon = (1 - 2 * bd) / (samplenr - 1)
@@ -126,7 +126,7 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 # Check if p is not too close to any other existing sample point
                 skip = False
                 i = 0
-                for samplept in samples.keys():
+                for samplept in samples_tmp.keys():
                     d = _distance(samplept, p)
                     if d < 0.01:
                         skip = True
