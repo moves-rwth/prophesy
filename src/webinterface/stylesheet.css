@@ -5,8 +5,8 @@ body {
     font: 16px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
 }
 
-a { color: #069; }
-a:hover { color: #28b; }
+/*a { color: #069; }
+a:hover { color: #28b; }*/
 
 h2 {
     margin-top: 15px;
@@ -39,9 +39,20 @@ input[type=checkbox] {
 #header {
     position: relative;
     height: 80px;
-    background-color:#dd1020;
+    background-color:#cd0010;
     color: #eee;
     margin: 0px;
+}
+
+#header.busy {
+    animation: backgroundColor 2s linear infinite;
+}
+
+@keyframes backgroundColor
+{
+    0%   { background-color:#cd0010; }
+    50%  { background-color:#ff4050; }
+    100% { background-color:#cd0010; }
 }
 
 #header h1 {
@@ -78,11 +89,6 @@ input[type=checkbox] {
     min-height:800px;
 }
 
-.upload{
-    margin: 10px 0px 0px 10px;
-    width: 100px;
-}    
-
 .cp {
     background-color: #ddd;
     width: 420px;
@@ -98,66 +104,23 @@ input[type=checkbox] {
 
 #info_ratfunc {
     white-space: pre-wrap;
+    height: 700px;
+    overflow: auto;
 }
 
 .legend table {
     border-spacing: 5px;
 }
-/*----- Tab Links -----*/
-.tab-links:after {
-    display:block;
-    clear:both;
-    content:'';
-}
-.tab-links li {
-    margin-right:1ex;
-    float:left;
-    list-style:none;
-}  
-.tab-links a {
-    padding:9px 15px;
-    display:inline-block;
-    border-style: solid solid none solid;
-    border-width:1px;
-    border-color: #000;
-    font-size:16px;
-    font-weight:600;
-    color:#4c4c4c;
-    transition:all linear 0.15s;
-}
- 
-.tab-links a:hover {
-    background:#DDC1C3;
-    text-decoration:none;
-}
- 
-li.active a, li.active a:hover {
-    background-color: #ddd;
-    color:#4c4c4c;
-}
-    
+
 #input .tab {
     height: 9em;
 }
 
-#sampling .tab {
+#samples .tab {
     height: 6em;
 }
 
 #constraints .tab {
     height: 6em;
 }
-    /*----- Content of Tabs -----*/
-.tab-content {
-    padding:15px;
-    box-shadow:-1px 1px 1px rgba(0,0,0,0.15);
-    background:#fff;
-}
 
-.tab {
-    display:none;
-}
-
-.tab.active {
-    display:block;
-}

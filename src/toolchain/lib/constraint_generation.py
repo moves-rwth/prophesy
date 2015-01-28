@@ -198,7 +198,6 @@ class ConstraintGeneration(object):
 
         self.smt2interface.pop()
         self.smt2interface.stop()
-        self.smt2interface.print_calls()
 
         print("Generation complete, plot located at {0}".format(self.result_file))
 

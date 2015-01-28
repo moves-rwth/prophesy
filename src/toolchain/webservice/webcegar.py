@@ -264,7 +264,9 @@ def generateSamples(iterations, nrsamples):
     samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
     for _ in range(iterations):
         new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
-        print(len(new_samples))
+        if len(new_samples) > 128:
+            # Do not overdo things
+            break
         samples.update(new_samples)
 
     _set_session('samples', samples)

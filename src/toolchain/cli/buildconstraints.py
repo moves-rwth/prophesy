@@ -65,9 +65,7 @@ if __name__ == "__main__":
 
     threshold_pol = Poly(threshold_symbol, symbols)
     tpol = threshold_pol.unify(result.ratfunc.nominator)
-    print(tpol)
     ext_ratfunc = RationalFunction(Poly(result.ratfunc.nominator, symbols), Poly(result.ratfunc.denominator, symbols))
-    print(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator)
     safe_objective_constraint = Constraint(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator, safe_relation, symbols)
     bad_objective_constraint = Constraint(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator, bad_relation , symbols)
     threshold_value_constraint = Constraint(threshold_pol - threshold, "=", symbols)
@@ -76,17 +74,17 @@ if __name__ == "__main__":
     smt2interface.assert_guarded_constraint("bad", bad_objective_constraint)
     smt2interface.assert_constraint(threshold_value_constraint)
 
-    print("Executed SMT commands:")
-    smt2interface.print_calls()
+    #print("Executed SMT commands:")
+    #smt2interface.print_calls()
 
     print("Performing sample refinement")
     (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
     sampler = sampling.RatFuncSampling(ext_ratfunc, result.parameters)
-    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    while len(new_samples) < 60 and len(new_samples) != len(samples):
-        samples = new_samples
-        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    samples = new_samples
+    #new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
+    #samples.update(new_samples)
+    #while len(new_samples) > 0 and len(samples) < 60:
+    #    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
+    #samples = new_samples
     
     for pt, v in samples.items():
         print(pt, v)

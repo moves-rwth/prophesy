@@ -6,6 +6,8 @@
     <style>
 
     </style>
+    <link href="buttons.css" rel="stylesheet" type="text/css">
+    <link href="tabs.css" rel="stylesheet" type="text/css">
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
     <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
     <script language="javascript" type="text/javascript" src="constraints.js"></script>
@@ -74,9 +76,11 @@ var options = {
 
 function setBusy(busy) {
     if (busy) {
-        jQuery("#busy-indicator").show();
+        $("#busy-indicator").show();
+        $("#header").addClass("busy");
     } else {
-        jQuery("#busy-indicator").hide();
+        $("#busy-indicator").hide();
+        $("#header").removeClass("busy");
     }
 }
         
@@ -267,12 +271,12 @@ $(document).ready(function() {
     });
 
     // Handler for changing active result
-    $('form-select').submit(function(event) {
+    $('#form-select').submit(function(event) {
+        event.preventDefault();
+
         result_name = $("#result-files").val();
         setCurrentResult(result_name);
         getCurrentResult();
-
-        event.preventDefault();
     });
     
 
@@ -405,6 +409,7 @@ $(document).ready(function() {
             <div id="tab-prism" class="tab active cp">
                 <form id="form-prism">
                     <span>Path to prism file:</span><input type="file" name="file" />
+                    <br>
                     <span>Path to PCTL file:</span><input type="file" name="pctl-file" />
                     <br>
                     <span>Run with:</span>
@@ -435,7 +440,7 @@ $(document).ready(function() {
                 <form id="form-select">
                     <select id="result-files">
                     </select>
-                    <button id="select-result" type="submit" class="upload">Load</button>
+                    <button id="select-result" type="submit" class="positive">Load</button>
                 </form>
             </div>
         </div>
@@ -450,16 +455,18 @@ $(document).ready(function() {
         <div class="tab-contents">
             <div id="tab-manual" class="tab active cp">
                 <form id="form-samples-manual">
-                    <label><input id="addSamples" type="radio" checked="checked">Add samples by mouse clicks</label>
-                    <button id="submit-samples" type="submit" class="upload">Check New</button>
+                    <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
+                    <br>
+                    <button id="submit-samples" type="submit" class="positive">Check New</button>
                 </form>
             </div>
             <div id="tab-auto" class="tab cp">
                 <form id="form-samples-auto">
-                    <label>Sampling number:<input id="sampling" type="text" value="2"/></label>
+                    <label>Sampling number: <input id="sampling" type="number" min="2" max="50" value="2" size="1"/></label>
                     <br/>
-                    <label>Number of iterations:<input id="iterations" type="text" value="2"/></label>
-                    <button id="generate-samples" type="submit" class="upload">Go</button>
+                    <label>Number of iterations: <input id="iterations" type="number" min="0" max="10" value="2"/></label>
+                    <br>
+                    <button id="generate-samples" type="submit">Go</button>
                 </form>
             </div>
         </div>
@@ -474,15 +481,15 @@ $(document).ready(function() {
         </ul>
         <div class="tab-contents">
             <div id="tab-constr-manual" class="tab active cp">
-                <form id="form-constraints-manual"><label>
-                    <input id="addConstraint" type="radio">Add constraints by mouse clicks</label>
+                <form id="form-constraints-manual">
+                    <label><input id="addConstraint" type="radio"/> Add constraints by mouse clicks</label>
                     <br>
-                    <input name="constr-mode" type="radio" value="safe" checked="checked">Check for safe</label>
-                    <input name="constr-mode" type="radio" value="bad">Check for bad</label>
+                    <label><input name="constr-mode" type="radio" value="safe" checked="checked"/> Check for safe</label>
+                    <label><input name="constr-mode" id="radio-bad" type="radio" value="bad"/> Check for bad</label>
                     <br>
-                    <button id="manualConstraints" class="submit">Check New</button>
+                    <button id="manualConstraints" type="submit" class="positive">Check New</button>
+                    <button id="clear-constraint" type="button" class="negative">Clear current</button>
                 </form>
-                <button id="clear-constraint" class="button">Clear current</button>
             </div>
             <div id="tab-constr-auto" class="tab cp">
                 <form id="form-constraints-auto">
@@ -495,10 +502,13 @@ $(document).ready(function() {
     <div id="settings">
         <h2>Settings</h2>
         <span>Threshold:</span>
-        <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.50</span>
+        <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.5</span>
         <br>
         <span>SMT Solver:</span>
-        <select id="smtsolver"><option selected="selected">SMT-RAT</option><option>Z3</option></select>
+        <select id="smtsolver">
+            <option selected="selected">Z3</option>
+            <!--<option>SMT-RAT</option>-->
+        </select>
     </div>
 </div> <!-- Control panel -->
 

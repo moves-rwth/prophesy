@@ -92,6 +92,8 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
         samples = filter_sampling(samples, threshold)
     (safe_samples, bad_samples) = split_samples(samples, threshold, greaterEqualSafe)
     samplenr = math.sqrt(len(samples))
+    if samplenr <= 1:
+        return {}
     bd = 0.1
     epsilon = (1 - 2 * bd) / (samplenr - 1)
     delta = math.sqrt(2 * (epsilon * epsilon) + epsilon / 2)
