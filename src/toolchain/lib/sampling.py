@@ -81,16 +81,15 @@ def _distance(p1, p2):
     return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 def filter_sampling(samples, threshold):
-    return {pt : val for (pt, val) in samples.items() if abs(threshold - val) > 0.1}
+    return {pt : val for (pt, val) in samples.items() if abs(threshold - val) <= 0.1}
 
 def near_sampling(samples, threshold, rectangles, limit = 0.1, added_dist = 0.05):
     pass
 
 def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True, use_filter = False):
+    samples = samples.copy()
     if use_filter:
         samples = filter_sampling(samples, threshold)
-    else:
-        samples = samples.copy()
     (safe_samples, bad_samples) = split_samples(samples, threshold, greaterEqualSafe)
     samplenr = math.sqrt(len(samples))
     bd = 0.1
@@ -129,20 +128,17 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 for samplept in samples.keys():
                     d = _distance(samplept, p)
                     if d < 0.01:
-                        skip = True
+                        #skip = True
                         skipCount += 1
                         break
                     elif d < 0.05:
                         i = i + 1
                         if i > 2:
-                            skip = True
+                            #skip = True
                             skipCount += 1
                             break
 
                 if not skip:
                     new_points.append(p)
     samples.update(sampling_interface.perform_sampling(new_points))
-    print("new samples {0}".format(len(new_points)))
-    print("skipCount {0}".format(skipCount))
-    # print(samples)
     return samples

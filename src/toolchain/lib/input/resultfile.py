@@ -17,7 +17,7 @@ class ParametricResult(object):
         self.ratfunc = ratfunc
 
     def __str__(self):
-        return "Parameters: {0}\nWell-formed Constraints:      {0}\nGraph-preserving Constraints: {0}\nResult: {0}\n".format(
+        return "Parameters: {0}\nWell-formed Constraints:      {1}\nGraph-preserving Constraints: {2}\nResult: {3}\n".format(
                 ", ".join(map(str, self.parameters)),
                 "\n                             ".join(map(str, self.wdconstraints)),
                 "\n                             ".join(map(str, self.gpconstraints)),

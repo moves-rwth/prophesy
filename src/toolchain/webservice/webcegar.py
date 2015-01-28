@@ -5,7 +5,7 @@ import sys
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
-
+import json
 import bottle
 import tempfile
 import argparse
@@ -263,22 +263,31 @@ def generateSamples(iterations, nrsamples):
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
     samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
     for _ in range(iterations):
-        samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
+        new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
+        print(len(new_samples))
+        samples.update(new_samples)
 
     _set_session('samples', samples)
     return _json_ok(_jsonSamples(samples))
 
-@route('/checkConstraints', method = 'POST')
-def checkConstraints():
-    coordinates = bottle.request.json
+@route('/checkConstraint', method = 'POST')
+def checkConstraint():
+    mode = bottle.request.forms.get('constr-mode')
+    if not mode in ['safe','bad']:
+        return _json_error("Invalid mode set", 400)
+
+    coordinates = bottle.request.forms.get('coordinates')
     if coordinates is None:
         return _json_error("Unable to read coordinates", 400)
+    coordinates = json.loads(bottle.request.forms.get('coordinates'))
+    if coordinates is None or len(coordinates) < 3:
+        return _json_error("Unable to parse coordinates", 400)
+
     result = _getResultData(_get_session('current_result', None))
     if result is None:
         return _json_error("Unable to load result data", 500)
 
-    # TODO: should the constraint check for good or bad-ness?
-    is_bad = False
+    is_bad = mode == "bad"
 
     coordinates = [(float(x), float(y)) for x, y in coordinates]
     coordinates = coordinates[:-1]
@@ -296,19 +305,14 @@ def checkConstraints():
 
     for p in result.parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
-        smt2interface.assert_constraint(Constraint(Poly(p - 1.0), "<=", result.parameters))
-        smt2interface.assert_constraint(Constraint(Poly(p), ">=", result.parameters))
+        smt2interface.assert_constraint(Constraint(Poly(p - 1.0, result.parameters), "<=", result.parameters))
+        smt2interface.assert_constraint(Constraint(Poly(p, result.parameters), ">=", result.parameters))
 
-    #TODO: allow flipped assertion?
-    safe_relation = "<="
-    bad_relation = ">"
-    safe_objective_constraint = Constraint(Poly(result.ratfunc.nominator / result.ratfunc.denominator - threshold), safe_relation, result.parameters)
-    bad_objective_constraint = Constraint(Poly(result.ratfunc.nominator / result.ratfunc.denominator - threshold), bad_relation , result.parameters)
-
-    smt2interface.add_variable("safe", VariableDomain.Bool)
-    smt2interface.add_variable("bad", VariableDomain.Bool)
-    smt2interface.assert_guarded_constraint("safe", safe_objective_constraint)
-    smt2interface.assert_guarded_constraint("bad", bad_objective_constraint)
+    relation = "<="
+    if is_bad:
+        relation = ">="
+    objective_constraint = Constraint(Poly(result.ratfunc.nominator - result.ratfunc.denominator * threshold, result.parameters), relation, result.parameters)
+    smt2interface.assert_constraint(objective_constraint)
 
     ###############################
     ###############################
@@ -319,8 +323,6 @@ def checkConstraints():
     for constraint in constraints:
         smt2interface.assert_constraint(constraint)
 
-    smt2interface.set_guard("safe", is_bad)
-    smt2interface.set_guard("bad", not is_bad)
     print("Calling smt solver")
     checkresult = smt2interface.check()
     if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
@@ -340,9 +342,14 @@ def checkConstraints():
         samples[pt] = value
         return _json_ok({'result':'sat', 'cex':{'coordinate':pt, 'value':float(value)}})
     elif checkresult == smt.smt.Answer.unsat:
-        return _json_ok({'result':'unsat'})
+        return _json_ok({'result':'unsat', 'type':mode})
     else:
         return _json_error('Solver Error')
+
+@route('/generateConstraints', method = 'POST')
+def generateConstraints():
+    return _json_error('Not implemented', 404)
+    pass
 
 # strips trailing slashes from requests
 class StripPathMiddleware(object):

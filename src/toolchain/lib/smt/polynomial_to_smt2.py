@@ -42,8 +42,11 @@ def strNum(n):
             num_str = "(- " + str(abs(n)) + ")"
     else:
         (nom, den) = n.as_numer_denom()
+        assert den > 0
         if n >= 0:
-            num_str = "(/ " + str(nom) + " " + str(den) + ")"
+            num_str = str(nom)
         else:
-            num_str = "(/ (- " + str(abs(nom)) + ") " + str(abs(den)) + ")"
+            num_str = "(- " + str(abs(nom)) + ") "
+        if den != 1:
+            num_str = "(/ " + num_str + " " + str(abs(den)) + ")"
     return num_str
