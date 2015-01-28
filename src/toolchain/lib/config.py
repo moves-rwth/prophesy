@@ -28,6 +28,7 @@ PRISM_COMMAND = "prism"
 
 # epsilon for constraint generation
 EPS = 0.0001
+DISTANCE_SAMPLING = 0.2
 
 
 #CONSTRAINT_GENERATION_COMMAND = "./polyCreator.py"
