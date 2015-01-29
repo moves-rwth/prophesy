@@ -12,6 +12,7 @@ from util import ensure_dir_exists
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
 import shutil
+from shapely.geometry import Point, asPoint
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -58,7 +59,7 @@ class ConstraintGeneration(object):
         (i.e. is contained by it)"""
         pol = constraint.polynomial
         parameters = constraint.symbols
-        evaluation = [e for e in zip(parameters, pt)]
+        evaluation = sampling.get_evaluation(pt, parameters)
 
         pol = pol.subs(evaluation).evalf(EPS)
 
@@ -184,15 +185,15 @@ class ConstraintGeneration(object):
 
             elif checkresult == smt.smt.Answer.sat:
                 # add new point as counter example to existing constraints
-                modelPoint = ()
+                modelPoint_tmp = ()
                 for p in self.parameters:
                     if p.name in smt_model:
-                        modelPoint = modelPoint + (smt_model[p.name],)
+                        modelPoint_tmp = modelPoint_tmp + (smt_model[p.name],)
                     else:
                         # if parameter is undefined set as 0.5
-                        modelPoint = modelPoint + (0.5,)
+                        modelPoint_tmp = modelPoint_tmp + (0.5,)
                         smt_model[p.name] = 0.5
-
+                modelPoint = Point(modelPoint_tmp)
                 self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 

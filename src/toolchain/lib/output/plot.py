@@ -54,11 +54,11 @@ class Plot(object):
             yInvalid = []
             for (key,val) in samples_qualitative.items():
                 if val:
-                    xValid.append(key[0])
-                    yValid.append(key[1])
+                    xValid.append(key.x)
+                    yValid.append(key.y)
                 else:
-                    xInvalid.append(key[0])
-                    yInvalid.append(key[1])
+                    xInvalid.append(key.x)
+                    yInvalid.append(key.y)
 
             ax1.scatter(xValid,yValid, marker='o', c='green')
             ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
@@ -72,23 +72,25 @@ class Plot(object):
 
             colorc = ColorConverter()
             for line in additional_arrows:
-                arrow_anchor_x = numpy.float64(line[0][0])
-                arrow_anchor_y = numpy.float64(line[0][1])
-                arrow_dx = numpy.float64(line[1][0])
-                arrow_dy = numpy.float64(line[1][1])
-                ax1.arrow(arrow_anchor_x, arrow_anchor_y, arrow_dx, arrow_dy, head_width=0.01, head_length=0.01, color='gray')
+                line_points = list(line.coords)
+                point1 = line_points[0]
+                point2 = line_points[1]
+                ax1.arrow(point1[0], point1[1], point2[0] - point1[0], point2[1] - point1[1], head_width=0.01, head_length=0.01, color='gray')
 
             for line in additional_lines_green:
-                point1 = line[0]
-                point2 = line[1]
+                line_points = list(line.coords)
+                point1 = line_points[0]
+                point2 = line_points[1]
                 ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='green')
             for line in additional_lines_red:
-                point1 = line[0]
-                point2 = line[1]
+                line_points = list(line.coords)
+                point1 = line_points[0]
+                point2 = line_points[1]
                 ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='red')
             for line in additional_lines_blue:
-                point1 = line[0]
-                point2 = line[1]
+                line_points = list(line.coords)
+                point1 = line_points[0]
+                point2 = line_points[1]
                 ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
 
             for box in additional_boxes_green:

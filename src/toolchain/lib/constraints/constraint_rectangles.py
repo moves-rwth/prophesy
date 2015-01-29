@@ -1,9 +1,8 @@
 from constraint_generation import ConstraintGeneration
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
-from shapely.geometry import Point, box, asPoint
+from shapely.geometry import box, Point, asPoint
 
-# TODO own rectangle class?
 class ConstraintRectangles(ConstraintGeneration):
 
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
@@ -104,9 +103,7 @@ class ConstraintRectangles(ConstraintGeneration):
 
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
             for anchor in anchor_points_for_a_dir:
-                for pt, value in self.samples.items():
-                    #TODO change later if samples also in shapely format
-                    point = asPoint(pt)
+                for point, value in self.samples.items():
                     # check if point lies in correct direction from anchor point
                     if not ((pos_x and point.x > anchor.x) or (not pos_x and point.x < anchor.x)):
                         continue;
@@ -137,9 +134,7 @@ class ConstraintRectangles(ConstraintGeneration):
                         # check if nothing of other polarity is inbetween.
                         safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
                         other_points = self.bad_samples.items() if safe_area else self.safe_samples.items()
-                        for pt2, value2 in other_points:
-                            #TODO change later if samples also in shapely format
-                            point2 = asPoint(pt2)
+                        for point2, value2 in other_points:
                             if self.is_inside_rectangle(point2, rectangle_test):
                                 # bad sample in safe area
                                 break_attempt = True

@@ -3,6 +3,7 @@ import itertools
 from config import DISTANCE_SAMPLING
 from collections import OrderedDict
 from data.range import create_range_from_interval
+from shapely.geometry import Point
 
 def read_samples_file(path):
     parameters = []
@@ -15,8 +16,8 @@ def read_samples_file(path):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
                     raise RuntimeError("Invalid input on line " + str(i+2))
-                samples[tuple(map(float, items[:-1]))] = float(items[-1])
-            samples = OrderedDict(sorted(samples.items()))
+                samples[Point(map(float, items[:-1]))] = float(items[-1])
+            samples = OrderedDict(samples.items())
     return (parameters, samples)
 
 def write_samples_file(parameters, samples_dict, path):
@@ -24,6 +25,11 @@ def write_samples_file(parameters, samples_dict, path):
         f.write(" ".join(parameters) + "\n")
         for k, v in samples_dict.items():
             f.write("\t".join([("%.4f" % (c)) for c in k ]) + "\t\t" + "%.4f" % (v) + "\n")
+
+def get_evaluation(point, parameters):
+    # returns list as evaluation for parameters according to point coordinates
+    list_subs = zip(parameters, list(point.coords)[0])
+    return [i for i in list_subs]
 
 class McSampling():
     def __init__(self, tool, prism_file, pctl_filepath):
@@ -64,8 +70,8 @@ class RatFuncSampling():
     def perform_sampling(self, samplepoints):
         samples = {}
         for pt in samplepoints:
-            samples[pt] = float(self.ratfunc.subs([i for i in zip(self.parameters, pt)]).evalf())
-        return OrderedDict(sorted(samples.items()))
+            samples[pt] = float(self.ratfunc.subs(get_evaluation(pt, self.parameters)).evalf())
+        return OrderedDict(samples.items())
 
 def split_samples(samples, threshold, greaterEqualSafe = True):
     """
@@ -77,9 +83,6 @@ def split_samples(samples, threshold, greaterEqualSafe = True):
         return (above_threshold, below_threshold)
     else:
         return (below_threshold, above_threshold)
-
-def _distance(p1, p2):
-    return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 
 def filter_sampling(samples, threshold):
     return {pt : val for (pt, val) in samples.items() if abs(threshold - val) <= DISTANCE_SAMPLING}
@@ -102,7 +105,7 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
     for safe_pt, safe_v in safe_samples.items():
         for bad_pt, bad_v in bad_samples.items():
             # print(totalCount/prod)
-            dist = _distance(safe_pt, bad_pt)
+            dist = safe_pt.distance(bad_pt)
             # print("safe_pt: {0}".format(safe_pt))
             # print("bad_pt: {0}".format(bad_pt))
             # print("distance: {0}".format( dist))
@@ -122,13 +125,12 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 # print("bad_weight: {0}".format(bad_weight))
                 assert(abs(safe_weight + bad_weight - 1) < 0.05)
 
-                p = tuple([(safe_weight * i_gs + bad_weight * i_bs)for i_gs, i_bs in zip(safe_pt, bad_pt)])
-
+                point = Point(safe_weight * safe_pt.x + bad_weight * bad_pt.x, safe_weight * safe_pt.y + bad_weight * bad_pt.y)
                 # Check if p is not too close to any other existing sample point
                 skip = False
                 i = 0
-                for samplept in samples_tmp.keys():
-                    d = _distance(samplept, p)
+                for sample_pt in samples_tmp.keys():
+                    d = sample_pt.distance(point)
                     if d < 0.01:
                         skip = True
                         skipCount += 1
@@ -141,7 +143,7 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                             break
 
                 if not skip:
-                    new_points.append(p)
+                    new_points.append(point)
     samples.update(sampling_interface.perform_sampling(new_points))
     print("new samples {0}".format(len(new_points)))
     print("skipCount {0}".format(skipCount))
