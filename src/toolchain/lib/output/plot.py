@@ -67,8 +67,8 @@ class Plot(object):
                 d = 0.01
                 dx = d if pos_x else -d
                 dy = d if pos_y else -d
-                for (x,y) in anchor_points_for_a_dir:
-                    ax1.arrow(x, y, dx, dy, head_width=d/2, head_length=d/2, color='blue')
+                for anchor in anchor_points_for_a_dir:
+                    ax1.arrow(anchor.x, anchor.y, dx, dy, head_width=d/2, head_length=d/2, color='blue')
 
             colorc = ColorConverter()
             for line in additional_arrows:
@@ -92,13 +92,16 @@ class Plot(object):
                 ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
 
             for box in additional_boxes_green:
-                p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
+                (x1, y1, x2, y2) = box.bounds
+                p = patches.Rectangle((x1, y1), abs(x2-x1), abs(y2-y1), facecolor=colorc.to_rgba("#4aa02c", 0.6), edgecolor="black", hatch="o")
                 ax1.add_patch(p)
             for box in additional_boxes_red:
-                p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#c11b17", 0.6), edgecolor="black", hatch="x")
+                (x1, y1, x2, y2) = box.bounds
+                p = patches.Rectangle((x1, y1), abs(x2-x1), abs(y2-y1), facecolor=colorc.to_rgba("#c11b17", 0.6), edgecolor="black", hatch="x")
                 ax1.add_patch(p)
             for box in additional_boxes_blue:
-                p = patches.Rectangle((min(box[0][0], box[1][0]),min(box[0][1], box[1][1])), abs(box[0][0] - box[1][0]), abs(box[0][1] - box[1][1]), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
+                (x1, y1, x2, y2) = box.bounds
+                p = patches.Rectangle((x1, y1), abs(x2-x1), abs(y2-y1), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
                 ax1.add_patch(p)
             pylab.ylim([0,1])
             pylab.xlim([0,1])

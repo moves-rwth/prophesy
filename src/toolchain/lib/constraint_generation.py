@@ -35,6 +35,7 @@ class ConstraintGeneration(object):
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
         self.nr = 0
+        # Stores all constraints as triple ([constraint], polygon representation, bad/safe)
         self.all_constraints = []
 
     def add_pdf(self, name):
@@ -96,8 +97,8 @@ class ConstraintGeneration(object):
 
     @abstractmethod
     def next_constraint(self):
-        """Generate a new set of constraints ([constraints], area_size, area_safe),
-        where [constraints] is a list of Constraint, area_size indicated the area covered
+        """Generate a new set of constraints ([constraints], area, area_safe),
+        where [constraints] is a list of Constraint, area is a polygon representation of the new area
         and area_safe indicated whether the area should be determined safe (or not)"""
         raise NotImplementedError("Abstract parent method")
 
@@ -136,7 +137,7 @@ class ConstraintGeneration(object):
                 # no new constraint available
                 break
 
-            (new_constraints, area, area_safe) = result_constraint
+            (new_constraints, polygon, area_safe) = result_constraint
 
             smt_successful = False
             smt_model = None
@@ -153,13 +154,14 @@ class ConstraintGeneration(object):
                     checkresult = smt_context.check()
                     duration = time.time() - start
                     print("Call took {0} seconds".format(duration))
-                    benchmark_output.append((checkresult, duration, area))
+                    area_size = polygon.area
+                    benchmark_output.append((checkresult, duration, area_size))
                     if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
                         # smt call not finished -> change constraint to make it better computable
                         result_update = self.change_current_constraint()
                         if result_update == None:
                             break
-                        (new_constraints, area) = result_update
+                        (new_constraints, area, area_safe) = result_update
                     else:
                         smt_successful = True
                         if checkresult == smt.smt.Answer.sat:
@@ -167,7 +169,7 @@ class ConstraintGeneration(object):
                         break
 
             # update list of all constraints
-            self.all_constraints.append(new_constraints)
+            self.all_constraints.append((new_constraints, polygon, area_safe))
 
             if checkresult == smt.smt.Answer.unsat:
                 # remove unnecessary samples which are covered already by constraints
