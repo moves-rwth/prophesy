@@ -226,7 +226,7 @@ def addSamples():
     samples = request.session.get('samples', {})
     for x, y in coordinates:
         point = (float(x), float(y))
-        value = result.ratfunc.subs([x for x in zip(result.parameters, point)]).evalf()
+        value = result.ratfunc.eval({x : v for x, v in zip(result.parameters, point)})
         samples[point] = value
     _set_session('samples', samples)
 
@@ -242,7 +242,7 @@ def addSample(x, y):
     result = _getResultData(_get_session('current_result', None))
     if result is None:
         return _json_error("Unable to load result data", 500)
-    value = result.ratfunc.subs([i for i in zip(result.parameters, (x, y))]).evalf()
+    value = result.ratfunc.eval({result.parameters[0] : x, result.parameters[1] : y})
     samples = _get_session('samples', {})
     samples[(x, y)] = value
     return _json_ok(_jsonSamples(samples))
@@ -289,14 +289,12 @@ def checkConstraint():
     if result is None:
         return _json_error("Unable to load result data", 500)
 
-    is_bad = mode == "bad"
-
     coordinates = [(float(x), float(y)) for x, y in coordinates]
     if coordinates[0] == coordinates[-1]:
         # Strip connecting point if any
         coordinates = coordinates[:-1]
 
-    constraints = poly_constraint(coordinates, result.parameters)
+    pconstraint = poly_constraint(coordinates, result.parameters)
 
     ###############################
     ###############################
@@ -313,7 +311,7 @@ def checkConstraint():
         smt2interface.assert_constraint(Constraint(Poly(p, result.parameters), ">=", result.parameters))
 
     relation = "<="
-    if is_bad:
+    if mode == "bad":
         relation = ">="
     objective_constraint = Constraint(Poly(result.ratfunc.nominator - result.ratfunc.denominator * threshold, result.parameters), relation, result.parameters)
     smt2interface.assert_constraint(objective_constraint)
@@ -324,8 +322,7 @@ def checkConstraint():
 
     # check constraint with smt
     smt_model = None
-    for constraint in constraints:
-        smt2interface.assert_constraint(constraint)
+    smt2interface.assert_constraint(pconstraint)
 
     print("Calling smt solver")
     checkresult = smt2interface.check()
@@ -341,12 +338,12 @@ def checkConstraint():
         # add new point as counter example to existing constraints
         # NOTE: What if value not set? Default 0,5? Error?
         pt = tuple([smt_model[p.name] for p in result.parameters])
-        value = result.ratfunc.subs(smt_model.items()).evalf()
+        value = result.ratfunc.eval(smt_model)
         samples = _get_session('samples', {})
         samples[pt] = value
         return _json_ok({'result':'sat', 'cex':{'coordinate':pt, 'value':float(value)}})
     elif checkresult == smt.smt.Answer.unsat:
-        return _json_ok({'result':'unsat', 'type':mode})
+        return _json_ok({'result':'unsat', 'type':mode, 'constraints': []})
     else:
         return _json_error('Solver Error')
 

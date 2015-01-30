@@ -4,6 +4,8 @@ from config import DISTANCE_SAMPLING
 from collections import OrderedDict
 from data.range import create_range_from_interval
 from shapely.geometry import Point
+import sympy
+from sympy.core.numbers import Rational
 
 def read_samples_file(path):
     parameters = []
@@ -29,7 +31,7 @@ def write_samples_file(parameters, samples_dict, path):
 def get_evaluation(point, parameters):
     # returns list as evaluation for parameters according to point coordinates
     list_subs = zip(parameters, list(point.coords)[0])
-    return [i for i in list_subs]
+    return {x:y for x,y in list_subs}
 
 class McSampling():
     def __init__(self, tool, prism_file, pctl_filepath):
@@ -63,14 +65,14 @@ class RatFuncSampling():
         all_points = itertools.product(*ranges)
         for pt in all_points:
             # Somehow sympy does not like zip, so generate a list
-            l = [i for i in zip(self.parameters, pt)]
-            samples[pt] = self.ratfunc.subs(l).evalf()
+            valuation = {x : sympy.Rational(y) for x,y in zip(self.parameters, pt)}
+            samples[pt] = self.ratfunc.eval(valuation)
         return OrderedDict(sorted(samples.items()))
 
     def perform_sampling(self, samplepoints):
         samples = {}
         for pt in samplepoints:
-            samples[pt] = float(self.ratfunc.subs(get_evaluation(pt, self.parameters)).evalf())
+            samples[pt] = self.ratfunc.eval({x:Rational(y) for x,y in zip(self.parameters, pt)}).evalf()
         return OrderedDict(samples.items())
 
 def split_samples(samples, threshold, greaterEqualSafe = True):

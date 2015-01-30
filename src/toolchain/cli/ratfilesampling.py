@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # Read previously generated result
     result = read_pstorm_result(vars(cmdargs)['rat_file'])
-    print(result)
+    print("Parameters:", result.parameters)
     # Generate sample points (uniform grid)
     intervals = [(0.01, 0.99)] * len(result.parameters)
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)

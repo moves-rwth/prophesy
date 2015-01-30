@@ -7,12 +7,13 @@ from output.plot import Plot
 from abc import ABCMeta, abstractmethod
 #needed for pdf merging for debugging
 from subprocess import call
-from config import PLOT_FILES_DIR, EPS
+from config import PLOT_FILES_DIR
 from util import ensure_dir_exists
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
 import shutil
-from shapely.geometry import Point, asPoint
+from shapely.geometry import Point
+from sympy.core.symbol import Symbol
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -58,10 +59,10 @@ class ConstraintGeneration(object):
         """Check wether the given point is satisfied by the constraints
         (i.e. is contained by it)"""
         pol = constraint.polynomial
-        parameters = constraint.symbols
+        parameters = pol.atoms(Symbol)
         evaluation = sampling.get_evaluation(pt, parameters)
 
-        pol = pol.subs(evaluation).evalf(EPS)
+        pol = pol.eval(evaluation).evalf()
 
         if constraint.relation == "=":
             return abs(pol) < EPS
@@ -194,7 +195,7 @@ class ConstraintGeneration(object):
                         modelPoint_tmp = modelPoint_tmp + (0.5,)
                         smt_model[p.name] = 0.5
                 modelPoint = Point(modelPoint_tmp)
-                self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
+                self.samples[modelPoint] = self.ratfunc.eval(smt_model.items()).evalf()
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 
             self.print_benchmark_output(benchmark_output)
