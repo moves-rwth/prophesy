@@ -12,6 +12,7 @@ from util import ensure_dir_exists
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
 import shutil
+from shapely.geometry import Point, asPoint
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -35,6 +36,7 @@ class ConstraintGeneration(object):
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
         self.nr = 0
+        # Stores all constraints as triple ([constraint], polygon representation, bad/safe)
         self.all_constraints = []
 
     def add_pdf(self, name):
@@ -57,7 +59,7 @@ class ConstraintGeneration(object):
         (i.e. is contained by it)"""
         pol = constraint.polynomial
         parameters = constraint.symbols
-        evaluation = [e for e in zip(parameters, pt)]
+        evaluation = sampling.get_evaluation(pt, parameters)
 
         pol = pol.subs(evaluation).evalf(EPS)
 
@@ -96,8 +98,8 @@ class ConstraintGeneration(object):
 
     @abstractmethod
     def next_constraint(self):
-        """Generate a new set of constraints ([constraints], area_size, area_safe),
-        where [constraints] is a list of Constraint, area_size indicated the area covered
+        """Generate a new set of constraints ([constraints], area, area_safe),
+        where [constraints] is a list of Constraint, area is a polygon representation of the new area
         and area_safe indicated whether the area should be determined safe (or not)"""
         raise NotImplementedError("Abstract parent method")
 
@@ -136,7 +138,7 @@ class ConstraintGeneration(object):
                 # no new constraint available
                 break
 
-            (new_constraints, area, area_safe) = result_constraint
+            (new_constraints, polygon, area_safe) = result_constraint
 
             smt_successful = False
             smt_model = None
@@ -153,13 +155,14 @@ class ConstraintGeneration(object):
                     checkresult = smt_context.check()
                     duration = time.time() - start
                     print("Call took {0} seconds".format(duration))
-                    benchmark_output.append((checkresult, duration, area))
+                    area_size = polygon.area
+                    benchmark_output.append((checkresult, duration, area_size))
                     if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
                         # smt call not finished -> change constraint to make it better computable
                         result_update = self.change_current_constraint()
                         if result_update == None:
                             break
-                        (new_constraints, area) = result_update
+                        (new_constraints, area, area_safe) = result_update
                     else:
                         smt_successful = True
                         if checkresult == smt.smt.Answer.sat:
@@ -167,7 +170,7 @@ class ConstraintGeneration(object):
                         break
 
             # update list of all constraints
-            self.all_constraints.append(new_constraints)
+            self.all_constraints.append((new_constraints, polygon, area_safe))
 
             if checkresult == smt.smt.Answer.unsat:
                 # remove unnecessary samples which are covered already by constraints
@@ -182,15 +185,15 @@ class ConstraintGeneration(object):
 
             elif checkresult == smt.smt.Answer.sat:
                 # add new point as counter example to existing constraints
-                modelPoint = ()
+                modelPoint_tmp = ()
                 for p in self.parameters:
                     if p.name in smt_model:
-                        modelPoint = modelPoint + (smt_model[p.name],)
+                        modelPoint_tmp = modelPoint_tmp + (smt_model[p.name],)
                     else:
                         # if parameter is undefined set as 0.5
-                        modelPoint = modelPoint + (0.5,)
+                        modelPoint_tmp = modelPoint_tmp + (0.5,)
                         smt_model[p.name] = 0.5
-
+                modelPoint = Point(modelPoint_tmp)
                 self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
                 print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
 

@@ -80,12 +80,12 @@ if __name__ == "__main__":
     print("Performing sample refinement")
     (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
     sampler = sampling.RatFuncSampling(ext_ratfunc, result.parameters)
-    #new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    #samples.update(new_samples)
-    #while len(new_samples) > 0 and len(samples) < 60:
-    #    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    #samples = new_samples
-    
+    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
+    while len(new_samples) < 60:
+        samples = new_samples
+        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
+    samples = new_samples
+
     for pt, v in samples.items():
         print(pt, v)
 

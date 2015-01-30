@@ -4,6 +4,7 @@ import sys
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
+sys.path.insert(0, os.path.join(thisfilepath, '../../lib'))
 
 import json
 import bottle
@@ -24,16 +25,13 @@ from modelcheckers.pstorm import ProphesyParametricModelChecker
 from constraints.convex_constraint import poly_constraint
 import smt
 from smt.smtlib import SmtlibSolver
-from sympy.core.symbol import Symbol
 from smt.smt import VariableDomain
 from sympy.polys.polytools import Poly
-from data.rationalfunction import RationalFunction
 from data.constraint import Constraint
 
 def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
     from bottle import response
-    import json
     # response.charset = 'UTF-8'
     response.content_type = 'application/json; charset=UTF-8'
     response.status = status
@@ -43,7 +41,6 @@ def _json_error(message, status = 500):
 def _json_ok(data = []):
     """Returns JSON OK with formatted data"""
     from bottle import response
-    import json
     # response.charset = 'UTF-8'
     response.content_type = 'application/json; charset=UTF-8'
     return json.dumps({'status':'ok', 'data':data})
@@ -79,6 +76,9 @@ def _getResultData(name):
 
 def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
+
+def _jsonPoly(polygon):
+    return [[x,y] for x,y in polygon.exterior.coords]
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -292,7 +292,9 @@ def checkConstraint():
     is_bad = mode == "bad"
 
     coordinates = [(float(x), float(y)) for x, y in coordinates]
-    coordinates = coordinates[:-1]
+    if coordinates[0] == coordinates[-1]:
+        # Strip connecting point if any
+        coordinates = coordinates[:-1]
 
     constraints = poly_constraint(coordinates, result.parameters)
 

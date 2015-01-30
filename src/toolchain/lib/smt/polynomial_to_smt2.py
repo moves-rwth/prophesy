@@ -1,16 +1,21 @@
 from sympy.polys import Poly
 from sympy import Rational, Integer, Float
 
+def degree(t):
+  """ Returns the degree of the given term (as tuple ((exp_0, exp_1, ..., exp_k), coeff)."""
+  assert isinstance(t, tuple)
+  return sum(t[0])
+
 def print_term(term, variables):
     """Prints ((v1=2,v2=3),c1) as (* c v1 v1  v2 v2 v2)"""
+    assert term[1] != 0
     factors = []
-    if sum(term[0]) == 0:
-        return strNum(term[1])
+    if term[1] != 1 or sum(term[0]) == 0:
+        factors.append(strNum(term[1]))
+
     for var, power in zip(variables,term[0]):
         # repeat var power times
         factors += [str(var)] * power
-    if term[1] != 1:
-        factors.append(strNum(term[1]))
 
     poly_str = " ".join(factors)
     if len(factors) > 1:
