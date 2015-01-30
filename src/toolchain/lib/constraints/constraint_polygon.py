@@ -1,7 +1,7 @@
-from constraint_generation import ConstraintGeneration
+from constraint_generation import *
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, LineString
 
 class ConstraintPolygon(ConstraintGeneration):
 
@@ -20,7 +20,10 @@ class ConstraintPolygon(ConstraintGeneration):
 
     def finalize_step(self, new_constraints):
         # Plot polygon
-        self.plot_results(display = False)
+        if self.safe:
+            self.plot_results(additional_polygons_green = [self.best_polygon], display = True)
+        else:
+            self.plot_results(additional_polygons_red = [self.best_polygon], display = True)
 
     def next_constraint(self):
         #TODO input comes from user
@@ -34,6 +37,8 @@ class ConstraintPolygon(ConstraintGeneration):
         if constraint is valid the tuple  is (True, polygon added)
         if constraint is invalid the tuple is (False, point as counterexample)
         """
+        self.best_polygon = polygon
+        self.safe = safe
         new_constraints = self.compute_constraints(polygon)
         result = self.analyze_constraint(new_constraints, polygon, safe)
         return result

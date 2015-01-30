@@ -16,6 +16,8 @@ from smt.isat import IsatSolver
 from smt.smt import VariableDomain
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
+from constraints.constraint_polygon import ConstraintPolygon
+from shapely.geometry import Polygon
 from input.resultfile import read_pstorm_result
 from data.rationalfunction import RationalFunction
 

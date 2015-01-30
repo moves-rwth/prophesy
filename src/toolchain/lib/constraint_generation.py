@@ -65,13 +65,12 @@ class ConstraintGeneration(object):
         """Compute constraints from polygon
         returns list of constraints describing the polygon
         """
-        assert(polygon.interiors is None)
+        assert(len(list(polygon.interiors)) == 0)
         new_constraints = []
         poly_points = list(polygon.exterior.coords)
-        for i in range(1, len(poly_points)):
-            point1 = poly_points[i]
-            j = (i + 1) % len(poly_points)
-            point2 = poly_points[j]
+        for i in range(0, len(poly_points)-1):
+            point1 = Point(poly_points[i])
+            point2 = Point(poly_points[i+1])
 
             if (abs(point1.x - point2.x) < EPS):
                 # vertical line
@@ -80,7 +79,7 @@ class ConstraintGeneration(object):
                 else:
                     rel = ">="
                 new_constraints.append(Constraint(Poly(self.parameters[0] - point1.x, self.parameters), rel, self.parameters))
-                print("line is described by x = {0}".format(point1.x))
+                #print("line is described by x = {0}".format(point1.x))
             else:
                 # asserted x2 != x1
                 # slope
@@ -95,7 +94,7 @@ class ConstraintGeneration(object):
                 rel = ">"
 
                 new_constraints.append(Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters))
-                print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
+                #print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
 
         print("Constraints for polygon ({0}): {1}".format(polygon, new_constraints))
         return new_constraints
@@ -136,10 +135,10 @@ class ConstraintGeneration(object):
             print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
             i = i + 1
 
-    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], display=False, first=False):
+    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], additional_polygons_green = [], additional_polygons_red = [], additional_polygons_blue = [], display=False, first=False):
         # plot result
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir=self.plotdir)
-        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines_green, additional_lines_red, additional_lines_blue, additional_boxes_green, additional_boxes_red, additional_boxes_blue, result_tmp_file, display)
+        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines_green, additional_lines_red, additional_lines_blue, additional_boxes_green, additional_boxes_red, additional_boxes_blue, additional_polygons_green, additional_polygons_red, additional_polygons_blue, result_tmp_file, display)
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
@@ -216,6 +215,7 @@ class ConstraintGeneration(object):
             # update everything in the algorithm according to correct new area
             #TODO what to do in GUI?
             self.finalize_step(constraints)
+            print("added new polygon {0} with constraints: {1}".format(polygon, constraints))
             result = (True, polygon)
 
         elif checkresult == smt.smt.Answer.sat:

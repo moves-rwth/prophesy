@@ -30,7 +30,7 @@ class Plot(object):
     def __onselect(self, eclick, erelease):
         'eclick and erelease are matplotlib events at press and release'
         print(' startposition : (%f, %f)' % (eclick.xdata, eclick.ydata))
-        print(' endposition   : (%f, %f)' % (erelease.xdata, erelease.ydata))
+        print(' endposition   : (%f, %f)' % (erelease.xdagreenta, erelease.ydata))
         print(' used button   : ', eclick.button)
 
     def __toggle_selector(self, event):
@@ -44,7 +44,7 @@ class Plot(object):
 
 
     @staticmethod
-    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], path_to_save=None, display=False):
+    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], additional_polygons_green = [], additional_polygons_red = [], additional_polygons_blue = [], path_to_save=None, display=False):
         if len(parameters) == 2:
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
@@ -105,6 +105,26 @@ class Plot(object):
                 (x1, y1, x2, y2) = box.bounds
                 p = patches.Rectangle((x1, y1), abs(x2-x1), abs(y2-y1), facecolor=colorc.to_rgba("#1b17c1", 0.6), edgecolor="black", hatch="x")
                 ax1.add_patch(p)
+
+            for polygon in additional_polygons_green:
+                poly_points = list(polygon.exterior.coords)
+                for i in range(0, len(poly_points)-1):
+                    point1 = poly_points[i]
+                    point2 = poly_points[i+1]
+                    ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='green')
+            for polygon in additional_polygons_red:
+                poly_points = list(polygon.exterior.coords)
+                for i in range(0, len(poly_points)-1):
+                    point1 = poly_points[i]
+                    point2 = poly_points[i+1]
+                    ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='red')
+            for polygon in additional_polygons_blue:
+                poly_points = list(polygon.exterior.coords)
+                for i in range(0, len(poly_points)-1):
+                    point1 = poly_points[i]
+                    point2 = poly_points[i+1]
+                    ax1.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
+
             pylab.ylim([0,1])
             pylab.xlim([0,1])
             ax1.set_xlabel(str(parameters[0]))
