@@ -41,7 +41,6 @@ def _find_nominator(string):
 def read_pstorm_result(location):
     with open(location) as f:
         inputstring = f.read()
-
     # Build parameters
     print("Reading parameters...")
     parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(",")
