@@ -98,3 +98,8 @@ if __name__ == "__main__":
     else:
         generator = ConstraintRectangles(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     generator.generate_constraints()
+
+    # only for testing purposes of polygon
+    #generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+    #generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
+    #generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
