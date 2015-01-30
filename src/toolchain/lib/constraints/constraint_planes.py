@@ -1,8 +1,5 @@
 from constraint_generation import *
-
 import numpy as np
-from numpy import cos, sin
-import sympy
 from shapely.geometry import LineString
 
 class ConstraintPlanes(ConstraintGeneration):
@@ -171,6 +168,10 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_anchor = None
         self.max_size = 0
         self.best_line = None
+
+        # split samples into safe and bad
+        (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
+        assert(len(self.safe_samples) + len(self.bad_samples) == len(self.samples))
 
         for anchor in self.anchor_points:
             print("anchor: {0}".format(anchor))

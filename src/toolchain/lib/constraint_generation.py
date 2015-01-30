@@ -36,8 +36,16 @@ class ConstraintGeneration(object):
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
         self.nr = 0
+        self.benchmark_output = []
         # Stores all constraints as triple ([constraint], polygon representation, bad/safe)
         self.all_constraints = []
+
+         # initial constraints
+        self.smt2interface.push()
+        for param in self.parameters:
+            # add constraints 0 <= param <= 1
+            self.smt2interface.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
+            self.smt2interface.assert_constraint(Constraint(Poly(param - 1, self.parameters), "<=", self.parameters))
 
     def add_pdf(self, name):
         """Adds pdf with name to result.pdf in tmp directory
@@ -52,6 +60,45 @@ class ConstraintGeneration(object):
                 shutil.move(result_tmp_file, self.result_file)
             except:
                 os.unlink(result_tmp_file)
+
+    def compute_constraints(self, polygon):
+        """Compute constraints from polygon
+        returns list of constraints describing the polygon
+        """
+        assert(polygon.interiors is None)
+        new_constraints = []
+        poly_points = list(polygon.exterior.coords)
+        for i in range(1, len(poly_points)):
+            point1 = poly_points[i]
+            j = (i + 1) % len(poly_points)
+            point2 = poly_points[j]
+
+            if (abs(point1.x - point2.x) < EPS):
+                # vertical line
+                if (point1.y < point2.y):
+                    rel = "<"
+                else:
+                    rel = ">="
+                new_constraints.append(Constraint(Poly(self.parameters[0] - point1.x, self.parameters), rel, self.parameters))
+                print("line is described by x = {0}".format(point1.x))
+            else:
+                # asserted x2 != x1
+                # slope
+                m = (point2.y - point1.y) / (point2.x - point1.x)
+                # two-point form
+                #     y-y1 = m * (x-x1)
+                # <=> 0 = mx - mx1 - y + y1
+                # <=> 0 = mx - y + c with c = y1 - mx1
+                c = point1.y - m * point1.x
+
+                # As we go counterclockwise, the described area is always left of the line
+                rel = ">"
+
+                new_constraints.append(Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters))
+                print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
+
+        print("Constraints for polygon ({0}): {1}".format(polygon, new_constraints))
+        return new_constraints
 
     @classmethod
     def is_point_fulfilling_constraint(cls, pt, constraint):
@@ -113,18 +160,87 @@ class ConstraintGeneration(object):
         """Final steps to execute after last call of next_constraint, usually plots things"""
         raise NotImplementedError("Abstract parent method")
 
+    def analyze_constraint(self, constraints, polygon, safe):
+        """Extends the current area by using the new polygon
+        constraints are the newly added constraints for the polygon
+        polygon marks the new area to cover
+        safe indicates whether the area is safe or bad
+        returns tuple (valid constraint, polygon/counterexample point)
+        if constraint is valid the tuple  is (True, polygon added)
+        if constraint is invalid the tuple is (False, point as counterexample)
+        """
+        assert(polygon is not None)
+        self.nr += 1
+        smt_successful = False
+        smt_model = None
+        result = None
+
+        while not smt_successful:
+            # check constraint with smt
+            with self.smt2interface as smt_context:
+                for constraint in constraints:
+                    smt_context.assert_constraint(constraint)
+
+                smt_context.set_guard("safe", not safe)
+                smt_context.set_guard("bad", safe)
+                print("Calling smt solver")
+                start = time.time()
+                checkresult = smt_context.check()
+                duration = time.time() - start
+                print("Call took {0} seconds".format(duration))
+                self.benchmark_output.append((checkresult, duration, polygon.area))
+                if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
+                    # smt call not finished -> change constraint to make it better computable
+                    #TODO what to do in GUI?
+                    result_update = self.change_current_constraint()
+                    if result_update == None:
+                        break
+                    (constraints, area, safe) = result_update
+                else:
+                    smt_successful = True
+                    if checkresult == smt.smt.Answer.sat:
+                        smt_model = smt_context.get_model()
+                    break
+
+        if checkresult == smt.smt.Answer.unsat:
+            # update list of all constraints
+            self.all_constraints.append((constraints, polygon, safe))
+
+            # remove unnecessary samples which are covered already by constraints
+            for pt in list(self.samples.keys()):
+                fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(pt, constraint) for constraint in constraints])
+                #TODO: Why delete, what if threshold changes?
+                if fullfillsAllConstraints:
+                    del self.samples[pt]
+
+            # update everything in the algorithm according to correct new area
+            #TODO what to do in GUI?
+            self.finalize_step(constraints)
+            result = (True, polygon)
+
+        elif checkresult == smt.smt.Answer.sat:
+            # add new point as counter example to existing constraints
+            modelPoint_tmp = ()
+            for p in self.parameters:
+                if p.name in smt_model:
+                    modelPoint_tmp = modelPoint_tmp + (smt_model[p.name],)
+                else:
+                    # if parameter is undefined set as 0.5
+                    modelPoint_tmp = modelPoint_tmp + (0.5,)
+                    smt_model[p.name] = 0.5
+            modelPoint = Point(modelPoint_tmp)
+            self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
+            print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
+            result = (False, modelPoint)
+        else:
+            assert(false)
+
+        self.print_benchmark_output(self.benchmark_output)
+        return result
+
     def generate_constraints(self):
         """Iteratively generates new constraints, heuristically, attempting to
         find the largest safe or unsafe area"""
-        benchmark_output = []
-
-        # initial constraints
-        self.smt2interface.push()
-        for param in self.parameters:
-            # add constraints 0 <= param <= 1
-            self.smt2interface.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
-            self.smt2interface.assert_constraint(Constraint(Poly(param - 1, self.parameters), "<=", self.parameters))
-
         while True:
             self.nr += 1
 
@@ -139,70 +255,10 @@ class ConstraintGeneration(object):
                 break
 
             (new_constraints, polygon, area_safe) = result_constraint
-
-            smt_successful = False
-            smt_model = None
-            while not smt_successful:
-                # check constraint with smt
-                with self.smt2interface as smt_context:
-                    for constraint in new_constraints:
-                        smt_context.assert_constraint(constraint)
-
-                    smt_context.set_guard("safe", not area_safe)
-                    smt_context.set_guard("bad", area_safe)
-                    print("Calling smt solver")
-                    start = time.time()
-                    checkresult = smt_context.check()
-                    duration = time.time() - start
-                    print("Call took {0} seconds".format(duration))
-                    area_size = polygon.area
-                    benchmark_output.append((checkresult, duration, area_size))
-                    if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
-                        # smt call not finished -> change constraint to make it better computable
-                        result_update = self.change_current_constraint()
-                        if result_update == None:
-                            break
-                        (new_constraints, area, area_safe) = result_update
-                    else:
-                        smt_successful = True
-                        if checkresult == smt.smt.Answer.sat:
-                            smt_model = smt_context.get_model()
-                        break
-
-            # update list of all constraints
-            self.all_constraints.append((new_constraints, polygon, area_safe))
-
-            if checkresult == smt.smt.Answer.unsat:
-                # remove unnecessary samples which are covered already by constraints
-                for pt in list(self.samples.keys()):
-                    fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(pt, constraint) for constraint in new_constraints])
-                    #TODO: Why delete, what if threshold changes?
-                    if fullfillsAllConstraints:
-                        del self.samples[pt]
-
-                # update everything in the algorithm according to correct new area
-                self.finalize_step(new_constraints)
-
-            elif checkresult == smt.smt.Answer.sat:
-                # add new point as counter example to existing constraints
-                modelPoint_tmp = ()
-                for p in self.parameters:
-                    if p.name in smt_model:
-                        modelPoint_tmp = modelPoint_tmp + (smt_model[p.name],)
-                    else:
-                        # if parameter is undefined set as 0.5
-                        modelPoint_tmp = modelPoint_tmp + (0.5,)
-                        smt_model[p.name] = 0.5
-                modelPoint = Point(modelPoint_tmp)
-                self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
-                print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
-
-            self.print_benchmark_output(benchmark_output)
+            self.analyze_constraint(new_constraints, polygon, area_safe)
 
         self.smt2interface.pop()
         self.smt2interface.stop()
         self.smt2interface.print_calls()
 
         print("Generation complete, plot located at {0}".format(self.result_file))
-
-        return

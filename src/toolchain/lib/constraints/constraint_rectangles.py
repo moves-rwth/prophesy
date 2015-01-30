@@ -1,7 +1,5 @@
-from constraint_generation import ConstraintGeneration
-from data.constraint import Constraint
-from sympy.polys.polytools import Poly
-from shapely.geometry import box, Point, asPoint
+from constraint_generation import *
+from shapely.geometry import box
 
 class ConstraintRectangles(ConstraintGeneration):
 
@@ -100,6 +98,10 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_anchor_points_for_dir = None
         self.best_pos_x = None
         self.best_pos_y = None
+
+        # split samples into safe and bad
+        (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
+        assert(len(self.safe_samples) + len(self.bad_samples) == len(self.samples))
 
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
             for anchor in anchor_points_for_a_dir:
