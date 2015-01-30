@@ -1,165 +1,87 @@
-from constraint_generation import ConstraintGeneration
-from data.constraint import Constraint
-from sympy.polys.polytools import Poly
+from constraint_generation import *
+from shapely.geometry import box
 
-# TODO own rectangle class?
 class ConstraintRectangles(ConstraintGeneration):
 
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
 
-        self.anchor_points = [([(0, 0)], True, True),
-                         ([(1, 0)], False, True),
-                         ([(1, 1)], False, False),
-                         ([(0, 1)], True, False)]
+        self.anchor_points = [([Point(0, 0)], True, True),
+                         ([Point(1, 0)], False, True),
+                         ([Point(1, 1)], False, False),
+                         ([Point(0, 1)], True, False)]
 
         self.safe_boxes = []
         self.unsafe_boxes = []
 
-        self.max_size = 0
-        self.max_pt = None
         self.max_area_safe = None
         self.best_anchor = None
         self.best_anchor_points_for_dir = None
+        self.best_rectangle = None
+        self.best_other_point = None
+        self.max_size = 0
         self.best_pos_x = None
         self.best_pos_y = None
 
-    def is_inside_rectangle(self, point, anchor_1, anchor_2, pos_x, pos_y):
-        # checks if the point lies in the rectangle spanned by anchor_1
-        if (pos_x and anchor_1[0] <= point[0] and point[0] <= anchor_2[0]) or (not pos_x and anchor_2[0] <= point[0] and point[0] <= anchor_1[0]):
-            if (pos_y and anchor_1[1] <= point[1] and point[1] <= anchor_2[1]) or (not pos_y and anchor_2[1] <= point[1] and point[1] <= anchor_1[1]):
-                return True
-            else:
-                return False
-        else:
-            return False
+    def is_inside_rectangle(self, point, rectangle):
+        # checks if the point lies in the rectangle
+        return point.within(rectangle) or point.touches(rectangle)
 
-    def create_rectangle_constraints(self, p1, p2, parameters):
-        pl = (min(p1[0], p2[0]), min(p1[1], p2[1]))
-        ph = (max(p1[0], p2[0]), max(p1[1], p2[1]))
+    def intersects(self, rectangle1, rectangle2):
+        # checks if rectangles intersect, touching is okay
+        return rectangle1.intersects(rectangle2) and not rectangle1.touches(rectangle2)
 
+    def create_rectangle_constraints(self, rectangle, parameters):
+        (x1, y1, x2, y2) = rectangle.bounds
+        assert(x1 <= x2)
+        assert(y1 <= y2)
 
-        constraints = [Constraint(Poly(parameters[0] - pl[0], parameters), ">=", parameters),
-                       Constraint(Poly(parameters[1] - pl[1], parameters), ">=", parameters),
-                       Constraint(Poly(parameters[0] - ph[0], parameters), "<=", parameters),
-                       Constraint(Poly(parameters[1] - ph[1], parameters), "<=", parameters)]
+        p = Poly(parameters[0] - x1, parameters)
+        constraints = [Constraint(Poly(parameters[0] - x1, parameters), ">=", parameters),
+                       Constraint(Poly(parameters[1] - y1, parameters), ">=", parameters),
+                       Constraint(Poly(parameters[0] - x2, parameters), "<=", parameters),
+                       Constraint(Poly(parameters[1] - y2, parameters), "<=", parameters)]
         return constraints
-
-    def is_intersection(self, rectangle1, rectangle2):
-        p11 = rectangle1[0]
-        p12 = rectangle1[1]
-        p21 = rectangle2[0]
-        p22 = rectangle2[1]
-
-        rec1_left = min(p11[0], p12[0])
-        rec1_right = max(p11[0], p12[0])
-        rec1_bottom = min(p11[1], p12[1])
-        rec1_top = max(p11[1], p12[1])
-        rec2_left = min(p21[0], p22[0])
-        rec2_right = max(p21[0], p22[0])
-        rec2_bottom = min(p21[1], p22[1])
-        rec2_top = max(p21[1], p22[1])
-
-        return rec1_left < rec2_right and rec2_left < rec1_right and rec1_bottom < rec2_top and rec2_bottom < rec1_top
-
-    def rectangle_subtract(self, fixed_point, point, rectangle2):
-        # subtracts rectangle2 from rectangle spanned by fixed_point and point
-        # fixed_point has to stay the same after subtraction
-        # rectangle2 has to lie completely in rectangle_original
-        # returns None if resulting rectangle is empty
-
-        rec_original_left = min(fixed_point[0], point[0])
-        rec_original_right = max(fixed_point[0], point[0])
-        rec_original_bottom = min(fixed_point[1], point[1])
-        rec_original_top = max(fixed_point[1], point[1])
-        p21 = rectangle2[0]
-        p22 = rectangle2[1]
-        rec2_left = min(p21[0], p22[0])
-        rec2_right = max(p21[0], p22[0])
-        rec2_bottom = min(p21[1], p22[1])
-        rec2_top = max(p21[1], p22[1])
-
-        # compute intersection
-        rec_intersect_left = max(rec_original_left, rec2_left);
-        rec_intersect_bottom = max(rec_original_bottom, rec2_bottom);
-        rec_intersect_right = min(rec_original_right, rec2_right);
-        rec_intersect_top = min(rec_original_top, rec2_top);
-
-        rec_remaining_left = rec_original_left
-        rec_remaining_right = rec_original_right
-        rec_remaining_bottom = rec_original_bottom
-        rec_remaining_top = rec_original_top
-
-        if (rec_original_left < rec_intersect_left):
-            assert rec_original_right == rec_intersect_right
-            rec_remaining_right = rec_intersect_left
-        if (rec_original_right > rec_intersect_right):
-            assert rec_original_left == rec_intersect_left
-            rec_remaining_left = rec_intersect_right
-        if (rec_original_bottom < rec_intersect_bottom):
-            assert rec_original_top == rec_intersect_top
-            rec_remaining_top = rec_intersect_bottom
-        if (rec_original_top > rec_intersect_top):
-            assert rec_original_bottom == rec_intersect_bottom
-            rec_remaining_bottom = rec_intersect_top
-
-        if (rec_original_left == rec_remaining_left and rec_original_right == rec_remaining_right and rec_original_bottom == rec_remaining_bottom and rec_original_top == rec_remaining_top):
-            return None
-
-        return ((rec_remaining_left, rec_remaining_bottom), (rec_remaining_right, rec_remaining_top))
 
     def change_current_constraint(self):
         # change current constraint to avoid memout in smt
-        # returns (new_constraint, new_covered_area)
-        if self.best_pos_x:
-            new_max_pt_x = self.best_anchor[0] + abs(self.best_anchor[0] - self.max_pt[0]) / 2
-        else:
-            new_max_pt_x = self.best_anchor[0] - abs(self.best_anchor[0] - self.max_pt[0]) / 2
+        # returns (new_constraint, new_covered_area, area_safe)
 
-        if self.best_pos_y:
-            new_max_pt_y = self.best_anchor[1] + abs(self.best_anchor[1] - self.max_pt[1]) / 2
-        else:
-            new_max_pt_y = self.best_anchor[1] - abs(self.best_anchor[1] - self.max_pt[1]) / 2
-
-        self.max_pt = (new_max_pt_x, new_max_pt_y)
-        self.max_size = abs(self.best_anchor[0] - self.max_pt[0]) * abs(self.best_anchor[1] - self.max_pt[1])
-        new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
-        return (new_constraints, self.max_size, self.max_area_safe)
+        # scale rectangle by factor 0.5
+        self.best_rectangle = affinity.scale(rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor)
+        (x1, y1, x2, y2) = self.best_rectangle.bounds
+        self.best_other_point = (x2 if self.best_pos_x else x1, y2 if self.best_pos_y else y1)
+        new_constraints = self.create_rectangle_constraints(self.best_rectangle, self.parameters)
+        return (new_constraints, self.best_rectangle, self.max_area_safe)
 
     def finalize_step(self, new_constraints):
         # update anchor points for direction
-        self.best_anchor_points_for_dir.append((self.max_pt[0], self.best_anchor[1]))
-        self.best_anchor_points_for_dir.append((self.best_anchor[0], self.max_pt[1]))
+        self.best_anchor_points_for_dir.append(Point(self.best_other_point.x, self.best_anchor.y))
+        self.best_anchor_points_for_dir.append(Point(self.best_anchor.x, self.best_other_point.y))
         self.best_anchor_points_for_dir.remove(self.best_anchor)
 
         # update anchor points
-        print("anchor_points before: {0}".format(self.anchor_points))
+        #print("anchor_points before: {0}".format(self.anchor_points))
+        (x1, y1, x2, y2) = self.best_rectangle.bounds
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
             if anchor_points_for_a_dir == self.best_anchor_points_for_dir:
                 continue
+            new_x = x2 if pos_x else x1
+            new_y = y2 if pos_y else y1
             for anchor_point in anchor_points_for_a_dir:
-                if self.is_inside_rectangle(anchor_point, self.best_anchor, self.max_pt, self.best_pos_x, self.best_pos_y):
+                if self.is_inside_rectangle(anchor_point, self.best_rectangle):
                     print(anchor_point)
-                    print(self.max_pt)
                     anchor_points_for_a_dir.remove(anchor_point)
-                    new_anchor = [0, 0]
-                    if pos_x:
-                        new_anchor[0] = max(anchor_point[0], self.max_pt[0])
-                    else:
-                        new_anchor[0] = min(anchor_point[0], self.max_pt[0])
-                    if pos_y:
-                        new_anchor[1] = max(anchor_point[1], self.max_pt[1])
-                    else:
-                        new_anchor[1] = min(anchor_point[1], self.max_pt[1])
+                    new_anchor = Point(new_x, new_y)
                     anchor_points_for_a_dir.append(new_anchor)
                     print("updated {0} with {1}".format(anchor_point, new_anchor))
 
-        print("anchor_points after: {0}".format(self.anchor_points))
+        #print("anchor_points after: {0}".format(self.anchor_points))
 
         if self.max_area_safe:
-            self.safe_boxes.append((self.best_anchor, self.max_pt))
+            self.safe_boxes.append(self.best_rectangle)
         else:
-            self.unsafe_boxes.append((self.best_anchor, self.max_pt))
+            self.unsafe_boxes.append(self.best_rectangle)
 
         self.plot_results(self.anchor_points, additional_boxes_green = self.safe_boxes, additional_boxes_red = self.unsafe_boxes, display = False)
 
@@ -169,28 +91,35 @@ class ConstraintRectangles(ConstraintGeneration):
 
         # reset
         self.max_size = 0
-        self.max_pt = None
         self.max_area_safe = None
+        self.best_rectangle = None
         self.best_anchor = None
+        self.best_other_point
         self.best_anchor_points_for_dir = None
         self.best_pos_x = None
         self.best_pos_y = None
 
+        # split samples into safe and bad
+        (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
+        assert(len(self.safe_samples) + len(self.bad_samples) == len(self.samples))
+
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
-            for anchor_point in anchor_points_for_a_dir:
+            for anchor in anchor_points_for_a_dir:
                 for point, value in self.samples.items():
                     # check if point lies in correct direction from anchor point
-                    if not ((pos_x and point[0] > anchor_point[0]) or (not pos_x and point[0] < anchor_point[0])):
+                    if not ((pos_x and point.x > anchor.x) or (not pos_x and point.x < anchor.x)):
                         continue;
-                    if not ((pos_y and point[1] > anchor_point[1]) or (not pos_y and point[1] < anchor_point[1])):
+                    if not ((pos_y and point.y > anchor.y) or (not pos_y and point.y < anchor.y)):
                         continue;
 
                     break_attempt = False
+                    (min_x, max_x) = (point.x, anchor.x) if point.x < anchor.x else (anchor.x, point.x)
+                    (min_y, max_y) = (point.y, anchor.y) if point.y < anchor.y else (anchor.y, point.y)
+                    rectangle_test = box(min_x, min_y, max_x, max_y)
                     # check for intersection with existing rectangles
                     # TODO make more efficient
                     for rectangle2 in self.safe_boxes + self.unsafe_boxes:
-                        intersection = self.is_intersection((anchor_point, point), rectangle2)
-                        if (intersection):
+                        if (self.intersects(rectangle_test, rectangle2)):
                             break_attempt = True
                             break
                             # TODO improve rectangle subtraction
@@ -202,13 +131,13 @@ class ConstraintRectangles(ConstraintGeneration):
                             #    anchor_point = rectangle_new[1]
 
                     # choose largest rectangle
-                    size = abs(point[0] - anchor_point[0]) * abs(point[1] - anchor_point[1])
+                    size = rectangle_test.area
                     if size > self.max_size and not break_attempt:
                         # check if nothing of other polarity is inbetween.
                         safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
                         other_points = self.bad_samples.items() if safe_area else self.safe_samples.items()
                         for point2, value2 in other_points:
-                            if self.is_inside_rectangle(point2, anchor_point, point, pos_x, pos_y):
+                            if self.is_inside_rectangle(point2, rectangle_test):
                                 # bad sample in safe area
                                 break_attempt = True
                                 break
@@ -217,19 +146,20 @@ class ConstraintRectangles(ConstraintGeneration):
                             # can extend area
                             self.max_size = size
                             self.max_area_safe = safe_area
-                            self.max_pt = point
-                            self.best_anchor = anchor_point
+                            self.best_rectangle = rectangle_test
+                            self.best_anchor = anchor
+                            self.best_other_point = point
                             self.best_anchor_points_for_dir = anchor_points_for_a_dir
                             self.best_pos_x = pos_x
                             self.best_pos_y = pos_y
 
-        if self.max_pt is not None and self.max_size > self.threshold_area:
+        if self.best_rectangle is not None and self.max_size > self.threshold_area:
             # plot result
             if self.max_area_safe:
-                self.plot_results(self.anchor_points, additional_boxes_green = [(self.best_anchor, self.max_pt)], display = False)
+                self.plot_results(self.anchor_points, additional_boxes_green = [self.best_rectangle], display = False)
             else:
-                self.plot_results(self.anchor_points, additional_boxes_red = [(self.best_anchor, self.max_pt)], display = False)
-            new_constraints = self.create_rectangle_constraints(self.best_anchor, self.max_pt, self.parameters)
-            return (new_constraints, self.max_size, self.max_area_safe)
+                self.plot_results(self.anchor_points, additional_boxes_red = [self.best_rectangle], display = False)
+            new_constraints = self.create_rectangle_constraints(self.best_rectangle, self.parameters)
+            return (new_constraints, self.best_rectangle, self.max_area_safe)
         else:
             return None
