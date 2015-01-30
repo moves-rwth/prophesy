@@ -145,7 +145,7 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 if not skip:
                     new_points.append(point)
     samples.update(sampling_interface.perform_sampling(new_points))
-    print("new samples {0}".format(len(new_points)))
-    print("skipCount {0}".format(skipCount))
+    #print("new samples {0}".format(len(new_points)))
+    #print("skipCount {0}".format(skipCount))
     # print(samples)
     return samples

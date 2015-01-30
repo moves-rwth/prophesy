@@ -61,7 +61,7 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_anchor_points_for_dir.remove(self.best_anchor)
 
         # update anchor points
-        print("anchor_points before: {0}".format(self.anchor_points))
+        #print("anchor_points before: {0}".format(self.anchor_points))
         (x1, y1, x2, y2) = self.best_rectangle.bounds
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
             if anchor_points_for_a_dir == self.best_anchor_points_for_dir:
@@ -76,7 +76,7 @@ class ConstraintRectangles(ConstraintGeneration):
                     anchor_points_for_a_dir.append(new_anchor)
                     print("updated {0} with {1}".format(anchor_point, new_anchor))
 
-        print("anchor_points after: {0}".format(self.anchor_points))
+        #print("anchor_points after: {0}".format(self.anchor_points))
 
         if self.max_area_safe:
             self.safe_boxes.append(self.best_rectangle)
