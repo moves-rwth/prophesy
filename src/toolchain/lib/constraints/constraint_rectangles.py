@@ -1,6 +1,4 @@
 from constraint_generation import ConstraintGeneration, Anchor, Direction
-from data.constraint import Constraint
-from sympy.polys.polytools import Poly
 from shapely.geometry import box, Point
 from shapely import affinity
 import sampling
@@ -30,18 +28,6 @@ class ConstraintRectangles(ConstraintGeneration):
     def intersects(self, rectangle1, rectangle2):
         # checks if rectangles intersect, touching is okay
         return rectangle1.intersects(rectangle2) and not rectangle1.touches(rectangle2)
-
-    def create_rectangle_constraints(self, rectangle, parameters):
-        (x1, y1, x2, y2) = rectangle.bounds
-        assert(x1 <= x2)
-        assert(y1 <= y2)
-
-        p = Poly(parameters[0] - x1, parameters)
-        constraints = [Constraint(Poly(parameters[0] - x1, parameters), ">=", parameters),
-                       Constraint(Poly(parameters[1] - y1, parameters), ">=", parameters),
-                       Constraint(Poly(parameters[0] - x2, parameters), "<=", parameters),
-                       Constraint(Poly(parameters[1] - y2, parameters), "<=", parameters)]
-        return constraints
 
     def change_current_constraint(self):
         # change current constraint to avoid memout in smt
