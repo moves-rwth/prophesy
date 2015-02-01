@@ -12,9 +12,40 @@ from util import ensure_dir_exists
 from data.constraint import Constraint, ComplexConstraint
 from sympy.polys.polytools import Poly
 import shutil
-from shapely.geometry import Point
-from sympy.core.symbol import Symbol
 from shapely.geometry.polygon import Polygon, orient, LinearRing
+from enum import Enum
+
+class Direction(Enum):
+    NE = (True, True)
+    SE = (True, False)
+    NW = (False, True)
+    SW = (False, False)
+    
+    @classmethod
+    def from_bool(cls, pos_x, pos_y):
+        if pos_x:
+            if pos_y:
+                return cls.NE
+            else:
+                return cls.SE
+        else:
+            if pos_y:
+                return cls.NW
+            else:
+                return cls.SW
+
+class Anchor(object):
+    def __init__(self, pos, dir):
+        self.pos = pos
+        self.dir = dir
+
+    def __hash__(self, *args, **kwargs):
+        return hash(self.pos) ^ hash(self.dir)
+
+    def __eq__(self, other):
+        if not isinstance(other, Anchor):
+            return False
+        return self.pos == other.pos and self.dir == other.dir
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -149,10 +180,10 @@ class ConstraintGeneration(object):
             print("{:3}".format(i) + "   {:>5s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
             i = i + 1
 
-    def plot_results(self, anchor_points = [], additional_arrows = [], additional_lines_green = [], additional_lines_red = [], additional_lines_blue = [], additional_boxes_green = [], additional_boxes_red = [], additional_boxes_blue = [], additional_polygons_green = [], additional_polygons_red = [], additional_polygons_blue = [], display=False, first=False):
+    def plot_results(self, *args, **kwargs):
         # plot result
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir=self.plotdir)
-        Plot.plot_results(self.parameters, dict([(p, v > self.threshold) for p,v in self.samples.items()]), anchor_points, additional_arrows, additional_lines_green, additional_lines_red, additional_lines_blue, additional_boxes_green, additional_boxes_red, additional_boxes_blue, additional_polygons_green, additional_polygons_red, additional_polygons_blue, result_tmp_file, display)
+        Plot.plot_results(parameters=self.parameters, samples_qualitative=dict([(p, v > self.threshold) for p,v in self.samples.items()]), path_to_save=result_tmp_file, *args, **kwargs)
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
@@ -169,7 +200,7 @@ class ConstraintGeneration(object):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def finalize_step(self, new_constraints):
+    def finalize_step(self, new_constraint):
         """Final steps to execute after last call of next_constraint, usually plots things"""
         raise NotImplementedError("Abstract parent method")
 
@@ -187,6 +218,9 @@ class ConstraintGeneration(object):
         smt_successful = False
         smt_model = None
         result = None
+
+        smt_successful = True
+        checkresult = smt.smt.Answer.unsat
 
         while not smt_successful:
             # check constraint with smt
@@ -214,6 +248,8 @@ class ConstraintGeneration(object):
                         smt_model = smt_context.get_model()
                     break
 
+        self.print_benchmark_output(self.benchmark_output)
+
         if checkresult == smt.smt.Answer.unsat:
             # update list of all constraints
             self.all_constraints.append((constraint, polygon, safe))
@@ -223,9 +259,6 @@ class ConstraintGeneration(object):
                 if self.is_point_fulfilling_constraint(pt, constraint):
                     del self.samples[pt]
 
-            # update everything in the algorithm according to correct new area
-            #TODO what to do in GUI?
-            self.finalize_step(constraint)
             print("added new polygon {0} with constraint: {1}".format(polygon, constraint))
             result = (True, polygon)
 
@@ -245,7 +278,9 @@ class ConstraintGeneration(object):
         else:
             assert False
 
-        self.print_benchmark_output(self.benchmark_output)
+        # update everything in the algorithm according to correct new area
+        #TODO what to do in GUI?
+        self.finalize_step(constraint)
         return result
 
     def generate_constraints(self):

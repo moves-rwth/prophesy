@@ -1,5 +1,5 @@
 import numpy
-from constraint_generation import ConstraintGeneration
+from constraint_generation import ConstraintGeneration, Anchor, Direction
 from config import EPS
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
@@ -20,7 +20,10 @@ class ConstraintPlanes(ConstraintGeneration):
         self.safe_planes = []
         self.unsafe_planes = []
 
-        self.anchor_points = [Point(0,0), Point(1,0), Point(1,1), Point(0,1)]
+        self.anchor_points = [Anchor(Point(0, 0), Direction.NE),
+                         Anchor(Point(1, 0), Direction.NW),
+                         Anchor(Point(1, 1), Direction.SW),
+                         Anchor(Point(0, 1), Direction.SE)]
         self.best_orientation_vector = None
         self.best_dpt = 0
         self.max_area_safe = False
@@ -128,21 +131,55 @@ class ConstraintPlanes(ConstraintGeneration):
         # TODO implement
         return
 
-    def finalize_step(self, new_constraints):
-        print("anchor_points before: {0}".format(self.anchor_points))
+    def finalize_step(self, new_constraint):
         (best_bound1, best_bound2) = self.best_line.coords
+        best_bound1 = Point(best_bound1)
+        best_bound2 = Point(best_bound2)
 
-        # update anchor points
-        self.anchor_points.append(Point(best_bound1))
-        self.anchor_points.append(Point(best_bound2))
-        #TODO only remove?
-        self.remove_array(self.anchor_points, self.best_anchor)
-
-        # remove additonal anchor points already in area
+        # Remove additional anchor points already in area
         for anchor in self.anchor_points:
-            fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(list(anchor.coords)[0], constraint) for constraint in new_constraints])
-            if fullfillsAllConstraints:
+            if self.is_point_fulfilling_constraint(list(anchor.pos.coords)[0], new_constraint):
                 self.remove_array(self.anchor_points, anchor)
+
+        # Add new anchors
+        # First add possible anchors for first bound point
+        if best_bound1.y == 0:
+            self.anchor_points.append(Anchor(Point(best_bound1), Direction.NW))
+            if best_bound2.x > best_bound1.x:
+                self.anchor_points.append(Anchor(Point(best_bound1), Direction.NE))
+        elif best_bound1.y == 1:
+            self.anchor_points.append(Anchor(Point(best_bound1), Direction.SE))
+            if best_bound2.x < best_bound1.x:
+                self.anchor_points.append(Anchor(Point(best_bound1), Direction.SW))
+        elif best_bound1.x == 0:
+            self.anchor_points.append(Anchor(Point(best_bound1), Direction.NE))
+            if best_bound2.y > best_bound1.y:
+                self.anchor_points.append(Anchor(Point(best_bound1), Direction.SE))
+        else:
+            assert best_bound1.x == 1
+            self.anchor_points.append(Anchor(Point(best_bound1), Direction.SW))
+            if best_bound2.y < best_bound1.y:
+                self.anchor_points.append(Anchor(Point(best_bound1), Direction.NW))
+
+        # Then for second bound point. Constraint is now on other side of the line
+        if best_bound2.y == 0:
+            self.anchor_points.append(Anchor(Point(best_bound2), Direction.NE))
+            if best_bound1.x > best_bound2.x:
+                self.anchor_points.append(Anchor(Point(best_bound2), Direction.NW))
+        elif best_bound2.y == 1:
+            self.anchor_points.append(Anchor(Point(best_bound2), Direction.SW))
+            if best_bound1.x < best_bound2.x:
+                self.anchor_points.append(Anchor(Point(best_bound2), Direction.SE))
+        elif best_bound2.x == 0:
+            self.anchor_points.append(Anchor(Point(best_bound2), Direction.SE))
+            if best_bound1.y > best_bound2.y:
+                self.anchor_points.append(Anchor(Point(best_bound2), Direction.NE))
+        else:
+            assert best_bound2.x == 1
+            self.anchor_points.append(Anchor(Point(best_bound2), Direction.NW))
+            if best_bound1.y < best_bound2.y:
+                self.anchor_points.append(Anchor(Point(best_bound2), Direction.SW))
+
         print("anchor_points after: {0}".format(self.anchor_points))
 
         if self.max_area_safe:
@@ -150,7 +187,7 @@ class ConstraintPlanes(ConstraintGeneration):
         else:
             self.unsafe_planes.append(self.best_line)
 
-        self.plot_results(additional_lines_green = self.safe_planes, additional_lines_red = self.unsafe_planes, additional_arrows = [LineString([self.best_anchor, self.best_orientation_vector * self.best_dpt])], display = True)
+        self.plot_results(anchor_points=self.anchor_points, poly_green = self.safe_planes, poly_red = self.unsafe_planes, additional_arrows = [LineString([self.best_anchor.pos, self.best_orientation_vector * self.best_dpt])], display = True)
 
     def next_constraint(self):
         # reset
@@ -174,16 +211,17 @@ class ConstraintPlanes(ConstraintGeneration):
                 orientation_vector = self.normalize_vector(self.rotate_vector(numpy.array([1, 0]), degree))
                 print("\to-vec: {0}".format(orientation_vector))
 
-                (area_safe, dpt) = self.create_halfspace_depth(self.safe_samples, self.bad_samples, anchor, orientation_vector)
+                (area_safe, dpt) = self.create_halfspace_depth(self.safe_samples, self.bad_samples, anchor.pos, orientation_vector)
                 if abs(dpt) < EPS:
                     continue
-                line = self.create_bounding_line(anchor, orientation_vector*dpt)
+                line = self.create_bounding_line(anchor.pos, orientation_vector*dpt)
                 if line is None:
                     continue
                 print("\t\tbounding line: {0} {1} {2}".format(line, area_safe, dpt))
-                point2 = anchor + orientation_vector * dpt
-                anchor_line = LineString([anchor, point2])
-                self.plot_results(additional_lines_blue = [line], additional_arrows = [anchor_line], display=False)
+                #point2 = anchor + orientation_vector * dpt
+                #anchor_line = LineString([anchor, point2])
+                # Plot for intermediate check
+                #self.plot_results(poly_blue = [line], additional_arrows = [anchor_line], display=False)
                 # chooose best
                 if dpt > self.best_dpt:
                     self.best_orientation_vector = orientation_vector
@@ -203,8 +241,8 @@ class ConstraintPlanes(ConstraintGeneration):
         print("Best area: {0}".format(self.max_area_safe))
         print("Best anchor: {0}".format(self.best_anchor))
         print("Best bounds: {0}".format(self.best_line))
-        point2 = self.best_anchor + self.best_orientation_vector * self.best_dpt
-        anchor_line = LineString([self.best_anchor, point2])
-        self.plot_results(additional_lines_blue = [self.best_line], additional_arrows = [anchor_line], display=True)
+        point2 = self.best_anchor.pos + self.best_orientation_vector * self.best_dpt
+        anchor_line = LineString([self.best_anchor.pos, point2])
+        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_line], additional_arrows = [anchor_line], display=True)
 
         return (self.compute_constraint(self.best_line), self.best_line, self.max_area_safe)

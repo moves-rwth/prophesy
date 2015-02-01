@@ -1,4 +1,4 @@
-from constraint_generation import ConstraintGeneration
+from constraint_generation import ConstraintGeneration, Anchor, Direction
 from data.constraint import Constraint
 from sympy.polys.polytools import Poly
 from shapely.geometry import box, Point
@@ -10,10 +10,10 @@ class ConstraintRectangles(ConstraintGeneration):
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
 
-        self.anchor_points = [([Point(0, 0)], True, True),
-                         ([Point(1, 0)], False, True),
-                         ([Point(1, 1)], False, False),
-                         ([Point(0, 1)], True, False)]
+        self.anchor_points = [Anchor(Point(0, 0), Direction.NE),
+                         Anchor(Point(1, 0), Direction.NW),
+                         Anchor(Point(1, 1), Direction.SW),
+                         Anchor(Point(0, 1), Direction.SE)]
 
         self.safe_boxes = []
         self.unsafe_boxes = []
@@ -57,7 +57,7 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_other_point = (x2 if self.best_pos_x else x1, y2 if self.best_pos_y else y1)
         return (self.create_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
 
-    def finalize_step(self, new_constraints):
+    def finalize_step(self, new_constraint):
         # update anchor points for direction
         self.best_anchor_points_for_dir.append(Point(self.best_other_point.x, self.best_anchor.y))
         self.best_anchor_points_for_dir.append(Point(self.best_anchor.x, self.best_other_point.y))
