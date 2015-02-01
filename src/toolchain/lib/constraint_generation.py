@@ -9,11 +9,12 @@ from abc import ABCMeta, abstractmethod
 from subprocess import call
 from config import PLOT_FILES_DIR, EPS
 from util import ensure_dir_exists
-from data.constraint import Constraint
+from data.constraint import Constraint, ComplexConstraint
 from sympy.polys.polytools import Poly
 import shutil
 from shapely.geometry import Point
 from sympy.core.symbol import Symbol
+from shapely.geometry.polygon import Polygon, orient, LinearRing
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -62,53 +63,65 @@ class ConstraintGeneration(object):
             except:
                 os.unlink(result_tmp_file)
 
-    def compute_constraints(self, polygon):
-        """Compute constraints from polygon
-        returns list of constraints describing the polygon
+    def compute_constraint(self, polygon):
+        """Compute constraints from polygon (Polygon, LineString or LinearRing)
+        Area will be considered at the rhs (ccw) of line segments
+        Polygon must be convex
+        returns single (Complex)Constraint describing the polygon
         """
-        assert(len(list(polygon.interiors)) == 0)
-        new_constraints = []
-        poly_points = list(polygon.exterior.coords)
-        for i in range(0, len(poly_points)-1):
-            point1 = Point(poly_points[i])
-            point2 = Point(poly_points[i+1])
+        if isinstance(polygon, LinearRing):
+            # Convert to polygon so it can be oriented
+            polygon = Polygon(polygon)
 
-            if (abs(point1.x - point2.x) < EPS):
-                # vertical line
-                if (point1.y < point2.y):
-                    rel = "<"
-                else:
-                    rel = ">="
-                new_constraints.append(Constraint(Poly(self.parameters[0] - point1.x, self.parameters), rel, self.parameters))
-                #print("line is described by x = {0}".format(point1.x))
+        if isinstance(polygon, Polygon):
+            assert len(list(polygon.interiors)) == 0
+            polygon = orient(polygon, sign=1.0)
+            polygon = polygon.exterior
+        points = list(polygon.coords)
+        assert len(points) >= 2
+
+        constraint = None
+        # Calculate half-plane for each pair of points
+        # http://math.stackexchange.com/questions/82151/find-the-equation-of-the-plane-passing-through-a-point-and-a-vector-orthogonal
+        for p1, p2 in zip(points[:-1], points[1:]):
+            # Get vector direction (parallel to hyperplane)
+            dvec = tuple([c2 - c1 for c1, c2 in zip(p1, p2)])
+            # Make vector orthogonal to hyperplane
+            # NOTE: rotate clockwise
+            # TODO: 2D only
+            dvec = (dvec[1], -dvec[0])
+
+            # Constant is dot-product of directional vector and origin
+            c = sum([c1 * c2 for c1, c2 in zip(dvec, p1)])
+            # Construct polynomial for line
+            poly = Poly(-c, self.parameters)
+            for parameter, coefficient in zip(self.parameters, dvec):
+                if coefficient != 0:
+                    poly = Poly(poly + parameter*coefficient, self.parameters)
+
+            # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
+            new_constraint = Constraint(poly, "<=", self.parameters)
+            if constraint is None:
+                constraint = new_constraint
             else:
-                # asserted x2 != x1
-                # slope
-                m = (point2.y - point1.y) / (point2.x - point1.x)
-                # two-point form
-                #     y-y1 = m * (x-x1)
-                # <=> 0 = mx - mx1 - y + y1
-                # <=> 0 = mx - y + c with c = y1 - mx1
-                c = point1.y - m * point1.x
+                constraint = constraint & new_constraint
 
-                # As we go counterclockwise, the described area is always left of the line
-                rel = ">"
-
-                new_constraints.append(Constraint(Poly(m*self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters))
-                #print("line is described by {m}x - y + {c} = 0".format(m=m, c=c))
-
-        print("Constraints for polygon ({0}): {1}".format(polygon, new_constraints))
-        return new_constraints
+        #print("constraint: {0}".format(constraint))
+        return constraint
 
     @classmethod
     def is_point_fulfilling_constraint(cls, pt, constraint):
         """Check wether the given point is satisfied by the constraints
         (i.e. is contained by it)"""
-        pol = constraint.polynomial
-        parameters = pol.atoms(Symbol)
-        evaluation = sampling.get_evaluation(pt, parameters)
+        if isinstance(constraint, ComplexConstraint):
+            if constraint.operator == "or":
+                return any([cls.is_point_fulfilling_constraint(pt, sub_constraint) for sub_constraint in constraint.constraints])
+            elif constraint.operator == "and":
+                return all([cls.is_point_fulfilling_constraint(pt, sub_constraint) for sub_constraint in constraint.constraints])
+            else:
+                assert False, "Unknown constraint operator {}".format(constraint.operator)
 
-        pol = pol.eval(evaluation).evalf()
+        pol = constraint.polynomial.eval({x:y for x,y in zip(constraint.symbols, pt)}).evalf()
 
         if constraint.relation == "=":
             return abs(pol) < EPS
@@ -160,7 +173,7 @@ class ConstraintGeneration(object):
         """Final steps to execute after last call of next_constraint, usually plots things"""
         raise NotImplementedError("Abstract parent method")
 
-    def analyze_constraint(self, constraints, polygon, safe):
+    def analyze_constraint(self, constraint, polygon, safe):
         """Extends the current area by using the new polygon
         constraints are the newly added constraints for the polygon
         polygon marks the new area to cover
@@ -178,8 +191,7 @@ class ConstraintGeneration(object):
         while not smt_successful:
             # check constraint with smt
             with self.smt2interface as smt_context:
-                for constraint in constraints:
-                    smt_context.assert_constraint(constraint)
+                smt_context.assert_constraint(constraint)
 
                 smt_context.set_guard("safe", not safe)
                 smt_context.set_guard("bad", safe)
@@ -195,7 +207,7 @@ class ConstraintGeneration(object):
                     result_update = self.change_current_constraint()
                     if result_update == None:
                         break
-                    (constraints, area, safe) = result_update
+                    (constraint, area, safe) = result_update
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:
@@ -204,32 +216,29 @@ class ConstraintGeneration(object):
 
         if checkresult == smt.smt.Answer.unsat:
             # update list of all constraints
-            self.all_constraints.append((constraints, polygon, safe))
+            self.all_constraints.append((constraint, polygon, safe))
 
             # remove unnecessary samples which are covered already by constraints
             for pt in list(self.samples.keys()):
-                fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(pt, constraint) for constraint in constraints])
-                #TODO: Why delete, what if threshold changes?
-                if fullfillsAllConstraints:
+                if self.is_point_fulfilling_constraint(pt, constraint):
                     del self.samples[pt]
 
             # update everything in the algorithm according to correct new area
             #TODO what to do in GUI?
-            self.finalize_step(constraints)
-            print("added new polygon {0} with constraints: {1}".format(polygon, constraints))
+            self.finalize_step(constraint)
+            print("added new polygon {0} with constraint: {1}".format(polygon, constraint))
             result = (True, polygon)
 
         elif checkresult == smt.smt.Answer.sat:
             # add new point as counter example to existing constraints
-            modelPoint_tmp = ()
+            modelPoint = ()
             for p in self.parameters:
                 if p.name in smt_model:
-                    modelPoint_tmp = modelPoint_tmp + (smt_model[p.name],)
+                    modelPoint = modelPoint + (smt_model[p.name],)
                 else:
                     # if parameter is undefined set as 0.5
-                    modelPoint_tmp = modelPoint_tmp + (0.5,)
+                    modelPoint = modelPoint + (0.5,)
                     smt_model[p.name] = 0.5
-            modelPoint = Point(modelPoint_tmp)
             self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
             print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
             result = (False, modelPoint)
@@ -242,7 +251,8 @@ class ConstraintGeneration(object):
     def generate_constraints(self):
         """Iteratively generates new constraints, heuristically, attempting to
         find the largest safe or unsafe area"""
-        while True:
+
+        while self.nr < 20:
             self.nr += 1
 
             # split samples into safe and bad
@@ -255,10 +265,7 @@ class ConstraintGeneration(object):
                 # no new constraint available
                 break
 
-            (new_constraints, polygon, area_safe) = result_constraint
-            self.analyze_constraint(new_constraints, polygon, area_safe)
-
-        self.smt2interface.pop()
-        self.smt2interface.stop()
+            (new_constraint, polygon, area_safe) = result_constraint
+            self.analyze_constraint(new_constraint, polygon, area_safe)
 
         print("Generation complete, plot located at {0}".format(self.result_file))

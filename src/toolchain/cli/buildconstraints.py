@@ -8,8 +8,6 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 import sampling
-from sympy.core.symbol import Symbol
-from sympy.polys.polytools import Poly
 from data.constraint import Constraint
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
@@ -17,9 +15,7 @@ from smt.smt import VariableDomain
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
-from shapely.geometry import Polygon
 from input.resultfile import read_pstorm_result
-from data.rationalfunction import RationalFunction
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')
@@ -47,55 +43,38 @@ if __name__ == "__main__":
         smt2interface = SmtlibSolver(cmdargs.z3location)
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
-    smt2interface.run()
 
-    threshold_symbol = Symbol("T")
-    symbols = result.parameters + [threshold_symbol]
+    print("Performing sample refinement")
+    (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
+    sampler = sampling.RatFuncSampling(result.ratfunc, result.parameters)
+    #new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
+    #while len(new_samples) < 60 and len(new_samples) > 0:
+    #    print(new_samples)
+    #    print("#####")
+    #    samples.update(new_samples)
+    #    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
+    #samples.update(new_samples)
+    print(samples)
+
+    print("Setup SMT interface")
+    smt2interface.run()
 
     for p in result.parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
-    smt2interface.add_variable(threshold_symbol.name, VariableDomain.Real)
     smt2interface.add_variable("safe", VariableDomain.Bool)
     smt2interface.add_variable("bad", VariableDomain.Bool)
 
     if cmdargs.safe_above_threshold:
         safe_relation = ">="
-        bad_relation = "<"
+        bad_relation = "<="
     else:
         safe_relation = "<="
-        bad_relation = ">"
+        bad_relation = ">="
 
-    threshold_pol = Poly(threshold_symbol, symbols)
-    tpol = threshold_pol.unify(result.ratfunc.nominator)
-    ext_ratfunc = RationalFunction(Poly(result.ratfunc.nominator, symbols), Poly(result.ratfunc.denominator, symbols))
-    safe_objective_constraint = Constraint(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator, safe_relation, symbols)
-    bad_objective_constraint = Constraint(ext_ratfunc.nominator - threshold_pol * ext_ratfunc.denominator, bad_relation , symbols)
-    threshold_value_constraint = Constraint(threshold_pol - threshold, "=", symbols)
-
-    smt2interface.assert_guarded_constraint("safe", safe_objective_constraint)
-    smt2interface.assert_guarded_constraint("bad", bad_objective_constraint)
-    smt2interface.assert_constraint(threshold_value_constraint)
-
-    #print("Executed SMT commands:")
-    #smt2interface.print_calls()
-
-    print("Performing sample refinement")
-    (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
-    sampler = sampling.RatFuncSampling(ext_ratfunc, result.parameters)
-    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    while len(new_samples) < 60:
-        samples = new_samples
-        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    samples = new_samples
-<<<<<<< HEAD
-
-    for pt, v in samples.items():
-        print(pt, v)
-=======
-    
-    #for pt, v in samples.items():
-    #    print(pt, v)
->>>>>>> origin/master
+    safe_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, safe_relation, result.parameters)
+    bad_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, bad_relation, result.parameters)
+    smt2interface.assert_guarded_constraint("safe", safe_constraint)
+    smt2interface.assert_guarded_constraint("bad", bad_constraint)
 
     print("Generating constraints")
     generator = None
@@ -109,3 +88,7 @@ if __name__ == "__main__":
     #generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     #generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
     #generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
+
+    smt2interface.stop()
+    #print("Executed SMT commands:")
+    #smt2interface.print_calls()    

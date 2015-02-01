@@ -42,11 +42,12 @@ def strNum(n):
             num_str = "(- " + str(abs(n)) + ")"
     else:
         (nom, den) = n.as_numer_denom()
+        # Convert to Integer first, to avoid printing float representation
         assert den > 0
         if n >= 0:
-            num_str = str(nom)
+            num_str = str(Integer(nom))
         else:
-            num_str = "(- " + str(abs(nom)) + ") "
+            num_str = "(- " + str(abs(Integer(nom))) + ") "
         if den != 1:
-            num_str = "(/ " + num_str + " " + str(abs(den)) + ")"
+            num_str = "(/ " + num_str + " " + str(abs(Integer(den))) + ")"
     return num_str

@@ -6,6 +6,8 @@ from sympy.polys.polytools import Poly
 from shapely.geometry import LineString
 from shapely.geometry.point import Point, asPoint
 import sampling
+from shapely.geometry.polygon import LinearRing
+from shapely.geometry.multipoint import MultiPoint
 
 class ConstraintPlanes(ConstraintGeneration):
 
@@ -38,6 +40,7 @@ class ConstraintPlanes(ConstraintGeneration):
 
     def compute_orthogonal_vector(self, vector):
         # computes one of the orthogonal vectors to vector
+        # Rotates CW
         return numpy.array([vector.item(1), -vector.item(0)])
 
     def create_halfspace_depth(self, safe_samples, bad_samples, anchor_point, orientation_vector):
@@ -73,38 +76,35 @@ class ConstraintPlanes(ConstraintGeneration):
             return (False, min_safe_dist)
 
     def create_bounding_line(self, anchor, orientation_vector):
-        # computes the bounding line orthogonal to the orientatation vector
-        # returns None if no intersection or intersections are out of borders
+        """computes the bounding line orthogonal to the orientatation vector
+        Ensures area of the line is at the RHS
+        returns None if no intersection or intersections are out of borders"""
+        bbox = LinearRing([(0,0),(1,0),(1,1),(0,1)])
 
         orthogonal_anchor = numpy.array(anchor) + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
 
-        # intersection with borders
-        down = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 0]), numpy.array([1, 0]))
-        left = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 0]), numpy.array([0, 1]))
-        top = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([0, 1]), numpy.array([1, 0]))
-        right = self.get_intersection(orthogonal_anchor, orthogonal_vec, numpy.array([1, 0]), numpy.array([0, 1]))
-        # print("\t\tBorders: {0}, {1}, {2}, {3}".format(down, left, top, right))
-        bounds = []
-        if down is not None and self.is_valid(down):
-            bounds.append(down)
-        if left is not None and self.is_valid(left):
-            bounds.append(left)
-        if top is not None and self.is_valid(top):
-            bounds.append(top)
-        if right is not None and self.is_valid(right):
-            bounds.append(right)
-        if len(bounds) != 2:
+        if not (0 <= orthogonal_anchor[0] <= 1) or not (0 <= orthogonal_anchor[1] <= 1):
+            # Line outside of bbox
             return None
-        else:
-            return LineString(bounds)
 
-    def is_valid(self, point):
-        # checks if point is in rectangle [0,0] to [1,1]
-        if (0 <= point.x and point.x <= 1):
-            return (0 <= point.y and point.y <= 1)
-        else:
-            return False
+        # Ensure start and end are far enough outside of bbox to ensure intersection
+        p = Point(orthogonal_anchor)
+        # First + then - ensures RHS of line is constraint area
+        # compute_orthogonal_vector returns CW rotation
+        start = Point(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2)
+        end = Point(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2)
+
+        line1 = LineString([start, p])
+        line2 = LineString([p, end])
+        intersection1 = line1.intersection(bbox)
+        intersection2 = line2.intersection(bbox)
+        if intersection1 is None or intersection2 is None:
+            return None
+        if not isinstance(intersection1, Point) or not isinstance(intersection2, Point):
+            # Each intersection must be a single point
+            return None
+        return LineString((intersection1, intersection2))
 
     def rotate_vector(self, x, rad):
         R = numpy.matrix([[numpy.cos(rad), -numpy.sin(rad)], [numpy.sin(rad), numpy.cos(rad)]])
@@ -113,18 +113,6 @@ class ConstraintPlanes(ConstraintGeneration):
 
     def normalize_vector(self, x):
         return x / numpy.linalg.norm(x)
-
-    def get_intersection(self, anchor_a, vector_a, anchor_b, vector_b) :
-        # computes intersection of two lines anchor_a + vector_a*x and anchor_b + vector_b*x
-        # returns None if there is no intersection
-        #TODO use intersection of lines
-        dap = numpy.array([-vector_a[1], vector_a[0]])
-        denom = numpy.dot( dap, vector_b)
-        num = numpy.dot( dap, numpy.array(anchor_a) - numpy.array(anchor_b))
-        if abs(denom) < EPS:
-            return None
-        else:
-            return asPoint((num / denom) * vector_b + anchor_b)
 
     def remove_array(self, L, arr):
         ind = 0
@@ -142,27 +130,27 @@ class ConstraintPlanes(ConstraintGeneration):
 
     def finalize_step(self, new_constraints):
         print("anchor_points before: {0}".format(self.anchor_points))
-        (best_bound1, best_bound2) = self.best_bounding
+        (best_bound1, best_bound2) = self.best_line.coords
 
         # update anchor points
-        self.anchor_points.append(best_bound1)
-        self.anchor_points.append(best_bound2)
+        self.anchor_points.append(Point(best_bound1))
+        self.anchor_points.append(Point(best_bound2))
         #TODO only remove?
         self.remove_array(self.anchor_points, self.best_anchor)
 
         # remove additonal anchor points already in area
         for anchor in self.anchor_points:
-            fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(anchor, constraint) for constraint in new_constraints])
+            fullfillsAllConstraints = all([self.is_point_fulfilling_constraint(list(anchor.coords)[0], constraint) for constraint in new_constraints])
             if fullfillsAllConstraints:
                 self.remove_array(self.anchor_points, anchor)
         print("anchor_points after: {0}".format(self.anchor_points))
 
         if self.max_area_safe:
-            self.safe_planes.append(self.best_bounding)
+            self.safe_planes.append(self.best_line)
         else:
-            self.unsafe_planes.append(self.best_bounding)
+            self.unsafe_planes.append(self.best_line)
 
-        self.plot_results(additional_lines_green = self.safe_planes, additional_lines_red = self.unsafe_planes, additional_arrows = [(self.best_anchor, self.best_orientation_vector * self.best_dpt)], display = True)
+        self.plot_results(additional_lines_green = self.safe_planes, additional_lines_red = self.unsafe_planes, additional_arrows = [LineString([self.best_anchor, self.best_orientation_vector * self.best_dpt])], display = True)
 
     def next_constraint(self):
         # reset
@@ -192,7 +180,7 @@ class ConstraintPlanes(ConstraintGeneration):
                 line = self.create_bounding_line(anchor, orientation_vector*dpt)
                 if line is None:
                     continue
-                print("\t\tbounding line: {0}".format(line))
+                print("\t\tbounding line: {0} {1} {2}".format(line, area_safe, dpt))
                 point2 = anchor + orientation_vector * dpt
                 anchor_line = LineString([anchor, point2])
                 self.plot_results(additional_lines_blue = [line], additional_arrows = [anchor_line], display=False)
@@ -219,49 +207,4 @@ class ConstraintPlanes(ConstraintGeneration):
         anchor_line = LineString([self.best_anchor, point2])
         self.plot_results(additional_lines_blue = [self.best_line], additional_arrows = [anchor_line], display=True)
 
-        (x1, y1, x2, y2) = self.best_line.bounds
-        if (abs(x2 - x1) < EPS):
-            # vertical line
-            if (self.best_orientation_vector[0] > 0):
-                rel = "<"
-                neg_rel = ">="
-            else:
-                rel = ">="
-                neg_rel = "<"
-            new_constraint =  Constraint(Poly(self.parameters[0] - x1, self.parameters), rel, self.parameters)
-            new_constraint_neg = Constraint(Poly(self.parameters[0] - x1, self.parameters), neg_rel, self.parameters)
-            print("line is described by x = {0}".format(x1))
-
-        else:
-            # asserted x2 != x1
-            # slope m = (y2-y1) / (x2-x1)
-            m = (y2 - y1) / (x2 - x1)
-            # two-point form
-            #     y-y1 = m * (x-x1)
-            # <=> 0 = mx - mx1 - y + y1
-            # <=> 0 = mx - y + c with c = y1 - mx1
-            c = y1 - m * x1
-
-            # TODO correct?
-            if (self.best_orientation_vector[0] > 0):
-                # part left of line is in constraint
-                rel = ">"
-                neg_rel = "<="
-            elif abs(self.best_orientation_vector[0]) < EPS and self.best_orientation_vector[1] > 0:
-                # part below line is in constraint
-                rel = ">"
-                neg_rel = "<="
-            else:
-                rel = "<="
-                neg_rel = ">"
-
-            new_constraint = Constraint(Poly(m * self.parameters[0] - self.parameters[1] + c, self.parameters), rel, self.parameters)
-            new_constraint_neg = Constraint(Poly(m * self.parameters[0] - self.parameters[1] + c, self.parameters), neg_rel, self.parameters)
-            print("line is described by {m}x - y + {c} = 0".format(m = m, c = c))
-
-        # new constraints + negation of previous constraints
-        print("constraint: {0}".format(new_constraint))
-        new_constraint_list = self.all_constraints_neg.copy()
-        new_constraint_list.append(new_constraint)
-        self.all_constraints_neg.append(new_constraint_neg)
-        return (new_constraint_list, self.max_size, self.max_area_safe)
+        return (self.compute_constraint(self.best_line), self.best_line, self.max_area_safe)

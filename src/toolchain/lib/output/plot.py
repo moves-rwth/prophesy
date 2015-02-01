@@ -54,11 +54,11 @@ class Plot(object):
             yInvalid = []
             for (key,val) in samples_qualitative.items():
                 if val:
-                    xValid.append(key.x)
-                    yValid.append(key.y)
+                    xValid.append(key[0])
+                    yValid.append(key[1])
                 else:
-                    xInvalid.append(key.x)
-                    yInvalid.append(key.y)
+                    xInvalid.append(key[0])
+                    yInvalid.append(key[1])
 
             ax1.scatter(xValid,yValid, marker='o', c='green')
             ax1.scatter(xInvalid,yInvalid, marker='x', c='red')

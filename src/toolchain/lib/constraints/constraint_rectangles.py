@@ -52,11 +52,10 @@ class ConstraintRectangles(ConstraintGeneration):
         # returns (new_constraint, new_covered_area, area_safe)
 
         # scale rectangle by factor 0.5
-        self.best_rectangle = affinity.scale(rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor)
+        self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor)
         (x1, y1, x2, y2) = self.best_rectangle.bounds
         self.best_other_point = (x2 if self.best_pos_x else x1, y2 if self.best_pos_y else y1)
-        new_constraints = self.create_rectangle_constraints(self.best_rectangle, self.parameters)
-        return (new_constraints, self.best_rectangle, self.max_area_safe)
+        return (self.create_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
 
     def finalize_step(self, new_constraints):
         # update anchor points for direction
@@ -110,6 +109,7 @@ class ConstraintRectangles(ConstraintGeneration):
         for (anchor_points_for_a_dir, pos_x, pos_y) in self.anchor_points:
             for anchor in anchor_points_for_a_dir:
                 for point, value in self.samples.items():
+                    point = Point(point)
                     # check if point lies in correct direction from anchor point
                     if not ((pos_x and point.x > anchor.x) or (not pos_x and point.x < anchor.x)):
                         continue;
@@ -141,6 +141,7 @@ class ConstraintRectangles(ConstraintGeneration):
                         safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
                         other_points = self.bad_samples.keys() if safe_area else self.safe_samples.keys()
                         for point2 in other_points:
+                            point2 = Point(point2)
                             if self.is_inside_rectangle(point2, rectangle_test):
                                 # bad sample in safe area
                                 break_attempt = True
@@ -163,7 +164,6 @@ class ConstraintRectangles(ConstraintGeneration):
                 self.plot_results(self.anchor_points, additional_boxes_green = [self.best_rectangle], display = False)
             else:
                 self.plot_results(self.anchor_points, additional_boxes_red = [self.best_rectangle], display = False)
-            new_constraints = self.create_rectangle_constraints(self.best_rectangle, self.parameters)
-            return (new_constraints, self.best_rectangle, self.max_area_safe)
+            return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
         else:
             return None

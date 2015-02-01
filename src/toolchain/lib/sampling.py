@@ -2,10 +2,9 @@ import math
 import itertools
 from config import DISTANCE_SAMPLING
 from collections import OrderedDict
-from data.range import create_range_from_interval
 from shapely.geometry import Point
-import sympy
 from sympy.core.numbers import Rational
+from numpy import linspace
 
 def read_samples_file(path):
     parameters = []
@@ -18,7 +17,7 @@ def read_samples_file(path):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
                     raise RuntimeError("Invalid input on line " + str(i+2))
-                samples[Point(map(float, items[:-1]))] = float(items[-1])
+                samples[tuple(map(float, items[:-1]))] = float(items[-1])
             samples = OrderedDict(samples.items())
     return (parameters, samples)
 
@@ -30,49 +29,55 @@ def write_samples_file(parameters, samples_dict, path):
 
 def get_evaluation(point, parameters):
     # returns list as evaluation for parameters according to point coordinates
-    list_subs = zip(parameters, list(point.coords)[0])
-    return {x:y for x,y in list_subs}
+    return {x:y for x,y in zip(parameters, point)}
 
-class McSampling():
-    def __init__(self, tool, prism_file, pctl_filepath):
-        self.tool = tool
-        self.prism_file = prism_file
-        self.pctl_filepath = pctl_filepath
-
+class Sampling(object):
+    def __init__(self):
+        pass
 
     def perform_uniform_sampling(self, intervals, samples_per_dimension):
-        assert(samples_per_dimension > 0)
-        if samples_per_dimension == 1: raise NotImplementedError
-        if self.prism_file.nr_parameters() != len(intervals):
-            raise RuntimeError("Number of ranges does not match number of parameters")
-
-        ranges = [create_range_from_interval(i, samples_per_dimension) for i in intervals]
-
-        return self.tool.uniform_sample_pctl_formula(self.prism_file, self.pctl_filepath, ranges)
+        assert samples_per_dimension > 1
+        ranges = [linspace(i[0], i[1], samples_per_dimension) for i in intervals]
+        all_points = itertools.product(*ranges)
+        return self.perform_sampling(all_points)
 
     def perform_sampling(self, samplepoints):
-        return self.tool.sample_pctl_formula(self.prism_file, self.pctl_filepath, samplepoints)
+        return NotImplementedError("Abstract samplingfunction called")
+
+class McSampling(Sampling):
+    def __init__(self, tool, prism_file, pctl_file):
+        super().__init__()
+
+        self.tool = tool
+        self.prism_file = prism_file
+        self.pctl_file = pctl_file
+    
+    def perform_uniform_sampling(self, intervals, samples_per_dimension):
+        assert samples_per_dimension > 1
+        ranges = [range.create_range_from_interval(interval, samples_per_dimension) for interval in intervals]
+        samples = self.tool.uniform_sample_pctl_formula(self, self.prism_file, self.pctl_file, ranges)
+        return OrderedDict(samples.items())
+
+    def perform_sampling(self, samplepoints):
+        samples = self.tool.sample_pctl_formula(self.prism_file, self.pctl_file, samplepoints)
+        return OrderedDict(samples.items())
 
 # Sampling for rational function
-class RatFuncSampling():
-    def __init__(self, ratfunc, parameters):
+class RatFuncSampling(Sampling):
+    def __init__(self, ratfunc, parameters, rational=False):
+        super().__init__()
+
         self.parameters = parameters
         self.ratfunc = ratfunc
-
-    def perform_uniform_sampling(self, intervals, samples_per_dimension):
-        samples = {}
-        ranges = [create_range_from_interval(i, samples_per_dimension).values() for i in intervals]
-        all_points = itertools.product(*ranges)
-        for pt in all_points:
-            # Somehow sympy does not like zip, so generate a list
-            valuation = {x : sympy.Rational(y) for x,y in zip(self.parameters, pt)}
-            samples[pt] = self.ratfunc.eval(valuation)
-        return OrderedDict(sorted(samples.items()))
+        self.rational = rational
 
     def perform_sampling(self, samplepoints):
         samples = {}
         for pt in samplepoints:
-            samples[pt] = self.ratfunc.eval({x:Rational(y) for x,y in zip(self.parameters, pt)}).evalf()
+            if self.rational:
+                samples[pt] = self.ratfunc.eval({x:Rational(y) for x,y in zip(self.parameters, pt)}).evalf()
+            else:
+                samples[pt] = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
         return OrderedDict(samples.items())
 
 def split_samples(samples, threshold, greaterEqualSafe = True):
@@ -93,6 +98,10 @@ def near_sampling(samples, threshold, rectangles, limit = 0.1, added_dist = 0.05
     pass
 
 def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = True, use_filter = False):
+    """Given the current samples and threshold, generates a new set of samples to approximate
+    the threshold function.
+    If use_filter is True, samples that are too far from the threshold are ignored
+    Returns an empty dictionary if no further refinement is possible"""
     samples = samples.copy()
     if use_filter:
         samples = filter_sampling(samples, threshold)
@@ -107,6 +116,8 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
     new_points = []
     for safe_pt, safe_v in safe_samples.items():
         for bad_pt, bad_v in bad_samples.items():
+            safe_pt = Point(safe_pt)
+            bad_pt = Point(bad_pt)
             # print(totalCount/prod)
             dist = safe_pt.distance(bad_pt)
             # print("safe_pt: {0}".format(safe_pt))
@@ -133,7 +144,7 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 skip = False
                 i = 0
                 for sample_pt in samples.keys():
-                    d = sample_pt.distance(point)
+                    d = point.distance(Point(sample_pt))
                     if d < 0.01:
                         #skip = True
                         skipCount += 1
@@ -146,6 +157,5 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                             break
 
                 if not skip:
-                    new_points.append(point)
-    samples.update(sampling_interface.perform_sampling(new_points))
-    return samples
+                    new_points.append(list(point.coords)[0])
+    return sampling_interface.perform_sampling(new_points)
