@@ -47,6 +47,9 @@ class Anchor(object):
             return False
         return self.pos == other.pos and self.dir == other.dir
 
+    def __str__(self):
+        return "({}, {}) {}".format(self.pos.x, self.pos.y, self.dir)
+
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
 
@@ -72,6 +75,8 @@ class ConstraintGeneration(object):
         self.benchmark_output = []
         # Stores all constraints as triple ([constraint], polygon representation, bad/safe)
         self.all_constraints = []
+        self.safe_polys = []
+        self.bad_polys = []
 
         # initial constraints
         self.smt2interface.push()
@@ -183,7 +188,12 @@ class ConstraintGeneration(object):
     def plot_results(self, *args, **kwargs):
         # plot result
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir=self.plotdir)
-        Plot.plot_results(parameters=self.parameters, samples_qualitative=dict([(p, v > self.threshold) for p,v in self.samples.items()]), path_to_save=result_tmp_file, *args, **kwargs)
+        Plot.plot_results(parameters=self.parameters,
+                          samples_qualitative=dict([(p, v > self.threshold) for p,v in self.samples.items()]),
+                          poly_green=self.safe_polys,
+                          poly_red=self.bad_polys,
+                          path_to_save=result_tmp_file,
+                          *args, **kwargs)
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
@@ -201,7 +211,8 @@ class ConstraintGeneration(object):
 
     @abstractmethod
     def finalize_step(self, new_constraint):
-        """Final steps to execute after last call of next_constraint, usually plots things"""
+        """Final steps to execute after last call of next_constraint, usually plots things.
+        Applies only for constraints for which no counterexample is found"""
         raise NotImplementedError("Abstract parent method")
 
     def analyze_constraint(self, constraint, polygon, safe):
@@ -253,6 +264,10 @@ class ConstraintGeneration(object):
         if checkresult == smt.smt.Answer.unsat:
             # update list of all constraints
             self.all_constraints.append((constraint, polygon, safe))
+            if safe:
+                self.safe_polys.append(polygon)
+            else:
+                self.bad_polys.append(polygon)
 
             # remove unnecessary samples which are covered already by constraints
             for pt in list(self.samples.keys()):
@@ -262,6 +277,9 @@ class ConstraintGeneration(object):
             print("added new polygon {0} with constraint: {1}".format(polygon, constraint))
             result = (True, polygon)
 
+            # update everything in the algorithm according to correct new area
+            #TODO what to do in GUI?
+            self.finalize_step(constraint)
         elif checkresult == smt.smt.Answer.sat:
             # add new point as counter example to existing constraints
             modelPoint = ()
@@ -278,9 +296,6 @@ class ConstraintGeneration(object):
         else:
             assert False
 
-        # update everything in the algorithm according to correct new area
-        #TODO what to do in GUI?
-        self.finalize_step(constraint)
         return result
 
     def generate_constraints(self):
@@ -302,5 +317,7 @@ class ConstraintGeneration(object):
 
             (new_constraint, polygon, area_safe) = result_constraint
             self.analyze_constraint(new_constraint, polygon, area_safe)
+            # Plot intermediate result
+            self.plot_results(display=False)
 
         print("Generation complete, plot located at {0}".format(self.result_file))
