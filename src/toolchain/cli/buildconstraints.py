@@ -16,6 +16,8 @@ from smt.isat import IsatSolver
 from smt.smt import VariableDomain
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
+from constraints.constraint_polygon import ConstraintPolygon
+from shapely.geometry import Polygon
 from input.resultfile import read_pstorm_result
 from data.rationalfunction import RationalFunction
 
@@ -85,9 +87,15 @@ if __name__ == "__main__":
         samples = new_samples
         new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
     samples = new_samples
+<<<<<<< HEAD
 
     for pt, v in samples.items():
         print(pt, v)
+=======
+    
+    #for pt, v in samples.items():
+    #    print(pt, v)
+>>>>>>> origin/master
 
     print("Generating constraints")
     generator = None
@@ -96,3 +104,8 @@ if __name__ == "__main__":
     else:
         generator = ConstraintRectangles(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     generator.generate_constraints()
+
+    # only for testing purposes of polygon
+    #generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+    #generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
+    #generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
