@@ -34,6 +34,8 @@ def smt2strPoly(p, variables):
 
 def strNum(n):
     assert isinstance(n, Rational) or isinstance(n, Integer) or isinstance(n, Float)
+    if isinstance(n, Float):
+        n = Rational(n)
     num_str = ""
     if n.is_integer:
         if n >= 0:
@@ -45,9 +47,9 @@ def strNum(n):
         # Convert to Integer first, to avoid printing float representation
         assert den > 0
         if n >= 0:
-            num_str = str(Integer(nom))
+            num_str = str((nom))
         else:
-            num_str = "(- " + str(abs(Integer(nom))) + ") "
+            num_str = "(- " + str(abs((nom))) + ") "
         if den != 1:
-            num_str = "(/ " + num_str + " " + str(abs(Integer(den))) + ")"
+            num_str = "(/ " + num_str + " " + str(abs((den))) + ")"
     return num_str

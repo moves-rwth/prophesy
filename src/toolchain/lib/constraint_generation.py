@@ -230,12 +230,10 @@ class ConstraintGeneration(object):
         smt_model = None
         result = None
 
-        smt_successful = True
-        checkresult = smt.smt.Answer.unsat
-
         while not smt_successful:
             # check constraint with smt
             with self.smt2interface as smt_context:
+                print("Checking constraint {}".format(constraint))
                 smt_context.assert_constraint(constraint)
 
                 smt_context.set_guard("safe", not safe)
@@ -316,6 +314,7 @@ class ConstraintGeneration(object):
                 break
 
             (new_constraint, polygon, area_safe) = result_constraint
+            self.plot_results(poly_blue=[polygon])
             self.analyze_constraint(new_constraint, polygon, area_safe)
             # Plot intermediate result
             self.plot_results(display=False)
