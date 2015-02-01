@@ -250,7 +250,7 @@ class ConstraintGeneration(object):
                     result_update = self.change_current_constraint()
                     if result_update == None:
                         break
-                    (constraint, area, safe) = result_update
+                    (constraint, polygon, safe) = result_update
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:

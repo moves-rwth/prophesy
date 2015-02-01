@@ -65,11 +65,11 @@ class ConstraintPlanes(ConstraintGeneration):
             return (True, 0)
         elif abs(min_safe_dist) < abs(min_bad_dist):
             # safe area
-            return (True, min_bad_dist)
+            return (True, min_bad_dist-EPS)
         else:
             # unsafe area
             assert(abs(min_safe_dist) > abs(min_bad_dist))
-            return (False, min_safe_dist)
+            return (False, min_safe_dist-EPS)
 
     def create_bounding_line(self, anchor, orientation_vector):
         """computes the bounding line orthogonal to the orientation vector
@@ -219,5 +219,11 @@ class ConstraintPlanes(ConstraintGeneration):
 
         if self.best_line is None:
             return None
+
+        if False:
+            point2 = self.best_anchor.pos + self.best_orientation_vector * self.best_dpt
+            anchor_line = LineString([self.best_anchor.pos, point2])
+            # Plot candiate
+            self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_line], additional_arrows = [anchor_line], display=False)
 
         return (self.compute_constraint(self.best_line), self.best_line, self.max_area_safe)
