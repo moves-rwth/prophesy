@@ -81,9 +81,10 @@ class ConstraintRectangles(ConstraintGeneration):
         #self.anchor_points.append(Anchor(self.best_other_point, self.best_anchor.dir))
         self.anchor_points.append(Anchor(other_right, self.best_anchor.dir))
         self.anchor_points.append(Anchor(other_left , self.best_anchor.dir))
-        
+
         self.all_boxes.append(self.best_rectangle)
 
+        # Plot the new anchors
         self.plot_results(anchor_points=self.anchor_points)
 
     def next_constraint(self):

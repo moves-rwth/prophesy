@@ -5,7 +5,7 @@ from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
 from shapely.geometry.linestring import LineString
-from shapely.geometry.polygon import LinearRing, Polygon
+from shapely.geometry.polygon import Polygon
 
 class Plot(object):
     def __plot_constraints(self, parameters, region, color):
@@ -49,15 +49,17 @@ class Plot(object):
         if isinstance(poly, Polygon):
             poly = poly.exterior
 
-        # If hatched, set edgeto black regardless of given argument
-        if not isinstance(poly, LineString) and 'hatch' in kwargs:
+        # If hatched, set edge to black regardless of given argument
+        if poly.__class__ != LineString and 'hatch' in kwargs:
             kwargs['ec'] = 'black'
 
         p = patches.Polygon(poly.coords, *args, **kwargs)
         subplot.add_patch(p)
 
     @staticmethod
-    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [], poly_green = [], poly_red = [], poly_blue = [], path_to_save=None, display=False):
+    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [],
+                     poly_green = [], poly_red = [], poly_blue = [],
+                     path_to_save=None, display=False):
         if len(parameters) == 2:
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
