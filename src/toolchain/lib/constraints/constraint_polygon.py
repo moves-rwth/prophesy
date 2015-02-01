@@ -1,44 +1,58 @@
-from constraint_generation import *
-from data.constraint import Constraint
-from sympy.polys.polytools import Poly
-from shapely.geometry import Polygon, LineString
+from constraint_generation import ConstraintGeneration
+from shapely.ops import triangulate
 
 class ConstraintPolygon(ConstraintGeneration):
 
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
 
-        self.best_polygon = None
-        self.safe = None
+        self.safe_polygons = []
+        self.bad_polygons = []
 
     def change_current_constraint(self):
-        # change current constraint to avoid memout in smt
-        # returns (new_constraint, new_covered_area, area_safe)
-
-        #TODO inform user
-        return (new_constraints, self.best_polygon, self.safe)
+        # TODO inform user
+        return None
 
     def finalize_step(self, new_constraints):
-        # Plot polygon
-        if self.safe:
-            self.plot_results(additional_polygons_green = [self.best_polygon], display = True)
-        else:
-            self.plot_results(additional_polygons_red = [self.best_polygon], display = True)
+        pass
 
     def next_constraint(self):
-        #TODO input comes from user
-        return
+        if len(self.safe_polygons) > 0:
+            poly = self.safe_polygons[0]
+            self.safe_polygons = self.safe_polygons[1:]
+            return (self.poly_constraint(poly), poly, True)
+        elif len(self.bad_polygons) > 0:
+            poly = self.bad_polygons[0]
+            self.bad_polygons = self.bad_polygons[1:]
+            return (self.poly_constraint(poly), poly, False)
+
+        return None
 
     def add_polygon(self, polygon, safe):
-        """Extends the current area by using the new polygon
-        polygon marks the new area to cover
-        safe indicates whether the area is safe or bad
-        returns tuple (valid constraint, polygon/counterexample point)
-        if constraint is valid the tuple  is (True, polygon added)
-        if constraint is invalid the tuple is (False, point as counterexample)
-        """
-        self.best_polygon = polygon
-        self.safe = safe
-        new_constraints = self.compute_constraints(polygon)
-        result = self.analyze_constraint(new_constraints, polygon, safe)
-        return result
+        if safe:
+            self.safe_polygons.append(polygon)
+        else:
+            self.bad_polygons.append(polygon)
+
+    def poly_constraint(self, complex_poly):
+        assert len(complex_poly.exterior.coords) >= 3, "Must supply at least 3 points"
+        # CCW polygon
+        complex_poly = complex_poly.orient(complex_poly, 1.0)
+        convex_poly = complex_poly.convex_hull
+        # If concave (ie convex hull has less points), then split in triangles
+        if len(list(complex_poly.exterior.coords)) > len(list(convex_poly.exterior.coords)):
+            polys = triangulate(complex_poly)
+        else:
+            polys = [complex_poly]
+
+        or_constraint = None
+
+        for poly in polys:
+            constraint = self.compute_constraint(poly)
+
+            if or_constraint is None:
+                or_constraint = constraint
+            else:
+                or_constraint = or_constraint | constraint
+
+        return or_constraint
