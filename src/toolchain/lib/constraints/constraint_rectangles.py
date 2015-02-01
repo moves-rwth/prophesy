@@ -40,7 +40,10 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_other_point = (x2 if pos_x else x1, y2 if pos_y else y1)
         return (self.create_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
 
-    def finalize_step(self, new_constraint):
+    def reject_constraint(self, constraint, safe, sample):
+        pass
+
+    def accept_constraint(self, constraint, safe):
         # remove contained anchors
         self.anchor_points.remove(self.best_anchor)
         anchors = self.anchor_points[:]

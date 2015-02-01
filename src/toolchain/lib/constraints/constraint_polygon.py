@@ -13,7 +13,10 @@ class ConstraintPolygon(ConstraintGeneration):
         # TODO inform user
         return None
 
-    def finalize_step(self, new_constraints):
+    def accept_constraint(self, constraint, safe, safe):
+        pass
+
+    def reject_constraint(self, constraint, sample):
         pass
 
     def next_constraint(self):

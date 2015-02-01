@@ -210,9 +210,14 @@ class ConstraintGeneration(object):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def finalize_step(self, new_constraint):
-        """Final steps to execute after last call of next_constraint, usually plots things.
-        Applies only for constraints for which no counterexample is found"""
+    def reject_constraint(self, constraint, safe, sample):
+        """Called for a constraint that is rejected (sample found).
+        sample is tuple((x,y), value)"""
+        raise NotImplementedError("Abstract parent method")
+
+    @abstractmethod
+    def accept_constraint(self, constraint, safe):
+        """Called for a constraint that is accepted (i.e. unsat)"""
         raise NotImplementedError("Abstract parent method")
 
     def analyze_constraint(self, constraint, polygon, safe):
@@ -277,7 +282,7 @@ class ConstraintGeneration(object):
 
             # update everything in the algorithm according to correct new area
             #TODO what to do in GUI?
-            self.finalize_step(constraint)
+            self.accept_constraint(constraint, safe)
         elif checkresult == smt.smt.Answer.sat:
             # add new point as counter example to existing constraints
             modelPoint = ()
@@ -291,6 +296,7 @@ class ConstraintGeneration(object):
             self.samples[modelPoint] = self.ratfunc.subs(smt_model.items()).evalf()
             print("added new sample {0} with value {1}".format(modelPoint, self.samples[modelPoint]))
             result = (False, modelPoint)
+            self.reject_constraint(constraint, safe, (modelPoint, self.samples[modelPoint]))
         else:
             assert False
 

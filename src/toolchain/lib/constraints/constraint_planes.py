@@ -120,7 +120,10 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_line = line
         return (self.compute_constraint(self.best_line), self.best_line, self.max_area_safe)
 
-    def finalize_step(self, new_constraint):
+    def reject_constraint(self, constraint, safe, sample):
+        pass
+
+    def accept_constraint(self, constraint, safe):
         (best_bound1, best_bound2) = self.best_line.coords
         best_bound1 = Point(best_bound1)
         best_bound2 = Point(best_bound2)
@@ -128,7 +131,7 @@ class ConstraintPlanes(ConstraintGeneration):
         # Remove additional anchor points already in area
         anchors = self.anchor_points[:]
         for anchor in anchors:
-            if self.is_point_fulfilling_constraint(list(anchor.pos.coords)[0], new_constraint):
+            if self.is_point_fulfilling_constraint(list(anchor.pos.coords)[0], constraint):
                 self.anchor_points.remove(anchor)
 
         # Add new anchors

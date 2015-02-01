@@ -1,12 +1,11 @@
 from constraint_generation import ConstraintGeneration
 from shapely.geometry import box, Point
-import sampling
-import config
 
 class Quad(object):
     def __init__(self, origin, size):
         self.origin = origin
         self.size = size
+        self.poly = box(self.origin.x, self.origin.y, self.origin.x+self.size, self.origin.y+self.size)
 
     def split(self):
         if self.width < 0.01:
@@ -16,17 +15,21 @@ class Quad(object):
                 Quad(Point(self.origin.x, self.origin.y+self.size/2),             self.self.size/2),
                 Quad(Point(self.origin.x+self.size/2, self.origin.y+self.size/2), self.self.size/2)]
 
-    def as_poly(self):
-        return box(self.origin.x, self.origin.y, self.origin.x+self.size, self.origin.y+self.size)
-
 class ConstraintQuads(ConstraintGeneration):
-
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
         super().__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
 
-        self.quads = [Quad(Point(0,0), 1.0)]
-        self.best_quad = None
-        self.best_quad_safe = True
+        self.quads = []
+        # Number of consecutive recursive splits() maximum
+        self.check_depth = 64
+        
+        # Setup initial quad
+        quad = Quad(Point(0,0), 1.0)
+        quadsamples = []
+        for pt, v in samples:
+            safe = (v >= self.threshold) == self.safe_above_threshold
+            quadsamples.append((Point(pt), safe))
+        self.check_quad((quad, quadsamples))
 
     def is_inside_rectangle(self, point, rectangle):
         # checks if the point lies in the rectangle
@@ -41,27 +44,71 @@ class ConstraintQuads(ConstraintGeneration):
         return self.compute_constraint(box)
 
     def change_current_constraint(self):
-        new_quads = self.best_quad.split()
-        if new_quads is None:
-            return None
-        self.best_quad = new_quads[0]
-        self.best_quad_safe = True
-        self.quads.append(new_quads[1:])
+        # TODO: Implement
+        # Split quad and try again
+        pass
 
-    def finalize_step(self, new_constraint):
-        self.best_quad = None
-        self.best_quad_safe = True
+    def check_quad(self, quad_elem, depth = 0):
+        """Check if given quad can be assumed safe or bad based on
+        known samples. If samples are mixed, split the quad and retry.
+        Resulting quads are added to self.quads"""
+        if depth == self.check_depth:
+            assert False, "Too deep"
+            self.quads.append(quad_elem)
+            return
+        
+        quad, samples = quad_elem
+        if len(samples) <= 1:
+            self.quads.append(quad_elem)
+            return
+        if all([sample[1] for sample in samples]):
+            # All safe
+            self.quads.append(quad_elem)
+            return
+        elif all([not sample[1] for sample in samples]):
+            # All bad
+            self.quads.append(quad_elem)
+            return
+        
+        # Samples are mixed
+        newquads = quad.split()
+        newsamples = [[]] * len(newquads)
+        newpairs = zip(newquads, newsamples)
 
-    def next_constraint(self):
-        if self.best_quad and self.best_quad_safe:
-            self.best_quad_safe = False
-            poly = self.best_quad.as_poly()
-            return (self.compute_constraint(poly), poly, self.best_quad_safe)
+        for pt, safe in samples.items():
+            for newquad, newsamples in newpairs:
+                mapped = False
+                if newquad.poly.intersects(pt):
+                    mapped = True
+                    newsamples.append((pt, safe))
+                assert mapped, "Unmapped sample {},{} {}".format(pt.x, pt.y, safe)
+        #self.quads += newpairs
+        for pair in newpairs:
+            self.check_quad(pair, depth+1)
 
-        # TODO: Make everything logical
-        self.best_quad = self.quads[0]
-        self.best_quad_safe = True
+    def reject_constraint(self, constraint, safe, sample):
+        # New sample, add it to current quad, and check it
+        # Also remove failed quad
+        self.quads[0][1].append((Point(sample[0]), not safe))
+        self.check_quad(self.quads[0])
         self.quads = self.quads[1:]
 
-        poly = self.best_quad.as_poly()
-        return (self.compute_constraint(poly), poly, self.best_quad_safe)
+    def accept_constraint(self, constraint, safe):
+        # Done with the quad
+        self.quads = self.quads[1:]
+
+    def next_constraint(self):
+        quad, quadsamples = self.quads[0]
+        constraint = self.compute_constraint(quad.poly)
+
+        if len(quadsamples) == 0:
+            # Assume safe at first (rather arbitrary)
+            return (constraint, quad.poly, True)
+        if all([sample[1] for sample in quadsamples]):
+            # All safe
+            return (constraint, quad.poly, True)
+        elif all([not sample[1] for sample in quadsamples]):
+            # All bad
+            return (constraint, quad.poly, False)
+        
+        assert False, "A mixed quad was left in the quad queue, wut"
