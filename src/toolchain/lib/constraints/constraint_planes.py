@@ -110,7 +110,7 @@ class ConstraintPlanes(ConstraintGeneration):
     def normalize_vector(self, x):
         return x / numpy.linalg.norm(x)
 
-    def change_current_constraint(self):
+    def fail_constraint(self, constraint, safe):
         if self.best_dpt < 0.05:
             return None
         self.best_dpt *= 0.5

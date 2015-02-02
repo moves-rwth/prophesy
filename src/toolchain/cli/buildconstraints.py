@@ -15,6 +15,7 @@ from smt.smt import VariableDomain
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
+from constraints.constraint_quads import ConstraintQuads
 from input.resultfile import read_pstorm_result
 
 if __name__ == "__main__":
@@ -29,7 +30,8 @@ if __name__ == "__main__":
     group.add_argument('--bad-above-threshold', action = 'store_false', dest = "safe_above_threshold")
     method_group = parser.add_mutually_exclusive_group(required = True)
     method_group.add_argument('--planes', action = 'store_true', dest = "planes")
-    method_group.add_argument('--growing-rectangles', action = 'store_false', dest = "planes")
+    method_group.add_argument('--growing-rectangles', action = 'store_true', dest = "rectangles")
+    method_group.add_argument('--quads', action = 'store_true', dest = "quads")
     solvers_group = parser.add_mutually_exclusive_group(required = True)
     solvers_group.add_argument('--z3', dest = "z3location", help = "location of z3")
     solvers_group.add_argument('--isat', dest = "isatlocation", help = "location of isat")
@@ -80,8 +82,12 @@ if __name__ == "__main__":
     generator = None
     if cmdargs.planes:
         generator = ConstraintPlanes(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
-    else:
+    elif cmdargs.rectangles:
         generator = ConstraintRectangles(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+    elif cmdargs.quads:
+        generator = ConstraintQuads(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+    else:
+        assert False
     generator.generate_constraints()
 
     # only for testing purposes of polygon

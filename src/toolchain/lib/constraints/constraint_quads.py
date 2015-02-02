@@ -8,16 +8,22 @@ class Quad(object):
         self.poly = box(self.origin.x, self.origin.y, self.origin.x+self.size, self.origin.y+self.size)
 
     def split(self):
-        if self.width < 0.1:
+        if self.size < 0.125:
             return None
-        return [Quad(Point(self.origin.x, self.origin.y),                         self.self.size/2),
-                Quad(Point(self.origin.x+self.size/2, self.origin.y),             self.self.size/2),
-                Quad(Point(self.origin.x, self.origin.y+self.size/2),             self.self.size/2),
-                Quad(Point(self.origin.x+self.size/2, self.origin.y+self.size/2), self.self.size/2)]
+        return [Quad(Point(self.origin.x, self.origin.y),                         self.size/2),
+                Quad(Point(self.origin.x+self.size/2, self.origin.y),             self.size/2),
+                Quad(Point(self.origin.x, self.origin.y+self.size/2),             self.size/2),
+                Quad(Point(self.origin.x+self.size/2, self.origin.y+self.size/2), self.size/2)]
+
+    def __repr__(self):
+        return "Quad(Point({},{}), {})".format(self.origin.x, self.origin.y, self.size)
+
+    def __str__(self):
+        return str(list(self.poly.exterior.coords))
 
 class ConstraintQuads(ConstraintGeneration):
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
-        super().__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
+        super().__init__(samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.quads = []
         # Number of consecutive recursive splits() maximum
@@ -26,7 +32,7 @@ class ConstraintQuads(ConstraintGeneration):
         # Setup initial quad
         quad = Quad(Point(0,0), 1.0)
         quadsamples = []
-        for pt, v in samples:
+        for pt, v in samples.items():
             safe = (v >= self.threshold) == self.safe_above_threshold
             quadsamples.append((Point(pt), safe))
         self.check_quad((quad, quadsamples))
@@ -43,10 +49,23 @@ class ConstraintQuads(ConstraintGeneration):
         box = box(quad.origin.x, quad.origin.y, quad.origin.x+quad.size, quad.origin.y+quad.size)
         return self.compute_constraint(box)
 
-    def change_current_constraint(self):
-        # TODO: Implement
-        # Split quad and try again
-        pass
+    def split_quad(self, quad_elem):
+        (quad, quadsamples) = quad_elem
+        newquads = quad.split()
+        if newquads is None:
+            return
+        newsamples = [[] for _ in newquads]
+        newelems = [i for i in zip(newquads, newsamples)]
+
+        for pt, safe in quadsamples:
+            mapped = False
+            for newquad, newsamples in newelems:
+                #print("Intersect {} {} : {}".format((pt.x,pt.y), newquad, newquad.poly.intersects(pt)))
+                if newquad.poly.intersects(pt):
+                    mapped = True
+                    newsamples.append((pt, safe))
+            assert mapped, "Unmapped sample {},{} {}".format(pt.x, pt.y, safe)
+        return newelems
 
     def check_quad(self, quad_elem, depth = 0):
         """Check if given quad can be assumed safe or bad based on
@@ -56,8 +75,8 @@ class ConstraintQuads(ConstraintGeneration):
             assert False, "Too deep"
             self.quads.append(quad_elem)
             return
-        
-        quad, samples = quad_elem
+
+        samples = quad_elem[1]
         if len(samples) <= 1:
             self.quads.append(quad_elem)
             return
@@ -69,24 +88,27 @@ class ConstraintQuads(ConstraintGeneration):
             # All bad
             self.quads.append(quad_elem)
             return
-        
-        # Samples are mixed
-        newquads = quad.split()
-        if newquads is None:
-            return
-        newsamples = [[]] * len(newquads)
-        newpairs = zip(newquads, newsamples)
 
-        for pt, safe in samples.items():
-            for newquad, newsamples in newpairs:
-                mapped = False
-                if newquad.poly.intersects(pt):
-                    mapped = True
-                    newsamples.append((pt, safe))
-                assert mapped, "Unmapped sample {},{} {}".format(pt.x, pt.y, safe)
+        newelems = self.split_quad(quad_elem)
+        if newelems is None:
+            return None
         #self.quads += newpairs
-        for pair in newpairs:
+        for pair in newelems:
             self.check_quad(pair, depth+1)
+
+    def fail_constraint(self, constraint, safe):
+        # Split quad and try again
+        quadelem = self.quads[0]
+        newelems = self.split_quad(quadelem)
+        # Currently no need to check it,
+        # failure ony applies for quad that was already consistent
+        self.quads = self.quads[1:]
+        if newelems is not None:
+            self.quads = newelems + self.quads
+        if len(self.quads) == 0:
+            return None
+        quad = self.quads[0][0]
+        return (self.compute_constraint(quad.poly), quad.poly, safe)
 
     def reject_constraint(self, constraint, safe, sample):
         # New sample, add it to current quad, and check it
@@ -115,5 +137,5 @@ class ConstraintQuads(ConstraintGeneration):
         elif all([not sample[1] for sample in quadsamples]):
             # All bad
             return (constraint, quad.poly, False)
-        
+
         assert False, "A mixed quad was left in the quad queue, wut"

@@ -71,7 +71,6 @@ class ConstraintGeneration(object):
 
         self.smt2interface = _smt2interface
         self.ratfunc = _ratfunc
-        self.nr = 0
         self.benchmark_output = []
         # Stores all constraints as triple ([constraint], polygon representation, bad/safe)
         self.all_constraints = []
@@ -205,8 +204,9 @@ class ConstraintGeneration(object):
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def change_current_constraint(self):
-        """Update current set of constraints (see next_constraint), usually to avoid mem or time out"""
+    def fail_constraint(self, constraint, safe):
+        """Update current set of constraints, usually to avoid mem or time out.
+        Returns same as next_constraint"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
@@ -230,7 +230,6 @@ class ConstraintGeneration(object):
         if constraint is invalid the tuple is (False, point as counterexample)
         """
         assert(polygon is not None)
-        self.nr += 1
         smt_successful = False
         smt_model = None
         result = None
@@ -249,13 +248,14 @@ class ConstraintGeneration(object):
                 duration = time.time() - start
                 print("Call took {0} seconds".format(duration))
                 self.benchmark_output.append((checkresult, duration, polygon.area))
-                if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
+                if not checkresult in [smt.smt.Answer.sat, smt.smt.Answer.unsat]:
                     # smt call not finished -> change constraint to make it better computable
                     #TODO what to do in GUI?
-                    result_update = self.change_current_constraint()
+                    result_update = self.fail_constraint(constraint, safe)
                     if result_update == None:
                         break
                     (constraint, polygon, safe) = result_update
+                    print(polygon.area)
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:
@@ -298,7 +298,8 @@ class ConstraintGeneration(object):
             result = (False, modelPoint)
             self.reject_constraint(constraint, safe, (modelPoint, self.samples[modelPoint]))
         else:
-            assert False
+            # SMT failed completely
+            return None
 
         return result
 
@@ -306,8 +307,9 @@ class ConstraintGeneration(object):
         """Iteratively generates new constraints, heuristically, attempting to
         find the largest safe or unsafe area"""
 
-        while self.nr < 20:
-            self.nr += 1
+        nr = 0
+        while nr < 20:
+            nr += 1
 
             # split samples into safe and bad
             (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
@@ -321,8 +323,12 @@ class ConstraintGeneration(object):
 
             (new_constraint, polygon, area_safe) = result_constraint
             self.plot_results(poly_blue=[polygon])
-            self.analyze_constraint(new_constraint, polygon, area_safe)
+            result = self.analyze_constraint(new_constraint, polygon, area_safe)
             # Plot intermediate result
             self.plot_results(display=False)
+            
+            if result is None:
+                print("Unable to analyze constraint, aborting")
+                break
 
         print("Generation complete, plot located at {0}".format(self.result_file))

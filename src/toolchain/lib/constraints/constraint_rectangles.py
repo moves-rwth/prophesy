@@ -29,7 +29,7 @@ class ConstraintRectangles(ConstraintGeneration):
         # checks if rectangles intersect, touching is okay
         return rectangle1.intersects(rectangle2) and not rectangle1.touches(rectangle2)
 
-    def change_current_constraint(self):
+    def fail_constraint(self, constraint, safe):
         # change current constraint to avoid memout in smt
         # returns (new_constraint, new_covered_area, area_safe)
 

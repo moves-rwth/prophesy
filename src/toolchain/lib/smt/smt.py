@@ -7,6 +7,7 @@ class Answer(Enum):
     unknown = 2
     killed = 3
     memout = 4
+    timeout = 5
 
 class VariableDomain(Enum):
     Bool = 0

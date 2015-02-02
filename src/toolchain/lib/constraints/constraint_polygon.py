@@ -9,14 +9,15 @@ class ConstraintPolygon(ConstraintGeneration):
         self.safe_polygons = []
         self.bad_polygons = []
 
-    def change_current_constraint(self):
+    def fail_constraint(self, constraint, safe):
         # TODO inform user
+        # TODO: convex constraint might be split in triangles
         return None
 
-    def accept_constraint(self, constraint, safe, safe):
+    def accept_constraint(self, constraint, safe):
         pass
 
-    def reject_constraint(self, constraint, sample):
+    def reject_constraint(self, constraint, safe, sample):
         pass
 
     def next_constraint(self):
