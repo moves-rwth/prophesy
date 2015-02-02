@@ -1,6 +1,8 @@
 from constraint_generation import ConstraintGeneration
 from shapely.geometry import box, Point
+from functools import total_ordering
 
+@total_ordering
 class Quad(object):
     def __init__(self, origin, size):
         self.origin = origin
@@ -8,7 +10,7 @@ class Quad(object):
         self.poly = box(self.origin.x, self.origin.y, self.origin.x+self.size, self.origin.y+self.size)
 
     def split(self):
-        if self.size < 0.125:
+        if self.size < 1.0/(2**6):
             return None
         return [Quad(Point(self.origin.x, self.origin.y),                         self.size/2),
                 Quad(Point(self.origin.x+self.size/2, self.origin.y),             self.size/2),
@@ -20,6 +22,17 @@ class Quad(object):
 
     def __str__(self):
         return str(list(self.poly.exterior.coords))
+
+    def __hash__(self):
+        return hash(self.origin) ^ hash(self.size)
+
+    def __eq__(self, other):
+        return self.origin == other.origin and self.size == other.size
+
+    def __lt__(self, other):
+        if self.size < other.size:
+            return True
+        return self.origin.x < other.origin.x
 
 class ConstraintQuads(ConstraintGeneration):
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
@@ -107,6 +120,7 @@ class ConstraintQuads(ConstraintGeneration):
             self.quads = newelems + self.quads
         if len(self.quads) == 0:
             return None
+        self.quads.sort(reverse=True)
         quad = self.quads[0][0]
         return (self.compute_constraint(quad.poly), quad.poly, safe)
 
@@ -116,6 +130,7 @@ class ConstraintQuads(ConstraintGeneration):
         self.quads[0][1].append((Point(sample[0]), not safe))
         self.check_quad(self.quads[0])
         self.quads = self.quads[1:]
+        self.quads.sort(reverse=True)
 
     def accept_constraint(self, constraint, safe):
         # Done with the quad
