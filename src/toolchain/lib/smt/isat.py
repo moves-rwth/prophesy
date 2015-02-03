@@ -43,8 +43,6 @@ class IsatSolver(SMTSolver):
                 for constr in constrs:
                     f.write("\t" + constr + ";\n")
 
-        print(resultfile[1])
-
         args = [self.location, resultfile, "--msw=0.0001", "--prabs=0.00001"]
 
         print(run_tool(args))

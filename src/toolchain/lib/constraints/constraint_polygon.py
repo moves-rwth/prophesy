@@ -1,5 +1,6 @@
 from constraint_generation import ConstraintGeneration
 from shapely.ops import triangulate
+from shapely.geometry.polygon import orient
 
 class ConstraintPolygon(ConstraintGeneration):
 
@@ -41,7 +42,7 @@ class ConstraintPolygon(ConstraintGeneration):
     def poly_constraint(self, complex_poly):
         assert len(complex_poly.exterior.coords) >= 3, "Must supply at least 3 points"
         # CCW polygon
-        complex_poly = complex_poly.orient(complex_poly, 1.0)
+        complex_poly = orient(complex_poly, 1.0)
         convex_poly = complex_poly.convex_hull
         # If concave (ie convex hull has less points), then split in triangles
         if len(list(complex_poly.exterior.coords)) > len(list(convex_poly.exterior.coords)):

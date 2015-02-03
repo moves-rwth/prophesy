@@ -256,7 +256,6 @@ class ConstraintGeneration(object):
                         break
                     # self.plot_candidate()
                     (constraint, polygon, safe) = result_update
-                    print(polygon.area)
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:
@@ -339,8 +338,8 @@ class ConstraintGeneration(object):
                     break
 
             # Plot the final outcome
-            self.plot_results(display = False)
-
-            print("Generation complete, plot located at {0}".format(self.result_file))
+            if self.plot:
+                self.plot_results(display = False)
+                print("Generation complete, plot located at {0}".format(self.result_file))
 
         return (self.safe_polys, self.bad_polys, self.new_samples)

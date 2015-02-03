@@ -37,11 +37,11 @@ class ConstraintRectangles(ConstraintGeneration):
         # returns (new_constraint, new_covered_area, area_safe)
 
         # scale rectangle by factor 0.5
-        self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor)
+        self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor.pos)
         (x1, y1, x2, y2) = self.best_rectangle.bounds
-        pos_x, pos_y = self.best_anchor.pos
-        self.best_other_point = (x2 if pos_x else x1, y2 if pos_y else y1)
-        return (self.create_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
+        pos_x, pos_y = self.best_anchor.dir.value
+        self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
+        return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
 
     def reject_constraint(self, constraint, safe, sample):
         pass

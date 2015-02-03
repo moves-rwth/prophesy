@@ -1,6 +1,4 @@
 import pylab
-import numpy
-import sympy
 from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
@@ -8,42 +6,6 @@ from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
 
 class Plot(object):
-    def __plot_constraints(self, parameters, region, color):
-        for constraints in reversed(region):
-            for c in constraints:
-                xs = numpy.linspace(0,1,11)
-                print(xs)
-                ys = [sympy.solve(c.polynomial.subs(parameters[0],x))[0].evalf() for x in xs]
-
-                print(ys)
-                if c.relation == ">=" or c.relation == ">":
-                    pyplot.fill_between(numpy.array(xs,dtype=float), numpy.array(ys,dtype=float), 1, facecolor=color)
-                else:
-                    pyplot.fill_between(numpy.array(xs,dtype=float), 0, numpy.array(ys,dtype=float), facecolor=color)
-                pylab.ylim([0,1])
-                pylab.xlim([0,1])
-
-
-    def plot_constraints(self, parameters, saferegion, badregion):
-        self.__plot_constraints(parameters, saferegion, 'green')
-        self.__plot_constraints(parameters, badregion, 'red')
-
-
-    def __onselect(self, eclick, erelease):
-        'eclick and erelease are matplotlib events at press and release'
-        print(' startposition : (%f, %f)' % (eclick.xdata, eclick.ydata))
-        print(' endposition   : (%f, %f)' % (erelease.xdagreenta, erelease.ydata))
-        print(' used button   : ', eclick.button)
-
-    def __toggle_selector(self, event):
-        print(' Key pressed.')
-        if event.key in ['Q', 'q'] and toggle_selector.RS.active:
-            print (' RectangleSelector deactivated.')
-            toggle_selector.RS.set_active(False)
-        if event.key in ['A', 'a'] and not toggle_selector.RS.active:
-            print (' RectangleSelector activated.')
-            toggle_selector.RS.set_active(True)
-
     @staticmethod
     def plot_poly(subplot, poly, *args, **kwargs):
         if isinstance(poly, Polygon):
@@ -109,23 +71,3 @@ class Plot(object):
             if display:
                 pyplot.show()
             pyplot.close(fig)
-
-
-    def plot_results_val(self, parameters, result):
-        if len(parameters) == 2:
-
-            x = []
-            y = []
-            z = []
-            for (key,val) in result.items():
-                x.append(key[0])
-                y.append(key[1])
-                z.append(val)
-
-            cm = pyplot.get_cmap("RdYlGn")
-            col = [cm(float(i)) for i in z]
-            pyplot.scatter(x,y,s=30,c=col,marker='o')
-            pylab.ylim([0,1])
-            pylab.xlim([0,1])
-            pyplot.show()
-
