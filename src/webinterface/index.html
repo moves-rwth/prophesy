@@ -319,19 +319,19 @@ $(document).ready(function() {
             //Ajax events
             success: function(result) {
                 if (result.status == "ok") {
-                    var status = result.data.result
-                    if (status == "sat") {
-                        // Counterexample
-                        sample = result.data.cex
+                    for (var key in result.data.sat) {
+                        var sample = result.data.sat[key];
                         samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
-                    } else if (status == "unsat") {
-                        // Constraint OK
-                        if (result.data.type == "safe") {
-                            safe_constraints.push(newConstraint);
+                    };
+                    var status = result.data.result
+                    for (var key in result.data.unsat) {
+                        var constraint = result.data.unsat[key];
+                        if (constraint[1]) {
+                            safe_constraints.push(constraint[0]);
                         } else {
-                            bad_constraints.push(newConstraint);
+                            bad_constraints.push(constraint[0]);
                         }
-                    }
+                    };
                     newConstraint = [];
                     plotSamples();
                 }
@@ -347,6 +347,39 @@ $(document).ready(function() {
     
     $( "#form-constraints-auto" ).submit(function( event ) {
         event.preventDefault();
+        
+        setBusy(true);
+        var formData = new FormData($(this)[0]);
+        $.ajax({
+            url: '../generateConstraints',
+            type: 'POST',
+            dataType: 'json',
+            //Ajax events
+            success: function(result) {
+                if (result.status == "ok") {
+                    for (var key in result.data.sat) {
+                        var sample = result.data.sat[key];
+                        samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
+                    };
+                    var status = result.data.result
+                    for (var key in result.data.unsat) {
+                        var constraint = result.data.unsat[key];
+                        if (constraint[1]) {
+                            safe_constraints.push(constraint[0]);
+                        } else {
+                            bad_constraints.push(constraint[0]);
+                        }
+                    };
+                    plotSamples();
+                }
+            },
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        }).always(function() {setBusy(false);});
     });
     
     $("#clear-constraint").click(function(event) {
@@ -472,7 +505,12 @@ $(document).ready(function() {
             </div>
             <div id="tab-constr-auto" class="tab cp">
                 <form id="form-constraints-auto">
-                    
+                    <select name="generator">
+                        <option selected="selected" value="planes">Planes</option>
+                        <option value="rectangles">Growing rectangles</option>
+                        <option value="quads">Quadrants</option>
+                    </select>
+                    <button id="autoConstraints" type="submit" class="positive">Generate</button>
                 </form>
             </div>
         </div>

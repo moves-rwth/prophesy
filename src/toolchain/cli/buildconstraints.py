@@ -2,6 +2,7 @@
 
 import sys
 import os
+from shapely.geometry.polygon import Polygon
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
@@ -11,7 +12,7 @@ import sampling
 from data.constraint import Constraint
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
-from smt.smt import VariableDomain
+from smt.smt import VariableDomain, setup_smt
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     method_group.add_argument('--planes', action = 'store_true', dest = "planes")
     method_group.add_argument('--growing-rectangles', action = 'store_true', dest = "rectangles")
     method_group.add_argument('--quads', action = 'store_true', dest = "quads")
+    method_group.add_argument('--poly', action = 'store_true', dest = "poly")
     solvers_group = parser.add_mutually_exclusive_group(required = True)
     solvers_group.add_argument('--z3', dest = "z3location", help = "location of z3")
     solvers_group.add_argument('--isat', dest = "isatlocation", help = "location of isat")
@@ -41,10 +43,6 @@ if __name__ == "__main__":
     threshold = vars(cmdargs)["threshold"]
     threshold_area = vars(cmdargs)["threshold_area"]
     result = read_pstorm_result(vars(cmdargs)['rat_file'])
-    if cmdargs.z3location:
-        smt2interface = SmtlibSolver(cmdargs.z3location)
-    elif cmdargs.isatlocation:
-        smt2interface = IsatSolver(cmdargs.isatlocation)
 
     print("Performing sample refinement")
     (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
@@ -59,24 +57,12 @@ if __name__ == "__main__":
     print(samples)
 
     print("Setup SMT interface")
+    if cmdargs.z3location:
+        smt2interface = SmtlibSolver(cmdargs.z3location)
+    elif cmdargs.isatlocation:
+        smt2interface = IsatSolver(cmdargs.isatlocation)
     smt2interface.run()
-
-    for p in result.parameters:
-        smt2interface.add_variable(p.name, VariableDomain.Real)
-    smt2interface.add_variable("safe", VariableDomain.Bool)
-    smt2interface.add_variable("bad", VariableDomain.Bool)
-
-    if cmdargs.safe_above_threshold:
-        safe_relation = ">="
-        bad_relation = "<="
-    else:
-        safe_relation = "<="
-        bad_relation = ">="
-
-    safe_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, safe_relation, result.parameters)
-    bad_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, bad_relation, result.parameters)
-    smt2interface.assert_guarded_constraint("safe", safe_constraint)
-    smt2interface.assert_guarded_constraint("bad", bad_constraint)
+    setup_smt(smt2interface, result, threshold, cmdargs.safe_above_threshold)
 
     print("Generating constraints")
     generator = None
@@ -86,14 +72,14 @@ if __name__ == "__main__":
         generator = ConstraintRectangles(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.quads:
         generator = ConstraintQuads(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+    elif cmdargs.poly:
+        generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        # For testing
+        generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), False)
+        generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
     else:
         assert False
     generator.generate_constraints()
-
-    # only for testing purposes of polygon
-    #generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
-    #generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
-    #generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
 
     smt2interface.stop()
     #print("Executed SMT commands:")

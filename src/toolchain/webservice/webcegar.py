@@ -20,14 +20,13 @@ from input.resultfile import read_param_result, read_pstorm_result, \
 from input.prismfile import PrismFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.pstorm import ProphesyParametricModelChecker
-
-
-from constraints.convex_constraint import poly_constraint
-import smt
 from smt.smtlib import SmtlibSolver
-from smt.smt import VariableDomain
-from sympy.polys.polytools import Poly
-from data.constraint import Constraint
+from smt.smt import setup_smt
+from shapely.geometry.polygon import Polygon
+from constraints.constraint_planes import ConstraintPlanes
+from constraints.constraint_rectangles import ConstraintRectangles
+from constraints.constraint_quads import ConstraintQuads
+from constraints.constraint_polygon import ConstraintPolygon
 
 def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
@@ -78,7 +77,7 @@ def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
 
 def _jsonPoly(polygon):
-    return [[x,y] for x,y in polygon.exterior.coords]
+    return [[x, y] for x, y in polygon.exterior.coords]
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -275,7 +274,7 @@ def generateSamples(iterations, nrsamples):
 @route('/checkConstraint', method = 'POST')
 def checkConstraint():
     mode = bottle.request.forms.get('constr-mode')
-    if not mode in ['safe','bad']:
+    if not mode in ['safe', 'bad']:
         return _json_error("Invalid mode set", 400)
 
     coordinates = bottle.request.forms.get('coordinates')
@@ -289,68 +288,76 @@ def checkConstraint():
     if result is None:
         return _json_error("Unable to load result data", 500)
 
+    samples = _get_session('samples', {})
+
+    threshold = _get_session('threshold', 0.5)
+
     coordinates = [(float(x), float(y)) for x, y in coordinates]
     if coordinates[0] == coordinates[-1]:
         # Strip connecting point if any
         coordinates = coordinates[:-1]
 
-    pconstraint = poly_constraint(coordinates, result.parameters)
-
-    ###############################
-    ###############################
-    # This part should be put away in a function
-    ###############################
     smt2interface = SmtlibSolver()
     smt2interface.run()
+    setup_smt(smt2interface, result, threshold, True)
 
-    threshold = _get_session('threshold', 0.5)
+    polygon = Polygon(coordinates)
+    generator = ConstraintPolygon(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    generator.plot = False
+    generator.add_polygon(polygon, mode == "safe")
 
-    for p in result.parameters:
-        smt2interface.add_variable(p.name, VariableDomain.Real)
-        smt2interface.assert_constraint(Constraint(Poly(p - 1.0, result.parameters), "<=", result.parameters))
-        smt2interface.assert_constraint(Constraint(Poly(p, result.parameters), ">=", result.parameters))
-
-    relation = "<="
-    if mode == "bad":
-        relation = ">="
-    objective_constraint = Constraint(Poly(result.ratfunc.nominator - result.ratfunc.denominator * threshold, result.parameters), relation, result.parameters)
-    smt2interface.assert_constraint(objective_constraint)
-
-    ###############################
-    ###############################
-    ###############################
-
-    # check constraint with smt
-    smt_model = None
-    smt2interface.assert_constraint(pconstraint)
-
-    print("Calling smt solver")
-    checkresult = smt2interface.check()
-    if checkresult == smt.smt.Answer.killed or checkresult == smt.smt.Answer.memout:
-        return _json_error("Solver DNF", 500)
-    else:
-        if checkresult == smt.smt.Answer.sat:
-            smt_model = smt2interface.get_model()
+    (safe_poly, bad_poly, new_samples) = generator.generate_constraints(10)
+    samples.update(new_samples)
 
     smt2interface.stop()
 
-    if checkresult == smt.smt.Answer.sat:
-        # add new point as counter example to existing constraints
-        # NOTE: What if value not set? Default 0,5? Error?
-        pt = tuple([smt_model[p.name] for p in result.parameters])
-        value = result.ratfunc.eval(smt_model)
-        samples = _get_session('samples', {})
-        samples[pt] = value
-        return _json_ok({'result':'sat', 'cex':{'coordinate':pt, 'value':float(value)}})
-    elif checkresult == smt.smt.Answer.unsat:
-        return _json_ok({'result':'unsat', 'type':mode, 'constraints': []})
-    else:
-        return _json_error('Solver Error')
+    unsat = []
+    for poly in safe_poly:
+        unsat.append((_jsonPoly(poly), True))
+    for poly in bad_poly:
+        unsat.append((_jsonPoly(poly), False))
+
+    return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
 @route('/generateConstraints', method = 'POST')
 def generateConstraints():
-    return _json_error('Not implemented', 404)
-    pass
+    generator_type = bottle.request.forms.get('generator')
+    if not generator_type in ['planes', 'rectangles', 'quads']:
+        return _json_error("Invalid generator set", 400)
+
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
+
+    samples = _get_session('samples', {})
+    threshold = _get_session('threshold', 0.5)
+
+    smt2interface = SmtlibSolver()
+    smt2interface.run()
+    setup_smt(smt2interface, result, threshold, True)
+
+    if generator_type == 'planes':
+        generator = ConstraintPlanes(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    elif generator_type == 'rectangles':
+        generator = ConstraintRectangles(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    elif generator_type == 'quads':
+        generator = ConstraintQuads(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    else:
+        return _json_error("Bad generator")
+    generator.plot = False
+
+    (safe_poly, bad_poly, new_samples) = generator.generate_constraints(10)
+    samples.update(new_samples)
+
+    smt2interface.stop()
+
+    unsat = []
+    for poly in safe_poly:
+        unsat.append((_jsonPoly(poly), True))
+    for poly in bad_poly:
+        unsat.append((_jsonPoly(poly), False))
+
+    return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
 # strips trailing slashes from requests
 class StripPathMiddleware(object):

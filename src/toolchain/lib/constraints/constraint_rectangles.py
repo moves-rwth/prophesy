@@ -29,6 +29,9 @@ class ConstraintRectangles(ConstraintGeneration):
         # checks if rectangles intersect, touching is okay
         return rectangle1.intersects(rectangle2) and not rectangle1.touches(rectangle2)
 
+    def plot_candidate(self):
+        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_rectangle], display = False)
+
     def fail_constraint(self, constraint, safe):
         # change current constraint to avoid memout in smt
         # returns (new_constraint, new_covered_area, area_safe)
@@ -73,9 +76,6 @@ class ConstraintRectangles(ConstraintGeneration):
 
         self.all_boxes.append(self.best_rectangle)
 
-        # Plot the new anchors
-        self.plot_results(anchor_points=self.anchor_points)
-
     def next_constraint(self):
         # computes next rectangle constraint
         # returns (new_constraint, new_covered_area)
@@ -88,8 +88,7 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_other_point = None
 
         # split samples into safe and bad
-        (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
-        assert(len(self.safe_samples) + len(self.bad_samples) == len(self.samples))
+        (safe_samples, bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
 
         for anchor in self.anchor_points:
             anchor_pos = anchor.pos
@@ -125,7 +124,7 @@ class ConstraintRectangles(ConstraintGeneration):
                 if size > max_size and not break_attempt and size > self.threshold_area:
                     # check if nothing of other polarity is inbetween.
                     safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
-                    other_points = self.bad_samples.keys() if safe_area else self.safe_samples.keys()
+                    other_points = bad_samples.keys() if safe_area else safe_samples.keys()
                     for point2 in other_points:
                         point2 = Point(point2)
                         if self.is_inside_rectangle(point2, rectangle_test):
@@ -140,9 +139,6 @@ class ConstraintRectangles(ConstraintGeneration):
                         self.best_rectangle = rectangle_test
                         self.best_anchor = anchor
                         self.best_other_point = point
-
-                        # Plot candiate
-                        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_rectangle], display = False)
 
         if self.best_rectangle is not None:
             return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)

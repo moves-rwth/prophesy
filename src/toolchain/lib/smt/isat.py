@@ -5,7 +5,9 @@ from smt.smt import SMTSolver, VariableDomain
 from util import run_tool, ensure_dir_exists
 
 def _constraint_to_isat(constraint):
-    return str(constraint.polynomial)[5:].split(",")[0].replace("**", "^") + " " + constraint.relation + " 0"
+    return "{} {} 0".format(
+                            str(constraint.polynomial.as_expr()).replace("**", "^"),
+                            constraint.relation)
 
 class IsatSolver(SMTSolver):
     def __init__(self, location = config.SMTRAT_COMMAND):

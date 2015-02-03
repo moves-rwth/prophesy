@@ -3,8 +3,8 @@ from constraint_generation import ConstraintGeneration, Anchor, Direction
 from config import EPS
 from shapely.geometry import LineString
 from shapely.geometry.point import Point
+from shapely.geometry.polygon import LinearRing, Polygon
 import sampling
-from shapely.geometry.polygon import LinearRing
 
 class ConstraintPlanes(ConstraintGeneration):
 
@@ -110,6 +110,14 @@ class ConstraintPlanes(ConstraintGeneration):
     def normalize_vector(self, x):
         return x / numpy.linalg.norm(x)
 
+    def get_area_poly(self, anchor, line):
+        return Polygon(list(anchor.pos.coords) + list(line.coords))
+
+    def plot_candidate(self):
+        point2 = self.best_anchor.pos + self.best_orientation_vector * self.best_dpt
+        anchor_line = LineString([self.best_anchor.pos, point2])
+        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_line], additional_arrows = [anchor_line], display=False)
+
     def fail_constraint(self, constraint, safe):
         if self.best_dpt < 0.05:
             return None
@@ -118,7 +126,8 @@ class ConstraintPlanes(ConstraintGeneration):
         if line is None:
             return None
         self.best_line = line
-        return (self.compute_constraint(self.best_line), self.best_line, self.max_area_safe)
+        area_poly = self.get_area_poly(self.best_anchor, line)
+        return (self.compute_constraint(self.best_line), area_poly, self.max_area_safe)
 
     def reject_constraint(self, constraint, safe, sample):
         pass
@@ -185,10 +194,11 @@ class ConstraintPlanes(ConstraintGeneration):
         self.max_area_safe = False
         self.best_anchor = None
         self.best_line = None
+        
+        best_area_poly = None
 
         # split samples into safe and bad
-        (self.safe_samples, self.bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
-        assert(len(self.safe_samples) + len(self.bad_samples) == len(self.samples))
+        (safe_samples, bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
 
         for anchor in self.anchor_points:
             orientation = {
@@ -200,33 +210,25 @@ class ConstraintPlanes(ConstraintGeneration):
                 # orientation vector according to 90°/steps
                 orientation_vector = self.normalize_vector(self.rotate_vector(orientation, step))
 
-                (area_safe, dpt) = self.create_halfspace_depth(self.safe_samples, self.bad_samples, anchor.pos, orientation_vector)
+                (area_safe, dpt) = self.create_halfspace_depth(safe_samples, bad_samples, anchor.pos, orientation_vector)
                 if abs(dpt) < EPS:
                     continue
                 line = self.create_bounding_line(anchor.pos, orientation_vector*dpt)
                 if line is None:
                     continue
 
-                if False:
-                    point2 = anchor.pos + orientation_vector * dpt
-                    anchor_line = LineString([anchor.pos, point2])
-                    # Plot candiate
-                    self.plot_results(anchor_points=self.anchor_points, poly_blue = [line], additional_arrows = [anchor_line], display=False)
-                # chooose best
-                if dpt > self.best_dpt:
+                area_poly = self.get_area_poly(anchor, line)
+
+                # choose best
+                if best_area_poly is None or area_poly.area > best_area_poly.area:
                     self.best_orientation_vector = orientation_vector
                     self.best_dpt = dpt
                     self.max_area_safe = area_safe
                     self.best_anchor = anchor
                     self.best_line = line
+                    best_area_poly = area_poly
 
         if self.best_line is None:
             return None
 
-        if False:
-            point2 = self.best_anchor.pos + self.best_orientation_vector * self.best_dpt
-            anchor_line = LineString([self.best_anchor.pos, point2])
-            # Plot candiate
-            self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_line], additional_arrows = [anchor_line], display=False)
-
-        return (self.compute_constraint(self.best_line), self.best_line, self.max_area_safe)
+        return (self.compute_constraint(self.best_line), best_area_poly, self.max_area_safe)
