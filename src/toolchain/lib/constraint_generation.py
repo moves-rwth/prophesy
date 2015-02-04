@@ -84,6 +84,7 @@ class ConstraintGeneration(object):
         if self.first_pdf:
             self.first_pdf = False
             shutil.copyfile(name, self.result_file)
+            print("Plot file located at {0}".format(self.result_file))
         else:
             (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
             call(["pdfunite", self.result_file, name, result_tmp_file])
@@ -184,7 +185,7 @@ class ConstraintGeneration(object):
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
-        (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = self.plotdir)
+        (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
         Plot.plot_results(parameters = self.parameters,
                           samples_qualitative = dict([(p, v > self.threshold) for p, v in self.samples.items()]),
                           poly_green = self.safe_polys,
