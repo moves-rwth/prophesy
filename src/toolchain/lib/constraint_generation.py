@@ -35,9 +35,10 @@ class Direction(Enum):
                 return cls.SW
 
 class Anchor(object):
-    def __init__(self, pos, dir):
+    def __init__(self, pos, dir, safe):
         self.pos = pos
         self.dir = dir
+        self.safe = safe
 
     def __hash__(self, *args, **kwargs):
         return hash(self.pos) ^ hash(self.dir)
@@ -45,10 +46,14 @@ class Anchor(object):
     def __eq__(self, other):
         if not isinstance(other, Anchor):
             return False
-        return self.pos == other.pos and self.dir == other.dir
+        if self.pos == other.pos and self.dir == other.dir:
+            assert(self.safe == other.safe)
+            return True
+        else:
+            return False
 
     def __str__(self):
-        return "({}, {}) {}".format(self.pos.x, self.pos.y, self.dir)
+        return "({}, {}) {} (Safe: {})".format(self.pos.x, self.pos.y, self.dir, self.safe)
 
 class ConstraintGeneration(object):
     __metaclass__ = ABCMeta
@@ -252,6 +257,7 @@ class ConstraintGeneration(object):
                 if not checkresult in [smt.smt.Answer.sat, smt.smt.Answer.unsat]:
                     # smt call not finished -> change constraint to make it better computable
                     # TODO what to do in GUI?
+                    print("Change constraint for better computation")
                     result_update = self.fail_constraint(constraint, safe)
                     if result_update == None:
                         break

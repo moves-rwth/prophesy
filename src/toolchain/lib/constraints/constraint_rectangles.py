@@ -9,10 +9,14 @@ class ConstraintRectangles(ConstraintGeneration):
     def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
 
-        self.anchor_points = [Anchor(Point(0, 0), Direction.NE),
-                         Anchor(Point(1, 0), Direction.NW),
-                         Anchor(Point(1, 1), Direction.SW),
-                         Anchor(Point(0, 1), Direction.SE)]
+        self.anchor_points = []
+        for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
+            value = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
+            if (self.safe_above_threshold and value >= self.threshold) or (not self.safe_above_threshold and value < self.threshold):
+                pt_safe = True
+            else:
+                pt_safe = False
+            self.anchor_points.append(Anchor(Point(pt), dir, pt_safe))
 
         self.max_area_safe = None
         self.best_anchor = None
@@ -71,8 +75,8 @@ class ConstraintRectangles(ConstraintGeneration):
 
         #TODO: Include the 'outer' point?
         #self.anchor_points.append(Anchor(self.best_other_point, self.best_anchor.dir))
-        self.anchor_points.append(Anchor(other_right, self.best_anchor.dir))
-        self.anchor_points.append(Anchor(other_left , self.best_anchor.dir))
+        self.anchor_points.append(Anchor(other_right, self.best_anchor.dir, safe))
+        self.anchor_points.append(Anchor(other_left , self.best_anchor.dir, safe))
 
         self.all_boxes.append(self.best_rectangle)
 
@@ -92,8 +96,9 @@ class ConstraintRectangles(ConstraintGeneration):
 
         for anchor in self.anchor_points:
             anchor_pos = anchor.pos
+
             pos_x, pos_y = anchor.dir.value
-            for point, value in self.samples.items():
+            for point, value in safe_samples.items() if anchor.safe else bad_samples.items():
                 point = Point(point)
                 # check if point lies in correct direction from anchor point
                 if not ((pos_x and point.x > anchor_pos.x) or (not pos_x and point.x < anchor_pos.x)):
