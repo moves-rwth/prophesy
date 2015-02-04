@@ -257,7 +257,7 @@ class ConstraintGeneration(object):
                 if not checkresult in [smt.smt.Answer.sat, smt.smt.Answer.unsat]:
                     # smt call not finished -> change constraint to make it better computable
                     # TODO what to do in GUI?
-                    print("Change constraint for better computation")
+                    print("{}: Change constraint for better computation".format(checkresult))
                     result_update = self.fail_constraint(constraint, safe)
                     if result_update == None:
                         break

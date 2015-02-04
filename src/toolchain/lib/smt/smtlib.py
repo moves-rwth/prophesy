@@ -21,7 +21,7 @@ class SmtlibSolver(SMTSolver):
         self.process = None
         self.string = self.formula
         self.memout = memout # Mem limit in Mbyte
-        self.timeout = timeout * 1000 # Soft timeout in msec
+        self.timeout = timeout # Soft timeout in seconds
         self.status = [""]
 
     def _write(self, data):
@@ -87,6 +87,10 @@ class SmtlibSolver(SMTSolver):
                 self.stop()
                 self.run()
                 return Answer.killed
+            elif output == "timeout":
+                self.stop()
+                self.run()
+                return Answer.timeout
             else:
                 self.stop()
                 self.run()
