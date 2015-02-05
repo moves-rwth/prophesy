@@ -47,13 +47,11 @@ if __name__ == "__main__":
     print("Performing sample refinement")
     (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
     sampler = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    #new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    #while len(new_samples) < 60 and len(new_samples) > 0:
-    #    print(new_samples)
-    #    print("#####")
-    #    samples.update(new_samples)
-    #    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    #samples.update(new_samples)
+    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
+    while len(new_samples) < 50 and len(new_samples) > 0:
+        samples.update(new_samples)
+        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
+    samples.update(new_samples)
     print(samples)
 
     print("Setup SMT interface")
@@ -75,8 +73,8 @@ if __name__ == "__main__":
     elif cmdargs.poly:
         generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
         # For testing
-        generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), False)
-        generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
+        generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
+        generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)
     else:
         assert False
     generator.generate_constraints()
