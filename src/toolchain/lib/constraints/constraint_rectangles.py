@@ -25,10 +25,6 @@ class ConstraintRectangles(ConstraintGeneration):
 
         self.all_boxes = []
 
-    def is_inside_rectangle(self, point, rectangle):
-        # checks if the point lies in the rectangle
-        return point.within(rectangle) or point.touches(rectangle)
-
     def intersects(self, rectangle1, rectangle2):
         # checks if rectangles intersect, touching is okay
         return rectangle1.intersects(rectangle2) and not rectangle1.touches(rectangle2)
@@ -132,7 +128,7 @@ class ConstraintRectangles(ConstraintGeneration):
                     other_points = bad_samples.keys() if safe_area else safe_samples.keys()
                     for point2 in other_points:
                         point2 = Point(point2)
-                        if self.is_inside_rectangle(point2, rectangle_test):
+                        if self.is_inside_polygon(point2, rectangle_test):
                             # bad sample in safe area
                             break_attempt = True
                             break

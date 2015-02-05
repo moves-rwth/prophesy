@@ -200,6 +200,10 @@ class ConstraintGeneration(object):
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
+    def is_inside_polygon(self, point, polygon):
+        # checks if the point lies inside the polygon
+        return point.within(polygon) or point.touches(polygon)
+
     @abstractmethod
     def next_constraint(self):
         """Generate a new set of constraints ([constraints], area, area_safe),
