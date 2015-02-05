@@ -15,10 +15,15 @@ class ConstraintPlanes(ConstraintGeneration):
         self.safe_planes = []
         self.unsafe_planes = []
 
-        self.anchor_points = [Anchor(Point(0, 0), Direction.NE),
-                         Anchor(Point(1, 0), Direction.NW),
-                         Anchor(Point(1, 1), Direction.SW),
-                         Anchor(Point(0, 1), Direction.SE)]
+        self.anchor_points = []
+        for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
+            value = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
+            if (self.safe_above_threshold and value >= self.threshold) or (not self.safe_above_threshold and value < self.threshold):
+                pt_safe = True
+            else:
+                pt_safe = False
+            self.anchor_points.append(Anchor(Point(pt), dir, pt_safe))
+
         self.best_orientation_vector = None
         self.best_dpt = 0
         self.max_area_safe = False
