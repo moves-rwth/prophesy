@@ -1,9 +1,9 @@
-import numpy
 from constraint_generation import ConstraintGeneration, Anchor, Direction
 from config import EPS
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
+import numpy
 import sampling
 
 class ConstraintPlanes(ConstraintGeneration):
@@ -29,7 +29,6 @@ class ConstraintPlanes(ConstraintGeneration):
         self.max_area_safe = False
         self.best_anchor = None
         self.best_plane = None
-        self.best_line = None
 
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
@@ -52,7 +51,6 @@ class ConstraintPlanes(ConstraintGeneration):
         min_bad_dist = 1000
 
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
-        # print("\t\torthogonal: {0}".format(orthogonal_vec))
 
         for k in safe_samples.keys():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
@@ -62,9 +60,6 @@ class ConstraintPlanes(ConstraintGeneration):
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
             if abs(dist) < abs(min_bad_dist):
                 min_bad_dist = dist
-
-        # print("\t\tmin_safe_dist: {0}".format(min_safe_dist))
-        # print("\t\tmin_bad_dist: {0}".format(min_bad_dist))
 
         if abs(min_safe_dist) == abs(min_bad_dist):
             return (True, 0)
@@ -76,32 +71,27 @@ class ConstraintPlanes(ConstraintGeneration):
             assert(abs(min_safe_dist) > abs(min_bad_dist))
             return (False, min_safe_dist-EPS)
 
-    def create_bounding_line(self, anchor, orientation_vector):
-        """computes the bounding line orthogonal to the orientation vector"""
+    def create_plane(self, anchor, orientation_vector):
+        """computes the plane created by splitting along the bounding line
+        with the anchor point in it
+        the bounding line is orthogonal to the orientation vector"""
         bbox = box(0, 0, 1, 1)
 
         orthogonal_anchor = numpy.array(anchor) + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
 
-        # Ensure start and end are far enough outside of bbox to ensure intersection
+        # Ensure start and end of bounding line are far enough outside of bbox to ensure intersection
         # compute_orthogonal_vector returns CW rotation
         start = Point(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2)
         end = Point(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2)
-        line = LineString([start, end])
+        bounding_line = LineString([start, end])
 
-        intersections = line.intersection(bbox.boundary)
+        intersections = bounding_line.intersection(bbox.boundary)
         if intersections is None or not isinstance(intersections, MultiPoint) or len(intersections) != 2:
             return None
 
-        return LineString([intersections[0], intersections[1]])
-
-    def create_plane(self, anchor, bounding_line):
-        """computes the plane created by splitting along the bounding line
-        with the anchor point in it
-        the bounding line is orthogonal to the orientation vector"""
-        (bound1, bound2) = bounding_line.coords
-        int1 = Point(bound1)
-        int2 = Point(bound2)
+        int1 = intersections[0]
+        int2 = intersections[1]
 
         half_A = self.get_halfspace_polygon(int1, int2)
         half_B = self.get_halfspace_polygon(int2, int1)
@@ -153,15 +143,22 @@ class ConstraintPlanes(ConstraintGeneration):
     def normalize_vector(self, x):
         return x / numpy.linalg.norm(x)
 
+    def is_valid_orientation(self, anchor, direction):
+        """Tests if anchor and direction are valid as new anchor"""
+        # Testing if point with small distance from anchor in direction is in unknown area
+        point_test = Point(numpy.array(anchor) + direction.to_vector() * EPS * 2)
+        if point_test.x < 0 or 1 < point_test.x or point_test.y < 0 or 1 < point_test.y:
+            return False
+        for plane in self.safe_planes + self.unsafe_planes:
+            if self.is_inside_polygon(point_test, plane):
+                return False
+        return True
+
     def fail_constraint(self, constraint, safe):
         if self.best_dpt < 0.05:
             return None
         self.best_dpt *= 0.5
-        line = self.create_bounding_line(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
-        if line is None:
-            return None
-        self.best_line = line
-        plane = self.create_plane(self.best_anchor.pos, self.best_line)
+        plane = self.create_plane(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
         if plane is None:
             return None
         self.best_plane = plane
@@ -171,10 +168,11 @@ class ConstraintPlanes(ConstraintGeneration):
         pass
 
     def accept_constraint(self, constraint, safe):
-        (best_bound1, best_bound2) = self.best_line.coords
-        best_bound1 = Point(best_bound1)
-        best_bound2 = Point(best_bound2)
-        safe = self.max_area_safe
+        assert(self.max_area_safe == safe)
+        if self.max_area_safe:
+            self.safe_planes.append(self.best_plane)
+        else:
+            self.unsafe_planes.append(self.best_plane)
 
         # Remove additional anchor points already in area
         anchors = self.anchor_points[:]
@@ -182,49 +180,12 @@ class ConstraintPlanes(ConstraintGeneration):
             if self.is_point_fulfilling_constraint(list(anchor.pos.coords)[0], constraint):
                 self.anchor_points.remove(anchor)
 
-        # Add new anchors
-        # First add possible anchors for first bound point
-        if best_bound1.y == 0:
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.NE, safe))
-            if best_bound2.x > best_bound1.x:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.NW, safe))
-        elif best_bound1.y == 1:
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.SW, safe))
-            if best_bound2.x < best_bound1.x:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.SE, safe))
-        elif best_bound1.x == 0:
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.SE, safe))
-            if best_bound2.y > best_bound1.y:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.NE, safe))
-        else:
-            assert best_bound1.x == 1
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.NW, safe))
-            if best_bound2.y < best_bound1.y:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.SW, safe))
-
-        # Then for second bound point. Constraint is now on other side of the line
-        if best_bound2.y == 0:
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.NW, safe))
-            if best_bound1.x > best_bound2.x:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.NE, safe))
-        elif best_bound2.y == 1:
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.SE, safe))
-            if best_bound1.x < best_bound2.x:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.SW, safe))
-        elif best_bound2.x == 0:
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.NE, safe))
-            if best_bound1.y > best_bound2.y:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.SE, safe))
-        else:
-            assert best_bound2.x == 1
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.SW, safe))
-            if best_bound1.y < best_bound2.y:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.NW, safe))
-
-        if self.max_area_safe:
-            self.safe_planes.append(self.best_plane)
-        else:
-            self.unsafe_planes.append(self.best_plane)
+        for pt in self.best_plane.boundary.coords:
+            point = Point(pt)
+            # Test all directions for anchor
+            for direction in [Direction.NE, Direction.NW, Direction.SW, Direction.SE]:
+                if self.is_valid_orientation(point, direction):
+                    self.anchor_points.append(Anchor(point, direction, safe))
 
     def next_constraint(self):
         # reset
@@ -233,7 +194,6 @@ class ConstraintPlanes(ConstraintGeneration):
         self.max_area_safe = False
         self.best_anchor = None
         self.best_plane = None
-        self.best_line = None
 
         # split samples into safe and bad
         (safe_samples, bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
@@ -252,11 +212,7 @@ class ConstraintPlanes(ConstraintGeneration):
                 if abs(dpt) < EPS:
                     continue
 
-                line = self.create_bounding_line(anchor.pos, orientation_vector*dpt)
-                if line is None:
-                    continue
-
-                plane = self.create_plane(anchor.pos, line)
+                plane = self.create_plane(anchor.pos, orientation_vector*dpt)
                 if plane is None:
                     continue
 
@@ -265,8 +221,6 @@ class ConstraintPlanes(ConstraintGeneration):
                 for plane2 in self.safe_planes if area_safe else self.unsafe_planes:
                     if (self.intersects(plane, plane2)):
                         plane = plane.difference(plane2)
-                        #print("After intersection: {}".format(plane))
-                        #self.plot_results(poly_blue = [plane, plane2], display=True)
 
                 #orientation_line = LineString([anchor.pos, Point(numpy.array(anchor.pos) + orientation_vector*dpt)])
                 #self.plot_results(anchor_points=self.anchor_points, poly_blue = [plane], additional_arrows = [orientation_line], display=True)
@@ -278,7 +232,6 @@ class ConstraintPlanes(ConstraintGeneration):
                     self.max_area_safe = area_safe
                     self.best_anchor = anchor
                     self.best_plane = plane
-                    self.best_line = line
 
         if self.best_plane is None:
             return None

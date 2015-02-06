@@ -11,6 +11,7 @@ from config import PLOT_FILES_DIR, EPS
 from util import ensure_dir_exists
 from data.constraint import Constraint, ComplexConstraint
 from sympy.polys.polytools import Poly
+from numpy import array
 import shutil
 from shapely.geometry.polygon import Polygon, orient, LinearRing
 from enum import Enum
@@ -33,6 +34,13 @@ class Direction(Enum):
                 return cls.NW
             else:
                 return cls.SW
+
+    def to_vector(self):
+        vector = {  Direction.NE: array([ 1,  1]),
+                    Direction.SE: array([ 1, -1]),
+                    Direction.NW: array([-1,  1]),
+                    Direction.SW: array([-1, -1])}
+        return vector[self]
 
 class Anchor(object):
     def __init__(self, pos, dir, safe):
