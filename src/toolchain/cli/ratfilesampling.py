@@ -48,6 +48,6 @@ if __name__ == "__main__":
                       path_to_save=path_to_save, display=False)
     print("Samples rendered to {}".format(path_to_save))
     # samples = sampling.perform_sampling_by_rf(ratfunc, parameters, [(0.3, 0.3), (0.4, 0.4)])
-    sampling.write_samples_file([p.name for p in result.parameters], samples, vars(cmdargs)["samples_file"])
+    sampling.write_samples_file([p.name for p in result.parameters], samples, cmdargs.threshold, cmdargs.safe_above_threshold, vars(cmdargs)["samples_file"])
 
     os.system("xdg-open {}".format(path_to_save))
