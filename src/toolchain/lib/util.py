@@ -19,7 +19,7 @@ def run_tool(args, quiet = False):
     pipe = subprocess.Popen(args, stdout = subprocess.PIPE)
 
     if(quiet):
-        print(pipe.communicate()[0])
+        return pipe.communicate()[0]
     else:
         for line in iter(pipe.stdout.readline, ""):
             if not line and pipe.poll() != None:

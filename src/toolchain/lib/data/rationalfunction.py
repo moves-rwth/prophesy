@@ -6,6 +6,11 @@ class RationalFunction:
         self.nominator = nominator
         self.denominator = denominator
 
+    def eval(self, x, a=None, auto=True):
+        eval_nom = self.nominator.eval(x, a, auto)
+        eval_den = self.denominator.eval(x, a, auto)
+        return eval_nom/eval_den
+
     def evalf(self, *args, **kwargs):
         return (self.nominator / self.denominator).evalf(RationalFunction.evaluation_precision)
 

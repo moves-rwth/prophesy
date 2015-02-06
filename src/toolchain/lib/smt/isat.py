@@ -5,10 +5,12 @@ from smt.smt import SMTSolver, VariableDomain
 from util import run_tool, ensure_dir_exists
 
 def _constraint_to_isat(constraint):
-    return str(constraint.polynomial)[5:].split(",")[0].replace("**", "^") + " " + constraint.relation + " 0"
+    return "{} {} 0".format(
+                            str(constraint.polynomial.as_expr()).replace("**", "^"),
+                            constraint.relation)
 
 class IsatSolver(SMTSolver):
-    def __init__(self, location):
+    def __init__(self, location = config.SMTRAT_COMMAND):
         self.location = location
         self.declstack = [list()]
         self.constraintstack = [list()]
@@ -40,8 +42,6 @@ class IsatSolver(SMTSolver):
             for constrs in self.constraintstack:
                 for constr in constrs:
                     f.write("\t" + constr + ";\n")
-
-        print(resultfile[1])
 
         args = [self.location, resultfile, "--msw=0.0001", "--prabs=0.00001"]
 
