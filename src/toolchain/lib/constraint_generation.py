@@ -344,7 +344,7 @@ class ConstraintGeneration(object):
 
         return result
 
-    def generate_constraints(self, max_iter = -1):
+    def generate_constraints(self, max_iter = -1, max_area = 1.0):
         """Iteratively generates new constraints, heuristically, attempting to
         find the largest safe or unsafe area
         max_iter: Number of constraints to generate/check at most (not counting SMT failures),
@@ -357,7 +357,8 @@ class ConstraintGeneration(object):
                 smtcontext.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
                 smtcontext.assert_constraint(Constraint(Poly(param - 1, self.parameters), "<=", self.parameters))
 
-            while max_iter != 0:  # nr < 200:
+            area_sum = 0
+            while max_iter != 0 and area_sum < max_area:  # nr < 200:
                 max_iter -= 1
 
                 # get next constraint depending on algorithm
@@ -376,6 +377,9 @@ class ConstraintGeneration(object):
                 if result is None:
                     print("Unable to analyze constraint, aborting")
                     break
+
+                area_sum = sum([benchmark[2] for benchmark in self.benchmark_output if benchmark[0] == smt.smt.Answer.unsat])
+                print(area_sum)
 
             # Plot the final outcome
             if self.plot:
