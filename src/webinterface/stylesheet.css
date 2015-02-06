@@ -71,12 +71,12 @@ input[type=checkbox] {
 
 #infopanel {
     display:inline-block;
-    width: 400px;
+    width: 300px;
 }
 
 #controlpanel {
     display:inline-block;
-    width: 422px;
+    width: 446px;
 }
 
 #plotsurround {
