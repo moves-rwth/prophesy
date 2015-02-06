@@ -27,6 +27,7 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
+from sampling import DelaunaySampling
 
 def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
@@ -77,7 +78,9 @@ def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
 
 def _jsonPoly(polygon):
-    return [[x, y] for x, y in polygon.exterior.coords]
+    if isinstance(polygon, Polygon):
+        return _jsonPoly(polygon.exterior)
+    return [[pt[0], pt[1]] for pt in polygon.coords]
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -267,10 +270,10 @@ def generateSamples(iterations, nrsamples):
     new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = False)
     for _ in range(iterations):
         samples.update(new_samples)
-        new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
-        if len(new_samples) > 128:
+        new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = False)
+        #if len(new_samples) > 128:
             # Do not overdo things
-            break
+        #    break
     samples.update(new_samples)
 
     _set_session('samples', samples)

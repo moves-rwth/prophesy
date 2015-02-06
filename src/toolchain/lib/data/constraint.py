@@ -1,8 +1,10 @@
 #
 # -*- coding: utf-8 -*-
-from sympy.polys.polytools import Poly
-from smt.polynomial_to_smt2 import smt2strPoly
 import sympy
+from sympy.polys.polytools import Poly
+from sympy.simplify.simplify import fraction
+from smt.polynomial_to_smt2 import smt2strPoly
+from sympy.core.sympify import sympify
 
 ##################################################################################################
 # Class representing a polynomial constraint.
@@ -37,7 +39,10 @@ class Constraint(object):
         for rel in rels:
             tokens = string.split(rel)
             if len(tokens) == 2:
-                return cls(Poly(tokens[0] + "-" + tokens[1], symbols), rel, symbols)
+                (nom,den) = fraction(tokens[0])
+                const = sympify(tokens[1])
+                return cls(Poly(nom - const*den, symbols), rel, symbols)
+        assert False, "Unable to parse constraint string {}".format(string)
 
     def __eq__(self, other):
         if not isinstance(other, Constraint): return False

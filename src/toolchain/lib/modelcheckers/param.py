@@ -35,7 +35,7 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
                 pctl_filepath,
                 "--result-file", resultfile,
                 "--no-startup-message"]
-        run_tool(args)
+        run_tool(args, True)
 
         # Param adds ".out" extension
         resultfile = resultfile + ".out"

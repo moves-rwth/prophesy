@@ -5,6 +5,9 @@ from collections import OrderedDict
 from shapely.geometry import Point
 from sympy.core.numbers import Rational
 from numpy import linspace
+from constraints.voronoi import computeDelaunayTriangulation
+from shapely.geometry.linestring import LineString
+from shapely.geometry.multilinestring import MultiLineString
 
 def read_samples_file(path):
     parameters = []
@@ -159,3 +162,47 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 if not skip:
                     new_points.append(list(point.coords)[0])
     return sampling_interface.perform_sampling(new_points)
+
+class DelaunaySampling(object):
+    @staticmethod
+    def calcDelaunay(samples, threshold):
+        points = []
+        for pt, v in samples.items():
+            # x,y as usual, z is value
+            points.append(Point(pt[0], pt[1], v))
+        dtriangles = computeDelaunayTriangulation(points)
+
+        triangles = []
+        for triangle in dtriangles:
+            triangle = [points[i] for i in triangle]
+            if all([p.z >= threshold for p in triangle]):
+                continue
+            if all([p.z < threshold for p in triangle]):
+                continue
+
+            # Triangle contains mixture of safe and bad points
+            triangles.append(triangle)
+        return triangles
+
+    @staticmethod
+    def calcApprox(triangles, threshold):
+        lines = []
+        for triangle in triangles:
+            line = []
+            points = triangle + [triangle[0]]
+            pairs = zip(points[:-1], points[1:])
+            for p1,p2 in pairs:
+                if (p1.z >= threshold) == (p2.z >= threshold):
+                    continue
+                sum = (p1.z+p2.z)
+                line.append(Point((p1.x*p1.z+p2.x*p2.z)/sum, (p1.y*p1.z+p2.y*p2.z)/sum))
+            assert len(line) <= 2
+            lines.append(line)
+        return lines
+
+    @staticmethod
+    def calcLine(samples, threshold):
+        triangles = DelaunaySampling.calcDelaunay(samples, threshold)
+        lines = DelaunaySampling.calcApprox(triangles, threshold)
+        lines = MultiLineString([LineString(line) for line in lines])
+        return lines
