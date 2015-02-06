@@ -1,0 +1,28 @@
+# Only install the standard system and language packs.
+tasksel	tasksel/first	multiselect
+d-i	preseed/early_command	string . /usr/share/debconf/confmodule; db_get debconf/priority; case $RET in low|medium) db_fset tasksel/first seen false; echo 'tasksel tasksel/first seen false' >>/var/lib/preseed/log ;; esac
+d-i	pkgsel/language-pack-patterns	string
+# No language support packages.
+d-i	pkgsel/install-language-support	boolean false
+d-i	base-installer/kernel/altmeta	string lts-quantal
+# Install basic packages
+d-i	pkgsel/include  string xfce4 kate git equivs
+# Automate setup
+d-i	partman-auto/method		string regular
+d-i	partman/confirm_write_new_label	boolean true
+d-i	partman/choose_partition	select Finish partitioning and write changes to disk
+d-i	partman/confirm			boolean true
+d-i	clock-setup/utc			boolean true
+d-i	clock-setup/ntp			boolean true
+d-i	clock-setup/ntp-server		string ntp.debian.com
+d-i	passwd/root-login		boolean false
+d-i	passwd/make-user		boolean true
+d-i	passwd/user-fullname		string prophesy
+d-i	passwd/username			string prophesy
+d-i	mirror/http/proxy		string
+d-i	user-setup/allow-password-weak	boolean false
+d-i	user-setup/encrypt-home		boolean false
+d-i	grub-installer/skip		boolean false
+d-i	grub-installer/only_debian	boolean true
+# Copy prophesy setup script
+d-i	preseed/late_command  string mkdir /target/home/prophesy/Desktop; cp /cdrom/finisher/* /target/home/prophesy/Desktop/; chroot /target chmod +x /home/prophesy/Desktop/run.sh; chmod 777 -R /target/home/prophesy/Desktop

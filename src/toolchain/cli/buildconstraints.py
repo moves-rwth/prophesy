@@ -24,6 +24,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--rat-file', help = "file containing rational function", required = True)
     parser.add_argument('--samples-file', help = 'file containing the sample points', required = True)
+    limit_group = parser.add_mutually_exclusive_group(required = True)
+    limit_group.add_argument('--iterations', dest = "iterations", help = "Number of constraints to generate", type=int)
+    limit_group.add_argument('--area', dest = "area", help = "Area (in [0,1]) to try to complete", type = float)
     method_group = parser.add_mutually_exclusive_group(required = True)
     method_group.add_argument('--planes', action = 'store_true', dest = "planes")
     method_group.add_argument('--rectangles', action = 'store_true', dest = "rectangles")
@@ -32,7 +35,7 @@ if __name__ == "__main__":
     solvers_group = parser.add_mutually_exclusive_group(required = True)
     solvers_group.add_argument('--z3', dest = "z3location", help = "location of z3")
     solvers_group.add_argument('--isat', dest = "isatlocation", help = "location of isat")
-    parser.add_argument('--threshold-area', type = float, help = 'threshold for minimial size of new area', default = 0.001)
+    parser.add_argument('--threshold-area', type = float, help = 'threshold for minimal size of new area', default = 0.001)
     cmdargs = parser.parse_args()
 
     threshold_area = vars(cmdargs)["threshold_area"]
@@ -67,7 +70,11 @@ if __name__ == "__main__":
         generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)
     else:
         assert False
-    generator.generate_constraints(200)
+
+    if cmdargs.iterations != None:
+        generator.generate_constraints(cmdargs.iterations)
+    else:
+        generator.generate_constraints(cmdargs.area)
 
     smt2interface.stop()
     #print("Executed SMT commands:")

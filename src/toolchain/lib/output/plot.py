@@ -9,13 +9,20 @@ class Plot(object):
     def plot_poly(subplot, poly, *args, **kwargs):
         if isinstance(poly, Polygon):
             poly = poly.exterior
+            
+        # If hatched, set edge to black regardless of given argument
+        if poly.__class__ != LineString and 'hatch' in kwargs:
+            kwargs['ec'] = 'none'
+
+        p = patches.Polygon(poly.coords, *args, **kwargs)
+        subplot.add_patch(p)
 
         # If hatched, set edge to black regardless of given argument
         if poly.__class__ != LineString and 'hatch' in kwargs:
             kwargs['ec'] = 'black'
-
-        p = patches.Polygon(poly.coords, *args, **kwargs)
-        subplot.add_patch(p)
+            kwargs['fill'] = False
+            p = patches.Polygon(poly.coords, *args, **kwargs)
+            subplot.add_patch(p)
 
     @staticmethod
     def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [],
@@ -50,11 +57,11 @@ class Plot(object):
                 ax1.arrow(point1[0], point1[1], point2[0] - point1[0], point2[1] - point1[1], head_width=0.01, head_length=0.01, color='gray')
 
             for box in poly_green:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#4aa02c", 0.2), ec=colorc.to_rgba("#4aa02c"), hatch="o")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#4aa02c", 0.6), ec=colorc.to_rgba("#4aa02c"), hatch="o")
             for box in poly_red:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#c11b17", 0.2), ec=colorc.to_rgba("#c11b17"), hatch="x")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#c11b17", 0.6), ec=colorc.to_rgba("#c11b17"), hatch="x")
             for box in poly_blue:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.2), ec=colorc.to_rgba("#1b17c1"), hatch=".")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch=".")
 
             # Draw the samples last
             ax1.scatter(xValid,yValid, marker='o', c='green')
