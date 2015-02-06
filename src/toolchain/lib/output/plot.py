@@ -1,4 +1,3 @@
-import pylab
 from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
@@ -37,9 +36,6 @@ class Plot(object):
                     xInvalid.append(key[0])
                     yInvalid.append(key[1])
 
-            ax1.scatter(xValid,yValid, marker='o', c='green')
-            ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
-
             for anchor in anchor_points:
                 d = 0.02
                 dx = d if anchor.dir.value[0] else -d
@@ -54,18 +50,20 @@ class Plot(object):
                 ax1.arrow(point1[0], point1[1], point2[0] - point1[0], point2[1] - point1[1], head_width=0.01, head_length=0.01, color='gray')
 
             for box in poly_green:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#4aa02c", 0.6), ec=colorc.to_rgba("#4aa02c"), hatch="o")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#4aa02c", 0.2), ec=colorc.to_rgba("#4aa02c"), hatch="o")
             for box in poly_red:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#c11b17", 0.6), ec=colorc.to_rgba("#c11b17"), hatch="x")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#c11b17", 0.2), ec=colorc.to_rgba("#c11b17"), hatch="x")
             for box in poly_blue:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch=".")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.2), ec=colorc.to_rgba("#1b17c1"), hatch=".")
 
-            pylab.ylim([0,1])
-            pylab.xlim([0,1])
+            # Draw the samples last
+            ax1.scatter(xValid,yValid, marker='o', c='green')
+            ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
+
+            ax1.set_ylim([0,1])
+            ax1.set_xlim([0,1])
             ax1.set_xlabel(str(parameters[0]))
             ax1.set_ylabel(str(parameters[1]))
-            #__toggle_selector.RS = RectangleSelector(ax1, __onselect, drawtype='line')
-            #pyplot.connect('key_press_event', __toggle_selector)
             if path_to_save != None:
                 pyplot.savefig(path_to_save, format="PDF")
             if display:

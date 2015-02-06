@@ -15,13 +15,13 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location = config.Z3_COMMAND, memout = 1000, timeout = 20):
+    def __init__(self, location = config.Z3_COMMAND, memout = 6000, timeout = 20):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
         self.string = self.formula
         self.memout = memout # Mem limit in Mbyte
-        self.timeout = timeout # Soft timeout in seconds
+        self.timeout = timeout*1000 # Soft timeout in seconds
         self.status = [""]
 
     def _write(self, data):

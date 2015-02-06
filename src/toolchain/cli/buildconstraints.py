@@ -9,10 +9,9 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
 import sampling
-from data.constraint import Constraint
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
-from smt.smt import VariableDomain, setup_smt
+from smt.smt import setup_smt
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
@@ -24,7 +23,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--rat-file', help = "file containing rational function", required = True)
     parser.add_argument('--samples-file', help = 'file containing the sample points', required = True)
-    parser.add_argument('--constraint-file', help = 'the file in which the constraints are stored', default = "constraints.out")
     parser.add_argument('--threshold', type = float, help = 'the threshold', required = True)
     group = parser.add_mutually_exclusive_group(required = True)
     group.add_argument('--safe-above-threshold', action = 'store_true', dest = "safe_above_threshold")
@@ -44,17 +42,8 @@ if __name__ == "__main__":
     threshold_area = vars(cmdargs)["threshold_area"]
     result = read_pstorm_result(vars(cmdargs)['rat_file'])
 
-    print("Performing sample refinement")
-    (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
-    sampler = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    #new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    #while len(new_samples) < 60 and len(new_samples) > 0:
-    #    print(new_samples)
-    #    print("#####")
-    #    samples.update(new_samples)
-    #    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    #samples.update(new_samples)
-    print(samples)
+    print("Reading samples")
+    (_, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
 
     print("Setup SMT interface")
     if cmdargs.z3location:
@@ -79,7 +68,7 @@ if __name__ == "__main__":
         generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
     else:
         assert False
-    generator.generate_constraints()
+    generator.generate_constraints(25)
 
     smt2interface.stop()
     #print("Executed SMT commands:")

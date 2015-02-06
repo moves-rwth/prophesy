@@ -20,4 +20,4 @@ class RationalFunction:
         return RationalFunction(newNom, newDen)
 
     def __str__(self):
-        return "(" + str(self.nominator)[5:].split(",")[0] + ") / (" + str(self.denominator)[5:].split(",")[0] + ")"
+        return "({}) / ({})".format(self.nominator.as_expr(), self.denominator.as_expr())

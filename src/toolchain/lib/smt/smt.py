@@ -6,6 +6,10 @@ def setup_smt(smt2interface, result, threshold, safe_above_threshold):
 
     for p in result.parameters:
         smt2interface.add_variable(p.name, VariableDomain.Real)
+
+    for constr in result.parameter_constraints:
+        smt2interface.assert_constraint(constr)
+
     smt2interface.add_variable("safe", VariableDomain.Bool)
     smt2interface.add_variable("bad", VariableDomain.Bool)
 
