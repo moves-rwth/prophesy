@@ -18,10 +18,10 @@ class ConstraintRectangles(ConstraintGeneration):
                 pt_safe = False
             self.anchor_points.append(Anchor(Point(pt), dir, pt_safe))
 
-        self.max_area_safe = None
         self.best_anchor = None
         self.best_rectangle = None
         self.best_other_point = None
+        self.next_rectangles = []
 
         self.all_boxes = []
 
@@ -43,6 +43,8 @@ class ConstraintRectangles(ConstraintGeneration):
         # returns (new_constraint, new_covered_area, area_safe)
 
         # scale rectangle by factor 0.5
+        old_rectangle = self.best_rectangle
+        old_other_point = self.best_other_point
         self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor.pos)
         if self.best_rectangle.area < self.threshold_area:
             # Discard rectangle and try other one by removing anchor
@@ -53,7 +55,20 @@ class ConstraintRectangles(ConstraintGeneration):
         (x1, y1, x2, y2) = self.best_rectangle.bounds
         pos_x, pos_y = self.best_anchor.dir.value
         self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
-        return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
+
+        # remember discared part of rectangle for future constaraints
+        anchor1_pt = Point(self.best_anchor.pos.x, self.best_other_point.y)
+        anchor2_pt = Point(self.best_other_point.x, self.best_anchor.pos.y)
+        anchor3_pt = Point(self.best_other_point)
+        anchor1 = Anchor(anchor1_pt, self.best_anchor.dir, self.best_anchor.safe)
+        anchor2 = Anchor(anchor2_pt, self.best_anchor.dir, self.best_anchor.safe)
+        anchor3 = Anchor(anchor3_pt, self.best_anchor.dir, self.best_anchor.safe)
+        rectangle1 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=Point(self.best_anchor.pos.x, old_other_point.y))
+        rectangle2 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=Point(old_other_point.x, self.best_anchor.pos.y))
+        rectangle3 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=old_other_point)
+        self.next_rectangles += [(rectangle1, anchor1), (rectangle2, anchor2), (rectangle3, anchor3)]
+
+        return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe)
 
     def reject_constraint(self, constraint, safe, sample):
         pass
@@ -92,8 +107,19 @@ class ConstraintRectangles(ConstraintGeneration):
         # computes next rectangle constraint
         # returns (new_constraint, new_covered_area)
 
+        # check if rectangle is in queue to process next
+        if len(self.next_rectangles) > 0:
+            (next_rectangle, anchor) = self.next_rectangles.pop(0)
+            self.best_rectangle = next_rectangle
+            self.max_area_safe = anchor.safe
+            self.best_anchor = anchor
+            (x1, y1, x2, y2) = self.best_rectangle.bounds
+            pos_x, pos_y = self.best_anchor.dir.value
+            self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
+            return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe)
+
+        # "normal" case where there is no rectangle in the queue
         # reset
-        self.max_area_safe = None
         self.best_rectangle = None
         self.best_anchor = None
         self.best_other_point = None
@@ -125,6 +151,7 @@ class ConstraintRectangles(ConstraintGeneration):
                 if self.best_rectangle is None or (rectangle.area > self.best_rectangle.area and rectangle.area > self.threshold_area):
                     # check if nothing of other polarity is inbetween.
                     safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
+                    anchor.safe = safe_area
                     other_points = bad_samples.keys() if safe_area else safe_samples.keys()
                     for point2 in other_points:
                         point2 = Point(point2)
@@ -135,12 +162,11 @@ class ConstraintRectangles(ConstraintGeneration):
 
                     if not break_attempt:
                         # can extend area
-                        self.max_area_safe = safe_area
                         self.best_rectangle = rectangle
                         self.best_anchor = anchor
                         self.best_other_point = point
 
         if self.best_rectangle is not None:
-            return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.max_area_safe)
+            return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe)
         else:
             return None
