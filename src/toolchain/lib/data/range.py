@@ -5,17 +5,13 @@ class Range():
         self.step = step_size
 
     def values(self):
-        value_list = []
-        i = self.start
-        while i <= self.stop:
-            value_list.append(i)
-            i = i + self.step
-        return value_list
+        from numpy import arange
+        return list(arange(self.start, self.stop, self.step)) + [self.stop]
 
 def create_range_from_interval(interval, nr_samples):
     """Given closed interval [l,h], generate nr_sample
     steps in this interval"""
-    assert(nr_samples > 1)
-    assert(interval[0] <= interval[1])
+    assert nr_samples > 1
+    assert interval[0] <= interval[1]
     return Range(interval[0], interval[1], (interval[1] - interval[0]) / (nr_samples - 1))
 

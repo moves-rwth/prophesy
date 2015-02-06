@@ -5,8 +5,8 @@ body {
     font: 16px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
 }
 
-a { color: #069; }
-a:hover { color: #28b; }
+/*a { color: #069; }
+a:hover { color: #28b; }*/
 
 h2 {
     margin-top: 15px;
@@ -39,12 +39,21 @@ input[type=checkbox] {
 #header {
     position: relative;
     height: 80px;
-    background-color:#dd1020;
+    background-color:#cd0010;
     color: #eee;
     margin: 0px;
 }
 
+#header.busy {
+    animation: backgroundColor 2s linear infinite;
+}
 
+@keyframes backgroundColor
+{
+    0%   { background-color:#cd0010; }
+    50%  { background-color:#ff4050; }
+    100% { background-color:#cd0010; }
+}
 
 #header h1 {
     margin-left: 10px;
@@ -55,21 +64,24 @@ input[type=checkbox] {
     color: #eee;
 }
 
-
-
+#busy-indicator {
+    float: right;
+    display: none;
+}
 
 #infopanel {
-    float: left;
+    display:inline-block;
     width: 400px;
 }
 
 #controlpanel {
-    float: right;
+    display:inline-block;
     width: 422px;
 }
+
 #plotsurround {
-    width: 562px;
-    float:left;
+    width: 800px;
+    display:inline-block;
 }
 
 #placeholder {
@@ -77,19 +89,7 @@ input[type=checkbox] {
     min-height:800px;
 }
 
-#settings {
-    width: 400px;
-}
-
-.submit{
-margin: 10px 0px 0px 280px;
-width: 100px;
-
-}    
-
 .cp {
-    margin-left: 10px;
-    margin-top: 20px;
     background-color: #ddd;
     width: 420px;
 }
@@ -102,7 +102,25 @@ width: 100px;
     color: #999;
 }
 
+#info_ratfunc {
+    white-space: pre-wrap;
+    height: 700px;
+    overflow: auto;
+}
 
 .legend table {
     border-spacing: 5px;
 }
+
+#input .tab {
+    height: 9em;
+}
+
+#samples .tab {
+    height: 6em;
+}
+
+#constraints .tab {
+    height: 6em;
+}
+

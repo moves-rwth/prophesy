@@ -1,16 +1,11 @@
 from sympy.polys import Poly
 from sympy import Rational, Integer, Float
 
-def degree(t):
-  """ Returns the degree of the given term (as tuple ((exp_0, exp_1, ..., exp_k), coeff)."""
-  assert isinstance(t, tuple)
-  return sum(t[0])
-
 def print_term(term, variables):
     """Prints ((v1=2,v2=3),c1) as (* c v1 v1  v2 v2 v2)"""
     assert term[1] != 0
     factors = []
-    if term[1] != 1 or degree(term) < 1:
+    if term[1] != 1 or sum(term[0]) == 0:
         factors.append(strNum(term[1]))
 
     for var, power in zip(variables,term[0]):
@@ -39,6 +34,8 @@ def smt2strPoly(p, variables):
 
 def strNum(n):
     assert isinstance(n, Rational) or isinstance(n, Integer) or isinstance(n, Float)
+    if isinstance(n, Float):
+        n = Rational(n)
     num_str = ""
     if n.is_integer:
         if n >= 0:
@@ -47,8 +44,12 @@ def strNum(n):
             num_str = "(- " + str(abs(n)) + ")"
     else:
         (nom, den) = n.as_numer_denom()
+        # Convert to Integer first, to avoid printing float representation
+        assert den > 0
         if n >= 0:
-            num_str = "(/ " + str(nom) + " " + str(den) + ")"
+            num_str = str((nom))
         else:
-            num_str = "(/ (- " + str(abs(nom)) + ") " + str(abs(den)) + ")"
+            num_str = "(- " + str(abs((nom))) + ") "
+        if den != 1:
+            num_str = "(/ " + num_str + " " + str(abs((den))) + ")"
     return num_str

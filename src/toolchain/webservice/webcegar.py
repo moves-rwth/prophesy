@@ -1,38 +1,87 @@
 #!/usr/bin/env python3
-import sys
 import os
-from input.comics import get_polynomials_from_comics_file
-from output.smt2 import smt2_to_file, call_smt_solver
-from symbol import parameters
-from buildconstraints import samples
-from util import ensure_dir_exists
+import sys
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
+sys.path.insert(0, os.path.join(thisfilepath, '../../lib'))
 
-from config import WEB_INTERMEDIATE_FILES_DIR, WEB_INTERFACE_DIR, TOOLNAME, \
-    WEBSESSIONS_DIR
-
-import bottle
-from bottle import request, route, hook, static_file, redirect, abort
-import beaker.middleware
 import json
-
+import bottle
+import tempfile
 import argparse
-from data.rationalfunction import RationalFunction
+import config
 import sampling
+from bottle import request, route, static_file, redirect
+import beaker.middleware
+from util import ensure_dir_exists
+from input.resultfile import read_param_result, read_pstorm_result, \
+    write_pstorm_result
+from input.prismfile import PrismFile
+from modelcheckers.param import ParamParametricModelChecker
+from modelcheckers.pstorm import ProphesyParametricModelChecker
+from smt.smtlib import SmtlibSolver
+from smt.smt import setup_smt
+from shapely.geometry.polygon import Polygon
+from constraints.constraint_planes import ConstraintPlanes
+from constraints.constraint_rectangles import ConstraintRectangles
+from constraints.constraint_quads import ConstraintQuads
+from constraints.constraint_polygon import ConstraintPolygon
 
-RESULTFILES_DIR = os.path.join(WEB_INTERMEDIATE_FILES_DIR, "results/")
+def _json_error(message, status = 500):
+    """Aborts the current request with the given message"""
+    from bottle import response
+    # response.charset = 'UTF-8'
+    response.content_type = 'application/json; charset=UTF-8'
+    response.status = status
+    return json.dumps({'status':'failed', 'reason':message})
+    # abort(409, json.dumps({'status':'failed', 'reason':message}))
 
-@hook('before_request')
-def setup_request():
-    request.session = request.environ['beaker.session']
-    if 'threshold' not in request.session:
-        request.session['threshold'] = 0.5
+def _json_ok(data = []):
+    """Returns JSON OK with formatted data"""
+    from bottle import response
+    # response.charset = 'UTF-8'
+    response.content_type = 'application/json; charset=UTF-8'
+    return json.dumps({'status':'ok', 'data':data})
+
+def _get_session(item, default = None):
+    try:
+        # Attempt to access session, set-up if fails
+        rqsession = request.session
+    except:
+        rqsession = request.session = request.environ['beaker.session']
+    if not item in rqsession:
+        rqsession[item] = default
+    return rqsession[item]
+
+def _set_session(item, data):
+    try:
+        # Attempt to access session, set-up if fails
+        rqsession = request.session
+    except:
+        rqsession = request.session = request.environ['beaker.session']
+    rqsession[item] = data
+    return data
+
+def _getResultData(name):
+    result_files = _get_session('result_files', {})
+    if not name in result_files:
+        return None
+    try:
+        result = read_pstorm_result(result_files[name])
+        return result
+    except:
+        return None
+
+def _jsonSamples(samples):
+    return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
+
+def _jsonPoly(polygon):
+    return [[x, y] for x, y in polygon.exterior.coords]
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
-    return static_file(filepath, root = WEB_INTERFACE_DIR)
+    return static_file(filepath, root = config.WEB_INTERFACE_DIR)
 
 @route('/')
 def index():
@@ -40,140 +89,275 @@ def index():
 
 @route('/invalidateSession')
 def invalidateSession():
+    # Delete temporary files
+    result_files = _get_session('result_files', {})
+    for fname in result_files.values():
+        try:
+            os.unlink(fname)
+        except:
+            pass
     request.session.invalidate()
+    return _json_ok()
 
-@route('/uploadComicsResult', method = 'POST')
-def uploadComicsResult():
-    upload = bottle.request.files.get('upload')
-#    name, ext = os.path.splitext(upload.filename)
-#    if ext not in ('.png','.jpg','.jpeg'):
-#        return 'File extension not allowed.'
+@route('/uploadPrism', method = 'POST')
+def uploadPrism():
+    tool = bottle.request.forms.get('mctool')
+    upload_prism = bottle.request.files.get('file')
+    upload_pctl = bottle.request.files.get('pctl-file')
+    if tool not in ['pstorm', 'param'] or upload_prism is None or upload_pctl is None:
+        return _json_error("Invalid form POST'ed")
 
-#    save_path = get_save_path_for_category(category)
-    save_path = os.path.join(RESULTFILES_DIR, upload.filename)
-    inputfile = open(save_path, 'wb')
-    inputfile.write(upload.file.read())
-    inputfile.close()
-    return 'OK'
+    (_, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTFILES_DIR)
+    upload_prism.save(prism_path, overwrite = True)
+    prism_file = PrismFile(prism_path)
 
+    (_, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTFILES_DIR)
+    upload_pctl.save(pctl_path, overwrite = True)
 
-@route('/listAvailableResultFiles')
-def loadAvailableResults():
-    files = [f for f in os.listdir(RESULTFILES_DIR) if f.endswith('.pol')]
-    files.sort()
-    return json.dumps(files)
+    if tool == "param":
+        prism_file.replace_parameter_keyword("param float")
+        tool = ParamParametricModelChecker()
+    elif tool == "pstorm":
+        tool = ProphesyParametricModelChecker()
+    else:
+        raise RuntimeError("No supported solver available")
 
-@route('/loadComicsResult/<filename>')
-def loadComicsResult(filename):
-    filepath = os.path.join(RESULTFILES_DIR, filename)
-    [parameters, constraints, nominator, denominator] = get_polynomials_from_comics_file(filepath)
+    result = tool.get_rational_function(prism_file, pctl_path)
 
-    request.session['name'] = filename
-    request.session['constraints'] = constraints
-    request.session['parameters'] = parameters
-    request.session['ratfunc'] = RationalFunction(nominator, denominator)
-    request.session['samples'] = {}
-    print(str(request.session['ratfunc']))
-    return json.dumps([str(request.session['ratfunc'])])
+    os.unlink(pctl_path)
+    os.unlink(prism_path)
+
+    (_, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
+    write_pstorm_result(res_file, result)
+
+    result_files = _get_session('result_files', {})
+
+    if upload_prism.filename in result_files:
+        os.unlink(result_files[upload_prism.filename])
+    result_files[upload_prism.filename] = res_file
+    _set_session('current_result', upload_prism.filename)
+
+    return _json_ok({"file" : upload_prism.filename})
+
+@route('/uploadResult', method = 'POST')
+def uploadResult():
+    tool = bottle.request.forms.get('result-type')
+    upload = bottle.request.files.get('file')
+    if tool not in ['pstorm', 'param'] or upload is None:
+        return _json_error("Invalid form POST'ed")
+
+    result_files = _get_session('result_files', {})
+
+    (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+    upload.save(res_file, overwrite = True)
+
+    try:
+        if tool == 'pstorm':
+            result = read_pstorm_result(res_file)
+        elif tool == 'param':
+            result = read_param_result(res_file)
+        else:
+            raise RuntimeError("Bad tool")
+    except:
+        return _json_error("Unable to parse result file")
+    finally:
+        os.unlink(res_file)
+
+    # Write pstorm result as canonical
+    (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+    write_pstorm_result(res_file, result)
+
+    if upload.filename in result_files:
+        os.unlink(result_files[upload.filename])
+    result_files[upload.filename] = res_file
+    _set_session('current_result', upload.filename)
+
+    return _json_ok({"file" : upload.filename})
+
+@route('/listAvailableResults')
+def listAvailableResults():
+    return _json_ok({"results" : [k for k in _get_session('result_files', {}).keys()]})
 
 @route('/setThreshold/<threshold:float>')
 def setThreshold(threshold):
-    request.session['threshold'] = threshold
+    _set_session('threshold', threshold)
+    return _json_ok({'threshold': threshold})
 
-@route('/showRationalFunction')
-def showRationalFunction():
-    if 'ratfunc' in request.session:
-        return json.dumps([str(request.session['ratfunc'])])
+@route('/getThreshold')
+def getThreshold():
+    return _json_ok({"threshold" : _get_session('threshold', 0.5)})
 
-@route('/manualCheckSamples', method = "POST")
-def manualCheckSamples():
-    spots = bottle.request.json
-    print(spots)
-    if 'ratfunc' not in request.session:
-        return 'fail'
-    if 'parameters' not in request.session:
-        return 'fail'
-    ratfunc = request.session['ratfunc']
-    parameters = request.session['parameters']
+@route('/getResultData/<name>')
+def getResultData(name):
+    result_files = _get_session('result_files', {})
+    if not name in result_files:
+        return _json_error("Result data not found", 404)
+    try:
+        result = read_pstorm_result(result_files[name])
+        return _json_ok({"result_data" : str(result)})
+    except:
+        return _json_error("Error reading result data")
+
+@route('/getCurrentResult')
+def getCurrentResult():
+    name = _get_session('current_result', None)
+    if name is None:
+        return _json_error("No result loaded", 412)
+    return _json_ok({"result" : name})
+
+@route('/setCurrentResult/<name>')
+def setCurrentResult(name):
+    results = _get_session('result_files', {})
+    if name in results:
+        _set_session('current_result', name)
+        return _json_ok({"result" : name})
+
+    return _json_error("No result found", 404)
+
+@route('/addSamples', method = "POST")
+def addSamples():
+    coordinates = bottle.request.json
+    if coordinates is None:
+        return _json_error("Unable to read coordinates", 400)
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
     samples = request.session.get('samples', {})
-    for spot in spots:
-        value = ratfunc.evaluate(zip(parameters, [float(x) for x in spot]))
-        point = tuple([float(x) for x in spot])
+    for x, y in coordinates:
+        point = (float(x), float(y))
+        value = result.ratfunc.eval({x : v for x, v in zip(result.parameters, point)})
         samples[point] = value
-    request.session['samples'] = samples
+    _set_session('samples', samples)
 
-    return json.dumps('ok')
-
-
-
-@route('/calculateSamples/<iterations:int>/<nrsamples:int>')
-def calculateSamples(iterations, nrsamples):
-
-    if 'ratfunc' not in request.session:
-        abort(409, 'rational function required')
-    if 'parameters' not in request.session:
-        abort(409, 'parameters required')
-    ratfunc = request.session['ratfunc']
-    print(ratfunc)
-    parameters = request.session['parameters']
-    print(parameters)
-    threshold = request.session['threshold']
-    sampling_interface = sampling.RatFuncSampling(ratfunc, parameters)
-    intervals = [(0.01, 0.99)] * len(parameters)
-    samples = request.session['samples']
-    unif_samples = sampling_interface.perform_uniform_sampling(intervals, 4)
-    for us, usv in unif_samples.items():
-        samples[us] = usv
-    print('refine')
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface , True)
-    print('refine')
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
-    samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
-    print('done')
-    request.session['samples'] = samples
-    flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in samples.items()])
-    print(flattenedsamples)
-    return json.dumps(flattenedsamples)
-
-@route('/checkConstraints', method = 'POST')
-def checkConstraints():
-    check = bottle.request.json
-    print(check)
-
-    # export problem as smt2
-    smt2_to_file(request.session['name'],
-                 request.session['parameters'],
-                 request.session['constraints'] + extra_constraints,
-                 request.session['ratfunc'],
-                 request.session['ratfunc'],
-                 request.session['threshold'],
-                 request.session['excluded_regions'],
-                 safity)
-    # call smt solver
-    (smtres, model) = call_smt_solver("z3", request.session['name'])
-
-    if smtres == "sat":
-        modelPoint = tuple([model[p.name] for p in parameters])
-        print(modelPoint)
-        samples[modelPoint] = ratfunc.evaluate(list(model.items()))
-        print(samples)
-    else:
-        samples = remove_covered_samples(parameters, samples, extra_constraints)
-        if safity:
-            safe.append(extra_constraints)
-        else:
-            bad.append(extra_constraints)
-        excluded_regions.append(extra_constraints)
-        print(safe)
-        print(bad)
+    return _json_ok(_jsonSamples(samples))
 
 @route('/getSamples')
 def getSamples():
-    if 'samples' in request.session:
-        flattenedsamples = list([{"coordinates" : [str(c) for c in k], "value" : str(v)} for k, v in request.session['samples'].items()])
-        return json.dumps(flattenedsamples)
+    flattenedsamples = _jsonSamples(_get_session('samples', {}))
+    return _json_ok(flattenedsamples)
+
+@route('/addSample/<x:float>/<y:float>')
+def addSample(x, y):
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
+    value = result.ratfunc.eval({result.parameters[0] : x, result.parameters[1] : y})
+    samples = _get_session('samples', {})
+    samples[(x, y)] = value
+    return _json_ok(_jsonSamples(samples))
+
+@route('/generateSamples/<iterations:int>/<nrsamples:int>')
+def generateSamples(iterations, nrsamples):
+    if iterations < 0:
+        return _json_error("Number of iterations must be >= 0", 400)
+    if nrsamples < 2:
+        return _json_error("Number of samples must be >= 2", 400)
+    threshold = _get_session('threshold', 0.5)
+
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
+
+    intervals = [(0.01, 0.99)] * len(result.parameters)
+    sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
+    samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
+    for _ in range(iterations):
+        new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = True)
+        if len(new_samples) > 128:
+            # Do not overdo things
+            break
+        samples.update(new_samples)
+
+    _set_session('samples', samples)
+    return _json_ok(_jsonSamples(samples))
+
+@route('/checkConstraint', method = 'POST')
+def checkConstraint():
+    mode = bottle.request.forms.get('constr-mode')
+    if not mode in ['safe', 'bad']:
+        return _json_error("Invalid mode set", 400)
+
+    coordinates = bottle.request.forms.get('coordinates')
+    if coordinates is None:
+        return _json_error("Unable to read coordinates", 400)
+    coordinates = json.loads(bottle.request.forms.get('coordinates'))
+    if coordinates is None or len(coordinates) < 3:
+        return _json_error("Unable to parse coordinates", 400)
+
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
+
+    samples = _get_session('samples', {})
+
+    threshold = _get_session('threshold', 0.5)
+
+    coordinates = [(float(x), float(y)) for x, y in coordinates]
+    if coordinates[0] == coordinates[-1]:
+        # Strip connecting point if any
+        coordinates = coordinates[:-1]
+
+    smt2interface = SmtlibSolver()
+    smt2interface.run()
+    setup_smt(smt2interface, result, threshold, True)
+
+    polygon = Polygon(coordinates)
+    generator = ConstraintPolygon(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    generator.plot = False
+    generator.add_polygon(polygon, mode == "safe")
+
+    (safe_poly, bad_poly, new_samples) = generator.generate_constraints(10)
+    samples.update(new_samples)
+
+    smt2interface.stop()
+
+    unsat = []
+    for poly in safe_poly:
+        unsat.append((_jsonPoly(poly), True))
+    for poly in bad_poly:
+        unsat.append((_jsonPoly(poly), False))
+
+    return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
+
+@route('/generateConstraints', method = 'POST')
+def generateConstraints():
+    generator_type = bottle.request.forms.get('generator')
+    if not generator_type in ['planes', 'rectangles', 'quads']:
+        return _json_error("Invalid generator set", 400)
+
+    result = _getResultData(_get_session('current_result', None))
+    if result is None:
+        return _json_error("Unable to load result data", 500)
+
+    samples = _get_session('samples', {})
+    threshold = _get_session('threshold', 0.5)
+
+    smt2interface = SmtlibSolver()
+    smt2interface.run()
+    setup_smt(smt2interface, result, threshold, True)
+
+    if generator_type == 'planes':
+        generator = ConstraintPlanes(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    elif generator_type == 'rectangles':
+        generator = ConstraintRectangles(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    elif generator_type == 'quads':
+        generator = ConstraintQuads(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
     else:
-        return json.dumps([])
+        return _json_error("Bad generator")
+    generator.plot = False
+
+    (safe_poly, bad_poly, new_samples) = generator.generate_constraints(10)
+    samples.update(new_samples)
+
+    smt2interface.stop()
+
+    unsat = []
+    for poly in safe_poly:
+        unsat.append((_jsonPoly(poly), True))
+    for poly in bad_poly:
+        unsat.append((_jsonPoly(poly), False))
+
+    return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
 # strips trailing slashes from requests
 class StripPathMiddleware(object):
@@ -185,20 +369,21 @@ class StripPathMiddleware(object):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Start a webservice for ' + TOOLNAME)
+    parser = argparse.ArgumentParser(description = 'Start a webservice for ' + config.TOOLNAME)
     parser.add_argument('--server-port', type = int, help = 'the port the server listens on', default = 4242)
     parser.add_argument('--server-host', help = "server host name", default = "localhost")
     parser.add_argument('--server-debug', type = bool, help = 'run the server in debug mode', default = True)
     parser.add_argument('--server-quiet', type = bool, help = 'run the server in quiet mode', default = False)
     cmdargs = parser.parse_args()
 
-    ensure_dir_exists(WEB_INTERMEDIATE_FILES_DIR)
-    ensure_dir_exists(RESULTFILES_DIR)
+    ensure_dir_exists(config.WEB_SESSIONS_DIR)
+    ensure_dir_exists(config.WEB_RESULTFILES_DIR)
 
     session_opts = {
         'session.type': 'file',
-        'session.data_dir': WEBSESSIONS_DIR,
+        'session.data_dir': config.WEB_SESSIONS_DIR,
         'session.auto': True,
+        'session.invalidate_corrupt':False
     }
 
     app = StripPathMiddleware(beaker.middleware.SessionMiddleware(bottle.app(), session_opts))

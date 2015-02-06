@@ -1,7 +1,7 @@
 #
 # -*- coding: utf-8 -*-
 from sympy.polys.polytools import Poly
-from data.polynomial_to_smt2 import smt2strPoly
+from smt.polynomial_to_smt2 import smt2strPoly
 import sympy
 
 ##################################################################################################
@@ -11,13 +11,13 @@ import sympy
 # @version: 2014-03-12
 ##################################################################################################
 
-class Constraint:
+class Constraint(object):
     """Represents a polynomial constraint pol rel 0.
          @param pol polynomials (Poly)
          @param rel (str)
          @param syms main variables of this constraint (list<Symbol>)
     """
-    RELATIONS = ["<", ">", "=", ">=", "<=", "<>"]  # the relations have to be ordered by size since otherwise parsing constraints would fail
+    RELATIONS = ["<", ">", "=", ">=", "<=", "<>"]
 
     def __init__(self, pol, rel, syms):
         assert isinstance(pol, Poly)
@@ -41,16 +41,16 @@ class Constraint:
 
     def __eq__(self, other):
         if not isinstance(other, Constraint): return False
-        return self.__str__().__eq__(other.__str__())
+        return str(self) == str(other)
 
     def __str__(self):
-        return str(self.polynomial)[5:].split(",")[0] + " " + self.relation + " 0"
+        return str(self.polynomial.as_expr()) + " " + self.relation + " 0"
 
     def __repr__(self):
         return str(self.polynomial) + " " + self.relation + " 0"
 
     def __hash__(self):  # exclude identical constraints
-        return self.__str__().__hash__()
+        return hash(str(self))
 
     def to_smt2_string(self):
             return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols) + " 0)"
@@ -58,7 +58,7 @@ class Constraint:
     def subs(self, substitutions):
         """ Performs the given list of substitutions on the polynomial of the constraint and
         adds all variables given by the substitutions to the new constraint. """
-        self.symbols += [substitution[0] for substitution in substitutions if not substitution[0] in self.symbols]
+        #self.symbols += [substitution[0] for substitution in substitutions if not substitution[0] in self.symbols]
         constraint = Constraint(self.polynomial.subs(substitutions), self.relation, self.symbols)
         return constraint
 
@@ -72,3 +72,33 @@ class Constraint:
         self.polynomial = Poly(self.polynomial.subs(switch_list, simultaneous=True), self.symbols)
         return self
 
+    def __and__(self, other):
+        return ComplexConstraint([self, other], "and")
+
+    def __or__(self, other):
+        return ComplexConstraint([self, other], "or")
+
+class ComplexConstraint(object):
+    def __init__(self, constraints, operator):
+        self.constraints = constraints
+        self.operator = operator
+
+    def __and__(self, other):
+        if self.operator == "and":
+            return ComplexConstraint(self.constraints + [other], "and")
+        else:
+            return ComplexConstraint([self, other], "and")
+
+    def __or__(self, other):
+        if self.operator == "or":
+            return ComplexConstraint(self.constraints + [other], "or")
+        else:
+            return ComplexConstraint([self, other], "or")
+
+    def to_smt2_string(self):
+        import operator
+        to_str = operator.methodcaller('to_smt2_string')
+        return "(" + self.operator + " ".join(map(to_str, self.constraints)) + " )"
+    
+    def __str__(self):
+        return "( " + (" " + self.operator + " ").join(map(str, self.constraints)) + " )"

@@ -8,7 +8,7 @@ from collections import OrderedDict
 from sampling import read_samples_file
 
 class PrismModelChecker(ProbablisticModelChecker):
-    def __init__(self, location):
+    def __init__(self, location = config.PRISM_COMMAND):
         self.location = location
 
     def name(self):
@@ -21,7 +21,7 @@ class PrismModelChecker(ProbablisticModelChecker):
         return pipe.communicate()[0].decode(encoding = 'UTF-8')
 
     def uniform_sample_pctl_formula(self, prism_file, pctl_filepath, ranges):
-        assert(len(prism_file.parameters) == len(ranges))
+        assert len(prism_file.parameters) == len(ranges), "Number of value ranges does not match number of parameters"
         check_filepath_for_reading(pctl_filepath, "pctl file")
 
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
