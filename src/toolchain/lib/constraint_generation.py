@@ -270,7 +270,7 @@ class ConstraintGeneration(object):
         smt_model = None
         result = None
 
-        # self.plot_candidate()
+        #self.plot_results(poly_blue = [polygon], display=True)
 
         while not smt_successful:
             # check constraint with smt
@@ -293,8 +293,8 @@ class ConstraintGeneration(object):
                     result_update = self.fail_constraint(constraint, safe)
                     if result_update == None:
                         break
-                    # self.plot_candidate()
                     (constraint, polygon, safe) = result_update
+                    #self.plot_results(poly_blue = [polygon], display=True)
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:
