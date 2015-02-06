@@ -190,11 +190,19 @@ class ConstraintGeneration(object):
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
+        #Extend arguments
+        poly_green = kwargs.get('poly_green')
+        if poly_green is None:
+            poly_green = []
+        kwargs['poly_green'] = poly_green + self.safe_polys
+        poly_red = kwargs.get('poly_red')
+        if poly_red is None:
+            poly_red = []
+        kwargs['poly_red'] = poly_red + self.bad_polys
+
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
         Plot.plot_results(parameters = self.parameters,
                           samples_qualitative = dict([(p, v > self.threshold) for p, v in self.samples.items()]),
-                          poly_green = self.safe_polys,
-                          poly_red = self.bad_polys,
                           path_to_save = result_tmp_file,
                           *args, **kwargs)
         self.add_pdf(result_tmp_file)
@@ -203,6 +211,11 @@ class ConstraintGeneration(object):
     def is_inside_polygon(self, point, polygon):
         # checks if the point lies inside the polygon
         return point.within(polygon) or point.touches(polygon)
+
+    def intersects(self, polygon1, polygon2):
+        """checks if two polygons intersect, touching is okay"""
+        #TODO first check bounding boxes?
+        return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
 
     @abstractmethod
     def next_constraint(self):

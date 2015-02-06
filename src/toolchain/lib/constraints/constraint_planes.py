@@ -30,7 +30,6 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_anchor = None
         self.best_plane = None
         self.best_line = None
-        self.all_constraints_neg = []
 
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
@@ -154,11 +153,6 @@ class ConstraintPlanes(ConstraintGeneration):
     def normalize_vector(self, x):
         return x / numpy.linalg.norm(x)
 
-    def plot_candidate(self):
-        point2 = self.best_anchor.pos + self.best_orientation_vector * self.best_dpt
-        anchor_line = LineString([self.best_anchor.pos, point2])
-        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_line], additional_arrows = [anchor_line], display=False)
-
     def fail_constraint(self, constraint, safe):
         if self.best_dpt < 0.05:
             return None
@@ -266,11 +260,19 @@ class ConstraintPlanes(ConstraintGeneration):
                 if plane is None:
                     continue
 
+                # check for intersection with existing planes
+                # TODO make more efficient
+                for plane2 in self.safe_planes if area_safe else self.unsafe_planes:
+                    if (self.intersects(plane, plane2)):
+                        plane = plane.difference(plane2)
+                        #print("After intersection: {}".format(plane))
+                        #self.plot_results(poly_blue = [plane, plane2], display=True)
+
                 #orientation_line = LineString([anchor.pos, Point(numpy.array(anchor.pos) + orientation_vector*dpt)])
                 #self.plot_results(anchor_points=self.anchor_points, poly_blue = [plane], additional_arrows = [orientation_line], display=True)
 
                 # choose best
-                if self.best_plane is None or plane.area > self.best_plane.area:
+                if self.best_plane is None or (plane.area > self.best_plane.area and plane.area > self.threshold_area):
                     self.best_orientation_vector = orientation_vector
                     self.best_dpt = dpt
                     self.max_area_safe = area_safe

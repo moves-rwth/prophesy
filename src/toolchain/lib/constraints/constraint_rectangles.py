@@ -25,10 +25,6 @@ class ConstraintRectangles(ConstraintGeneration):
 
         self.all_boxes = []
 
-    def intersects(self, rectangle1, rectangle2):
-        # checks if rectangles intersect, touching is okay
-        return rectangle1.intersects(rectangle2) and not rectangle1.touches(rectangle2)
-
     def plot_candidate(self):
         self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_rectangle], display = False)
 
@@ -81,7 +77,6 @@ class ConstraintRectangles(ConstraintGeneration):
         # returns (new_constraint, new_covered_area)
 
         # reset
-        max_size = 0
         self.max_area_safe = None
         self.best_rectangle = None
         self.best_anchor = None
@@ -120,9 +115,10 @@ class ConstraintRectangles(ConstraintGeneration):
                         #    point = rectangle_new[0]
                         #    anchor_point = rectangle_new[1]
 
+                if break_attempt:
+                    continue
                 # choose largest rectangle
-                size = rectangle_test.area
-                if size > max_size and not break_attempt and size > self.threshold_area:
+                if self.best_rectangle is None or (rectangle_test.area > self.best_rectangle.area and rectangle_test.area > self.threshold_area):
                     # check if nothing of other polarity is inbetween.
                     safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
                     other_points = bad_samples.keys() if safe_area else safe_samples.keys()
@@ -135,7 +131,6 @@ class ConstraintRectangles(ConstraintGeneration):
 
                     if not break_attempt:
                         # can extend area
-                        max_size = size
                         self.max_area_safe = safe_area
                         self.best_rectangle = rectangle_test
                         self.best_anchor = anchor
