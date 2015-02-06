@@ -11,6 +11,7 @@ from config import PLOT_FILES_DIR, EPS
 from util import ensure_dir_exists
 from data.constraint import Constraint, ComplexConstraint
 from sympy.polys.polytools import Poly
+from numpy import array
 import shutil
 from shapely.geometry.polygon import Polygon, orient, LinearRing
 from enum import Enum
@@ -33,6 +34,13 @@ class Direction(Enum):
                 return cls.NW
             else:
                 return cls.SW
+
+    def to_vector(self):
+        vector = {  Direction.NE: array([ 1,  1]),
+                    Direction.SE: array([ 1, -1]),
+                    Direction.NW: array([-1,  1]),
+                    Direction.SW: array([-1, -1])}
+        return vector[self]
 
 class Anchor(object):
     def __init__(self, pos, dir, safe):
@@ -190,15 +198,39 @@ class ConstraintGeneration(object):
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
+        #Extend arguments
+        poly_green = kwargs.get('poly_green')
+        if poly_green is None:
+            poly_green = []
+        kwargs['poly_green'] = poly_green + self.safe_polys
+        poly_red = kwargs.get('poly_red')
+        if poly_red is None:
+            poly_red = []
+        kwargs['poly_red'] = poly_red + self.bad_polys
+
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
         Plot.plot_results(parameters = self.parameters,
                           samples_qualitative = dict([(p, v > self.threshold) for p, v in self.samples.items()]),
-                          poly_green = self.safe_polys,
-                          poly_red = self.bad_polys,
                           path_to_save = result_tmp_file,
                           *args, **kwargs)
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
+
+    def is_inside_polygon(self, point, polygon):
+        # checks if the point lies inside the polygon
+        return point.within(polygon) or point.touches(polygon)
+
+    def intersects(self, polygon1, polygon2):
+        """checks if two polygons intersect, touching is okay"""
+        #TODO first check bounding boxes?
+        return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
+
+    @abstractmethod
+    def refine_with_intersections(self, polygon):
+        """Compute the intersections of the polygon with the existing ones
+        and refine it by getting the difference
+        returns the refined polygon"""
+        raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
     def next_constraint(self):
@@ -263,6 +295,7 @@ class ConstraintGeneration(object):
                         break
                     self.plot_candidate()
                     (constraint, polygon, safe) = result_update
+                    #self.plot_results(poly_blue = [polygon], display=True)
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:

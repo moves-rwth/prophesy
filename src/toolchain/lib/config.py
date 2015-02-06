@@ -3,7 +3,7 @@ thisfilepath = os.path.dirname(os.path.realpath(__file__))
 
 VERSION = [0, 3, 0]
 
-AUTHORS = ["Florian Corzilius", "Christian Dehnert", "Nils Jansen", "Sebastian Junges", "Matthias Volk"]
+AUTHORS = ["Harold Bruintjes", "Florian Corzilius", "Christian Dehnert", "Nils Jansen", "Sebastian Junges", "Matthias Volk"]
 SUPPORT = ["Nils Jansen", "Sebastian Junges"]
 TOOLNAME = "Prophesy"
 
@@ -28,6 +28,8 @@ PRISM_COMMAND = os.path.join(TOOL_DIR, "prism")
 
 # epsilon for constraint generation
 EPS = 0.0001
-DISTANCE_SAMPLING = 0.2
+
+SAMPLING_DISTANCE = 0.2
+SAMPLING_THRESHOLD_NEW = 50
 
 #CONSTRAINT_GENERATION_COMMAND = "./polyCreator.py"

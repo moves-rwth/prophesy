@@ -1,9 +1,9 @@
-import numpy
 from constraint_generation import ConstraintGeneration, Anchor, Direction
 from config import EPS
-from shapely.geometry import LineString
+from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.point import Point
-from shapely.geometry.polygon import LinearRing, Polygon
+from shapely.geometry.polygon import Polygon
+import numpy
 import sampling
 
 class ConstraintPlanes(ConstraintGeneration):
@@ -15,16 +15,20 @@ class ConstraintPlanes(ConstraintGeneration):
         self.safe_planes = []
         self.unsafe_planes = []
 
-        self.anchor_points = [Anchor(Point(0, 0), Direction.NE),
-                         Anchor(Point(1, 0), Direction.NW),
-                         Anchor(Point(1, 1), Direction.SW),
-                         Anchor(Point(0, 1), Direction.SE)]
+        self.anchor_points = []
+        for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
+            value = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
+            if (self.safe_above_threshold and value >= self.threshold) or (not self.safe_above_threshold and value < self.threshold):
+                pt_safe = True
+            else:
+                pt_safe = False
+            self.anchor_points.append(Anchor(Point(pt), dir, pt_safe))
+
         self.best_orientation_vector = None
         self.best_dpt = 0
         self.max_area_safe = False
         self.best_anchor = None
-        self.best_line = None
-        self.all_constraints_neg = []
+        self.best_plane = None
 
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
@@ -47,7 +51,6 @@ class ConstraintPlanes(ConstraintGeneration):
         min_bad_dist = 1000
 
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
-        # print("\t\torthogonal: {0}".format(orthogonal_vec))
 
         for k in safe_samples.keys():
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
@@ -57,9 +60,6 @@ class ConstraintPlanes(ConstraintGeneration):
             dist = self.compute_distance(anchor_point, k, orthogonal_vec)
             if abs(dist) < abs(min_bad_dist):
                 min_bad_dist = dist
-
-        # print("\t\tmin_safe_dist: {0}".format(min_safe_dist))
-        # print("\t\tmin_bad_dist: {0}".format(min_bad_dist))
 
         if abs(min_safe_dist) == abs(min_bad_dist):
             return (True, 0)
@@ -71,36 +71,69 @@ class ConstraintPlanes(ConstraintGeneration):
             assert(abs(min_safe_dist) > abs(min_bad_dist))
             return (False, min_safe_dist-EPS)
 
-    def create_bounding_line(self, anchor, orientation_vector):
-        """computes the bounding line orthogonal to the orientation vector
-        Ensures area of the line is at the RHS
-        returns None if no intersection or intersections are out of borders"""
-        bbox = LinearRing([(0,0),(1,0),(1,1),(0,1)])
+    def create_plane(self, anchor, orientation_vector):
+        """computes the plane created by splitting along the bounding line
+        with the anchor point in it
+        the bounding line is orthogonal to the orientation vector"""
+        bbox = box(0, 0, 1, 1)
 
         orthogonal_anchor = numpy.array(anchor) + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
 
-        if not (0 <= orthogonal_anchor[0] <= 1) or not (0 <= orthogonal_anchor[1] <= 1):
-            # Line outside of bbox
-            return None
-
-        # Ensure start and end are far enough outside of bbox to ensure intersection
-        p = Point(orthogonal_anchor)
-        # First + then - ensures RHS of line is constraint area
+        # Ensure start and end of bounding line are far enough outside of bbox to ensure intersection
         # compute_orthogonal_vector returns CW rotation
         start = Point(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2)
         end = Point(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2)
+        bounding_line = LineString([start, end])
 
-        line1 = LineString([start, p])
-        line2 = LineString([p, end])
-        intersection1 = line1.intersection(bbox)
-        intersection2 = line2.intersection(bbox)
-        if intersection1 is None or intersection2 is None:
+        intersections = bounding_line.intersection(bbox.boundary)
+        if intersections is None or not isinstance(intersections, MultiPoint) or len(intersections) != 2:
             return None
-        if not isinstance(intersection1, Point) or not isinstance(intersection2, Point):
-            # Each intersection must be a single point
+
+        int1 = intersections[0]
+        int2 = intersections[1]
+
+        half_A = self.get_halfspace_polygon(int1, int2)
+        half_B = self.get_halfspace_polygon(int2, int1)
+
+        if self.is_inside_polygon(anchor, half_A):
+            plane = half_A
+        elif self.is_inside_polygon(anchor, half_B):
+            plane = half_B
+        else:
             return None
-        return LineString((intersection1, intersection2))
+
+        return plane
+
+    def get_halfspace_polygon(self, start, end):
+        """compute a halfspace polygon starting at poin start
+        and traversing the bounding box until end point is reached"""
+        result = [(start.x, start.y)]
+        corner_current = self.get_next_corner(start)
+        corner_end = self.get_next_corner(end)
+        while not corner_current.equals(corner_end):
+            result.append((corner_current.x, corner_current.y))
+            corner_current = self.get_next_corner(corner_current)
+        result.append((end.x, end.y))
+        return Polygon(result)
+
+    def get_next_corner(self, point):
+        """return the next corner point (CCW) for a point lying on the bounding box"""
+        if point.x == 0:
+            if point.y == 0:
+                return Point(1, 0)
+            else:
+                return Point(0, 0)
+        elif point.x == 1:
+            if point.y == 1:
+                return Point(0, 1)
+            else:
+                return Point(1, 1)
+        elif point.y == 0:
+            return Point(1, 0)
+        else:
+            assert(point.y == 1)
+            return Point(0, 1)
 
     def rotate_vector(self, x, rad):
         R = numpy.matrix([[numpy.cos(rad), -numpy.sin(rad)], [numpy.sin(rad), numpy.cos(rad)]])
@@ -110,32 +143,51 @@ class ConstraintPlanes(ConstraintGeneration):
     def normalize_vector(self, x):
         return x / numpy.linalg.norm(x)
 
-    def get_area_poly(self, anchor, line):
-        return Polygon(list(anchor.pos.coords) + list(line.coords))
+    def is_valid_orientation(self, anchor, direction):
+        """Tests if anchor and direction are valid as new anchor"""
+        # Testing if point with small distance from anchor in direction is in unknown area
+        point_test = Point(numpy.array(anchor) + direction * EPS * 2)
+        if point_test.x < 0 or 1 < point_test.x or point_test.y < 0 or 1 < point_test.y:
+            return False
+        for plane in self.safe_planes + self.unsafe_planes:
+            if self.is_inside_polygon(point_test, plane):
+                return False
+        return True
 
-    def plot_candidate(self):
-        point2 = self.best_anchor.pos + self.best_orientation_vector * self.best_dpt
-        anchor_line = LineString([self.best_anchor.pos, point2])
-        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_line], additional_arrows = [anchor_line], display=False)
+    def refine_with_intersections(self, polygon):
+        # check for intersection with existing planes
+        # TODO make more efficient
+        for plane2 in self.safe_planes + self.unsafe_planes:
+            if (self.intersects(polygon, plane2)):
+                polygon = polygon.difference(plane2)
+        return polygon
 
     def fail_constraint(self, constraint, safe):
-        if self.best_dpt < 0.05:
+        if self.best_dpt < EPS:
             return None
         self.best_dpt *= 0.5
-        line = self.create_bounding_line(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
-        if line is None:
+        plane = self.create_plane(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
+        if plane is None:
             return None
-        self.best_line = line
-        area_poly = self.get_area_poly(self.best_anchor, line)
-        return (self.compute_constraint(self.best_line), area_poly, self.max_area_safe)
+        plane = self.refine_with_intersections(plane)
+        if plane is None:
+            return None
+
+        if plane.area < self.threshold_area:
+            return None
+
+        self.best_plane = plane
+        return (self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe)
 
     def reject_constraint(self, constraint, safe, sample):
         pass
 
     def accept_constraint(self, constraint, safe):
-        (best_bound1, best_bound2) = self.best_line.coords
-        best_bound1 = Point(best_bound1)
-        best_bound2 = Point(best_bound2)
+        assert(self.max_area_safe == safe)
+        if self.max_area_safe:
+            self.safe_planes.append(self.best_plane)
+        else:
+            self.unsafe_planes.append(self.best_plane)
 
         # Remove additional anchor points already in area
         anchors = self.anchor_points[:]
@@ -143,49 +195,13 @@ class ConstraintPlanes(ConstraintGeneration):
             if self.is_point_fulfilling_constraint(list(anchor.pos.coords)[0], constraint):
                 self.anchor_points.remove(anchor)
 
-        # Add new anchors
-        # First add possible anchors for first bound point
-        if best_bound1.y == 0:
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.NE))
-            if best_bound2.x > best_bound1.x:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.NW))
-        elif best_bound1.y == 1:
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.SW))
-            if best_bound2.x < best_bound1.x:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.SE))
-        elif best_bound1.x == 0:
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.SE))
-            if best_bound2.y > best_bound1.y:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.NE))
-        else:
-            assert best_bound1.x == 1
-            self.anchor_points.append(Anchor(Point(best_bound1), Direction.NW))
-            if best_bound2.y < best_bound1.y:
-                self.anchor_points.append(Anchor(Point(best_bound1), Direction.SW))
-
-        # Then for second bound point. Constraint is now on other side of the line
-        if best_bound2.y == 0:
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.NW))
-            if best_bound1.x > best_bound2.x:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.NE))
-        elif best_bound2.y == 1:
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.SE))
-            if best_bound1.x < best_bound2.x:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.SW))
-        elif best_bound2.x == 0:
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.NE))
-            if best_bound1.y > best_bound2.y:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.SE))
-        else:
-            assert best_bound2.x == 1
-            self.anchor_points.append(Anchor(Point(best_bound2), Direction.SW))
-            if best_bound1.y < best_bound2.y:
-                self.anchor_points.append(Anchor(Point(best_bound2), Direction.NW))
-
-        if self.max_area_safe:
-            self.safe_planes.append(self.best_line)
-        else:
-            self.unsafe_planes.append(self.best_line)
+        for pt in self.best_plane.boundary.coords:
+            point = Point(pt)
+            # Test all directions for anchor
+            for direction in [Direction.NE, Direction.NW, Direction.SW, Direction.SE]:
+                if self.is_valid_orientation(point, direction.to_vector()):
+                    self.anchor_points.append(Anchor(point, direction, safe))
+        #self.plot_results(anchor_points=self.anchor_points, display=True)
 
     def next_constraint(self):
         # reset
@@ -193,9 +209,7 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_dpt = 0
         self.max_area_safe = False
         self.best_anchor = None
-        self.best_line = None
-        
-        best_area_poly = None
+        self.best_plane = None
 
         # split samples into safe and bad
         (safe_samples, bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
@@ -213,22 +227,38 @@ class ConstraintPlanes(ConstraintGeneration):
                 (area_safe, dpt) = self.create_halfspace_depth(safe_samples, bad_samples, anchor.pos, orientation_vector)
                 if abs(dpt) < EPS:
                     continue
-                line = self.create_bounding_line(anchor.pos, orientation_vector*dpt)
-                if line is None:
+
+                plane = self.create_plane(anchor.pos, orientation_vector*dpt)
+                if plane is None:
                     continue
 
-                area_poly = self.get_area_poly(anchor, line)
+                plane = self.refine_with_intersections(plane)
+                if plane is None:
+                    continue
+
+                #orientation_line = LineString([anchor.pos, Point(numpy.array(anchor.pos) + orientation_vector*dpt)])
+                #self.plot_results(anchor_points=self.anchor_points, poly_blue = [plane], additional_arrows = [orientation_line], display=True)
 
                 # choose best
-                if best_area_poly is None or area_poly.area > best_area_poly.area:
-                    self.best_orientation_vector = orientation_vector
-                    self.best_dpt = dpt
-                    self.max_area_safe = area_safe
-                    self.best_anchor = anchor
-                    self.best_line = line
-                    best_area_poly = area_poly
+                if self.best_plane is None or (plane.area > self.best_plane.area and plane.area > self.threshold_area):
+                    # check if nothing of other polarity is inbetween.
+                    other_points = bad_samples.keys() if area_safe else safe_samples.keys()
+                    break_attempt = False
+                    for point2 in other_points:
+                        point2 = Point(point2)
+                        if self.is_inside_polygon(point2, plane):
+                            # wrong sample in covered area
+                            break_attempt = True
+                            break
 
-        if self.best_line is None:
+                    if not break_attempt:
+                        self.best_orientation_vector = orientation_vector
+                        self.best_dpt = dpt
+                        self.max_area_safe = area_safe
+                        self.best_anchor = anchor
+                        self.best_plane = plane
+
+        if self.best_plane is None:
             return None
 
-        return (self.compute_constraint(self.best_line), best_area_poly, self.max_area_safe)
+        return (self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe)
