@@ -45,7 +45,10 @@ class ConstraintRectangles(ConstraintGeneration):
         # scale rectangle by factor 0.5
         self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor.pos)
         if self.best_rectangle.area < self.threshold_area:
-            return None
+            # Discard rectangle and try other one by removing anchor
+            # TODO better solution?
+            self.anchor_points.remove(self.best_anchor)
+            return self.next_constraint()
 
         (x1, y1, x2, y2) = self.best_rectangle.bounds
         pos_x, pos_y = self.best_anchor.dir.value
