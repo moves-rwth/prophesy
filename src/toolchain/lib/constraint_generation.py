@@ -238,7 +238,7 @@ class ConstraintGeneration(object):
         smt_model = None
         result = None
 
-        # self.plot_candidate()
+        self.plot_candidate()
 
         while not smt_successful:
             # check constraint with smt
@@ -261,7 +261,7 @@ class ConstraintGeneration(object):
                     result_update = self.fail_constraint(constraint, safe)
                     if result_update == None:
                         break
-                    # self.plot_candidate()
+                    self.plot_candidate()
                     (constraint, polygon, safe) = result_update
                 else:
                     smt_successful = True
@@ -334,7 +334,7 @@ class ConstraintGeneration(object):
                     break
 
                 (new_constraint, polygon, area_safe) = result_constraint
-                self.plot_results(poly_blue = [polygon])
+                #self.plot_results(poly_blue = [polygon])
                 result = self.analyze_constraint(new_constraint, polygon, area_safe)
                 # Plot intermediate result
                 if result is not None and len(self.all_constraints) % 20 == 0:

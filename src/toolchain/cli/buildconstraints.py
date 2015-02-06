@@ -68,7 +68,7 @@ if __name__ == "__main__":
         generator.add_polygon(Polygon([(0.5, 0), (0.75, 0.25), (0.5, 0.5), (0.25, 0.25)]), True)
     else:
         assert False
-    generator.generate_constraints(25)
+    generator.generate_constraints(200)
 
     smt2interface.stop()
     #print("Executed SMT commands:")
