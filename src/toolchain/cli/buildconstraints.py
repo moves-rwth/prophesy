@@ -43,14 +43,8 @@ if __name__ == "__main__":
     threshold_area = vars(cmdargs)["threshold_area"]
     result = read_pstorm_result(vars(cmdargs)['rat_file'])
 
-    print("Performing sample refinement")
-    (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
-    sampler = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    while len(new_samples) < SAMPLING_THRESHOLD_NEW and len(new_samples) > 0:
-        samples.update(new_samples)
-        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    samples.update(new_samples)
+    print("Loading samples")
+    (_, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
     print(samples)
 
     print("Setup SMT interface")
