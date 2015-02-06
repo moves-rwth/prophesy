@@ -18,6 +18,7 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
 from constraints.constraint_quads import ConstraintQuads
 from input.resultfile import read_pstorm_result
+from config import SAMPLING_THRESHOLD_NEW
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     group.add_argument('--bad-above-threshold', action = 'store_false', dest = "safe_above_threshold")
     method_group = parser.add_mutually_exclusive_group(required = True)
     method_group.add_argument('--planes', action = 'store_true', dest = "planes")
-    method_group.add_argument('--growing-rectangles', action = 'store_true', dest = "rectangles")
+    method_group.add_argument('--rectangles', action = 'store_true', dest = "rectangles")
     method_group.add_argument('--quads', action = 'store_true', dest = "quads")
     method_group.add_argument('--poly', action = 'store_true', dest = "poly")
     solvers_group = parser.add_mutually_exclusive_group(required = True)
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
     sampler = sampling.RatFuncSampling(result.ratfunc, result.parameters)
     new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    while len(new_samples) < 50 and len(new_samples) > 0:
+    while len(new_samples) < SAMPLING_THRESHOLD_NEW and len(new_samples) > 0:
         samples.update(new_samples)
         new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
     samples.update(new_samples)

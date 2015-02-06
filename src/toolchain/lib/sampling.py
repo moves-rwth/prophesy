@@ -1,6 +1,6 @@
 import math
 import itertools
-from config import DISTANCE_SAMPLING
+from config import SAMPLING_DISTANCE
 from collections import OrderedDict
 from shapely.geometry import Point
 from sympy.core.numbers import Rational
@@ -92,7 +92,7 @@ def split_samples(samples, threshold, greaterEqualSafe = True):
         return (below_threshold, above_threshold)
 
 def filter_sampling(samples, threshold):
-    return {pt : val for (pt, val) in samples.items() if abs(threshold - val) <= DISTANCE_SAMPLING}
+    return {pt : val for (pt, val) in samples.items() if abs(threshold - val) <= SAMPLING_DISTANCE}
 
 def near_sampling(samples, threshold, rectangles, limit = 0.1, added_dist = 0.05):
     pass

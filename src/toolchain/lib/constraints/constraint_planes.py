@@ -163,7 +163,7 @@ class ConstraintPlanes(ConstraintGeneration):
         return polygon
 
     def fail_constraint(self, constraint, safe):
-        if self.best_dpt < 0.05:
+        if self.best_dpt < EPS:
             return None
         self.best_dpt *= 0.5
         plane = self.create_plane(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
@@ -171,6 +171,9 @@ class ConstraintPlanes(ConstraintGeneration):
             return None
         plane = self.refine_with_intersections(plane)
         if plane is None:
+            return None
+
+        if plane.area < self.threshold_area:
             return None
 
         self.best_plane = plane
