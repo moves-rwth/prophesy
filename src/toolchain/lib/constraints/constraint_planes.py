@@ -146,13 +146,21 @@ class ConstraintPlanes(ConstraintGeneration):
     def is_valid_orientation(self, anchor, direction):
         """Tests if anchor and direction are valid as new anchor"""
         # Testing if point with small distance from anchor in direction is in unknown area
-        point_test = Point(numpy.array(anchor) + direction.to_vector() * EPS * 2)
+        point_test = Point(numpy.array(anchor) + direction * EPS * 2)
         if point_test.x < 0 or 1 < point_test.x or point_test.y < 0 or 1 < point_test.y:
             return False
         for plane in self.safe_planes + self.unsafe_planes:
             if self.is_inside_polygon(point_test, plane):
                 return False
         return True
+
+    def refine_with_intersections(self, polygon):
+        # check for intersection with existing planes
+        # TODO make more efficient
+        for plane2 in self.safe_planes + self.unsafe_planes:
+            if (self.intersects(polygon, plane2)):
+                polygon = polygon.difference(plane2)
+        return polygon
 
     def fail_constraint(self, constraint, safe):
         if self.best_dpt < 0.05:
@@ -161,6 +169,10 @@ class ConstraintPlanes(ConstraintGeneration):
         plane = self.create_plane(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
         if plane is None:
             return None
+        plane = self.refine_with_intersections(plane)
+        if plane is None:
+            return None
+
         self.best_plane = plane
         return (self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe)
 
@@ -184,8 +196,9 @@ class ConstraintPlanes(ConstraintGeneration):
             point = Point(pt)
             # Test all directions for anchor
             for direction in [Direction.NE, Direction.NW, Direction.SW, Direction.SE]:
-                if self.is_valid_orientation(point, direction):
+                if self.is_valid_orientation(point, direction.to_vector()):
                     self.anchor_points.append(Anchor(point, direction, safe))
+        #self.plot_results(anchor_points=self.anchor_points, display=True)
 
     def next_constraint(self):
         # reset
@@ -209,6 +222,7 @@ class ConstraintPlanes(ConstraintGeneration):
                 orientation_vector = self.normalize_vector(self.rotate_vector(orientation, step))
 
                 (area_safe, dpt) = self.create_halfspace_depth(safe_samples, bad_samples, anchor.pos, orientation_vector)
+                dpt *= 0.5
                 if abs(dpt) < EPS:
                     continue
 
@@ -216,22 +230,31 @@ class ConstraintPlanes(ConstraintGeneration):
                 if plane is None:
                     continue
 
-                # check for intersection with existing planes
-                # TODO make more efficient
-                for plane2 in self.safe_planes if area_safe else self.unsafe_planes:
-                    if (self.intersects(plane, plane2)):
-                        plane = plane.difference(plane2)
+                plane = self.refine_with_intersections(plane)
+                if plane is None:
+                    continue
 
                 #orientation_line = LineString([anchor.pos, Point(numpy.array(anchor.pos) + orientation_vector*dpt)])
                 #self.plot_results(anchor_points=self.anchor_points, poly_blue = [plane], additional_arrows = [orientation_line], display=True)
 
                 # choose best
                 if self.best_plane is None or (plane.area > self.best_plane.area and plane.area > self.threshold_area):
-                    self.best_orientation_vector = orientation_vector
-                    self.best_dpt = dpt
-                    self.max_area_safe = area_safe
-                    self.best_anchor = anchor
-                    self.best_plane = plane
+                    # check if nothing of other polarity is inbetween.
+                    other_points = bad_samples.keys() if area_safe else safe_samples.keys()
+                    break_attempt = False
+                    for point2 in other_points:
+                        point2 = Point(point2)
+                        if self.is_inside_polygon(point2, plane):
+                            # wrong sample in covered area
+                            break_attempt = True
+                            break
+
+                    if not break_attempt:
+                        self.best_orientation_vector = orientation_vector
+                        self.best_dpt = dpt
+                        self.max_area_safe = area_safe
+                        self.best_anchor = anchor
+                        self.best_plane = plane
 
         if self.best_plane is None:
             return None

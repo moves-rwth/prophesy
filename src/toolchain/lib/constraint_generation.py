@@ -226,6 +226,13 @@ class ConstraintGeneration(object):
         return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
 
     @abstractmethod
+    def refine_with_intersections(self, polygon):
+        """Compute the intersections of the polygon with the existing ones
+        and refine it by getting the difference
+        returns the refined polygon"""
+        raise NotImplementedError("Abstract parent method")
+
+    @abstractmethod
     def next_constraint(self):
         """Generate a new set of constraints ([constraints], area, area_safe),
         where [constraints] is a list of Constraint, area is a polygon representation of the new area

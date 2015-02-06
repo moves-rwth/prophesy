@@ -28,6 +28,16 @@ class ConstraintRectangles(ConstraintGeneration):
     def plot_candidate(self):
         self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_rectangle], display = False)
 
+    def refine_with_intersections(self, polygon):
+        # check for intersection with existing rectangles
+        # TODO make more efficient
+        for rectangle2 in self.all_boxes:
+            if self.intersects(polygon, rectangle2):
+                # TODO set largest part of remaining difference as new rectangle 
+                #polygon = polygon.difference(rectangle2)
+                return None
+        return polygon
+
     def fail_constraint(self, constraint, safe):
         # change current constraint to avoid memout in smt
         # returns (new_constraint, new_covered_area, area_safe)
@@ -100,39 +110,27 @@ class ConstraintRectangles(ConstraintGeneration):
                 break_attempt = False
                 (min_x, max_x) = (point.x, anchor_pos.x) if point.x < anchor_pos.x else (anchor_pos.x, point.x)
                 (min_y, max_y) = (point.y, anchor_pos.y) if point.y < anchor_pos.y else (anchor_pos.y, point.y)
-                rectangle_test = box(min_x, min_y, max_x, max_y)
-                # check for intersection with existing rectangles
-                # TODO make more efficient
-                for rectangle2 in self.all_boxes:
-                    if (self.intersects(rectangle_test, rectangle2)):
-                        break_attempt = True
-                        break
-                        # TODO improve rectangle subtraction
-                        # # reduce rectangle to part outside of existing rectangles
-                        # rectangle_new = self.rectangle_subtract(anchor_point, point, rectangle2)
-                        # if (rectangle_new != None):
-                        #    Plot.plot_results(parameters, dict([(p, v > threshold) for p,v in samples.items()]), anchor_points, additional_boxes_green = [(anchor_point, point)], additional_boxes_red = [rectangle2],  additional_boxes_blue = [rectangle_new], path_to_save = os.path.join(self.plotdir, "intersect.pdf"), display=True)
-                        #    point = rectangle_new[0]
-                        #    anchor_point = rectangle_new[1]
-
-                if break_attempt:
+                rectangle = box(min_x, min_y, max_x, max_y)
+                rectangle = self.refine_with_intersections(rectangle)
+                if rectangle is None:
                     continue
+
                 # choose largest rectangle
-                if self.best_rectangle is None or (rectangle_test.area > self.best_rectangle.area and rectangle_test.area > self.threshold_area):
+                if self.best_rectangle is None or (rectangle.area > self.best_rectangle.area and rectangle.area > self.threshold_area):
                     # check if nothing of other polarity is inbetween.
                     safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
                     other_points = bad_samples.keys() if safe_area else safe_samples.keys()
                     for point2 in other_points:
                         point2 = Point(point2)
-                        if self.is_inside_polygon(point2, rectangle_test):
-                            # bad sample in safe area
+                        if self.is_inside_polygon(point2, rectangle):
+                            # wrong sample in covered area
                             break_attempt = True
                             break
 
                     if not break_attempt:
                         # can extend area
                         self.max_area_safe = safe_area
-                        self.best_rectangle = rectangle_test
+                        self.best_rectangle = rectangle
                         self.best_anchor = anchor
                         self.best_other_point = point
 
