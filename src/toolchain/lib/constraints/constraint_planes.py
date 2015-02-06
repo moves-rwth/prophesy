@@ -222,7 +222,6 @@ class ConstraintPlanes(ConstraintGeneration):
                 orientation_vector = self.normalize_vector(self.rotate_vector(orientation, step))
 
                 (area_safe, dpt) = self.create_halfspace_depth(safe_samples, bad_samples, anchor.pos, orientation_vector)
-                dpt *= 0.5
                 if abs(dpt) < EPS:
                     continue
 
