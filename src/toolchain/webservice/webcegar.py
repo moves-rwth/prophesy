@@ -35,6 +35,7 @@ def _json_error(message, status = 500):
     # response.charset = 'UTF-8'
     response.content_type = 'application/json; charset=UTF-8'
     response.status = status
+    print("({}) {}".format(status, message))
     return json.dumps({'status':'failed', 'reason':message})
     # abort(409, json.dumps({'status':'failed', 'reason':message}))
 
@@ -127,8 +128,8 @@ def uploadPrism():
 
     try:
         result = tool.get_rational_function(prism_file, pctl_path)
-    except:
-        return _json_error("Error while computing rational function")
+    except Exception as e:
+        return _json_error("Error while computing rational function: {}".format(e))
 
     os.unlink(pctl_path)
     os.unlink(prism_path)
