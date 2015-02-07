@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg') # use for plotting without X-server
 from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
