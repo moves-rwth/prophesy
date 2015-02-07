@@ -4,28 +4,32 @@ import subprocess
 import time
 
 THRESHOLD_AREA = 0.001
-END_CRITERIA = "--iterations"
-END_CRITERIA_VALUE = 20
+END_CRITERIA = "--area"
+END_CRITERIA_VALUE = 0.95
 current_time = time.strftime("%H_%M", time.localtime())
 target_file = "constraint_generation_{}".format(current_time)
 
 
 benchmarks = [ 
     ("brp/brp_16-2"),
+    ("crowds/crowds_3-5"),
+    ("nand/nand_10-1"),
+    ("crowds/crowds_5-5"),
+    ("crowds/crowds_10-5"),
+    ("nand/nand_10-2"),
+    ("nand-reward/nand_10-2"),
+    ("crowds/crowds_15-5"),
+    ("nand/nand_10-5"),
+    ("nand-reward/nand_10-5"),
+    ("crowds/crowds_20-5"),
+    ("nand/nand_20-2"),
+    ("nand-reward/nand_20-2"),
+#   ("nand/nand_20-5"),
+#   ("nand-reward/nand_20-5"),
 #   ("brp/brp_128-2"),
 #   ("brp/brp_128-5"),
 #   ("brp/brp_256-2"),
 #   ("brp/brp_256-5"),
-    ("crowds/crowds_3-5"),
-    ("crowds/crowds_5-5"),
-    ("crowds/crowds_10-5"),
-    ("crowds/crowds_15-5"),
-    ("crowds/crowds_20-5"),
-    ("nand/nand_10-1"),
-    ("nand/nand_10-2"),
-    ("nand/nand_10-5"),
-    ("nand/nand_20-2"),
-#   ("nand/nand_20-5"),
 ]
 
 def runBenchmarks():
