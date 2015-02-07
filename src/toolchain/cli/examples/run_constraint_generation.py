@@ -5,9 +5,9 @@ import time
 
 THRESHOLD_AREA = 0.001
 END_CRITERIA = "--iterations"
-END_CRITERIA_VALUE = 200
+END_CRITERIA_VALUE = 20
 current_time = time.strftime("%H_%M", time.localtime())
-target_file = "constraint_generation_{}.out".format(current_time)
+target_file = "constraint_generation_{}".format(current_time)
 
 
 benchmarks = [ 
@@ -31,6 +31,7 @@ benchmarks = [
 def runBenchmarks():
     for (benchmark) in benchmarks:
         for algorithm in ["rectangles", "quads"]:
+	    target_file = "{}_{}_{}.out".format(target_file, benchmark, algorithm)
             command = ["python3",
                         "../buildconstraints.py", 
                         "--rat-file",
@@ -49,10 +50,5 @@ def runBenchmarks():
             subprocess.call(command, stdout=output);
             output.write("\n==========================================================\n\n")
             output.close()
-
-    output = open(target_file, "a+")
-    output.write("\n==========================================================\n")
-    output.write("Run ended.")
-    output.close()
 
 runBenchmarks()
