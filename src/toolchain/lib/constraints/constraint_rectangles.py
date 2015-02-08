@@ -49,7 +49,10 @@ class ConstraintRectangles(ConstraintGeneration):
         if self.best_rectangle.area < self.threshold_area:
             # Discard rectangle and try other one by removing anchor
             # TODO better solution?
-            self.anchor_points.remove(self.best_anchor)
+            try:
+                self.anchor_points.remove(self.best_anchor)
+            except ValueError:
+                pass
             return self.next_constraint()
 
         (x1, y1, x2, y2) = self.best_rectangle.bounds
