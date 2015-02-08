@@ -178,6 +178,8 @@ class SmtlibSolver(SMTSolver):
             (_, args) = parse_smt_command(cmd)
             if args[2] == "Real":
                 model[args[0]] = parse_smt_expr(args[3])
+        self.stop()
+        self.run()
         return model
 
     def from_file(self, path): raise NotImplementedError
