@@ -21,7 +21,7 @@ class SmtlibSolver(SMTSolver):
         self.process = None
         self.string = self.formula
         self.memout = memout # Mem limit in Mbyte
-        self.timeout = timeout*1000 # Soft timeout in seconds
+        self.timeout = timeout#*1000 # Soft timeout in seconds
         self.status = [""]
 
     def _write(self, data):
@@ -37,7 +37,7 @@ class SmtlibSolver(SMTSolver):
 
     def run(self):
         if self.process == None:
-            args = [self.location, "-smt2", "-in", "-t:" + str(self.timeout), "-memory:" + str(self.memout)]
+            args = [self.location, "-smt2", "-in", "-T:" + str(self.timeout), "-memory:" + str(self.memout)]
             self.process = subprocess.Popen(args, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
             self._write("".join(self.status))
 
@@ -71,9 +71,13 @@ class SmtlibSolver(SMTSolver):
             print("**\t " + output)
             if output == "unsat":
                 print("returns unsat")
+                self.stop()
+                self.run()
                 return Answer.unsat
             elif output == "sat":
                 print("returns sat")
+                self.stop()
+                self.run()
                 return Answer.sat
             elif output == "unknown":
                 self.stop()
