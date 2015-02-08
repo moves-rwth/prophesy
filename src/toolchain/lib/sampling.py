@@ -8,6 +8,7 @@ from numpy import linspace
 from constraints.voronoi import computeDelaunayTriangulation
 from shapely.geometry.linestring import LineString
 from shapely.geometry.multilinestring import MultiLineString
+import ast
 
 def read_samples_file(path):
     parameters = []
@@ -19,7 +20,7 @@ def read_samples_file(path):
         if len(lines) > 2:
             parameters = lines[0].split()
             threshold = float(lines[1])
-            safe_above = bool(lines[2])
+            safe_above = ast.literal_eval(lines[2])
             for i, line in enumerate(lines[3:]):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
