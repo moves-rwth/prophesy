@@ -286,6 +286,7 @@ class ConstraintGeneration(object):
                 duration = time.time() - start
                 print("Call took {0} seconds".format(duration))
                 self.benchmark_output.append((checkresult, duration, polygon.area))
+                self.print_benchmark_output(self.benchmark_output)
                 if not checkresult in [smt.smt.Answer.sat, smt.smt.Answer.unsat]:
                     # smt call not finished -> change constraint to make it better computable
                     # TODO what to do in GUI?
@@ -301,8 +302,6 @@ class ConstraintGeneration(object):
                     if checkresult == smt.smt.Answer.sat:
                         smt_model = smt_context.get_model()
                     break
-
-        self.print_benchmark_output(self.benchmark_output)
 
         if checkresult == smt.smt.Answer.unsat:
             # update list of all constraints
@@ -385,5 +384,6 @@ class ConstraintGeneration(object):
             if self.plot:
                 self.plot_results(display = False)
                 print("Generation complete, plot located at {0}".format(self.result_file))
+            self.print_benchmark_output(self.benchmark_output)
 
         return (self.safe_polys, self.bad_polys, self.new_samples)
