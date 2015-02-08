@@ -76,8 +76,6 @@ class SmtlibSolver(SMTSolver):
                 return Answer.unsat
             elif output == "sat":
                 print("returns sat")
-                self.stop()
-                self.run()
                 return Answer.sat
             elif output == "unknown":
                 self.stop()
