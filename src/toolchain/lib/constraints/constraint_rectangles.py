@@ -78,7 +78,10 @@ class ConstraintRectangles(ConstraintGeneration):
 
     def accept_constraint(self, constraint, safe):
         # remove contained anchors
-        self.anchor_points.remove(self.best_anchor)
+        try:
+            self.anchor_points.remove(self.best_anchor)
+        except ValueError:
+            pass
         anchors = self.anchor_points[:]
         for anchor in anchors:
             
