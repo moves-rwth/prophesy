@@ -162,6 +162,10 @@ class ConstraintPlanes(ConstraintGeneration):
                 polygon = polygon.difference(plane2)
         return polygon
 
+    def plot_candidate(self):
+        orientation_line = LineString([self.best_anchor.pos, Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector*self.best_dpt)])
+        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_plane], additional_arrows = [orientation_line], display=True)
+
     def fail_constraint(self, constraint, safe):
         if self.best_dpt < EPS:
             return None
