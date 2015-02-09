@@ -1,4 +1,5 @@
 import math
+import numpy
 import itertools
 from config import SAMPLING_DISTANCE
 from collections import OrderedDict
@@ -149,6 +150,17 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                 assert(abs(safe_weight + bad_weight - 1) < 0.05)
 
                 point = Point(safe_weight * safe_pt.x + bad_weight * bad_pt.x, safe_weight * safe_pt.y + bad_weight * bad_pt.y)
+                
+                distance = abs(safe_v - bad_v)
+                w1 = abs(safe_v - threshold)/distance
+                # Offset the weight a little to balance the sample types
+                if len(safe_samples) < len(bad_samples):
+                    w1 -= 0.1
+                else:
+                    w1 += 0.1
+                point = Point((bad_pt.x-safe_pt.x)*w1+safe_pt.x, (bad_pt.y-safe_pt.y)*w1+safe_pt.y)
+                
+                
                 # Check if p is not too close to any other existing sample point
                 skip = False
                 i = 0
@@ -169,9 +181,33 @@ def refine_sampling(samples, threshold, sampling_interface, greaterEqualSafe = T
                     new_points.append(list(point.coords)[0])
     return sampling_interface.perform_sampling(new_points)
 
+def weighed_interpolation(point1, point2, threshold, fudge=0.0):
+    distance = abs(point1.z-point2.z)
+    w1 = abs(threshold-point2.z)/distance
+    w1 += fudge
+    return Point((point2.x-point1.x)*w1+point1.x, (point2.y-point1.y)*w1+point1.y)
+
+class SampleRefinement(object):
+    def __init__(self, samples):
+        self.samples = samples.copy()
+
+    def refine_samples(self):
+        raise NotImplemented()
+
+class LinearRefinement(SampleRefinement):
+    def __init__(self, samples):
+        super().__init__(samples)
+
+class DelaunayRefinement(SampleRefinement):
+    def __init__(self, samples):
+        super().__init__(samples)
+
+
 class DelaunaySampling(object):
     @staticmethod
     def calcDelaunay(samples, threshold):
+        """perform Delaunay triangulation of sample points. Limit the resulting triangles to those
+        that contain both a safe and bad point"""
         points = []
         for pt, v in samples.items():
             # x,y as usual, z is value
@@ -191,8 +227,16 @@ class DelaunaySampling(object):
         return triangles
 
     @staticmethod
-    def calcApprox(triangles, threshold):
+    def calcApprox(triangles, threshold, samples):
+        """Given set of triangle points, return the set of points
+        that lie on an edge connecting a safe and bad point. The location
+        is weighted by the value of the end points of each line"""
+        # NOTE: A triangle can only have exactly two such points, or none
+        # The resulting connecting line thus never splits
         lines = []
+        safesamples = {k:v for k,v in samples.items() if v >= threshold}
+        saf = len(safesamples)
+        bad = len(samples) - saf
         for triangle in triangles:
             line = []
             points = triangle + [triangle[0]]
@@ -200,15 +244,32 @@ class DelaunaySampling(object):
             for p1,p2 in pairs:
                 if (p1.z >= threshold) == (p2.z >= threshold):
                     continue
-                sum = (p1.z+p2.z)
-                line.append(Point((p1.x*p1.z+p2.x*p2.z)/sum, (p1.y*p1.z+p2.y*p2.z)/sum))
+                if saf > bad:
+                    fudge = 0.1
+                else:
+                    fudge = -0.1
+                line.append(weighed_interpolation(p1, p2, threshold, fudge))
             assert len(line) <= 2
             lines.append(line)
         return lines
 
     @staticmethod
-    def calcLine(samples, threshold):
+    def calcSamples(samples, threshold, sampling_interface, distance = 0.05):
         triangles = DelaunaySampling.calcDelaunay(samples, threshold)
-        lines = DelaunaySampling.calcApprox(triangles, threshold)
+        lines = DelaunaySampling.calcApprox(triangles, threshold, samples)
+        points = []
+        for p1,p2 in lines:
+            points.append(p1.coords[0])
+            line = LineString([p1,p2])
+            for d in numpy.arange(0, line.length, distance):
+                pt = line.interpolate(d)
+                points.append(pt.coords[0])
+        return sampling_interface.perform_sampling(points)
+
+    @staticmethod
+    def calcLine(samples, threshold):
+        """Return a new set of sample points as MultiLineString"""
+        triangles = DelaunaySampling.calcDelaunay(samples, threshold)
+        lines = DelaunaySampling.calcApprox(triangles, threshold, samples)
         lines = MultiLineString([LineString(line) for line in lines])
         return lines

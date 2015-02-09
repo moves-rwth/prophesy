@@ -1,7 +1,6 @@
 import tempfile
 import time
 import os
-import sampling
 import smt.smt
 from output.plot import Plot
 from abc import ABCMeta, abstractmethod

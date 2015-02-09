@@ -11,7 +11,7 @@ class Quad(object):
         self.poly = box(self.origin.x, self.origin.y, self.origin.x+self.size, self.origin.y+self.size)
 
     def split(self):
-        if self.size < 1.0/(2**6):
+        if self.size < (2**-7):
             return None
         new_quads = [Quad(Point(self.origin.x, self.origin.y),                         self.size/2),
                      Quad(Point(self.origin.x+self.size/2, self.origin.y),             self.size/2),
