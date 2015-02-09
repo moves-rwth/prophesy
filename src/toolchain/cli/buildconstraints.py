@@ -2,8 +2,6 @@
 
 import sys
 import os
-from shapely.geometry.polygon import Polygon
-from sampling.sampling import read_samples_file
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
@@ -17,6 +15,8 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
 from constraints.constraint_quads import ConstraintQuads
 from input.resultfile import read_pstorm_result
+from shapely.geometry.polygon import Polygon
+from sampling.sampling import read_samples_file
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')

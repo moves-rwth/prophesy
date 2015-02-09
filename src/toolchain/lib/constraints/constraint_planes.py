@@ -1,10 +1,10 @@
-from constraint_generation import ConstraintGeneration, Anchor, Direction
+from sampling.sampling import split_samples
+from constraints.constraint_generation import ConstraintGeneration, Anchor, Direction
 from config import EPS
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
 import numpy
-import sampling
 
 class ConstraintPlanes(ConstraintGeneration):
 
@@ -216,7 +216,7 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_plane = None
 
         # split samples into safe and bad
-        (safe_samples, bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
+        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold, self.safe_above_threshold)
 
         for anchor in self.anchor_points:
             orientation = {

@@ -1,4 +1,4 @@
-from constraint_generation import ConstraintGeneration
+from constraints.constraint_generation import ConstraintGeneration
 from shapely.geometry import box, Point
 from functools import total_ordering
 
@@ -63,8 +63,11 @@ class ConstraintQuads(ConstraintGeneration):
         # Setup initial quad
         quad = Quad(Point(0,0), 1.0)
         for pt, v in samples.items():
+            pt = Point(pt)
+            if not quad.poly.intersects(pt):
+                continue
             safe = (v >= self.threshold) == self.safe_above_threshold
-            quad.samples.append((Point(pt), safe))
+            quad.samples.append((pt, safe))
         self.check_quad(quad)
 
     def plot_candidate(self):
