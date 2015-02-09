@@ -110,8 +110,12 @@ def uploadPrism():
     tool = bottle.request.forms.get('mctool')
     upload_prism = bottle.request.files.get('file')
     upload_pctl = bottle.request.files.get('pctl-file')
-    if tool not in ['pstorm', 'param'] or upload_prism is None or upload_pctl is None:
-        return _json_error("Invalid form POST'ed")
+    if tool not in ['pstorm', 'param']:
+        return _json_error("Invalid tool selected")
+    if upload_prism is None:
+        return _json_error("Missing PRISM file")
+    if upload_pctl is None:
+        return _json_error("Missing PCTL file")
 
     (_, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTFILES_DIR)
     upload_prism.save(prism_path, overwrite = True)

@@ -136,6 +136,16 @@ function writeSamples(samples) {
     return data;
 }
 
+function clearError() {
+    $("#errorbox").hide();
+}
+
+function checkError(jqXHR) {
+    result = $.parseJSON(jqXHR.responseText);
+    $("#error-message").text(result.reason);
+    $("#errorbox").show();
+}
+
 $(document).ready(function() {
     // Install handler for tabs
     $('.tab-links a').on('click', function(e)  {
@@ -207,55 +217,61 @@ $(document).ready(function() {
     $('#form-prism').submit(function(event){
         event.preventDefault();
 
+        setBusy(true);
         var formData = new FormData($(this)[0]);
         $.ajax({
             url: '../uploadPrism',
             type: 'POST',
             //Ajax events
             success: function() {
+                clearError();
+
                 getCurrentResult();
                 listAvailableResults();
             },
-            error: function() {alert('error');},
             // Form data
             data: formData,
             //Options to tell jQuery not to process data or worry about content-type.
             cache: false,
             contentType: false,
             processData: false
-        });
+        }).fail(function(jqXHR) {checkError(jqXHR);}).always(function() {setBusy(false);})
     });
 
     // Handler for upload of result
     $('#form-result').submit(function(event){
         event.preventDefault();
 
+        setBusy(true);
         var formData = new FormData($(this)[0]);
         $.ajax({
             url: '../uploadResult',
             type: 'POST',
             //Ajax events
             success: function() {
+                clearError();
+
                 getCurrentResult();
                 listAvailableResults();
             },
-            error: function() {alert('error');},
             // Form data
             data: formData,
             //Options to tell jQuery not to process data or worry about content-type.
             cache: false,
             contentType: false,
             processData: false
-        });
+        }).fail(function(jqXHR) {checkError(jqXHR);}).always(function() {setBusy(false);});
     });
 
     // Handler for changing active result
     $('#form-select').submit(function(event) {
         event.preventDefault();
 
+        setBusy(true);
         result_name = $("#result-files").val();
         setCurrentResult(result_name);
         getCurrentResult();
+        setBusy(false);
     });
     
 
@@ -269,16 +285,18 @@ $(document).ready(function() {
             dataType: 'json',
             contentType: 'application/json',
             success: function(result) {
-                    if (result.status == "ok") {
-                        //Clear samples
-                        samples = [];
-                        newSamples = [];
-                        readSamples(result.data);
-                        plotSamples();
-                    }
-                },
+                clearError();
+
+                if (result.status == "ok") {
+                    //Clear samples
+                    samples = [];
+                    newSamples = [];
+                    readSamples(result.data);
+                    plotSamples();
+                }
+            },
             processData: false
-            }).always(function() {setBusy(false);});
+            }).fail(function(jqXHR) {checkError(jqXHR);}).always(function() {setBusy(false);});
     });
     
     $( "#form-samples-auto" ).submit(function( event ) {
@@ -291,6 +309,8 @@ $(document).ready(function() {
             type: 'POST',
             //Ajax events
             success: function(result) {
+                clearError();
+
                 if (result.status == "ok") {
                     //Clear samples
                     samples = [];
@@ -305,7 +325,7 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false
-        }).always(function() {setBusy(false);});
+        }).fail(function(jqXHR) {checkError(jqXHR);}).always(function() {setBusy(false);});
     });
     
     // Handler for change of settings
@@ -328,6 +348,8 @@ $(document).ready(function() {
             dataType: 'json',
             //Ajax events
             success: function(result) {
+                clearError();
+
                 if (result.status == "ok") {
                     for (var key in result.data.sat) {
                         var sample = result.data.sat[key];
@@ -352,7 +374,7 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false
-        }).always(function() {setBusy(false);});
+        }).fail(function(jqXHR) {checkError(jqXHR);}).always(function() {setBusy(false);});
     });
     
     $( "#form-constraints-auto" ).submit(function( event ) {
@@ -366,6 +388,8 @@ $(document).ready(function() {
             dataType: 'json',
             //Ajax events
             success: function(result) {
+                clearError();
+
                 if (result.status == "ok") {
                     for (var key in result.data.sat) {
                         var sample = result.data.sat[key];
@@ -389,7 +413,7 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false
-        }).always(function() {setBusy(false);});
+        }).fail(function(jqXHR) {checkError(jqXHR);}).always(function() {setBusy(false);});
     });
     
     $("#clear-constraint").click(function(event) {
@@ -413,6 +437,7 @@ $(document).ready(function() {
  
 <body>
 <div id="header"><h1>Prophesy UI</h1><span id="busy-indicator">Working...</span></div>
+<div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
 
 <div id="plotsurround">
     <div id="placeholder"></div>
@@ -521,7 +546,7 @@ $(document).ready(function() {
             <div id="tab-constr-auto" class="tab cp">
                 <form id="form-constraints-auto">
                     <select name="generator">
-                        <option selected="selected" value="planes">Planes</option>
+                        <option selected="selected" value="planess">Planes</option>
                         <option value="rectangles">Growing rectangles</option>
                         <option value="quads">Quadrants</option>
                     </select>

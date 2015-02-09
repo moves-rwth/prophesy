@@ -69,6 +69,23 @@ input[type=checkbox] {
     display: none;
 }
 
+#errorbox {
+    padding: 10px;
+    font-size: 25px;
+    position: relative;
+
+    background-color:#cdcd00;
+    color: #000;
+    margin: 0px;
+    
+    display:none;
+}
+
+#error-title {
+}
+#error-message {
+}
+
 #infopanel {
     display:inline-block;
     width: 300px;
