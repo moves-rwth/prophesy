@@ -326,7 +326,7 @@ def checkConstraint():
 
     smt2interface = SmtlibSolver()
     smt2interface.run()
-    setup_smt(smt2interface, result, threshold, True)
+    setup_smt(smt2interface, result, threshold)
 
     polygon = Polygon(coordinates)
     generator = ConstraintPolygon(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
@@ -361,7 +361,7 @@ def generateConstraints():
 
     smt2interface = SmtlibSolver()
     smt2interface.run()
-    setup_smt(smt2interface, result, threshold, True)
+    setup_smt(smt2interface, result, threshold)
 
     if generator_type == 'planes':
         generator = ConstraintPlanes(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)

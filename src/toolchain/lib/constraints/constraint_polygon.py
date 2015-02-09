@@ -4,8 +4,8 @@ from shapely.geometry.polygon import orient
 
 class ConstraintPolygon(ConstraintGeneration):
 
-    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
-        ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
+    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
+        ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.safe_polygons = []
         self.bad_polygons = []

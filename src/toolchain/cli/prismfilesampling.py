@@ -9,7 +9,8 @@ sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 import argparse
 from modelcheckers.prism import PrismModelChecker
 from input.prismfile import PrismFile
-from sampling import McSampling, write_samples_file
+from sampling.sampling import write_samples_file
+from sampling.sampler_prism import McSampling
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Perform sampling on a prism file')
@@ -40,5 +41,5 @@ if __name__ == "__main__":
     sampling_interface = McSampling(tool, prism_file, cmdargs.pctl_file)
     samples = sampling_interface.perform_uniform_sampling(intervals, cmdargs.samplingnr)
     # samples = perform_sampling_mc(tool, prism_file, vars(cmdargs)["pctl_file"], [(0.3, 0.3), (0.4, 0.4)])
-    write_samples_file(prism_file.parameters, samples, cmdargs.samples_file)
+    write_samples_file(prism_file.parameters, samples, cmdargs.threshold, cmdargs.samples_file)
 

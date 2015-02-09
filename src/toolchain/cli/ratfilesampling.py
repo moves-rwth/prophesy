@@ -58,6 +58,6 @@ if __name__ == "__main__":
     Plot.plot_results(parameters=result.parameters, samples_qualitative=plot_samples,
                       path_to_save=path_to_save, display=False)
     print("Samples rendered to {}".format(path_to_save))
-    write_samples_file([p.name for p in result.parameters], samples, cmdargs.threshold, cmdargs.safe_above_threshold, vars(cmdargs)["samples_file"])
+    write_samples_file([p.name for p in result.parameters], samples, cmdargs.threshold, cmdargs.samples_file)
 
     os.system("xdg-open {}".format(path_to_save))

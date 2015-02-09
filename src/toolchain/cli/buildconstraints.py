@@ -41,9 +41,8 @@ if __name__ == "__main__":
     result = read_pstorm_result(cmdargs.rat_file)
 
     print("Loading samples")
-    (parameters, threshold, safe_above_threshold, samples) = read_samples_file(cmdargs.samples_file)
+    (parameters, threshold, samples) = read_samples_file(cmdargs.samples_file)
     print("Threshold: {}".format(threshold))
-    print("Safe above threshold: {}".format(safe_above_threshold))
     print(samples)
 
     print("Setup SMT interface")
@@ -52,18 +51,18 @@ if __name__ == "__main__":
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     smt2interface.run()
-    setup_smt(smt2interface, result, threshold, safe_above_threshold)
+    setup_smt(smt2interface, result, threshold)
 
     print("Generating constraints")
     generator = None
     if cmdargs.planes:
-        generator = ConstraintPlanes(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPlanes(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.rectangles:
-        generator = ConstraintRectangles(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintRectangles(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.quads:
-        generator = ConstraintQuads(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintQuads(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.poly:
-        generator = ConstraintPolygon(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPolygon(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
         # For testing
         generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
         generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)

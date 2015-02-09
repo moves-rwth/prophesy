@@ -68,14 +68,13 @@ class ConstraintGeneration(object):
     (which possibly never happens)"""
     __metaclass__ = ABCMeta
 
-    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
+    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
         if len(parameters) != 2:
             raise NotImplementedError
 
         self.samples = samples.copy()
         self.parameters = parameters
         self.threshold = threshold
-        self.safe_above_threshold = safe_above_threshold
         self.threshold_area = threshold_area
 
         self.smt2interface = _smt2interface
@@ -222,12 +221,6 @@ class ConstraintGeneration(object):
     def plot_candidate(self):
         pass
 
-    def plot_green(self, value):
-        if self.safe_above_threshold:
-            return value > self.threshold
-        else:
-            return value <= self.threshold
-
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
@@ -243,7 +236,7 @@ class ConstraintGeneration(object):
 
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
         Plot.plot_results(parameters = self.parameters,
-                          samples_qualitative = dict([(p, self.plot_green(v)) for p, v in self.samples.items()]),
+                          samples_qualitative = dict([(p, v >= self.threshold) for p, v in self.samples.items()]),
                           path_to_save = result_tmp_file,
                           *args, **kwargs)
         self.add_pdf(result_tmp_file)

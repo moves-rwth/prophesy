@@ -2,7 +2,6 @@ import itertools
 from config import SAMPLING_DISTANCE
 from shapely.geometry import Point
 from numpy import linspace
-import ast
 from collections import OrderedDict
 
 class Sampler(object):
@@ -31,38 +30,33 @@ def read_samples_file(path):
     parameters = []
     samples = {}
     threshold = None
-    safe_above = None
     with open(path, 'r') as f:
         lines = [l.strip() for l in f.readlines()]
         if len(lines) > 2:
             parameters = lines[0].split()
             threshold = float(lines[1])
-            safe_above = ast.literal_eval(lines[2])
-            for i, line in enumerate(lines[3:]):
+            for i, line in enumerate(lines[2:]):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
                     raise RuntimeError("Invalid input on line " + str(i+2))
                 samples[tuple(map(float, items[:-1]))] = float(items[-1])
             samples = OrderedDict(samples.items())
-    return (parameters, threshold, safe_above, samples)
+    return (parameters, threshold, samples)
 
-def write_samples_file(parameters, samples_dict, threshold, safe_above, path):
+def write_samples_file(parameters, samples_dict, threshold, path):
     with open(path, "w") as f:
         f.write(" ".join(parameters) + "\n")
-        f.write("{}\n{}\n".format(threshold, safe_above))
+        f.write("{}\n".format(threshold))
         for k, v in samples_dict.items():
             f.write("\t".join([("%.4f" % (c)) for c in k ]) + "\t\t" + "%.4f" % (v) + "\n")
 
-def split_samples(samples, threshold, safe_above_threshold = True):
+def split_samples(samples, threshold):
     """
-    returns (safe, bad)
+    returns (>=, <)
     """
     below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
     above_threshold = dict([(k, v) for k, v in samples.items() if v >= threshold])
-    if safe_above_threshold:
-        return (above_threshold, below_threshold)
-    else:
-        return (below_threshold, above_threshold)
+    return (above_threshold, below_threshold)
 
 def filter_samples(samples, threshold, distance = SAMPLING_DISTANCE):
     """Returns samples which are less than 'distance' away from the threshold"""

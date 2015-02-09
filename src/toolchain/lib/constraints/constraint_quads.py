@@ -53,8 +53,8 @@ class Quad(object):
         return False
 
 class ConstraintQuads(ConstraintGeneration):
-    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
-        super().__init__(samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
+    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
+        super().__init__(samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.quads = []
         # Number of consecutive recursive splits() maximum
@@ -66,7 +66,7 @@ class ConstraintQuads(ConstraintGeneration):
             pt = Point(pt)
             if not quad.poly.intersects(pt):
                 continue
-            safe = (v >= self.threshold) == self.safe_above_threshold
+            safe = v >= self.threshold
             quad.samples.append((pt, safe))
         self.check_quad(quad)
 
