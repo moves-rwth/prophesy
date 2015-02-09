@@ -268,17 +268,20 @@ def generateSamples(iterations, nrsamples):
     intervals = [(0.01, 0.99)] * len(result.parameters)
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
     samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
-    new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = False)
-    for _ in range(iterations):
+    #new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = False)
+    for i in range(iterations):
+        new_samples = DelaunaySampling.calcSamples(samples, threshold, sampling_interface)
+        #new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = (i > 0))
         samples.update(new_samples)
-        new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = False)
-        #if len(new_samples) > 128:
-            # Do not overdo things
-        #    break
     samples.update(new_samples)
 
     _set_session('samples', samples)
     return _json_ok(_jsonSamples(samples))
+
+@route('/clearSamples')
+def clearSamples():
+    _set_session("samples", {})
+    return _json_ok()
 
 @route('/checkConstraint', method = 'POST')
 def checkConstraint():
