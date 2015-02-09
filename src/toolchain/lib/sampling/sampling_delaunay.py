@@ -12,7 +12,7 @@ class DelaunayRefinement(SampleGenerator):
         self.distance = distance
 
     def _make_points(self, samples):
-        return set([Point(x,y,v) for (x,y), v in samples.items()])
+        return [Point(x,y,v) for (x,y), v in samples.items()]
 
     def __iter__(self):
         # Nothing to prime
@@ -47,7 +47,7 @@ class DelaunayRefinement(SampleGenerator):
         triangles = []
         points = set([])
         for triangle in dtriangles:
-            points |= triangle
+            points |= set(triangle)
             triangle = [self.points[i] for i in triangle]
             if all([p.z >= self.threshold for p in triangle]):
                 continue

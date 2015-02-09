@@ -24,11 +24,11 @@ if __name__ == "__main__":
     solver_group.add_argument('--storm', help = 'the location of the storm binary')
     cmdargs = parser.parse_args()
 
-    prism_file = PrismFile(vars(cmdargs)["file"])
+    prism_file = PrismFile(cmdargs.file)
 
-    if vars(cmdargs)["prism"] != None:
-        tool = PrismModelChecker(vars(cmdargs)["prism"])
-    elif vars(cmdargs)["storm"] != None:
+    if cmdargs.prism != None:
+        tool = PrismModelChecker(cmdargs.prism)
+    elif cmdargs.storm != None:
         raise NotImplementedError
     else:
         raise RuntimeError("No supported solver available")
@@ -37,8 +37,8 @@ if __name__ == "__main__":
 
 
     intervals = [(0.01, 0.99)] * prism_file.nr_parameters()
-    sampling_interface = McSampling(tool, prism_file, vars(cmdargs)["pctl_file"])
-    samples = sampling_interface.perform_uniform_sampling(intervals, vars(cmdargs)['samplingnr'])
+    sampling_interface = McSampling(tool, prism_file, cmdargs.pctl_file)
+    samples = sampling_interface.perform_uniform_sampling(intervals, cmdargs.samplingnr)
     # samples = perform_sampling_mc(tool, prism_file, vars(cmdargs)["pctl_file"], [(0.3, 0.3), (0.4, 0.4)])
-    write_samples_file(prism_file.parameters, samples, vars(cmdargs)["samples_file"])
+    write_samples_file(prism_file.parameters, samples, cmdargs.samples_file)
 

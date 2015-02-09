@@ -25,8 +25,9 @@ class LinearRefinement(SampleGenerator):
         return self
 
     def __next__(self):
-        if self.first:
+        if not self.first:
             self.samples = filter_samples(self.samples, self.threshold)
+        else:
             self.first = False
 
         if len(self.samples) == 0:

@@ -8,8 +8,8 @@ class UniformSampleGenerator(SampleGenerator):
         self.samples_per_dimension = samples_per_dimension
 
     def __iter__(self):
-        # Nothing to prime
-        return self
+        # Prime the generator
+        return next(self)
 
     def __next__(self):
         # There is a special uniform function for samplers (optimization case for PRISM)
