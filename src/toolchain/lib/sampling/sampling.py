@@ -70,7 +70,7 @@ def filter_samples(samples, threshold, distance = SAMPLING_DISTANCE):
 
 def weighed_interpolation(point1, point2, value1, value2, threshold, fudge=0.0):
     distance = abs(value1-value2)
-    weight = abs(threshold-value2)/distance
+    weight = abs(threshold-value1)/distance
     weight += fudge
     return Point((point2.x-point1.x)*weight+point1.x, (point2.y-point1.y)*weight+point1.y)
 

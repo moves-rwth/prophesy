@@ -284,17 +284,27 @@ $(document).ready(function() {
     $( "#form-samples-auto" ).submit(function( event ) {
         event.preventDefault();
 
-        iterations = $("#iterations").val();
-        sampling = $("#sampling").val();
         setBusy(true);
-        $.getJSON("../generateSamples/" + iterations + "/" + sampling, function(result) {
-            if (result.status == "ok") {
-                //Clear samples
-                samples = [];
-                newSamples = [];
-                readSamples(result.data);
-                plotSamples();
-            }
+        var formData = new FormData($(this)[0]);
+        $.ajax({
+            url: '../generateSamples',
+            type: 'POST',
+            //Ajax events
+            success: function(result) {
+                if (result.status == "ok") {
+                    //Clear samples
+                    samples = [];
+                    newSamples = [];
+                    readSamples(result.data);
+                    plotSamples();
+                }
+            },
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
         }).always(function() {setBusy(false);});
     });
     
@@ -474,9 +484,14 @@ $(document).ready(function() {
             </div>
             <div id="tab-auto" class="tab cp">
                 <form id="form-samples-auto">
-                    <label>Sampling number: <input id="sampling" type="number" min="2" max="50" value="2" size="1"/></label>
+                    <label>Sampling number: <input name="sampling" type="number" min="2" max="50" value="2" size="1"/></label>
                     <br/>
-                    <label>Number of iterations: <input id="iterations" type="number" min="0" max="10" value="2"/></label>
+                    <label>Number of iterations: <input name="iterations" type="number" min="0" max="10" value="2"/></label>
+                    <br>
+                    <select name="generator">
+                        <option value="linear" selected="selected">Linear interpolation</option>
+                        <option value="delaunay">Delaunay triangulation</option>
+                    </select>
                     <br>
                     <button id="generate-samples" type="submit">Go</button>
                 </form>

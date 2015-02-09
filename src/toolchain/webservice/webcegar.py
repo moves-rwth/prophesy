@@ -11,7 +11,6 @@ import bottle
 import tempfile
 import argparse
 import config
-import sampling
 from bottle import request, route, static_file, redirect
 import beaker.middleware
 from util import ensure_dir_exists
@@ -23,11 +22,14 @@ from modelcheckers.pstorm import ProphesyParametricModelChecker
 from smt.smtlib import SmtlibSolver
 from smt.smt import setup_smt
 from shapely.geometry.polygon import Polygon
+from sampling.sampler_ratfunc import RatFuncSampling
+from sampling.sampling_uniform import UniformSampleGenerator
+from sampling.sampling_linear import LinearRefinement
+from sampling.sampling_delaunay import DelaunayRefinement
 from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
-from sampling import DelaunaySampling
 
 def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
@@ -253,27 +255,40 @@ def addSample(x, y):
     samples[(x, y)] = value
     return _json_ok(_jsonSamples(samples))
 
-@route('/generateSamples/<iterations:int>/<nrsamples:int>')
-def generateSamples(iterations, nrsamples):
+@route('/generateSamples', method = 'POST')
+def generateSamples():
+    nrsamples = int(bottle.request.forms.get('sampling'))
+    iterations = int(bottle.request.forms.get('iterations'))
+
     if iterations < 0:
         return _json_error("Number of iterations must be >= 0", 400)
     if nrsamples < 2:
         return _json_error("Number of samples must be >= 2", 400)
     threshold = _get_session('threshold', 0.5)
+    generator_type = bottle.request.forms.get('generator')
+    if not generator_type in ['linear', 'delaunay']:
+        return _json_error("Invalid generator set " + generator_type, 400)
 
     result = _getResultData(_get_session('current_result', None))
     if result is None:
         return _json_error("Unable to load result data", 500)
 
+    samples = {}
     intervals = [(0.01, 0.99)] * len(result.parameters)
-    sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    samples = sampling_interface.perform_uniform_sampling(intervals, nrsamples)
-    #new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = False)
-    for i in range(iterations):
-        new_samples = DelaunaySampling.calcSamples(samples, threshold, sampling_interface)
-        #new_samples = sampling.refine_sampling(samples, threshold, sampling_interface, True, use_filter = (i > 0))
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
+    uniform_generator = UniformSampleGenerator(sampling_interface, intervals, nrsamples)
+    for new_samples in uniform_generator:
         samples.update(new_samples)
-    samples.update(new_samples)
+
+    if generator_type == "linear":
+        refinement_generator = LinearRefinement(sampling_interface, samples, threshold)
+    elif generator_type == "delaunay":
+        refinement_generator = DelaunayRefinement(sampling_interface, samples, threshold)
+    else:
+        assert False, "Bad generator"
+    # Using range to limit the number of iterations
+    for (new_samples, _) in zip(refinement_generator, range(0, iterations)):
+        samples.update(new_samples)
 
     _set_session('samples', samples)
     return _json_ok(_jsonSamples(samples))
