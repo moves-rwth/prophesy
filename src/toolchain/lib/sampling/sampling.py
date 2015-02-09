@@ -54,8 +54,8 @@ def split_samples(samples, threshold):
     """
     returns (>=, <)
     """
-    below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
     above_threshold = dict([(k, v) for k, v in samples.items() if v >= threshold])
+    below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
     return (above_threshold, below_threshold)
 
 def filter_samples(samples, threshold, distance = SAMPLING_DISTANCE):

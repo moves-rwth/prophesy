@@ -234,9 +234,14 @@ class ConstraintGeneration(object):
             poly_red = []
         kwargs['poly_red'] = poly_red + self.bad_polys
 
+        #Split samples appropriately
+        samples_green = [pt for pt, v in self.samples.items() if v >= self.threshold]
+        samples_red = [pt for pt, v in self.samples.items() if v < self.threshold]
+
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
         Plot.plot_results(parameters = self.parameters,
-                          samples_qualitative = dict([(p, v >= self.threshold) for p, v in self.samples.items()]),
+                          samples_green = samples_green,
+                          samples_red = samples_red,
                           path_to_save = result_tmp_file,
                           *args, **kwargs)
         self.add_pdf(result_tmp_file)
@@ -320,7 +325,6 @@ class ConstraintGeneration(object):
                         break
                     self.plot_candidate()
                     (constraint, polygon, safe) = result_update
-                    #self.plot_results(poly_blue = [polygon], display=True)
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:

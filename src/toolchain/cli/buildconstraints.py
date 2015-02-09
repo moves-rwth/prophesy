@@ -17,6 +17,7 @@ from constraints.constraint_quads import ConstraintQuads
 from input.resultfile import read_pstorm_result
 from shapely.geometry.polygon import Polygon
 from sampling.sampling import read_samples_file
+from output.plot import Plot
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')
@@ -35,10 +36,16 @@ if __name__ == "__main__":
     solvers_group.add_argument('--z3', dest = "z3location", help = "location of z3")
     solvers_group.add_argument('--isat', dest = "isatlocation", help = "location of isat")
     parser.add_argument('--threshold-area', type = float, help = 'threshold for minimal size of new area', default = 0.001)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--safe-above-threshold', action = 'store_true', dest = "safe_above_threshold")
+    group.add_argument('--bad-above-threshold', action = 'store_false', dest = "safe_above_threshold")
     cmdargs = parser.parse_args()
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)
+
+    if not cmdargs.safe_above_threshold:
+        Plot.flip_green_red = True
 
     print("Loading samples")
     (parameters, threshold, samples) = read_samples_file(cmdargs.samples_file)
