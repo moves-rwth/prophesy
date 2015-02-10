@@ -11,7 +11,7 @@ import bottle
 import tempfile
 import argparse
 import config
-from bottle import request, route, static_file, redirect
+from bottle import request, route, static_file, redirect, error, response
 import beaker.middleware
 from util import ensure_dir_exists
 from input.resultfile import read_param_result, read_pstorm_result, \
@@ -84,6 +84,12 @@ def _jsonPoly(polygon):
     if isinstance(polygon, Polygon):
         return _jsonPoly(polygon.exterior)
     return [[pt[0], pt[1]] for pt in polygon.coords]
+
+@error(500)
+def handle_error(http_error):
+    # (code, message, exc, tb) = http_error.status, http_error.body, http_error.exception, http_error.traceback
+    #return bottle.HTTPResponse(status=200, body=)
+    return _json_error("{}: {}".format(http_error.body, http_error.exception))
 
 @route('/ui/<filepath:path>')
 def server_static(filepath):
@@ -333,7 +339,7 @@ def checkConstraint():
     setup_smt(smt2interface, result, threshold)
 
     polygon = Polygon(coordinates)
-    generator = ConstraintPolygon(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+    generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
     generator.plot = False
     generator.add_polygon(polygon, mode == "safe")
 
@@ -347,6 +353,9 @@ def checkConstraint():
         unsat.append((_jsonPoly(poly), True))
     for poly in bad_poly:
         unsat.append((_jsonPoly(poly), False))
+
+    if len(new_samples) == 0 and len(unsat) == 0:
+        return _json_error("SAT solver did not return an answer")
 
     return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
@@ -368,11 +377,11 @@ def generateConstraints():
     setup_smt(smt2interface, result, threshold)
 
     if generator_type == 'planes':
-        generator = ConstraintPlanes(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+        generator = ConstraintPlanes(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
     elif generator_type == 'rectangles':
-        generator = ConstraintRectangles(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+        generator = ConstraintRectangles(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
     elif generator_type == 'quads':
-        generator = ConstraintQuads(samples, result.parameters, threshold, True, 0.01, smt2interface, result.ratfunc)
+        generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
     else:
         return _json_error("Bad generator")
     generator.plot = False
@@ -387,6 +396,9 @@ def generateConstraints():
         unsat.append((_jsonPoly(poly), True))
     for poly in bad_poly:
         unsat.append((_jsonPoly(poly), False))
+
+    if len(new_samples) == 0 and len(unsat) == 0:
+        return _json_error("SAT solver did not return an answer")
 
     return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 

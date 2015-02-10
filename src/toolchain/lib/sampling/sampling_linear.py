@@ -33,7 +33,7 @@ class LinearRefinement(SampleGenerator):
         if len(self.samples) == 0:
             raise StopIteration()
 
-        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold, True)
+        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold)
         delta = self._min_dist()
         new_points = []
         # Offset the weight a little to balance the sample types
