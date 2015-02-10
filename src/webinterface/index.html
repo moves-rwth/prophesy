@@ -100,10 +100,10 @@ function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
     }
 
     setBusy(true);
+    clearError();
     $.ajax(ajax)
     .done(function(data) {
         if (data.status == "ok") {
-            clearError();
             onSuccess(data);
         } else {
             checkError(data);
