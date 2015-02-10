@@ -195,6 +195,12 @@ class ConstraintGeneration(object):
     def plot_candidate(self):
         pass
 
+    def plot_green(self, value):
+        if self.safe_above_threshold:
+            return value > self.threshold
+        else:
+            return value <= self.threshold
+
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
@@ -210,7 +216,7 @@ class ConstraintGeneration(object):
 
         (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
         Plot.plot_results(parameters = self.parameters,
-                          samples_qualitative = dict([(p, v > self.threshold) for p, v in self.samples.items()]),
+                          samples_qualitative = dict([(p, self.plot_green(v)) for p, v in self.samples.items()]),
                           path_to_save = result_tmp_file,
                           *args, **kwargs)
         self.add_pdf(result_tmp_file)
@@ -286,6 +292,7 @@ class ConstraintGeneration(object):
                 duration = time.time() - start
                 print("Call took {0} seconds".format(duration))
                 self.benchmark_output.append((checkresult, duration, polygon.area))
+                self.print_benchmark_output(self.benchmark_output)
                 if not checkresult in [smt.smt.Answer.sat, smt.smt.Answer.unsat]:
                     # smt call not finished -> change constraint to make it better computable
                     # TODO what to do in GUI?
@@ -301,8 +308,6 @@ class ConstraintGeneration(object):
                     if checkresult == smt.smt.Answer.sat:
                         smt_model = smt_context.get_model()
                     break
-
-        self.print_benchmark_output(self.benchmark_output)
 
         if checkresult == smt.smt.Answer.unsat:
             # update list of all constraints
@@ -385,5 +390,6 @@ class ConstraintGeneration(object):
             if self.plot:
                 self.plot_results(display = False)
                 print("Generation complete, plot located at {0}".format(self.result_file))
+            self.print_benchmark_output(self.benchmark_output)
 
         return (self.safe_polys, self.bad_polys, self.new_samples)

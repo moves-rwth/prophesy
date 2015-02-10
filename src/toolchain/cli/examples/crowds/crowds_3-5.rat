@@ -1,0 +1,15 @@
+!Parameters: badC, PF
+!Result: (-128*badC**10*PF**5 + 1360*badC**9*PF**5 - 960*badC**9*PF**4 - 6320*badC**8*PF**5 + 8880*badC**8*PF**4 - 2880*badC**8*PF**3 + 16760*badC**7*PF**5 - 35280*badC**7*PF**4 + 22680*badC**7*PF**3 - 4320*badC**7*PF**2 - 27640*badC**6*PF**5 + 78000*badC**6*PF**4 - 74880*badC**6*PF**3 + 28080*badC**6*PF**2 - 3240*badC**6*PF + 28928*badC**5*PF**5 - 103200*badC**5*PF**4 + 132750*badC**5*PF**3 - 73980*badC**5*PF**2 + 16605*badC**5*PF - 972*badC**5 - 18720*badC**4*PF**5 + 81360*badC**4*PF**4 - 132570*badC**4*PF**3 + 99090*badC**4*PF**2 - 32805*badC**4*PF + 3645*badC**4 + 6840*badC**3*PF**5 - 35280*badC**3*PF**4 + 70290*badC**3*PF**3 - 66960*badC**3*PF**2 + 29970*badC**3*PF - 4860*badC**3 - 1080*badC**2*PF**5 + 6480*badC**2*PF**4 - 15390*badC**2*PF**3 + 18090*badC**2*PF**2 - 10530*badC**2*PF + 2430*badC**2) / (243*badC**5*PF**5 - 1215*badC**4*PF**5 + 1215*badC**4*PF**4 + 2430*badC**3*PF**5 - 4860*badC**3*PF**4 + 2430*badC**3*PF**3 - 2430*badC**2*PF**5 + 7290*badC**2*PF**4 - 7290*badC**2*PF**3 + 2430*badC**2*PF**2 + 1215*badC*PF**5 - 4860*badC*PF**4 + 7290*badC*PF**3 - 4860*badC*PF**2 + 1215*badC*PF - 243*PF**5 + 1215*PF**4 - 2430*PF**3 + 2430*PF**2 - 1215*PF + 243)
+!Well-formed Constraints:
+-PF + 1 >= 0
+-PF <= 0
+PF >= 0
+PF - 1 <= 0
+badC >= 0
+-badC + 1 >= 0
+badC - 1 <= 0
+-badC <= 0
+!Graph-preserving Constraints:
+-PF + 1 > 0
+PF > 0
+badC > 0

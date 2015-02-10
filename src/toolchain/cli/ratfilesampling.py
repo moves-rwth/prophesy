@@ -34,9 +34,11 @@ if __name__ == "__main__":
     intervals = [(0.01, 0.99)] * len(result.parameters)
     sampling_interface = sampling.RatFuncSampling(result.ratfunc, result.parameters)
     # Calculate probabilities at sample points, and write to disk
+    print("Performing uniform sampling")
     samples = sampling_interface.perform_uniform_sampling(intervals, vars(cmdargs)['samplingnr'])
     filter = False
-    for _ in range(0, cmdargs.iterations):
+    for i in range(0, cmdargs.iterations):
+        print("Refining sampling ({}/{})".format(i+1, cmdargs.iterations))
         new_samples = refine_sampling(samples, cmdargs.threshold, sampling_interface, cmdargs.safe_above_threshold, filter)
         filter = False
         samples.update(new_samples)
@@ -46,6 +48,6 @@ if __name__ == "__main__":
                       path_to_save=path_to_save, display=False)
     print("Samples rendered to {}".format(path_to_save))
     # samples = sampling.perform_sampling_by_rf(ratfunc, parameters, [(0.3, 0.3), (0.4, 0.4)])
-    sampling.write_samples_file([p.name for p in result.parameters], samples, vars(cmdargs)["samples_file"])
+    sampling.write_samples_file([p.name for p in result.parameters], samples, cmdargs.threshold, cmdargs.safe_above_threshold, vars(cmdargs)["samples_file"])
 
     os.system("xdg-open {}".format(path_to_save))

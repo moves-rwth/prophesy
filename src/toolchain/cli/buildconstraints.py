@@ -24,10 +24,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--rat-file', help = "file containing rational function", required = True)
     parser.add_argument('--samples-file', help = 'file containing the sample points', required = True)
-    parser.add_argument('--threshold', type = float, help = 'the threshold', required = True)
-    group = parser.add_mutually_exclusive_group(required = True)
-    group.add_argument('--safe-above-threshold', action = 'store_true', dest = "safe_above_threshold")
-    group.add_argument('--bad-above-threshold', action = 'store_false', dest = "safe_above_threshold")
     limit_group = parser.add_mutually_exclusive_group(required = True)
     limit_group.add_argument('--iterations', dest = "iterations", help = "Number of constraints to generate", type=int)
     limit_group.add_argument('--area', dest = "area", help = "Area (in [0,1]) to try to complete", type = float)
@@ -42,18 +38,13 @@ if __name__ == "__main__":
     parser.add_argument('--threshold-area', type = float, help = 'threshold for minimal size of new area', default = 0.001)
     cmdargs = parser.parse_args()
 
-    threshold = vars(cmdargs)["threshold"]
     threshold_area = vars(cmdargs)["threshold_area"]
     result = read_pstorm_result(vars(cmdargs)['rat_file'])
 
-    print("Performing sample refinement")
-    (parameters, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
-    sampler = sampling.RatFuncSampling(result.ratfunc, result.parameters)
-    new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold)
-    while len(new_samples) < SAMPLING_THRESHOLD_NEW and len(new_samples) > 0:
-        samples.update(new_samples)
-        new_samples = sampling.refine_sampling(samples, threshold, sampler, cmdargs.safe_above_threshold, use_filter = True)
-    samples.update(new_samples)
+    print("Loading samples")
+    (parameters, threshold, safe_above_threshold, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
+    print("Threshold: {}".format(threshold))
+    print("Safe above threshold: {}".format(safe_above_threshold))
     print(samples)
 
     print("Setup SMT interface")
@@ -62,18 +53,18 @@ if __name__ == "__main__":
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     smt2interface.run()
-    setup_smt(smt2interface, result, threshold, cmdargs.safe_above_threshold)
+    setup_smt(smt2interface, result, threshold, safe_above_threshold)
 
     print("Generating constraints")
     generator = None
     if cmdargs.planes:
-        generator = ConstraintPlanes(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPlanes(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.rectangles:
-        generator = ConstraintRectangles(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintRectangles(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.quads:
-        generator = ConstraintQuads(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintQuads(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.poly:
-        generator = ConstraintPolygon(samples, result.parameters, threshold, cmdargs.safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPolygon(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
         # For testing
         generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
         generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)

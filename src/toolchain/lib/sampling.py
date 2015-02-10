@@ -8,25 +8,31 @@ from numpy import linspace
 from constraints.voronoi import computeDelaunayTriangulation
 from shapely.geometry.linestring import LineString
 from shapely.geometry.multilinestring import MultiLineString
+import ast
 
 def read_samples_file(path):
     parameters = []
     samples = {}
+    threshold = None
+    safe_above = None
     with open(path, 'r') as f:
         lines = [l.strip() for l in f.readlines()]
-        if len(lines) > 0:
+        if len(lines) > 2:
             parameters = lines[0].split()
-            for i, line in enumerate(lines[1:]):
+            threshold = float(lines[1])
+            safe_above = ast.literal_eval(lines[2])
+            for i, line in enumerate(lines[3:]):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
                     raise RuntimeError("Invalid input on line " + str(i+2))
                 samples[tuple(map(float, items[:-1]))] = float(items[-1])
             samples = OrderedDict(samples.items())
-    return (parameters, samples)
+    return (parameters, threshold, safe_above, samples)
 
-def write_samples_file(parameters, samples_dict, path):
+def write_samples_file(parameters, samples_dict, threshold, safe_above, path):
     with open(path, "w") as f:
         f.write(" ".join(parameters) + "\n")
+        f.write("{}\n{}\n".format(threshold, safe_above))
         for k, v in samples_dict.items():
             f.write("\t".join([("%.4f" % (c)) for c in k ]) + "\t\t" + "%.4f" % (v) + "\n")
 
