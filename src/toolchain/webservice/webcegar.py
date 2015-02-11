@@ -267,17 +267,15 @@ def uploadResult():
 
 @route('/listAvailableResults')
 def listAvailableResults():
-    results = _get_session('result_files', None)
-    if results == None:
-        results = {}
+    results = _get_session('result_files', {})
+    if len(results) == 0 and len(default_results) > 0:
         # Copy over default results
         for name, path in default_results.items():
             (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
             results[name] = res_file
             shutil.copyfile(path, res_file)
         _set_session('result_files', results)
-        if len(results) > 0:
-            _set_session('current_result', next(iter(results)))
+        _set_session('current_result', next(iter(results)))
     return _json_ok({"results" : {k:k for k in results.keys()}})
 
 @route('/getResultData/<name>')
@@ -470,6 +468,7 @@ def generateConstraints():
             (constraint, poly, safe) = data
             unsat.append((_jsonPoly(poly), safe))
         else:
+            (point, value) = data
             new_samples[point] = value
             samples[point] = value
 
