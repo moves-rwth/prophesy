@@ -304,22 +304,22 @@ class ConstraintGeneration(object):
         while not smt_successful:
             # check constraint with smt
             with self.smt2interface as smt_context:
-                print("Checking constraint {}".format(constraint))
+                #print("Checking constraint {}".format(constraint))
                 smt_context.assert_constraint(constraint)
 
                 smt_context.set_guard("safe", not safe)
                 smt_context.set_guard("bad", safe)
-                print("Calling smt solver")
+                #print("Calling smt solver")
                 start = time.time()
                 checkresult = smt_context.check()
                 duration = time.time() - start
-                print("Call took {0} seconds".format(duration))
+                #print("Call took {0} seconds".format(duration))
                 self.benchmark_output.append((checkresult, duration, polygon.area))
-                self.print_benchmark_output(self.benchmark_output)
+                #self.print_benchmark_output(self.benchmark_output)
                 if not checkresult in [smt.smt.Answer.sat, smt.smt.Answer.unsat]:
                     # smt call not finished -> change constraint to make it better computable
                     # TODO what to do in GUI?
-                    print("{}: Change constraint for better computation".format(checkresult))
+                    #print("{}: Change constraint for better computation".format(checkresult))
                     result_update = self.fail_constraint(constraint, safe)
                     if result_update == None:
                         break
@@ -388,7 +388,7 @@ class ConstraintGeneration(object):
                 break
 
             # Plot intermediate result
-            if self.plot and len(self.all_constraints) % 20 == 0:
+            if len(self.all_constraints) % 20 == 0:
                 self.plot_results(display = False)
 
         # Plot the final outcome

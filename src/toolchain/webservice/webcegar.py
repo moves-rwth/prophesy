@@ -462,16 +462,18 @@ def generateConstraints():
         return _json_error("Bad generator")
     generator.plot = False
 
-    (safe_poly, bad_poly, new_samples) = generator.generate_constraints(10)
-    samples.update(new_samples)
+    unsat = []
+    new_samples = {}
+    for check_result, _ in zip(generator, range(0,10)):
+        (is_unsat, data) = check_result
+        if is_unsat:
+            (constraint, poly, safe) = data
+            unsat.append((_jsonPoly(poly), safe))
+        else:
+            new_samples[point] = value
+            samples[point] = value
 
     smt2interface.stop()
-
-    unsat = []
-    for poly in safe_poly:
-        unsat.append((_jsonPoly(poly), True))
-    for poly in bad_poly:
-        unsat.append((_jsonPoly(poly), False))
 
     if len(new_samples) == 0 and len(unsat) == 0:
         return _json_error("SAT solver did not return an answer")

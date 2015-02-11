@@ -69,6 +69,7 @@ class ConstraintQuads(ConstraintGeneration):
             safe = v >= self.threshold
             quad.samples.append((pt, safe))
         self.check_quad(quad)
+        self.quads.sort(reverse=True)
 
     def plot_candidate(self):
         boxes = []

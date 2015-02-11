@@ -73,7 +73,7 @@ class Plot(object):
 
             xCoords = [x for x,y in samples_blue]
             yCoords = [y for x,y in samples_blue]
-            ax1.scatter(xCoords, yCoords, marker='-', c='blue')
+            ax1.scatter(xCoords, yCoords, marker='.', c='blue')
 
             ax1.set_ylim([0,1])
             ax1.set_xlim([0,1])

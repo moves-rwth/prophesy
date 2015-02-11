@@ -34,11 +34,21 @@ class DelaunayRefinement(SampleGenerator):
             for d in numpy.arange(0, line.length, self.distance):
                 pt = line.interpolate(d)
                 points.append(pt.coords[0])
-            if p2.distance(Point(points[-1])) > 0.01:
+            if p2.distance(Point(points[-1])) > 0.01 and not p2.coords[0] in points:
+                # Add final point if not too close to intermediate point
                 points.append(p2.coords[0])
         new_samples = self.sampler.perform_sampling(points)
         new_points = self._make_points(new_samples)
         self.points += new_points
+        
+        filter_points = []
+        for i1 in range(0, len(self.points)):
+            for i2 in range(i1+1, len(self.points)):
+                if self.points[i1].distance(self.points[i2]) < 0.001:
+                    break
+            else:
+                filter_points.append(self.points[i1])
+        self.points = filter_points
 
         return new_samples
 
