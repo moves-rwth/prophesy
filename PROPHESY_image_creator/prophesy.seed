@@ -39,7 +39,7 @@ tasksel tasksel/first               multiselect standard
 tasksel tasksel/desktop             multiselect xfce
 d-i pkgsel/language-pack-patterns   string
 d-i pkgsel/install-language-support boolean false
-d-i pkgsel/include                  string xfce4 lightdm gedit iceweasel zerofree git python3 python3-pip python3-numpy python3-shapely python3-matplotlib linux-headers-amd64 virtualbox-guest-additions-iso libginac2 libgmpxx4ldbl default-jre-headless
+d-i pkgsel/include                  string xfce4 lightdm gedit iceweasel zerofree git python3 python3-pip python3-numpy python3-shapely python3-matplotlib linux-headers-amd64 virtualbox-guest-additions-iso libginac2 libgmpxx4ldbl default-jre-headless unzip
 d-i pkgsel/upgrade                  select full-upgrade
 
 d-i grub-installer/skip             boolean false

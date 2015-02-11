@@ -526,14 +526,19 @@ def initEnv():
 
     # Preload some result files for easy startup
     print("Loading default result files...")
-    ratfiles = os.listdir(os.path.join(config.TOOL_DIR, 'rat_files'))
-    for rfile in ratfiles:
-        fullpath = os.path.join(config.TOOL_DIR, 'rat_files', rfile)
-        try:
-            read_pstorm_result(fullpath)
-            default_results[rfile] = fullpath
-        except:
-            pass
+    rat_path = os.path.join(config.EXAMPLES_DIR, 'rat_files')
+    try:
+        ratfiles = os.listdir(rat_path)
+        for rfile in ratfiles:
+            fullpath = os.path.join(rat_path, rfile)
+            try:
+                read_pstorm_result(fullpath)
+                default_results[rfile] = fullpath
+            except:
+                pass
+    except:
+        pass
+
     print("Done checking environment")
 
 # strips trailing slashes from requests

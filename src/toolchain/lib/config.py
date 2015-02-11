@@ -17,7 +17,8 @@ WEB_RESULTFILES_DIR = os.path.join(TMP_DIR, "web/results")
 # directory with webinterface
 WEB_INTERFACE_DIR = os.path.join(thisfilepath, "../../webinterface/")
 
-TOOL_DIR = os.path.join(thisfilepath, "../../../benchmarkfiles/")
+TOOL_DIR = "/home/prophesy/bin"
+EXAMPLES_DIR = "/home/prophesy/examples"
 
 # external tools
 Z3_COMMAND = os.path.join(TOOL_DIR, "z3")

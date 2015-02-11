@@ -25,13 +25,17 @@ EOF
 mkdir /home/prophesy/bin
 mkdir /home/prophesy/lib
 
-# Fetch tools, and put them in the right location
-#TODO wget
-tar -xaf tools.tar.gz ./
+# Fetch tools
+wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/tools.zip
+unzip tools.zip
 
 # Fetch prophesy
-#TODO wget
-tar -xaf prophesy.tar.gz ./
+wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/prophesy.zip
+unzip prophesy.zip
+
+# Fetch examples
+wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/examples.zip
+unzip examples.zip
 
 # Make prism work
 cd /home/prophesy/bin/prism-4.2.1-linux
