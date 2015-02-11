@@ -2,6 +2,12 @@ Requirements:
 - shapely (https://github.com/Toblerity/Shapely)
     - needs geos
     - then pip install shapely
+- sympy
+- numpy
+- matplotlib
+
+Check the configuration in src/toolchain/lib/config.py
+and make sure all binary paths are correct
 
 To run the web interface execute
 

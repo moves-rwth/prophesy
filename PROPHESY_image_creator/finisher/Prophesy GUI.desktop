@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Type=Link
+Name=Prophesy GUI
+Comment=Link to the Prophesy GUI
+Icon=xfce4-splash
+URL=http://localhost:4242/

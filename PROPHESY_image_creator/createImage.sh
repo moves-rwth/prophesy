@@ -7,8 +7,8 @@
 PRESEED=$1
 FINISHER=$2
 DEBCONFIGFILE=$3
-DEBIAN_ISO=$"debian-7.8.0-amd64-netinst.iso"
-DEBIAN_ISO_URL=$"http://cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/$DEBIAN_ISO"
+DEBIAN_ISO=$"debian-jessie-DI-rc1-amd64-netinst.iso"
+DEBIAN_ISO_URL=$"http://cdimage.debian.org/cdimage/jessie_di_rc1/amd64/iso-cd/$DEBIAN_ISO"
 
 
 # Some constants for colored output
