@@ -276,7 +276,8 @@ def listAvailableResults():
             results[name] = res_file
             shutil.copyfile(path, res_file)
         _set_session('result_files', results)
-        _set_session('current_result', next(iter(results)))
+        if len(results) > 0:
+            _set_session('current_result', next(iter(results)))
     return _json_ok({"results" : {k:k for k in results.keys()}})
 
 @route('/getResultData/<name>')
@@ -489,6 +490,7 @@ def initEnv():
     except:
         pass
     try:
+        print(config.PARAMETRIC_STORM_COMMAND)
         run_tool([config.PARAMETRIC_STORM_COMMAND], True)
         pmcCheckers['pstorm'] = "Parametric Storm"
         print("Found pstorm")
@@ -497,9 +499,11 @@ def initEnv():
 
     samplers['ratfunc'] = "Rational function"
     try:
-        run_tool([config.PRISM_COMMAND], True)
-        samplers['prism'] = "PRISM"
-        print("Found prism")
+        # TODO: Prism sampling not yet supported
+        #run_tool([config.PRISM_COMMAND], True)
+        #samplers['prism'] = "PRISM"
+        #print("Found prism")
+        pass
     except:
         pass
 

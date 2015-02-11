@@ -34,9 +34,12 @@ class DelaunayRefinement(SampleGenerator):
             for d in numpy.arange(0, line.length, self.distance):
                 pt = line.interpolate(d)
                 points.append(pt.coords[0])
+            if p2.distance(Point(points[-1])) > 0.01:
+                points.append(p2.coords[0])
         new_samples = self.sampler.perform_sampling(points)
         new_points = self._make_points(new_samples)
         self.points += new_points
+
         return new_samples
 
     def _calc_triangles(self):
@@ -57,6 +60,7 @@ class DelaunayRefinement(SampleGenerator):
             # Triangle contains mixture of safe and bad points
             triangles.append(triangle)
         points = [self.points[i] for i in points]
+
         return (points, triangles)
 
     def _calc_lines(self, triangles):
@@ -67,10 +71,11 @@ class DelaunayRefinement(SampleGenerator):
         safe_points = [pt for pt in self.points if pt.z >= self.threshold]
         nsaf = len(safe_points)
         nbad = len(self.points) - nsaf
-        if nsaf > nbad:
-            fudge = 0.1
+        if nsaf < nbad:
+            # Move towards larger value of more safe samples required
+            fudge = 0.01
         else:
-            fudge = -0.1
+            fudge = -0.01
 
         for triangle in triangles:
             line = []
@@ -79,9 +84,14 @@ class DelaunayRefinement(SampleGenerator):
             for p1,p2 in pairs:
                 if (p1.z >= self.threshold) == (p2.z >= self.threshold):
                     continue
-                line.append(weighed_interpolation(p1, p2, p1.z, p2.z, self.threshold, fudge))
+                if (p1.distance(p2) < 0.001):
+                    continue
+                midpoint = weighed_interpolation(p1, p2, p1.z, p2.z, self.threshold, fudge)
+                if midpoint is not None:
+                    line.append(midpoint)
             # NOTE: A triangle can only have exactly two such points, or none
             # The resulting connecting line thus never splits
-            assert len(line) in [0,2]
-            lines.append(line)
+            #assert len(line) in [0,2]
+            if len(line) == 2:
+                lines.append(line)
         return lines

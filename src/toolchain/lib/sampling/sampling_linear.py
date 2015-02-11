@@ -15,6 +15,8 @@ class LinearRefinement(SampleGenerator):
     def _min_dist(self):
         """Max. distance between two points to be considered"""
         samplenr = math.sqrt(len(self.samples))
+        if samplenr <= 1:
+            return 0
         bd = 0.1
         epsilon = (1 - 2 * bd) / (samplenr - 1)
         delta = math.sqrt(2 * (epsilon * epsilon) + epsilon / 2)
@@ -38,9 +40,10 @@ class LinearRefinement(SampleGenerator):
         new_points = []
         # Offset the weight a little to balance the sample types
         if len(safe_samples) < len(bad_samples):
-            fudge = -0.1
+            # Move towards larger value of more safe samples required
+            fudge = 0.01
         else:
-            fudge = 0.1
+            fudge = -0.01
         for safe_pt, safe_v in safe_samples.items():
             for bad_pt, bad_v in bad_samples.items():
                 safe_pt = Point(safe_pt)
@@ -48,6 +51,8 @@ class LinearRefinement(SampleGenerator):
                 dist = safe_pt.distance(bad_pt)
                 if dist < delta and dist > 0.06:
                     point = weighed_interpolation(safe_pt, bad_pt, safe_v, bad_v, self.threshold, fudge)
+                    if point is None:
+                        continue
 
                     # Check if point is not too close to any other existing sample point
                     skip = False

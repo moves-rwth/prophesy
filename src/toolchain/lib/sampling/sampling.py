@@ -3,6 +3,7 @@ from config import SAMPLING_DISTANCE
 from shapely.geometry import Point
 from numpy import linspace
 from collections import OrderedDict
+import math
 
 class Sampler(object):
     """Base class for performing sampling of given set of points"""
@@ -64,9 +65,17 @@ def filter_samples(samples, threshold, distance = SAMPLING_DISTANCE):
 
 def weighed_interpolation(point1, point2, value1, value2, threshold, fudge=0.0):
     distance = abs(value1-value2)
+    if distance < 0.00001:
+        return None
     weight = abs(threshold-value1)/distance
-    weight += fudge
-    return Point((point2.x-point1.x)*weight+point1.x, (point2.y-point1.y)*weight+point1.y)
+    dx = point2.x-point1.x
+    dy = point2.y-point1.y
+    offset = abs(fudge) / math.sqrt(dx*dx + dy*dy)
+    # Positive fudge moves towards larger value
+    if (value1 > value2) == (fudge > 0):
+        offset *= -1
+    weight += offset
+    return Point(dx*weight+point1.x, dy*weight+point1.y)
 
 
 
