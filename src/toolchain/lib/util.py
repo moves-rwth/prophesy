@@ -16,7 +16,7 @@ def check_filepath_for_reading(filepath, filedescription_string = "file"):
         raise IOException("No read access on " + filedescription_string + ". Location: '" + "'.")
 
 def run_tool(args, quiet = False):
-    pipe = subprocess.Popen(args, stdout = subprocess.PIPE)
+    pipe = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
     if(quiet):
         return pipe.communicate()[0]

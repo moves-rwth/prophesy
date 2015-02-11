@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import shutil
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
@@ -11,18 +12,19 @@ import bottle
 import tempfile
 import argparse
 import config
-from bottle import request, route, static_file, redirect, error, response
+from bottle import request, route, static_file, redirect, error
 import beaker.middleware
-from util import ensure_dir_exists
+from util import ensure_dir_exists, run_tool
 from input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from input.prismfile import PrismFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.pstorm import ProphesyParametricModelChecker
-from smt.smtlib import SmtlibSolver
 from smt.smt import setup_smt
-from shapely.geometry.polygon import Polygon
+from smt.isat import IsatSolver
+from smt.smtlib import SmtlibSolver
 from sampling.sampler_ratfunc import RatFuncSampling
+from sampling.sampler_prism import McSampling
 from sampling.sampling_uniform import UniformSampleGenerator
 from sampling.sampling_linear import LinearRefinement
 from sampling.sampling_delaunay import DelaunayRefinement
@@ -30,6 +32,13 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
+from shapely.geometry.polygon import Polygon
+
+pmcCheckers = {}
+samplers = {}
+satSolvers = {}
+
+default_results = {}
 
 def _json_error(message, status = 500):
     """Aborts the current request with the given message"""
@@ -85,10 +94,35 @@ def _jsonPoly(polygon):
         return _jsonPoly(polygon.exterior)
     return [[pt[0], pt[1]] for pt in polygon.coords]
 
+def getSat(satname):
+    if satname == 'z3':
+        return SmtlibSolver()
+    elif satname == 'isat':
+        return IsatSolver()
+    else:
+        raise RuntimeError("Unknown SAT solver requested")
+
+def getSampler(satname, result):
+    if satname == 'ratfunc':
+        # Do not use rationals for now
+        return RatFuncSampling(result.ratfunc, result.parameters, False)
+    elif satname == 'prism':
+        return McSampling(result.prism_file, result.pctl_file)
+    else:
+        raise RuntimeError("Unknown sampler requested")
+
+def getPMC(satname):
+    if satname == 'pstorm':
+        return ProphesyParametricModelChecker()
+    elif satname == 'param':
+        return ParamParametricModelChecker();
+    else:
+        raise RuntimeError("Unknown PMC requested")
+
 @error(500)
 def handle_error(http_error):
     # (code, message, exc, tb) = http_error.status, http_error.body, http_error.exception, http_error.traceback
-    #return bottle.HTTPResponse(status=200, body=)
+    # return bottle.HTTPResponse(status=200, body=)
     return _json_error("{}: {}".format(http_error.body, http_error.exception))
 
 @route('/ui/<filepath:path>')
@@ -111,12 +145,51 @@ def invalidateSession():
     request.session.invalidate()
     return _json_ok()
 
+@route('/setThreshold/<threshold:float>')
+def setThreshold(threshold):
+    _set_session('threshold', threshold)
+    return getThreshold()
+
+@route('/getThreshold')
+def getThreshold():
+    return _json_ok(_get_session('threshold', 0.5))
+
+@route('/listEnvironment')
+def listEnv():
+    return _json_ok({"pmc":pmcCheckers, "samplers":samplers, "sat":satSolvers})
+
+@route('/getEnvironment')
+def getEnv():
+    return _json_ok({
+                     "pmc" :     _get_session("pmc", next(iter(pmcCheckers.keys()))),
+                     "sampler" : _get_session("sampler", 'ratfunc'),
+                     "sat" :     _get_session("sat", next(iter(satSolvers.keys())))})
+
+@route('/setEnvironment', method = 'POST')
+def setEnv():
+    pmc = bottle.request.forms.get('pmc')
+    sampler = bottle.request.forms.get('sampler')
+    sat = bottle.request.forms.get('sat')
+    if not pmc in pmcCheckers:
+        return _json_error("Invalid model checker")
+    if not sampler in samplers:
+        return _json_error("Invalid sampler")
+    if not sat in satSolvers:
+        return _json_error("Invalid SAT solver")
+    # TODO: pmc is not really a global setting,
+    # depends on upload form
+    _set_session("pmc", pmc)
+    _set_session("sampler", sampler)
+    _set_session("sat", sat)
+
+    return getEnv()
+
 @route('/uploadPrism', method = 'POST')
 def uploadPrism():
     tool = bottle.request.forms.get('mctool')
     upload_prism = bottle.request.files.get('file')
     upload_pctl = bottle.request.files.get('pctl-file')
-    if tool not in ['pstorm', 'param']:
+    if tool not in pmcCheckers.keys():
         return _json_error("Invalid tool selected")
     if upload_prism is None:
         return _json_error("Missing PRISM file")
@@ -132,11 +205,7 @@ def uploadPrism():
 
     if tool == "param":
         prism_file.replace_parameter_keyword("param float")
-        tool = ParamParametricModelChecker()
-    elif tool == "pstorm":
-        tool = ProphesyParametricModelChecker()
-    else:
-        raise RuntimeError("No supported solver available")
+    tool = getPMC(tool)
 
     try:
         result = tool.get_rational_function(prism_file, pctl_path)
@@ -162,8 +231,11 @@ def uploadPrism():
 def uploadResult():
     tool = bottle.request.forms.get('result-type')
     upload = bottle.request.files.get('file')
-    if tool not in ['pstorm', 'param'] or upload is None:
-        return _json_error("Invalid form POST'ed")
+    # Note: this is not the list of pmcCheckers, but of available result parsers
+    if tool not in ['pstorm', 'param']:
+        return _json_error("Invalid tool selected")
+    if upload is None:
+        return _json_error("Missing result file")
 
     result_files = _get_session('result_files', {})
 
@@ -195,16 +267,17 @@ def uploadResult():
 
 @route('/listAvailableResults')
 def listAvailableResults():
-    return _json_ok({"results" : [k for k in _get_session('result_files', {}).keys()]})
-
-@route('/setThreshold/<threshold:float>')
-def setThreshold(threshold):
-    _set_session('threshold', threshold)
-    return _json_ok({'threshold': threshold})
-
-@route('/getThreshold')
-def getThreshold():
-    return _json_ok({"threshold" : _get_session('threshold', 0.5)})
+    results = _get_session('result_files', None)
+    if results == None:
+        results = {}
+        # Copy over default results
+        for name, path in default_results.items():
+            (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+            results[name] = res_file
+            shutil.copyfile(path, res_file)
+        _set_session('result_files', results)
+        _set_session('current_result', next(iter(results)))
+    return _json_ok({"results" : {k:k for k in results.keys()}})
 
 @route('/getResultData/<name>')
 def getResultData(name):
@@ -213,7 +286,7 @@ def getResultData(name):
         return _json_error("Result data not found", 404)
     try:
         result = read_pstorm_result(result_files[name])
-        return _json_ok({"result_data" : str(result)})
+        return _json_ok(str(result))
     except:
         return _json_error("Error reading result data")
 
@@ -222,14 +295,14 @@ def getCurrentResult():
     name = _get_session('current_result', None)
     if name is None:
         return _json_error("No result loaded", 412)
-    return _json_ok({"result" : name})
+    return _json_ok(name)
 
 @route('/setCurrentResult/<name>')
 def setCurrentResult(name):
     results = _get_session('result_files', {})
     if name in results:
         _set_session('current_result', name)
-        return _json_ok({"result" : name})
+        return _json_ok(name)
 
     return _json_error("No result found", 404)
 
@@ -260,9 +333,11 @@ def addSample(x, y):
     result = _getResultData(_get_session('current_result', None))
     if result is None:
         return _json_error("Unable to load result data", 500)
-    value = result.ratfunc.eval({result.parameters[0] : x, result.parameters[1] : y})
+
+    sampler = getSampler(_get_session('sampler'), result)
+    new_samples = sampler.perform_sampling([(x, y)])
     samples = _get_session('samples', {})
-    samples[(x, y)] = value
+    samples.update(new_samples)
     return _json_ok(_jsonSamples(samples))
 
 @route('/generateSamples', method = 'POST')
@@ -285,7 +360,7 @@ def generateSamples():
 
     samples = {}
     intervals = [(0.01, 0.99)] * len(result.parameters)
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
+    sampling_interface = getSampler(_get_session('sampler'), result)
     uniform_generator = UniformSampleGenerator(sampling_interface, intervals, nrsamples)
     for new_samples in uniform_generator:
         samples.update(new_samples)
@@ -334,7 +409,7 @@ def checkConstraint():
         # Strip connecting point if any
         coordinates = coordinates[:-1]
 
-    smt2interface = SmtlibSolver()
+    smt2interface = getSat(_get_session('sat'))
     smt2interface.run()
     setup_smt(smt2interface, result, threshold)
 
@@ -372,7 +447,7 @@ def generateConstraints():
     samples = _get_session('samples', {})
     threshold = _get_session('threshold', 0.5)
 
-    smt2interface = SmtlibSolver()
+    smt2interface = getSat(_get_session('sat'))
     smt2interface.run()
     setup_smt(smt2interface, result, threshold)
 
@@ -402,6 +477,65 @@ def generateConstraints():
 
     return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
+def initEnv():
+    # Check available model checkers, solvers and various other constraints
+    # and adjust capabilities based on that
+    print("Checking available tools...")
+
+    try:
+        run_tool([config.PARAM_COMMAND], True)
+        pmcCheckers['param'] = "Param"
+        print("Found param")
+    except:
+        pass
+    try:
+        run_tool([config.PARAMETRIC_STORM_COMMAND], True)
+        pmcCheckers['pstorm'] = "Parametric Storm"
+        print("Found pstorm")
+    except:
+        pass
+
+    samplers['ratfunc'] = "Rational function"
+    try:
+        run_tool([config.PRISM_COMMAND], True)
+        samplers['prism'] = "PRISM"
+        print("Found prism")
+    except:
+        pass
+
+    try:
+        run_tool([config.Z3_COMMAND], True)
+        satSolvers['z3'] = "Z3"
+        print("Found z3")
+    except:
+        pass
+    try:
+        run_tool([config.SMTRAT_COMMAND], True)
+        satSolvers['isat'] = "iSAT"
+        print("Found isat")
+    except:
+        pass
+
+    if len(pmcCheckers) == 0:
+        raise RuntimeError("No model checkers in environment")
+    if len(samplers) == 0:
+        # The astute programmer can see that this should never happen
+        raise RuntimeError("No samplers in environment")
+    if len(satSolvers) == 0:
+        raise RuntimeError("No SAT solvers in environment")
+
+    # Preload some result files for easy startup
+    print("Loading default result files...")
+    ratfiles = os.listdir(os.path.join(config.TOOL_DIR, 'rat_files'))
+    for rfile in ratfiles:
+        fullpath = os.path.join(config.TOOL_DIR, 'rat_files', rfile)
+        try:
+            read_pstorm_result(fullpath)
+            default_results[rfile] = fullpath
+        except:
+            pass
+    print("Done checking environment")
+
 # strips trailing slashes from requests
 class StripPathMiddleware(object):
     def __init__(self, app):
@@ -428,6 +562,8 @@ if __name__ == "__main__":
         'session.auto': True,
         'session.invalidate_corrupt':False
     }
+
+    initEnv()
 
     app = StripPathMiddleware(beaker.middleware.SessionMiddleware(bottle.app(), session_opts))
     if(vars(cmdargs)['server_quiet']):

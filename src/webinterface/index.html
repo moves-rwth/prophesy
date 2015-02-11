@@ -15,7 +15,6 @@
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript">
-
 var threshold = "0.5";
 var samples = [];
 var safe_constraints = [];
@@ -73,7 +72,12 @@ var options = {
             position: "right"
         }};
 
+var isBusy = false;
 function setBusy(busy) {
+    if (busy && isBusy) {
+        alert("Operation in progress");
+        throw "Operation in progress";
+    }
     if (busy) {
         $("#busy-indicator").show();
         $("#header").addClass("busy");
@@ -81,6 +85,20 @@ function setBusy(busy) {
         $("#busy-indicator").hide();
         $("#header").removeClass("busy");
     }
+    isBusy = busy;
+}
+
+function clearError() {
+    $("#errorbox").removeClass("shown");
+}
+
+function checkError(result) {
+    if (result !== null) {
+        $("#error-message").text(result.reason);
+    } else {
+        $("#error-message").text("Unspecified error");
+    }
+    $("#errorbox").addClass("shown");
 }
 
 function doJSON(url, onSuccess = function(result) {}, onFail = function() {}) {
@@ -99,10 +117,18 @@ function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
         }
     }
 
-    setBusy(true);
+    try {
+        setBusy(true);
+    } catch(err) {
+        // Don't try and do two things at the same time,
+        // the server serializes session access
+        return null;
+    }
+
     clearError();
     $.ajax(ajax)
     .done(function(data) {
+        setBusy(false);
         if (data.status == "ok") {
             onSuccess(data);
         } else {
@@ -110,6 +136,7 @@ function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
         }
     })
     .fail(function(jqXHR) {
+        setBusy(false);
         checkError(failHandler(jqXHR));
         onFail();
     })
@@ -169,19 +196,6 @@ function writeSamples(samples) {
         data.push({'coordinate':sample, 'value':-1.0});
     };
     return data;
-}
-
-function clearError() {
-    $("#errorbox").hide();
-}
-
-function checkError(result) {
-    if (result !== null) {
-        $("#error-message").text(result.reason);
-    } else {
-        $("#error-message").text("Unspecified error");
-    }
-    $("#errorbox").show();
 }
 
 $(document).ready(function() {
@@ -297,7 +311,6 @@ $(document).ready(function() {
 
         result_name = $("#result-files").val();
         setCurrentResult(result_name);
-        getCurrentResult();
     });
 
     $( "#form-samples-manual" ).submit(function( event ) {
@@ -421,6 +434,13 @@ $(document).ready(function() {
         plotSamples();
     });
     
+    $("#samplers").on('change', function() {
+        setEnv();
+    });
+    $("#satsolvers").on('change', function() {
+        setEnv();
+    });
+    
     /////////////////////////
     // Things to do initially
     /////////////////////////
@@ -429,10 +449,15 @@ $(document).ready(function() {
     plotSamples();
     
     // Load initial settings
-    getCurrentResult();
+    // Manually set busy to false, server will serialize output
+    listEnv();
+    isBusy = false;
     listAvailableResults();
+    isBusy = false;
     getThreshold();
+    isBusy = false;
     getSamples();
+    isBusy = false;
 });
 
 
@@ -464,10 +489,8 @@ $(document).ready(function() {
                     <span>Path to PCTL file:</span><input type="file" name="pctl-file" />
                     <br>
                     <span>Run with:</span>
-                    <select name="mctool">
-                        <option selected="selected" value="pstorm">Prophesy</option>
-                        <option value="param">param</option>
-                        <!--<option>prism</option>-->
+                    <select id="mctools" name="mctool">
+                        <option>No tool available</option>
                     </select>
                     <br/>
                     <button id="upload-prism" type="submit" class="upload">Upload</button>
@@ -565,10 +588,14 @@ $(document).ready(function() {
         <span>Threshold:</span>
         <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.5</span>
         <br>
+        <span>Sampler:</span>
+        <select id="samplers">
+            <option>No sampler available</option>
+        </select>
+        <br>
         <span>SMT Solver:</span>
-        <select id="smtsolver">
-            <option selected="selected">Z3</option>
-            <!--<option>SMT-RAT</option>-->
+        <select id="satsolvers">
+            <option>No solver available</option>
         </select>
     </div>
 </div> <!-- Control panel -->

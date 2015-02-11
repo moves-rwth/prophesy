@@ -1,23 +1,35 @@
+// webcegar settings
 var currentResult = "";
+var pmc = ""
+var sat = ""
+var sampler = ""
+
+function fillSelect(select, data, selected) {
+    select.empty()
+    for (var key in data) {
+        select.append($('<option>', {
+            value: key,
+            text: data[key]
+        }));
+    }
+    if (selected !== null) {
+        select.val(selected);
+    }
+}
 
 function listAvailableResults() {
     doJSON("../listAvailableResults/", function(result) {
         var availableFiles = $("#result-files");
-        availableFiles.empty();
-        for (var key in result.data.results) {
-            var resname = result.data.results[key];
-            option = availableFiles.append($("<option />").val(resname).text(resname));
-            if (resname == currentResult) {
-                option.prop("selected", true);
-            }
-        }
+        fillSelect(availableFiles, result.data.results, currentResult);
+        
+        getCurrentResult();
     });
 }
 
 // Update display to show the active result information
 function getResultData(name) {
     doJSON("../getResultData/"+name, function(result) {
-        $("#info_ratfunc").text(result.data.result_data);
+        $("#info_ratfunc").text(result.data);
     }, function() {
         $("#info_ratfunc").text("Failed to retrieve data");
     });
@@ -25,7 +37,8 @@ function getResultData(name) {
 
 function getCurrentResult() {
     doJSON("../getCurrentResult/", function(result) {
-        currentResult = result.data.result;
+        currentResult = result.data;
+        $("#result-files").val(currentResult);
         getResultData(currentResult);
     }, function() {
         currentResult = "";
@@ -34,16 +47,14 @@ function getCurrentResult() {
 
 function setCurrentResult(file) {
     doJSON("../setCurrentResult/"+file, function(result) {
-        $("#info_ratfunc").text(result.data.result.ratfunc);
         currentResult = file;
-    }, function() {
-        $("#info_ratfunc").text("Not loaded");
+        getResultData(currentResult);
     });
 }
 
 function getThreshold() {
     doJSON("../getThreshold/", function(result) {
-        threshold = result.data.threshold;
+        threshold = result.data;
         $('#thresholdSlider').val(threshold*1000);
         $("#thresvalue").text(threshold);
     });
@@ -58,4 +69,47 @@ function getSamples() {
         readSamples(result.data);
         plotSamples();
     });
+}
+
+function listEnv() {
+    doJSON("../listEnvironment", function(result) {
+        var pmcTools = $("#mctools");
+        fillSelect(pmcTools, result.data.pmc, pmc);
+
+        var samplers = $("#samplers");
+        fillSelect(samplers, result.data.samplers, sat);
+
+        var smtSolvers = $("#satsolvers");
+        fillSelect(smtSolvers, result.data.sat, sampler);
+        
+        getEnv();
+    });
+}
+
+function setEnv() {
+    var formData = new FormData();
+    formData.append('pmc', $("#mctools").val());
+    formData.append('sampler', $("#samplers").val());
+    formData.append('sat', $("#satsolvers").val());
+    doAjax({
+        url: '../setEnvironment',
+        type: 'POST',
+        // Form data
+        data: formData,
+        //Options to tell jQuery not to process data or worry about content-type.
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getEnv() {
+    doJSON("../getEnvironment", function(result) {
+        pmc = result.data.pmc;
+        $("#mctools").val(pmc);
+        sampler = result.data.sampler;
+        $("#samplers").val(sampler);
+        sat = result.data.sat;
+        $("#satsolvers").val(sat);
+    });  
 }
