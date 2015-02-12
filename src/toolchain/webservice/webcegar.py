@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.join(thisfilepath, '../../lib'))
 import json
 import bottle
 import tempfile
+import re
 import argparse
 import config
 from bottle import request, route, static_file, redirect, error
@@ -286,7 +287,16 @@ def getResultData(name):
         return _json_error("Result data not found", 404)
     try:
         result = read_pstorm_result(result_files[name])
-        return _json_ok(str(result))
+        str_result = str(result)
+        # Replace ** with superscript
+        str_result = re.sub(r'\*\*(\d+)', r'<sub>\1</sub>', str_result)
+        # Replace * with dot symbol
+        str_result = re.sub(r'\*', r'&#183;', str_result)
+        # Replace <= with symbol
+        str_result = re.sub(r'\<\=', r'&#8804;', str_result)
+        # Replace >= with symbol
+        str_result = re.sub(r'\>\=', r'&#8805;', str_result)
+        return _json_ok(str_result)
     except:
         return _json_error("Error reading result data")
 

@@ -29,7 +29,7 @@ function listAvailableResults() {
 // Update display to show the active result information
 function getResultData(name) {
     doJSON("../getResultData/"+name, function(result) {
-        $("#info_ratfunc").text(result.data);
+        $("#info_ratfunc").html(result.data);
     }, function() {
         $("#info_ratfunc").text("Failed to retrieve data");
     });
