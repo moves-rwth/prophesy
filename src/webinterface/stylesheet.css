@@ -152,7 +152,6 @@ input[type=radio] {
 
 .colRight {
     width: 250px;
-    float: left;
 }
 
 form {
@@ -184,4 +183,4 @@ form {
 .legendLabel {
     padding: 2px;
     padding-right: 10px;
-}}
+}
