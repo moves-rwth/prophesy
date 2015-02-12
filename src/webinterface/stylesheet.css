@@ -163,3 +163,25 @@ form {
 .button {
     text-align: center;
 }
+
+#legendContainer {
+    min-width:800px;
+    text-align: center;
+    padding-top: 10px;
+}
+
+#legend {
+    width: 550px;
+    margin-left: 25px;
+    float: left;
+}
+
+.legendColorBox {
+    padding: 2px;
+    padding-top: 7px;
+}
+
+.legendLabel {
+    padding: 2px;
+    padding-right: 10px;
+}}

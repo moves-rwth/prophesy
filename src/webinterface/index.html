@@ -69,7 +69,8 @@ var options = {
         },
         legend: {
             labelBoxBorderColor: "black",
-            position: "right"
+            container: '#legend',
+            noColumns: 6
         }};
 
 var isBusy = false;
@@ -167,7 +168,7 @@ function plotSamples() {
 
     plotpoints = [{label: "new", data: [], points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
-                  {label: ">=" + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+                  {label: "&#8805; " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: fillNewConstraint}, color: "black"},
                   {label: "safe constr", data: [], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"},
                   {label: "bad constr", data: [], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"}];
@@ -469,8 +470,10 @@ $(document).ready(function() {
 <div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
 
 <div id="plotsurround">
+    <div id="legendContainer">
+        <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
+    </div>
     <div id="placeholder"></div>
-    <span id="mousePos">(0.00, 0.00)</span>
 </div>
 
 <div id="controlpanel">
