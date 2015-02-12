@@ -293,6 +293,10 @@ def getResultData(name):
 def getCurrentResult():
     name = _get_session('current_result', None)
     if name is None:
+        if len(default_results) > 0:
+            name = next(iter(default_results))
+            _set_session('current_result', name)
+    if name is None:
         return _json_error("No result loaded", 412)
     return _json_ok(name)
 
@@ -462,7 +466,7 @@ def generateConstraints():
 
     unsat = []
     new_samples = {}
-    for check_result, _ in zip(generator, range(0,10)):
+    for check_result, _ in zip(generator, range(0,25)):
         (is_unsat, data) = check_result
         if is_unsat:
             (constraint, poly, safe) = data
