@@ -69,7 +69,8 @@ var options = {
         },
         legend: {
             labelBoxBorderColor: "black",
-            position: "right"
+            container: '#legend',
+            noColumns: 6
         }};
 
 var isBusy = false;
@@ -167,7 +168,7 @@ function plotSamples() {
 
     plotpoints = [{label: "new", data: [], points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
-                  {label: ">=" + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+                  {label: "&#8805; " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: fillNewConstraint}, color: "black"},
                   {label: "safe constr", data: [], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"},
                   {label: "bad constr", data: [], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"}];
@@ -467,8 +468,10 @@ $(document).ready(function() {
 <div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
 
 <div id="plotsurround">
+    <div id="legendContainer">
+        <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
+    </div>
     <div id="placeholder"></div>
-    <span id="mousePos">(0.00, 0.00)</span>
 </div>
 
 <div id="controlpanel">
@@ -482,37 +485,49 @@ $(document).ready(function() {
         <div class="tab-contents">
             <div id="tab-prism" class="tab active cp">
                 <form id="form-prism">
-                    <span>Path to prism file:</span><input type="file" name="file" />
+                    <span class="colLeft">Path to prism file:</span>
+                    <input type="file" name="file" class="colRight"/>
                     <br>
-                    <span>Path to PCTL file:</span><input type="file" name="pctl-file" />
+                    <span class="colLeft">Path to PCTL file:</span>
+                    <input type="file" name="pctl-file" class="colRight"/>
                     <br>
-                    <span>Run with:</span>
-                    <select id="mctools" name="mctool">
+                    <span class="colLeft">Run with:</span>
+                    <select id="mctools" name="mctool" class="colRight">
                         <option>No tool available</option>
                     </select>
-                    <br/>
-                    <button id="upload-prism" type="submit" class="upload">Upload</button>
+                    <br>
+                    <div class="button">
+                         <button id="upload-prism" type="submit" class="upload positive">Upload</button>
+                    </div>
                 </form>
             </div>
             
             <div id="tab-upload"  class="tab cp">
                 <form id="form-result">
-                    <span>Path to result file:</span><input type="file" name="file"/>
+                    <span class="colLeft">Path to result file:</span>
+                    <input type="file" name="file" class="colRight"/>
                     <br>
-                    <select name="result-type">
+                    <span class="colLeft">Run with:</span>
+                    <select name="result-type" class="colRight">
                         <option value="pstorm" selected="selected">pstorm</option>
                         <option value="param">param</option>
                     </select>
-                    <br/>
-                    <button id="upload-result" type="submit" class="upload">Upload</button>
+                    <br>
+                    <div class="button">
+                        <button id="upload-result" type="submit" class="upload positive">Upload</button>
+                    </div>
                 </form>
             </div>
             
             <div id="tab-select" class="tab cp">
                 <form id="form-select">
-                    <select id="result-files">
+                    <span class="colLeft">Result file:</span>
+                    <select id="result-files" class="colRight">
                     </select>
-                    <button id="select-result" type="submit" class="positive">Load</button>
+                    <br>
+                    <div class="button">
+                        <button id="select-result" type="submit" class="positive">Load</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -529,21 +544,28 @@ $(document).ready(function() {
                 <form id="form-samples-manual">
                     <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
                     <br>
-                    <button id="submit-samples" type="submit" class="positive">Check New</button>
+                    <div class="button">
+                        <button id="submit-samples" type="submit" class="positive">Check New</button>
+                    </div>
                 </form>
             </div>
             <div id="tab-auto" class="tab cp">
                 <form id="form-samples-auto">
-                    <label>Sampling number: <input name="sampling" type="number" min="2" max="50" value="2" size="1"/></label>
+                    <span class="colLeft">Sampling number:</span>
+                    <input name="sampling" class="colRight" type="number" min="2" max="50" value="2" size="1"/>
                     <br/>
-                    <label>Number of iterations: <input name="iterations" type="number" min="0" max="10" value="2"/></label>
+                    <span class="colLeft">Number of iterations:</span>
+                    <input name="iterations" class="colRight" type="number" min="0" max="10" value="2"/>
                     <br>
-                    <select name="generator">
+                    <span class="colLeft">Iteration type:</span>
+                    <select name="generator" class="colRight">
                         <option value="linear" selected="selected">Linear interpolation</option>
                         <option value="delaunay">Delaunay triangulation</option>
                     </select>
                     <br>
-                    <button id="generate-samples" type="submit">Go</button>
+                    <div class="button">
+                        <button id="generate-samples" type="submit" class="positive">Go</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -564,18 +586,23 @@ $(document).ready(function() {
                     <label><input name="constr-mode" type="radio" value="safe" checked="checked"/> Check for safe</label>
                     <label><input name="constr-mode" id="radio-bad" type="radio" value="bad"/> Check for bad</label>
                     <br>
-                    <button id="manualConstraints" type="submit" class="positive">Check New</button>
-                    <button id="clear-constraint" type="button" class="negative">Clear current</button>
+                    <div class="button">
+                        <button id="manualConstraints" type="submit" class="positive">Check New</button>
+                        <button id="clear-constraint" type="button" class="negative">Clear current</button>
+                    </div>
                 </form>
             </div>
             <div id="tab-constr-auto" class="tab cp">
                 <form id="form-constraints-auto">
-                    <select name="generator">
+                    <span class="colLeft">Constraint type:</span>
+                    <select name="generator" class="colRight">
                         <option selected="selected" value="planess">Planes</option>
                         <option value="rectangles">Growing rectangles</option>
                         <option value="quads">Quadrants</option>
                     </select>
-                    <button id="autoConstraints" type="submit" class="positive">Generate</button>
+                    <div class="button">
+                        <button id="autoConstraints" type="submit" class="positive">Generate</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -583,16 +610,16 @@ $(document).ready(function() {
     
     <div id="settings">
         <h2>Settings</h2>
-        <span>Threshold:</span>
+        <span class="colLeft">Threshold:</span>
         <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.5</span>
         <br>
-        <span>Sampler:</span>
-        <select id="samplers">
+        <span class="colLeft">Sampler:</span>
+        <select id="samplers" class="colRight">
             <option>No sampler available</option>
         </select>
         <br>
-        <span>SMT Solver:</span>
-        <select id="satsolvers">
+        <span class="colLeft">SMT Solver:</span>
+        <select id="satsolvers" class="colRight">
             <option>No solver available</option>
         </select>
     </div>
