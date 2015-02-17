@@ -268,19 +268,13 @@ def uploadResult():
 
 @route('/listAvailableResults')
 def listAvailableResults():
+    setup_results()
     results = _get_session('result_files', {})
-    if len(results) == 0 and len(default_results) > 0:
-        # Copy over default results
-        for name, path in default_results.items():
-            (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
-            results[name] = res_file
-            shutil.copyfile(path, res_file)
-        _set_session('result_files', results)
-        _set_session('current_result', next(iter(results)))
     return _json_ok({"results" : {k:k for k in results.keys()}})
 
 @route('/getResultData/<name>')
 def getResultData(name):
+    setup_results()
     result_files = _get_session('result_files', {})
     if not name in result_files:
         return _json_error("Result data not found", 404)
@@ -301,11 +295,8 @@ def getResultData(name):
 
 @route('/getCurrentResult')
 def getCurrentResult():
+    setup_results()
     name = _get_session('current_result', None)
-    if name is None:
-        if len(default_results) > 0:
-            name = next(iter(default_results))
-            _set_session('current_result', name)
     if name is None:
         return _json_error("No result loaded", 412)
     return _json_ok(name)
@@ -493,6 +484,18 @@ def generateConstraints():
 
     return _json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
+def setup_results():
+    results = _get_session('result_files', None)
+    if results is None:
+        # Copy over default results
+        results = {}
+        for name, path in default_results.items():
+            (_, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+            results[name] = res_file
+            shutil.copyfile(path, res_file)
+        _set_session('result_files', results)
+        _set_session('current_result', next(iter(results.keys())))
+
 def initEnv():
     # Check available model checkers, solvers and various other constraints
     # and adjust capabilities based on that
@@ -505,7 +508,6 @@ def initEnv():
     except:
         pass
     try:
-        print(config.PARAMETRIC_STORM_COMMAND)
         run_tool([config.PARAMETRIC_STORM_COMMAND], True)
         pmcCheckers['pstorm'] = "Parametric Storm"
         print("Found pstorm")
