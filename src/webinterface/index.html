@@ -207,10 +207,31 @@ $(document).ready(function() {
         jQuery(this).parent('li').addClass('active').siblings().removeClass('active');
         e.preventDefault();
     });
-  
+
     $("#placeholder").bind("plothover", function (event, pos, item) {
-        var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
-        $("#mousePos").text(str);
+        //Tooltip for samples
+        if (item) {
+            var x = item.datapoint[0].toFixed(2);
+            var y = item.datapoint[1].toFixed(2);
+            var str = "(" + x + ", " + y + ")";
+            $("#mousePos").text(str)
+            var string = "";
+            //Search for correct sample
+            for (var i in samples) {
+                var sample = samples[i];
+                if (sample[0].toFixed(2) == x && sample[1].toFixed(2) == y) {
+                    string = sample[2].toFixed(3);
+                }
+            }
+            if (string != "") {
+                //Display tooltip
+                $("#tooltip").html(string).css({top: item.pageY+5, left: item.pageX+5}).fadeIn(200);
+            }
+        } else {
+            var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
+            $("#mousePos").text(str)
+            $("#tooltip").hide();
+        }
     });
 
     $("#placeholder").bind("plotclick", function (event, pos, item) {
@@ -502,6 +523,7 @@ $(document).ready(function() {
     </div>
     <div id="placeholder"></div>
 </div>
+<div id='tooltip'></div>
 
 <div id="controlpanel">
     <div id="input">

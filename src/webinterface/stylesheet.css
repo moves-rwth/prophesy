@@ -184,3 +184,12 @@ form {
     padding: 2px;
     padding-right: 5px;
 }
+
+#tooltip {
+    position: absolute;
+    display: none;
+    border: 1px solid;
+    padding: 2px;
+    background-color: #F6F6B9;
+    opacity: 0.80;
+}
