@@ -448,9 +448,16 @@ $(document).ready(function() {
     });
     
     // Handler for change of settings
+    // Just change threshold label
+    $("#thresholdSlider").on('input', function() {
+        threshold = $('#thresholdSlider').val();
+        $("#thresvalue").text(Number(threshold).toFixed(3));
+    });
+
+    // Change display of samples as well
     $("#thresholdSlider").on('change', function() {
-        threshold = $('#thresholdSlider').val()/1000;
-        $("#thresvalue").text(threshold);
+        threshold = $('#thresholdSlider').val();
+        $("#thresvalue").text(Number(threshold).toFixed(3));
         setThreshold(threshold);
         plotSamples();
     });
@@ -636,7 +643,7 @@ $(document).ready(function() {
     <div id="settings">
         <h2>Settings</h2>
         <span class="colLeft">Threshold:</span>
-        <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.5</span>
+        <input type="range" min="0" max="1" value="0.5" step=".001" id="thresholdSlider" /><span id="thresvalue">0.500</span>
         <br>
         <span class="colLeft">Sampler:</span>
         <select id="samplers" class="colRight">
