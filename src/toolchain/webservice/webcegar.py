@@ -440,6 +440,8 @@ def checkConstraint():
 
 @route('/generateConstraints', method = 'POST')
 def generateConstraints():
+    iterations = int(bottle.request.forms.get('iterations_constraints'))
+
     generator_type = bottle.request.forms.get('generator')
     if not generator_type in ['planes', 'rectangles', 'quads']:
         return _json_error("Invalid generator set", 400)
@@ -467,11 +469,11 @@ def generateConstraints():
 
     unsat = []
     new_samples = {}
-    for check_result, _ in zip(generator, range(0,25)):
+    for check_result, _ in zip(generator, range(0,iterations)):
         (is_unsat, data) = check_result
         if is_unsat:
             (constraint, poly, safe) = data
-            unsat.append((_jsonPoly(poly), safe))
+            unsat.append((_jsonPoly(poly), bool(safe)))
         else:
             (point, value) = data
             new_samples[point] = value
