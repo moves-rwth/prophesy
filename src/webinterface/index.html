@@ -256,12 +256,16 @@ $(document).ready(function() {
     $("#addSamples").change(function(e) {
         if ($(this).prop('checked')) {
             $("#addConstraint").prop('checked', false);
+            newConstraint = [];
+            plotSamples();
             currentPlotMode = PlotMode.SAMPLE;
         }
     });
     $("#addConstraint").change(function(e) {
         if ($(this).prop('checked')) {
             $("#addSamples").prop('checked', false);
+            newSamples = [];
+            plotSamples();
             currentPlotMode = PlotMode.CONSTRAINT;
         }
     });
@@ -356,6 +360,17 @@ $(document).ready(function() {
         });
     });
     
+    $("#clear-samples-current").click(function(event) {
+        newSamples = [];
+        plotSamples();
+    });
+
+    $("#clear-samples-all").click(function(event) {
+        samples = [];
+        newSamples = [];
+        plotSamples();
+    });
+
     $( "#form-constraints-manual" ).submit(function( event ) {
         event.preventDefault();
         
@@ -420,8 +435,15 @@ $(document).ready(function() {
         });
     });
     
-    $("#clear-constraint").click(function(event) {
+    $("#clear-constraint-current").click(function(event) {
         newConstraint = [];
+        plotSamples();
+    });
+
+    $("#clear-constraint-all").click(function(event) {
+        newConstraint = [];
+        safe_constraints = [];
+        bad_constraints = [];
         plotSamples();
     });
     
@@ -546,6 +568,8 @@ $(document).ready(function() {
                     <br>
                     <div class="button">
                         <button id="submit-samples" type="submit" class="positive">Check New</button>
+                        <button id="clear-samples-current" type="button" class="negative">Clear current</button>
+                        <button id="clear-samples-all" type="button" class="negative">Clear all</button>
                     </div>
                 </form>
             </div>
@@ -588,7 +612,8 @@ $(document).ready(function() {
                     <br>
                     <div class="button">
                         <button id="manualConstraints" type="submit" class="positive">Check New</button>
-                        <button id="clear-constraint" type="button" class="negative">Clear current</button>
+                        <button id="clear-constraint-current" type="button" class="negative">Clear current</button>
+                        <button id="clear-constraint-all" type="button" class="negative">Clear all</button>
                     </div>
                 </form>
             </div>
