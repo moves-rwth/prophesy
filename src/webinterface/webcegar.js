@@ -55,6 +55,7 @@ function setCurrentResult(file) {
 function getThreshold() {
     doJSON("../getThreshold/", function(result) {
         threshold = result.data;
+        threshold = Number(threshold).toFixed(3);
         $('#thresholdSlider').val(threshold);
         $("#thresvalue").text(threshold);
     });

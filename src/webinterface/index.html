@@ -472,13 +472,15 @@ $(document).ready(function() {
     // Just change threshold label
     $("#thresholdSlider").on('input', function() {
         threshold = $('#thresholdSlider').val();
-        $("#thresvalue").text(Number(threshold).toFixed(3));
+        threshold = Number(threshold).toFixed(3)
+        $("#thresvalue").text(threshold);
     });
 
     // Change display of samples as well
     $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val();
-        $("#thresvalue").text(Number(threshold).toFixed(3));
+        threshold = Number(threshold).toFixed(3)
+        $("#thresvalue").text(threshold);
         setThreshold(threshold);
         plotSamples();
     });
@@ -506,6 +508,8 @@ $(document).ready(function() {
     getThreshold();
     isBusy = false;
     getSamples();
+    isBusy = false;
+    plotSamples();
     isBusy = false;
 });
 
