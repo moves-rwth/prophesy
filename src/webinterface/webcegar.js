@@ -114,3 +114,22 @@ function getEnv() {
         $("#satsolvers").val(sat);
     });  
 }
+
+function url(s) {
+    var l = window.location;
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + s;
+}
+
+function getContraint() {
+    var ws = new WebSocket(url("/websocket"));
+    ws.onopen = function() {
+        ws.send("Hello, world");
+    };
+    ws.onmessage = function (evt) {
+        alert(evt.data);
+    };
+    ws.onclose = function() {
+    };
+    ws.onerror = function() {
+    };   
+}
