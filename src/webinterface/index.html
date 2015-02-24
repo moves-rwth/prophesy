@@ -182,8 +182,10 @@ function plotSamples() {
     $.plot("#placeholder", plotpoints, options);
 }
 
-function readSamples(new_samples) {
-    samples = [];
+function readSamples(new_samples, clear = true) {
+    if (clear) {
+        samples = [];
+    }
     for (var key in new_samples) {
         var sample = new_samples[key];
         samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
@@ -197,6 +199,49 @@ function writeSamples(samples) {
         data.push({'coordinate':sample, 'value':-1.0});
     };
     return data;
+}
+
+function url(s) {
+    var l = window.location;
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + s;
+}
+
+function openSocket() {
+    var ws = new WebSocket(url("/websocket"));
+    ws.onopen = function(evt) {};
+    ws.onmessage = function (evt) {
+        data = $.parseJSON(evt.data);
+        if (data === null) {
+            checkError({'reason':'Socket data invalid'});
+        } else {
+            switch(data.type) {
+                case "samples":
+                    readSamples(data.data, false);
+                    break;
+                case "constraints":
+                    for (var key in data.data) {
+                        var constraint = data.data[key];
+                        if (constraint[1]) {
+                            safe_constraints.push(constraint[0]);
+                        } else {
+                            bad_constraints.push(constraint[0]);
+                        }
+                    };
+                    break;
+            }
+        }
+        
+    };
+    ws.onclose = function(evt) {
+     /*
+     evt.code
+     evt.reason
+     evt.wasClean
+     */
+    };
+    ws.onerror = function(evt) {
+        checkError({'reason':'Socket error'});
+    };   
 }
 
 $(document).ready(function() {
@@ -282,6 +327,7 @@ $(document).ready(function() {
             currentPlotMode = PlotMode.SAMPLE;
         }
     });
+
     $("#addConstraint").change(function(e) {
         if ($(this).prop('checked')) {
             $("#addSamples").prop('checked', false);
@@ -511,6 +557,8 @@ $(document).ready(function() {
     isBusy = false;
     plotSamples();
     isBusy = false;
+    
+    openSocket();
 });
 
 

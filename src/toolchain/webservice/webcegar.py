@@ -10,11 +10,13 @@ import tempfile
 import re
 import argparse
 import shutil
+import uuid
 
 from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler
 from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
+from pycket.session import SessionMixin
 
 import config
 from util import ensure_dir_exists, run_tool
@@ -76,15 +78,13 @@ def getPMC(satname):
     else:
         raise RuntimeError("Unknown PMC requested")
 
-@route('/ui/<filepath:path>')
+#@route('/ui/<filepath:path>')
 def server_static(filepath):
     return static_file(filepath, root = config.WEB_INTERFACE_DIR)
 
-@route('/')
+#@route('/')
 def index():
     return redirect("ui/index.html", code = 301)
-
-from pycket.session import SessionMixin
 
 class CegarHandler(RequestHandler, SessionMixin):
     def write_error(self, status_code, **kwargs):
@@ -100,16 +100,16 @@ class CegarHandler(RequestHandler, SessionMixin):
         self.set_status(status)
         self.write({'status':'failed', 'reason':message})
 
-    def _json_ok(data = []):
+    def _json_ok(self, data = []):
         """Returns JSON OK with formatted data"""
         self.write({'status':'ok', 'data':data})
 
-    def _get_session(item, default = None):
+    def _get_session(self, item, default = None):
         if not item in self.session:
             self.session.set(item, default)
         return self.session.get(item, default)
 
-    def _set_session(item, data):
+    def _set_session(self, item, data):
         self.session.set(item, data)
         return data
 
@@ -147,7 +147,7 @@ class CegarHandler(RequestHandler, SessionMixin):
         self.id = uuid.uuid4()
         self.session.set('socket_id', self.id)
 
-@route('/invalidateSession')
+#@route('/invalidateSession')
 class InvalidateSession(CegarHandler):
     def get(self):
         # Delete temporary files
@@ -160,7 +160,7 @@ class InvalidateSession(CegarHandler):
         request.session.invalidate()
         return self._json_ok()
 
-@route('/threshold')
+#@route('/threshold')
 class Threshold(CegarHandler):
     def get(self):
         return self._json_ok(self._get_session('threshold', 0.5))
@@ -177,7 +177,7 @@ class Threshold(CegarHandler):
         # Clear all constraints, they are no longer valid
         self._set_session('constraints', [])
 
-@route('/currentResult')
+#@route('/currentResult')
 class CurrentResult(CegarHandler):
     def get(self):
         self.setup_results()
@@ -195,7 +195,7 @@ class CurrentResult(CegarHandler):
 
         return self._json_error("No result found", 404)
 
-@route('/environment')
+#@route('/environment')
 class Environment(CegarHandler):
     def get(self):
         return self._json_ok({
@@ -221,12 +221,12 @@ class Environment(CegarHandler):
 
         return get()
 
-@route('/environments')
+#@route('/environments')
 class Environments(CegarHandler):
     def get(self):
         return self._json_ok({"pmc":pmcCheckers, "samplers":samplers, "sat":satSolvers})
 
-@route('/results')
+#@route('/results')
 class Results(CegarHandler):
     def get(self, name=None):
         self.setup_results()
@@ -251,7 +251,7 @@ class Results(CegarHandler):
             str_result = re.sub(r'\>\=', r'&#8805;', str_result)
             return self._json_ok(str_result)
 
-@route('/uploadPrism', method = 'POST')
+#@route('/uploadPrism', method = 'POST')
 class UploadPrism(CegarHandler):
     def post(self):
         tool = self.get_argument('mctool')
@@ -298,7 +298,7 @@ class UploadPrism(CegarHandler):
 
         return self._json_ok(upload_prism.filename)
 
-@route('/uploadResult', method = 'POST')
+#@route('/uploadResult', method = 'POST')
 class UploadResult(CegarHandler):
     def post(self):
         tool = self.get_argument('result-type')
@@ -340,10 +340,10 @@ class UploadResult(CegarHandler):
         return self._json_ok({"file" : upload.filename})
 
 
-@route('/samples', method = "POST")
+#@route('/samples', method = "POST")
 class Samples(CegarHandler):
     def get(self):
-        flattenedsamples = _jsonSamples(_get_session('samples', {}))
+        flattenedsamples = _jsonSamples(self._get_session('samples', {}))
         return self._json_ok(flattenedsamples)
 
     def post(self):
@@ -385,7 +385,7 @@ class Samples(CegarHandler):
         self._set_session("samples", {})
         return self._json_ok()
 
-@route('/generateSamples', method = 'POST')
+#@route('/generateSamples', method = 'POST')
 class GenerateSamples(CegarHandler):
     def get(self):
         nrsamples = int(self.get_argument('sampling'))
@@ -489,7 +489,7 @@ class ConstraintHandler(CegarHandler):
         
         return (new_samples, unsat)
 
-@route('/constraints')
+#@route('/constraints')
 class Constraints(ConstraintHandler):
     def get(self):
         constraints = self._get_session('constraints', [])
@@ -527,7 +527,7 @@ class Constraints(ConstraintHandler):
         self._set_session('constraints', {})
         return self._json_ok()
 
-@route('/generateConstraints')
+#@route('/generateConstraints')
 class GenerateConstraints(ConstraintHandler):
     def get(self):
         iterations = int(self.get_argument('iterations'))
@@ -558,14 +558,15 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
 
     def open(self):
         self.id = uuid.uuid4()
-        self.session.set('socket_id', self.id)
         CegarWebSocket.socket_list[self.id] = self
-
-    def on_message(self, message):
-        print("Got unexpected websocket message: {}".format(message))
+        #self.session.set('socket_id', self.id)
 
     def on_close(self):
         del CegarWebSocket.socket_list[self.id]
+
+    def on_message(self, message):
+        # TODO: read cancel message
+        print("Got unexpected websocket message: {}".format(message))
 
     def send_samples(self, samples):
         """samples is dictionary point:value"""
@@ -646,6 +647,9 @@ def initEnv():
 
 def make_app():
     settings = {
+        'static_path': config.WEB_INTERFACE_DIR,
+        'static_url_prefix' : '/ui/',
+        'cookie_secret' : "sldfjwlekfjLKJLEAQEWjrdjvsl3807(*&SAd",
         'pycket': {
             'engine': 'redis',
             'storage': {
@@ -681,12 +685,16 @@ def make_app():
         (r'/results/(.*)', Results),
         (r'/results', Results),
         (r'/uploadPrism', UploadPrism),
-        (r'/uploadResult', UploadResult), # TODO: ought to be part of result
+        #TODO: ought to be part of result
+        (r'/uploadResult', UploadResult),
         (r'/samples', Samples),
         (r'/generateSamples', GenerateSamples),
         (r'/constraints', Constraints),
         (r'/generateConstraints', GenerateConstraints),
+        (r'/websocket', CegarWebSocket),
     ], **settings)
+
+    return application
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Start a webservice for ' + config.TOOLNAME)
@@ -709,13 +717,9 @@ if __name__ == "__main__":
     initEnv()
 
     app = make_app()
-    app.listen(4242)
-    IOLoop.current().start()
 
-    start_server = websockets.serve(hello, 'localhost', 42424)
-    asyncio.get_event_loop().run_until_complete(start_server)
-
-    #app = StripPathMiddleware(beaker.middleware.SessionMiddleware(bottle.app(), session_opts))
     if(not cmdargs.server_quiet):
         print("Starting webservice...")
-    #bottle.run(app = app, host = cmdargs.server_host, port = cmdargs.server_port, debug = cmdargs.server_debug, quiet = cmdargs.server_quiet)
+
+    app.listen(cmdargs.server_port)
+    IOLoop.current().start()
