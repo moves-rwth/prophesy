@@ -115,6 +115,7 @@ class CegarHandler(RequestHandler, SessionMixin):
 
 
     def _getResultData(self, name):
+        self.setup_results()
         result_files = self._get_session('result_files', {})
         if not name in result_files:
             return None
@@ -165,12 +166,16 @@ class Threshold(CegarHandler):
     def get(self):
         return self._json_ok(self._get_session('threshold', 0.5))
 
-    def post(self):
-        return self.put()
-
     def put(self):
-        # threshold = self.get_argument('threshold', None)
         threshold = json_decode(self.request.body)
+        threshold = float(threshold)
+        self._set_session('threshold', threshold)
+
+        # Clear all constraints, they are no longer valid
+        self._set_session('constraints', [])
+
+    def post(self):
+        threshold = self.get_argument('threshold', None)
         threshold = float(threshold)
         self._set_session('threshold', threshold)
 
@@ -230,9 +235,9 @@ class Environments(CegarHandler):
 class Results(CegarHandler):
     def get(self, name=None):
         self.setup_results()
-        results = self._get_session('result_files', {})
+        result_files = self._get_session('result_files', {})
         if name is None:
-            return self._json_ok({k:k for k in results.keys()})
+            return self._json_ok({k:k for k in result_files.keys()})
         else:
             if not name in result_files:
                 return self._json_error("Result data not found", 404)
@@ -353,14 +358,14 @@ class Samples(CegarHandler):
         result = self._getResultData(self._get_session('current_result', None))
         if result is None:
             return self._json_error("Unable to load result data", 500)
-        samples = request.session.get('samples', {})
+        samples = self._get_session('samples', {})
         for x, y in coordinates:
             point = (float(x), float(y))
             value = result.ratfunc.eval({x : v for x, v in zip(result.parameters, point)})
             samples[point] = value
         self._set_session('samples', samples)
 
-        return self._json_ok(self._jsonSamples(samples))
+        return self._json_ok(_jsonSamples(samples))
 
     def put(self):
         coordinate = json_decode(self.request.body)
@@ -387,7 +392,7 @@ class Samples(CegarHandler):
 
 #@route('/generateSamples', method = 'POST')
 class GenerateSamples(CegarHandler):
-    def get(self):
+    def post(self):
         nrsamples = int(self.get_argument('sampling'))
         iterations = int(self.get_argument('iterations'))
 
@@ -408,7 +413,7 @@ class GenerateSamples(CegarHandler):
 
         samples = {}
         intervals = [(0.01, 0.99)] * len(result.parameters)
-        sampling_interface = getSampler(_get_session('sampler'), result)
+        sampling_interface = getSampler(self._get_session('sampler'), result)
         uniform_generator = UniformSampleGenerator(sampling_interface, intervals, nrsamples)
         for new_samples in uniform_generator:
             samples.update(new_samples)
@@ -463,7 +468,7 @@ class ConstraintHandler(CegarHandler):
 
         socket = self._get_socket()
 
-        smtinterface.run()
+        #smt2interface.run()
 
         unsat = []
         new_samples = {}
@@ -477,7 +482,6 @@ class ConstraintHandler(CegarHandler):
             else:
                 (point, value) = data
                 new_samples[point] = value
-                samples[point] = value
                 if socket is not None:
                     socket.send_samples({point:value})
 
@@ -485,7 +489,7 @@ class ConstraintHandler(CegarHandler):
             if iterations == 0:
                 break
 
-        smtinterface.stop()
+        smt2interface.stop()
         
         return (new_samples, unsat)
 
@@ -529,7 +533,7 @@ class Constraints(ConstraintHandler):
 
 #@route('/generateConstraints')
 class GenerateConstraints(ConstraintHandler):
-    def get(self):
+    def post(self):
         iterations = int(self.get_argument('iterations'))
         generator_type = self.get_argument('generator')
         if not generator_type in ['planes', 'rectangles', 'quads']:
@@ -551,7 +555,7 @@ class GenerateConstraints(ConstraintHandler):
         samples.update(new_samples)
         constraints.append(unsat)
 
-        return self.self._json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
+        return self._json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
 class CegarWebSocket(WebSocketHandler, SessionMixin):
     socket_list = {}
