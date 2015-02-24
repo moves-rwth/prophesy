@@ -20,7 +20,7 @@ function fillSelect(select, data, selected) {
 function listAvailableResults() {
     doJSON("../results", function(result) {
         var availableFiles = $("#result-files");
-        fillSelect(availableFiles, result.data.results, currentResult);
+        fillSelect(availableFiles, result.data, currentResult);
         
         getCurrentResult();
     });
@@ -90,6 +90,13 @@ function setThreshold(threshold) {
 function getSamples() {
     doJSON("../samples", function(result) {
         readSamples(result.data);
+        plotSamples();
+    });
+}
+
+function getConstraints() {
+    doJSON("../constraints", function(result) {
+        readConstraints(result.data);
         plotSamples();
     });
 }

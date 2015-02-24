@@ -500,10 +500,12 @@ class Constraints(ConstraintHandler):
         return self._json_ok(constraints)
 
     def post(self):
-        request = json_decode(self.request.body)
-        safe = bool(request['safe'])
+        #request = json_decode(self.request.body)
+        #safe = bool(request['safe'])
+        #coordinates = request['coordinates']
 
-        coordinates = request['coordinates']
+        safe = self.get_argument('constr-mode') == "safe"
+        coordinates = json_decode(self.get_argument('coordinates'))
         if coordinates is None:
             return self._json_error("Unable to read coordinates", 400)
         coordinates = [(float(x), float(y)) for x, y in coordinates]
@@ -512,7 +514,7 @@ class Constraints(ConstraintHandler):
             coordinates = coordinates[:-1]
 
         smt2interface, generator = self.make_gen("poly")
-        generator.add_polygon(coordinates, safe)
+        generator.add_polygon(Polygon(coordinates), safe)
         new_samples, unsat = self.analyze(smt2interface, generator)
 
         if len(new_samples) == 0 and len(unsat) == 0:
@@ -563,7 +565,7 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
     def open(self):
         self.id = uuid.uuid4()
         CegarWebSocket.socket_list[self.id] = self
-        #self.session.set('socket_id', self.id)
+        self.session.set('socket_id', self.id)
 
     def on_close(self):
         del CegarWebSocket.socket_list[self.id]
@@ -578,9 +580,8 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
         pass
 
     def send_constraints(self, constraints):
-        """constraints is list (poly, safe)"""
-        data = [(_jsonPoly(poly), safe) for poly, safe in constraints]
-        self.write_message({"type":"constraints", "data":data})
+        """constraints is list (poly_list, safe)"""
+        self.write_message({"type":"constraints", "data":constraints})
 
 def initEnv():
     # Check available model checkers, solvers and various other constraints

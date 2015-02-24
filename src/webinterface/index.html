@@ -192,6 +192,21 @@ function readSamples(new_samples, clear = true) {
     };
 }
 
+function readConstraints(new_constraints, clear = true) {
+    if (clear) {
+        safe_constraints = [];
+        bad_constraints = [];
+    }
+    for (var key in new_constraints) {
+        var constraint = new_constraints[key];
+        if (constraint[1]) {
+            safe_constraints.push(constraint[0]);
+        } else {
+            bad_constraints.push(constraint[0]);
+        }
+    };
+}
+
 function writeSamples(samples) {
     data = [];
     for (var key in samples) {
@@ -217,6 +232,7 @@ function openSocket() {
             switch(data.type) {
                 case "samples":
                     readSamples(data.data, false);
+                    plotSamples();
                     break;
                 case "constraints":
                     for (var key in data.data) {
@@ -227,6 +243,7 @@ function openSocket() {
                             bad_constraints.push(constraint[0]);
                         }
                     };
+                    plotSamples();
                     break;
             }
         }
@@ -407,6 +424,10 @@ $(document).ready(function() {
     
     $( "#form-samples-auto" ).submit(function( event ) {
         event.preventDefault();
+        
+        //Clear samples
+        samples = [];
+        plotSamples();
 
         var formData = new FormData($(this)[0]);
         doAjax({
@@ -453,19 +474,8 @@ $(document).ready(function() {
             contentType: false,
             processData: false
         },function(result) {
-            for (var key in result.data.sat) {
-                var sample = result.data.sat[key];
-                samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
-            };
-            var status = result.data.result
-            for (var key in result.data.unsat) {
-                var constraint = result.data.unsat[key];
-                if (constraint[1]) {
-                    safe_constraints.push(constraint[0]);
-                } else {
-                    bad_constraints.push(constraint[0]);
-                }
-            };
+            readSamples(result.data.sat);
+            readConstraints(result.data.unsat);
             newConstraint = [];
             plotSamples();
         });
@@ -485,19 +495,8 @@ $(document).ready(function() {
             contentType: false,
             processData: false
         }, function(result) {
-            for (var key in result.data.sat) {
-                var sample = result.data.sat[key];
-                samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
-            };
-            var status = result.data.result
-            for (var key in result.data.unsat) {
-                var constraint = result.data.unsat[key];
-                if (constraint[1]) {
-                    safe_constraints.push(constraint[0]);
-                } else {
-                    bad_constraints.push(constraint[0]);
-                }
-            }
+            readSamples(result.data.sat);
+            readConstraints(result.data.unsat);
             plotSamples();
         });
     });
@@ -554,6 +553,8 @@ $(document).ready(function() {
     getThreshold();
     isBusy = false;
     getSamples();
+    isBusy = false;
+    getConstraints();
     isBusy = false;
     plotSamples();
     isBusy = false;
