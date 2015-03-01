@@ -4,7 +4,7 @@ from collections import OrderedDict
 from sympy.polys import Poly
 from sympy.core.sympify import sympify
 
-from libpycarl import parsePolynomial, parseRationalFunction, RationalFunction
+from libpycarl import Parser
 import libpycarl
 
 from pprint import pprint
@@ -18,17 +18,11 @@ class CarlSampling(Sampler):
         self.ratfunc = ratfunc
         self.rational = rational
 
-        self.poly = parseRationalFunction(str(self.ratfunc))
-
-        vars = self.poly.gatherVariables()
-        self.poly_vars = []
-        for p in self.parameters:
-            for v in vars:
-                if str(v) == str(p):
-                    self.poly_vars.append(v)
-                    break
-            else:
-                assert False, "Cannot match variable to parameter"
+        parser = Parser()
+        self.poly_vars = [libpycarl.VariablePool.getFreshVariable(str(p), libpycarl.VariableType.REAL) for p in self.parameters]
+        for v in self.poly_vars:
+            parser.addVariable(v)
+        self.poly = parser.rationalFunction(str(self.ratfunc))
 
     def perform_sampling(self, samplepoints):
         samples = {}
