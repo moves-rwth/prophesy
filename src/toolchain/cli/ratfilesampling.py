@@ -13,6 +13,7 @@ from config import PLOT_FILES_DIR
 from sampling.sampling import write_samples_file
 from sampling.sampler_ratfunc import RatFuncSampling
 from sampling.sampler_prism import McSampling
+from sampling.sampler_carl import CarlSampling
 from sampling.sampling_linear import LinearRefinement
 from sampling.sampling_delaunay import DelaunayRefinement
 from sampling.sampling_uniform import UniformSampleGenerator
@@ -34,7 +35,8 @@ if __name__ == "__main__":
     # Read previously generated result
     result = read_pstorm_result(cmdargs.rat_file)
     print("Parameters:", result.parameters)
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
+    #sampling_interface = RatFuncSampling(result.ratfunc, result.parameters, False)
+    sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
     # Generate sample points (uniform grid)
     samples = {}

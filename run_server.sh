@@ -1,2 +1,3 @@
 #!/bin/bash
-./src/toolchain/webservice/webcegar.py --server-quiet true 
+export LD_LIBRARY_PATH=./src/lib/
+./src/toolchain/webservice/webcegar.py --server-quiet true
