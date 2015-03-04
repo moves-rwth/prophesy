@@ -84,6 +84,10 @@ function setThreshold(threshold) {
         cache: false,
         contentType: false,
         processData: false
+    }, function(result) {
+        safe_constraints = [];
+        bad_constraints = [];
+        plotSamples();
     });
 }
 

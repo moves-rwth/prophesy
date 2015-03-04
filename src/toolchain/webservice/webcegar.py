@@ -545,7 +545,7 @@ class Constraints(ConstraintHandler):
         constraints = self._get_session('constraints', [])
 
         samples.update(new_samples)
-        constraints.append(unsat)
+        constraints += unsat
 
         self._set_session('samples', samples)
         self._set_session('constraints', constraints)
@@ -576,10 +576,11 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("SMT solver did not return an answer")
 
         samples = self._get_session('samples', {})
-        constraints = self._get_session('constraints', [])
+        # Clear all constraints, resumption not supported (yet)
+        constraints = [] #self._get_session('constraints', [])
 
         samples.update(new_samples)
-        constraints.append(unsat)
+        constraints += unsat
 
         self._set_session('samples', samples)
         self._set_session('constraints', constraints)

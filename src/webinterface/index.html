@@ -473,6 +473,11 @@ $(document).ready(function() {
     $( "#form-constraints-auto" ).submit(function( event ) {
         event.preventDefault();
         
+        // Clear existing constraints
+        safe_constraints = [];
+        bad_constraints = [];
+        plotSamples();
+        
         var formData = new FormData($(this)[0]);
         doAjax({
             url: '../generateConstraints',
