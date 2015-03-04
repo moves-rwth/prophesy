@@ -29,6 +29,7 @@ from smt.smt import setup_smt
 from smt.isat import IsatSolver
 from smt.smtlib import SmtlibSolver
 from sampling.sampler_ratfunc import RatFuncSampling
+from sampling.sampler_carl import CarlSampling
 from sampling.sampler_prism import McSampling
 from sampling.sampling_uniform import UniformSampleGenerator
 from sampling.sampling_linear import LinearRefinement
@@ -64,7 +65,11 @@ def getSat(satname):
 def getSampler(satname, result):
     if satname == 'ratfunc':
         # Do not use rationals for now
+        return RatFuncSampling(result.ratfunc, result.parameters, True)
+    elif satname == 'ratfunc_float':
         return RatFuncSampling(result.ratfunc, result.parameters, False)
+    elif satname == 'carl':
+        return CarlSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
         return McSampling(result.prism_file, result.pctl_file)
     else:
@@ -100,9 +105,12 @@ class CegarHandler(RequestHandler, SessionMixin):
         self.set_status(status)
         self.write({'status':'failed', 'reason':message})
 
-    def _json_ok(self, data = []):
+    def _json_ok(self, data = None):
         """Returns JSON OK with formatted data"""
-        self.write({'status':'ok', 'data':data})
+        if data is not None:
+            self.write({'status':'ok', 'data':data})
+        else:
+            self.write({'status':'ok'})
 
     def _get_session(self, item, default = None):
         if not item in self.session:
@@ -112,7 +120,6 @@ class CegarHandler(RequestHandler, SessionMixin):
     def _set_session(self, item, data):
         self.session.set(item, data)
         return data
-
 
     def _getResultData(self, name):
         self.setup_results()
@@ -174,6 +181,8 @@ class Threshold(CegarHandler):
         # Clear all constraints, they are no longer valid
         self._set_session('constraints', [])
 
+        return self._json_ok()
+
     def post(self):
         threshold = self.get_argument('threshold', None)
         threshold = float(threshold)
@@ -181,6 +190,8 @@ class Threshold(CegarHandler):
 
         # Clear all constraints, they are no longer valid
         self._set_session('constraints', [])
+
+        return self._json_ok()
 
 #@route('/currentResult')
 class CurrentResult(CegarHandler):
@@ -204,9 +215,9 @@ class CurrentResult(CegarHandler):
 class Environment(CegarHandler):
     def get(self):
         return self._json_ok({
-                         "pmc" :     self._get_session("pmc", next(iter(pmcCheckers.keys()))),
-                         "sampler" : self._get_session("sampler", 'ratfunc'),
-                         "sat" :     self._get_session("sat", next(iter(satSolvers.keys())))})
+                         "pmc"     : self._get_session("pmc", next(iter(pmcCheckers.keys()))),
+                         "sampler" : self._get_session("sampler", 'ratfunc_float'),
+                         "sat"     : self._get_session("sat", next(iter(satSolvers.keys())))})
 
     def post(self):
         pmc = self.get_argument('pmc')
@@ -224,7 +235,7 @@ class Environment(CegarHandler):
         self._set_session("sampler", sampler)
         self._set_session("sat", sat)
 
-        return get()
+        return self._json_ok()
 
 #@route('/environments')
 class Environments(CegarHandler):
@@ -238,23 +249,24 @@ class Results(CegarHandler):
         result_files = self._get_session('result_files', {})
         if name is None:
             return self._json_ok({k:k for k in result_files.keys()})
-        else:
-            if not name in result_files:
-                return self._json_error("Result data not found", 404)
-            try:
-                result = read_pstorm_result(result_files[name])
-            except:
-                return self._json_error("Error reading result data")
-            str_result = str(result)
-            # Replace ** with superscript
-            str_result = re.sub(r'\*\*(\d+)', r'<sub>\1</sub>', str_result)
-            # Replace * with dot symbol
-            str_result = re.sub(r'\*', r'&#183;', str_result)
-            # Replace <= with symbol
-            str_result = re.sub(r'\<\=', r'&#8804;', str_result)
-            # Replace >= with symbol
-            str_result = re.sub(r'\>\=', r'&#8805;', str_result)
-            return self._json_ok(str_result)
+
+        if not name in result_files:
+            return self._json_error("Result data not found", 404)
+
+        try:
+            result = read_pstorm_result(result_files[name])
+        except:
+            return self._json_error("Error reading result data")
+        str_result = str(result)
+        # Replace ** with superscript
+        str_result = re.sub(r'\*\*(\d+)', r'<sub>\1</sub>', str_result)
+        # Replace * with dot symbol
+        str_result = re.sub(r'\*', r'&#183;', str_result)
+        # Replace <= with symbol
+        str_result = re.sub(r'\<\=', r'&#8804;', str_result)
+        # Replace >= with symbol
+        str_result = re.sub(r'\>\=', r'&#8805;', str_result)
+        return self._json_ok(str_result)
 
 #@route('/uploadPrism', method = 'POST')
 class UploadPrism(CegarHandler):
@@ -359,13 +371,18 @@ class Samples(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
         samples = self._get_session('samples', {})
-        for x, y in coordinates:
-            point = (float(x), float(y))
-            value = result.ratfunc.eval({x : v for x, v in zip(result.parameters, point)})
-            samples[point] = value
+        socket = self._get_socket()
+        sampling_interface = getSampler(self._get_session('sampler'), result)
+
+        coordinates = [(float(x), float(y)) for x, y in coordinates]
+        new_samples = sampling_interface.perform_sampling(coordinates)
+        if socket is not None:
+            socket.send_samples(new_samples)
+
+        samples.update(new_samples)
         self._set_session('samples', samples)
 
-        return self._json_ok(_jsonSamples(samples))
+        return self._json_ok(_jsonSamples(new_samples))
 
     def put(self):
         coordinate = json_decode(self.request.body)
@@ -383,6 +400,7 @@ class Samples(CegarHandler):
         new_samples = sampler.perform_sampling([(x, y)])
         samples = self._get_session('samples', {})
         samples.update(new_samples)
+        return _json_ok()
         # return _json_ok(_jsonSamples(samples))
         # TODO: redirect?
 
@@ -393,17 +411,21 @@ class Samples(CegarHandler):
 #@route('/generateSamples', method = 'POST')
 class GenerateSamples(CegarHandler):
     def post(self):
-        nrsamples = int(self.get_argument('sampling'))
         iterations = int(self.get_argument('iterations'))
 
         if iterations < 0:
             return self._json_error("Number of iterations must be >= 0", 400)
-        if nrsamples < 2:
-            return self._json_error("Number of samples must be >= 2", 400)
         threshold = self._get_session('threshold', 0.5)
         generator_type = self.get_argument('generator')
-        if not generator_type in ['linear', 'delaunay']:
+        if not generator_type in ['uniform', 'linear', 'delaunay']:
             return self._json_error("Invalid generator set " + generator_type, 400)
+        
+        if generator_type == 'uniform' and iterations < 2:
+            return self._json_error("Number of iterations must be >= 2 for uniform generation", 400)
+        
+        if iterations == 0:
+            # Nothing to do
+            return self._json_ok(_jsonSamples({}))
 
         result = self._getResultData(self._get_session('current_result', None))
         if result is None:
@@ -411,29 +433,28 @@ class GenerateSamples(CegarHandler):
 
         socket = self._get_socket()
 
-        samples = {}
-        intervals = [(0.01, 0.99)] * len(result.parameters)
+        samples = self._get_session('samples', {})
+        new_samples = {}
         sampling_interface = getSampler(self._get_session('sampler'), result)
-        uniform_generator = UniformSampleGenerator(sampling_interface, intervals, nrsamples)
-        for new_samples in uniform_generator:
-            samples.update(new_samples)
-            if socket is not None:
-                socket.send_samples(new_samples)
-
-        if generator_type == "linear":
-            refinement_generator = LinearRefinement(sampling_interface, samples, threshold)
+        if generator_type == 'uniform':
+            intervals = [(0.01, 0.99)] * len(result.parameters)
+            samples_generator = UniformSampleGenerator(sampling_interface, intervals, iterations)
+        elif generator_type == "linear":
+            samples_generator = LinearRefinement(sampling_interface, samples, threshold)
         elif generator_type == "delaunay":
-            refinement_generator = DelaunayRefinement(sampling_interface, samples, threshold)
+            samples_generator = DelaunayRefinement(sampling_interface, samples, threshold)
         else:
             assert False, "Bad generator"
-        # Using range to limit the number of iterations
-        for (new_samples, _) in zip(refinement_generator, range(0, iterations)):
-            samples.update(new_samples)
-            if socket is not None:
-                socket.send_samples(new_samples)
 
+        # Using range to limit the number of iterations
+        for (generated_samples, _) in zip(samples_generator, range(0, iterations)):
+            new_samples.update(generated_samples)
+            if socket is not None:
+                socket.send_samples(generated_samples)
+
+        samples.update(new_samples)
         self._set_session('samples', samples)
-        return self._json_ok(_jsonSamples(samples))
+        return self._json_ok(_jsonSamples(new_samples))
 
 class ConstraintHandler(CegarHandler):
     def make_gen(self, type):
@@ -526,11 +547,14 @@ class Constraints(ConstraintHandler):
         samples.update(new_samples)
         constraints.append(unsat)
 
+        self._set_session('samples', samples)
+        self._set_session('constraints', constraints)
+
         return self._json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
         # TODO: redirect?
 
     def delete(self):
-        self._set_session('constraints', {})
+        self._set_session('constraints', [])
         return self._json_ok()
 
 #@route('/generateConstraints')
@@ -556,6 +580,9 @@ class GenerateConstraints(ConstraintHandler):
 
         samples.update(new_samples)
         constraints.append(unsat)
+
+        self._set_session('samples', samples)
+        self._set_session('constraints', constraints)
 
         return self._json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
 
@@ -602,6 +629,8 @@ def initEnv():
         pass
 
     samplers['ratfunc'] = "Rational function"
+    samplers['ratfunc_float'] = "Rational function (float)"
+    samplers['carl'] = "Carl library"
     try:
         # TODO: Prism sampling not yet supported
         # run_tool([config.PRISM_COMMAND], True)

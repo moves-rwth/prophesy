@@ -13,6 +13,7 @@
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
+    <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript">
 var threshold = "0.5";
@@ -26,6 +27,8 @@ var newConstraintComplete = true;
 
 var PlotMode = Object.freeze({SAMPLE: 1, CONSTRAINT: 2});
 var currentPlotMode = PlotMode.SAMPLE;
+
+var websocketActive = false;
 
 var options = {
         axisLabels: {
@@ -207,15 +210,6 @@ function readConstraints(new_constraints, clear = true) {
     };
 }
 
-function writeSamples(samples) {
-    data = [];
-    for (var key in samples) {
-        var sample = samples[key];
-        data.push({'coordinate':sample, 'value':-1.0});
-    };
-    return data;
-}
-
 function url(s) {
     var l = window.location;
     return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + s;
@@ -223,7 +217,9 @@ function url(s) {
 
 function openSocket() {
     var ws = new WebSocket(url("/websocket"));
-    ws.onopen = function(evt) {};
+    ws.onopen = function(evt) {
+        websocketActive = true;
+    };
     ws.onmessage = function (evt) {
         data = $.parseJSON(evt.data);
         if (data === null) {
@@ -235,14 +231,7 @@ function openSocket() {
                     plotSamples();
                     break;
                 case "constraints":
-                    for (var key in data.data) {
-                        var constraint = data.data[key];
-                        if (constraint[1]) {
-                            safe_constraints.push(constraint[0]);
-                        } else {
-                            bad_constraints.push(constraint[0]);
-                        }
-                    };
+                    readConstraints(data.data, false);
                     plotSamples();
                     break;
             }
@@ -250,15 +239,19 @@ function openSocket() {
         
     };
     ws.onclose = function(evt) {
-     /*
-     evt.code
-     evt.reason
-     evt.wasClean
-     */
+        /*
+        evt.code
+        evt.reason
+        evt.wasClean
+        */
+        websocketActive = false;
     };
     ws.onerror = function(evt) {
+        websocketActive = false;
         checkError({'reason':'Socket error'});
-    };   
+    };
+
+    return ws;
 }
 
 $(document).ready(function() {
@@ -414,20 +407,16 @@ $(document).ready(function() {
             contentType: 'application/json',
             processData: false
         },function(result) {
-                //Clear samples
-                samples = [];
+                if (!websocketActive) {
+                    readSamples(result.data, false);
+                }
                 newSamples = [];
-                readSamples(result.data);
                 plotSamples();
         });
     });
     
     $( "#form-samples-auto" ).submit(function( event ) {
         event.preventDefault();
-        
-        //Clear samples
-        samples = [];
-        plotSamples();
 
         var formData = new FormData($(this)[0]);
         doAjax({
@@ -440,11 +429,10 @@ $(document).ready(function() {
             contentType: false,
             processData: false
         }, function(result) {
-            //Clear samples
-            samples = [];
-            newSamples = [];
-            readSamples(result.data);
-            plotSamples();
+            if (!websocketActive) {
+                readSamples(result.data, false);
+                plotSamples();
+            }
         });
     });
     
@@ -454,9 +442,8 @@ $(document).ready(function() {
     });
 
     $("#clear-samples-all").click(function(event) {
-        samples = [];
         newSamples = [];
-        plotSamples();
+        clearSamples();
     });
 
     $( "#form-constraints-manual" ).submit(function( event ) {
@@ -474,8 +461,10 @@ $(document).ready(function() {
             contentType: false,
             processData: false
         },function(result) {
-            readSamples(result.data.sat);
-            readConstraints(result.data.unsat);
+            if (!websocketActive) {
+                readSamples(result.data.sat, false);
+                readConstraints(result.data.unsat, false);
+            }
             newConstraint = [];
             plotSamples();
         });
@@ -495,9 +484,11 @@ $(document).ready(function() {
             contentType: false,
             processData: false
         }, function(result) {
-            readSamples(result.data.sat);
-            readConstraints(result.data.unsat);
-            plotSamples();
+            if (!websocketActive) {
+                readSamples(result.data.sat, false);
+                readConstraints(result.data.unsat, false);
+                plotSamples();
+            }
         });
     });
     
@@ -508,9 +499,8 @@ $(document).ready(function() {
 
     $("#clear-constraint-all").click(function(event) {
         newConstraint = [];
-        safe_constraints = [];
-        bad_constraints = [];
         plotSamples();
+        clearConstraints();
     });
     
     // Handler for change of settings
@@ -650,21 +640,19 @@ $(document).ready(function() {
                     <br>
                     <div class="button">
                         <button id="submit-samples" type="submit" class="positive">Check New</button>
-                        <button id="clear-samples-current" type="button" class="negative">Clear current</button>
+                        <button id="clear-samples-current" type="button">Clear current</button>
                         <button id="clear-samples-all" type="button" class="negative">Clear all</button>
                     </div>
                 </form>
             </div>
             <div id="tab-auto" class="tab cp">
                 <form id="form-samples-auto">
-                    <span class="colLeft">Sampling number:</span>
-                    <input name="sampling" class="colRight" type="number" min="2" max="50" value="2" size="1"/>
-                    <br/>
                     <span class="colLeft">Number of iterations:</span>
                     <input name="iterations" class="colRight" type="number" min="0" max="10" value="2"/>
                     <br>
-                    <span class="colLeft">Iteration type:</span>
+                    <span class="colLeft">Generator type:</span>
                     <select name="generator" class="colRight">
+                        <option value="uniform" selected="selected">Uniform grid</option>
                         <option value="linear" selected="selected">Linear interpolation</option>
                         <option value="delaunay">Delaunay triangulation</option>
                     </select>
@@ -694,7 +682,7 @@ $(document).ready(function() {
                     <br>
                     <div class="button">
                         <button id="manualConstraints" type="submit" class="positive">Check New</button>
-                        <button id="clear-constraint-current" type="button" class="negative">Clear current</button>
+                        <button id="clear-constraint-current" type="button">Clear current</button>
                         <button id="clear-constraint-all" type="button" class="negative">Clear all</button>
                     </div>
                 </form>

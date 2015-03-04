@@ -10,13 +10,12 @@ import libpycarl
 from pprint import pprint
 
 class CarlSampling(Sampler):
-    """Sample based on sympy rational function"""
-    def __init__(self, ratfunc, parameters, rational=False):
+    """Sample based on CARL library"""
+    def __init__(self, ratfunc, parameters):
         super().__init__()
 
         self.parameters = parameters
         self.ratfunc = ratfunc
-        self.rational = rational
 
         parser = Parser()
         self.poly_vars = [libpycarl.VariablePool.getFreshVariable(str(p), libpycarl.VariableType.REAL) for p in self.parameters]

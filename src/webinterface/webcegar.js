@@ -94,9 +94,30 @@ function getSamples() {
     });
 }
 
+function clearSamples() {
+    doAjax({
+        url: '../samples',
+        type: 'DELETE',
+    }, function(result) {
+        samples = [];
+        plotSamples();
+    });
+}
+
 function getConstraints() {
     doJSON("../constraints", function(result) {
         readConstraints(result.data);
+        plotSamples();
+    });
+}
+
+function clearConstraints() {
+    doAjax({
+        url: '../constraints',
+        type: 'DELETE',
+    }, function(result) {
+        safe_constraints = [];
+        bad_constraints = [];
         plotSamples();
     });
 }
