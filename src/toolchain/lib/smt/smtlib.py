@@ -15,7 +15,7 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location = config.Z3_COMMAND, memout = 8000, timeout = 30):
+    def __init__(self, location = config.Z3_COMMAND, memout = 4000, timeout = 10):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None

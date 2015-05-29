@@ -16,6 +16,7 @@ from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler
 from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
+from tornado import gen
 from pycket.session import SessionMixin
 
 import config
@@ -40,11 +41,15 @@ from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
 from shapely.geometry.polygon import Polygon
 
+from concurrent.futures import ThreadPoolExecutor
+
 pmcCheckers = {}
 samplers = {}
 satSolvers = {}
 
 default_results = {}
+
+executor = ThreadPoolExecutor(max_workers=1)
 
 def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
@@ -423,6 +428,7 @@ class Samples(CegarHandler):
 
 #@route('/generateSamples', method = 'POST')
 class GenerateSamples(CegarHandler):
+    @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
 
@@ -458,14 +464,18 @@ class GenerateSamples(CegarHandler):
             samples_generator = DelaunayRefinement(sampling_interface, samples, threshold)
         else:
             assert False, "Bad generator"
+        
+        def generate_samples(samples_generator, iterations):
+            for (generated_samples,_) in zip(samples_generator, range(0, iterations)):
+                new_samples.update(generated_samples)
+                if socket is not None:
+                    socket.send_samples(generated_samples)
+                if self._check_canceled():
+                    break
 
-        # Using range to limit the number of iterations
-        for (generated_samples, _) in zip(samples_generator, range(0, iterations)):
-            new_samples.update(generated_samples)
-            if socket is not None:
-                socket.send_samples(generated_samples)
-            if self._check_canceled():
-                break
+            return new_samples
+
+        new_samples = yield executor.submit(generate_samples, samples_generator, iterations)
 
         samples.update(new_samples)
         self._set_session('samples', samples)
@@ -538,6 +548,7 @@ class Constraints(ConstraintHandler):
         constraints = self._get_session('constraints', [])
         return self._json_ok(constraints)
 
+    @gen.coroutine
     def post(self):
         #request = json_decode(self.request.body)
         #safe = bool(request['safe'])
@@ -554,7 +565,7 @@ class Constraints(ConstraintHandler):
 
         smt2interface, generator = self.make_gen("poly")
         generator.add_polygon(Polygon(coordinates), safe)
-        new_samples, unsat = self.analyze(smt2interface, generator)
+        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
@@ -577,6 +588,7 @@ class Constraints(ConstraintHandler):
 
 #@route('/generateConstraints')
 class GenerateConstraints(ConstraintHandler):
+    @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
         generator_type = self.get_argument('generator')
@@ -588,7 +600,7 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("Unable to load result data", 500)
 
         smt2interface, generator = self.make_gen(generator_type)
-        new_samples, unsat = self.analyze(smt2interface, generator, iterations)
+        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
