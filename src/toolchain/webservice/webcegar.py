@@ -112,6 +112,10 @@ class CegarHandler(RequestHandler, SessionMixin):
         else:
             self.write({'status':'ok'})
 
+    def _json_canceled(self, data = None):
+        """Returns JSON Canceled"""
+        self.write({'status':'canceled'})
+
     def _get_session(self, item, default = None):
         if not item in self.session:
             self.session.set(item, default)
@@ -154,6 +158,14 @@ class CegarHandler(RequestHandler, SessionMixin):
     def open(self):
         self.id = uuid.uuid4()
         self.session.set('socket_id', self.id)
+
+    def _check_canceled(self):
+        canceled = self._get_session('canceled', False)
+        print("Was canceled? ", canceled)
+        if canceled:
+            self._set_session('canceled', False)
+            return True
+        return False
 
 #@route('/invalidateSession')
 class InvalidateSession(CegarHandler):
@@ -282,12 +294,12 @@ class UploadPrism(CegarHandler):
             return self._json_error("Missing PCTL file")
 
         (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTFILES_DIR)
-        with os.fdopen(prism_fd) as prism_f:
+        with os.fdopen(prism_fd, "wb") as prism_f:
             prism_f.write(upload_prism.body)
         prism_file = PrismFile(prism_path)
 
         (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTFILES_DIR)
-        with os.fdopen(pctl_fd) as pctl_f:
+        with os.fdopen(pctl_fd, "wb") as pctl_f:
             pctl_f.write(upload_pctl.body)
 
         if tool == "param":
@@ -312,6 +324,7 @@ class UploadPrism(CegarHandler):
             os.unlink(result_files[upload_prism.filename])
         result_files[upload_prism.filename] = res_file
         self._set_session('current_result', upload_prism.filename)
+        self._set_session('result_files', result_files)
 
         return self._json_ok(upload_prism.filename)
 
@@ -329,7 +342,7 @@ class UploadResult(CegarHandler):
         result_files = self._get_session('result_files', {})
 
         (res_fd, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
-        with os.fdopen(res_fd) as res_f:
+        with os.fdopen(res_fd, "wb") as res_f:
             res_f.write(upload.body)
 
         try:
@@ -353,9 +366,9 @@ class UploadResult(CegarHandler):
             os.unlink(result_files[upload.filename])
         result_files[upload.filename] = res_file
         self._set_session('current_result', upload.filename)
+        self._set_session('result_files', result_files)
 
         return self._json_ok({"file" : upload.filename})
-
 
 #@route('/samples', method = "POST")
 class Samples(CegarHandler):
@@ -451,6 +464,8 @@ class GenerateSamples(CegarHandler):
             new_samples.update(generated_samples)
             if socket is not None:
                 socket.send_samples(generated_samples)
+            if self._check_canceled():
+                break
 
         samples.update(new_samples)
         self._set_session('samples', samples)
@@ -505,6 +520,9 @@ class ConstraintHandler(CegarHandler):
                 new_samples[point] = value
                 if socket is not None:
                     socket.send_samples({point:value})
+
+            if self._check_canceled():
+                break
 
             iterations -= 1
             if iterations == 0:
@@ -599,8 +617,11 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
         del CegarWebSocket.socket_list[self.id]
 
     def on_message(self, message):
-        # TODO: read cancel message
-        print("Got unexpected websocket message: {}".format(message))
+        if message == 'cancel':
+            print("Received cancel operation")
+            self.session.set('canceled', True)
+        else:
+            print("Got unexpected websocket message: {}".format(message))
 
     def send_samples(self, samples):
         """samples is dictionary point:value"""

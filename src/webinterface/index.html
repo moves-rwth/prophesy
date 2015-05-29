@@ -28,6 +28,7 @@ var newConstraintComplete = true;
 var PlotMode = Object.freeze({SAMPLE: 1, CONSTRAINT: 2});
 var currentPlotMode = PlotMode.SAMPLE;
 
+var websocket = null;
 var websocketActive = false;
 
 var options = {
@@ -83,10 +84,10 @@ function setBusy(busy) {
         throw "Operation in progress";
     }
     if (busy) {
-        $("#busy-indicator").show();
+        $("#busy-indicator").css('visibility', 'visible');;
         $("#header").addClass("busy");
     } else {
-        $("#busy-indicator").hide();
+        $("#busy-indicator").css('visibility', 'hidden');;
         $("#header").removeClass("busy");
     }
     isBusy = busy;
@@ -217,8 +218,10 @@ function url(s) {
 
 function openSocket() {
     var ws = new WebSocket(url("/websocket"));
+    websocket = ws;
     ws.onopen = function(evt) {
         websocketActive = true;
+        $("#cancel").show();
     };
     ws.onmessage = function (evt) {
         data = $.parseJSON(evt.data);
@@ -245,9 +248,11 @@ function openSocket() {
         evt.wasClean
         */
         websocketActive = false;
+        $("#cancel").hide();
     };
     ws.onerror = function(evt) {
         websocketActive = false;
+        $("#cancel").hide();
         checkError({'reason':'Socket error'});
     };
 
@@ -328,6 +333,12 @@ $(document).ready(function() {
             plotSamples();
         }
     });    
+
+    $("#cancel").click(function(event) {
+        if (websocketActive) {
+            websocket.send("cancel");
+        }
+    });
 
     $("#addSamples").change(function(e) {
         if ($(this).prop('checked')) {
@@ -553,7 +564,7 @@ $(document).ready(function() {
     isBusy = false;
     plotSamples();
     isBusy = false;
-    
+
     openSocket();
 });
 
@@ -562,7 +573,12 @@ $(document).ready(function() {
 </head>
  
 <body>
-<div id="header"><h1>Prophesy UI</h1><span id="busy-indicator">Working...</span></div>
+<div id="header">
+    <h1>Prophesy UI</h1>
+    <div id="busy-indicator">Working...<br>
+        <button id="cancel" type="button" class="negative">Cancel</button>
+    </div>
+</div>
 <div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
 
 <div id="plotsurround">
@@ -653,7 +669,7 @@ $(document).ready(function() {
             <div id="tab-auto" class="tab cp">
                 <form id="form-samples-auto">
                     <span class="colLeft">Number of iterations:</span>
-                    <input name="iterations" class="colRight" type="number" min="0" max="10" value="2"/>
+                    <input name="iterations" class="colRight" type="number" min="0" max="98" value="2"/>
                     <br>
                     <span class="colLeft">Generator type:</span>
                     <select name="generator" class="colRight">

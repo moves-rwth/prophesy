@@ -69,6 +69,7 @@ function getThreshold() {
         threshold = Number(threshold).toFixed(3);
         $('#thresholdSlider').val(threshold);
         $("#thresvalue").text(threshold);
+        plotSamples();
     });
 }
 

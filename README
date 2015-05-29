@@ -2,6 +2,9 @@ This README contains instructions for installing and running the Prophesy toolch
 http://moves.rwth-aachen.de/research/tools/prophesy
 Here, a video tutorial for using the tool can also be found.
 
+Throught this README, we refer to the Prophesy installation directory as
+$PROPHESY_DIR (in the virtual machine, this is /home/cav/prophesy)
+
 ============
 Requirements
 ============
@@ -28,24 +31,31 @@ sudo pip3 install shapely
 
 The toolset itself can be downloaded from http://moves.rwth-aachen.de/reasearch/tools/prophesy . 3 packages are available: The toolchain, the binaries and examples. Extracting these packages into the same directory suffices to run the toolchain. In the CAV virtual machine, run the following commands to do so:
 
+export PROPHESY_DIR=/home/cav/prophesy
+mkdir -p $PROPHESY_DIR
+cd $PROPHESY_DIR
 wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/prophesy.zip
 wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/examples.zip
 wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/tools.zip
 unzip prophesy.zip
 unzip examples.zip
 unzip tools.zip
+echo export PROPHESY_DIR=$PROPHESY_DIR >> ~/.bashrc
 
 Finally, the CARL library (contained in the binaries package) needs to be made visible in the system library search path. That can be done by modifying the search path. For the CAV virtual machine, this ca nbe done by the following commands:
 sudo su
-echo /home/cav/lib >> /etc/ld.so.conf.d/prophesy.conf && ldconfig
+echo $PROPHESY_DIR/lib >> /etc/ld.so.conf.d/prophesy.conf
+ldconfig
 exit
+
+Restart the terminal to load the $PROPHESY_DIR variable
 
 ==================
 Running benchmarks
 ==================
-In order for you to be able to reproduce our benchmark results, we have included the core of the verification procedure, i.e. the model checker computing the rational function, in the virtual machine. The executable "pstorm" can be found at /home/prophesy/bin. If you want to run any of the experiments from the paper, please open a terminal (for example by right-clicking the desktop and selecting "Open terminal here" and then changing to the right directory by typing
+In order for you to be able to reproduce our benchmark results, we have included the core of the verification procedure, i.e. the model checker computing the rational function, in the virtual machine. The executable "pstorm" can be found at $PROPHESY_DIR/bin. If you want to run any of the experiments from the paper, please open a terminal (for example by right-clicking the desktop and selecting "Open terminal here" and then changing to the right directory by typing
 
-cd /home/prophesy/bin
+cd $PROPHESY_DIR/bin
 
 The model checker binary (pstorm) can then be run by invoking
 
@@ -62,7 +72,7 @@ Running tool GUI
 ================
 In order to use the web-frontend of the tool, please first start the webservice by opening a terminal, change the directory with
 
-cd ~/prophesy/
+cd $PROPHESY_DIR/prophesy
 
 executing
 
