@@ -71,8 +71,6 @@ class SmtlibSolver(SMTSolver):
             print("**\t " + output)
             if output == "unsat":
                 print("returns unsat")
-                self.stop()
-                self.run()
                 return Answer.unsat
             elif output == "sat":
                 print("returns sat")

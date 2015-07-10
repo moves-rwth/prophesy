@@ -77,5 +77,5 @@ if __name__ == "__main__":
         generator.generate_constraints(cmdargs.area)
 
     smt2interface.stop()
-    #print("Executed SMT commands:")
-    #smt2interface.print_calls()    
+    print("Executed SMT commands:")
+    smt2interface.print_calls()
