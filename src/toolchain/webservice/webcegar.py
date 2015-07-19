@@ -600,7 +600,7 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("Unable to load result data", 500)
 
         smt2interface, generator = self.make_gen(generator_type)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator)
+        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator, iterations)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
