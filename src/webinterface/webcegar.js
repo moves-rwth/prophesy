@@ -1,96 +1,171 @@
+// webcegar settings
 var currentResult = "";
+var pmc = ""
+var sat = ""
+var sampler = ""
+
+function fillSelect(select, data, selected) {
+    select.empty()
+    for (var key in data) {
+        select.append($('<option>', {
+            value: key,
+            text: data[key]
+        }));
+    }
+    if (selected !== null) {
+        select.val(selected);
+    }
+}
 
 function listAvailableResults() {
-    setBusy(true);
-    $.getJSON("../listAvailableResults/", function(result) {
-        if (result.status == "ok") {
-            var availableFiles = $("#result-files");
-            availableFiles.empty();
-            for (var key in result.data.results) {
-                var resname = result.data.results[key];
-                option = availableFiles.append($("<option />").val(resname).text(resname));
-                if (resname == currentResult) {
-                    option.prop("selected", true);
-                }
-            };
-        }
-    }).fail(function(jqXHR) {
-        //result = $.parseJSON(jqXHR.responseText);
-        //alert("Ajax Failure: " + result.reason);
-    }).always(function() {setBusy(false);});
+    doJSON("../results", function(result) {
+        var availableFiles = $("#result-files");
+        fillSelect(availableFiles, result.data, currentResult);
+        
+        getCurrentResult();
+    });
 }
 
 // Update display to show the active result information
 function getResultData(name) {
-    setBusy(true);
-    function fail() {
+    doJSON("../results/"+name, function(result) {
+        $("#info_ratfunc").html(result.data);
+    }, function() {
         $("#info_ratfunc").text("Failed to retrieve data");
-    };
-    
-    $.getJSON("../getResultData/"+name, function(result) {
-        if (result.status != "ok") {
-            fail();
-        } else {
-            $("#info_ratfunc").text(result.data.result_data);
-        }
-    }).fail(function(jqXHR) {
-        //result = $.parseJSON(jqXHR.responseText);
-        //alert("Failed getting result data: " + result.reason);
-        fail();
-    }).always(function() {setBusy(false);});
+    });
 }
 
 function getCurrentResult() {
-    setBusy(true);
-    $.getJSON("../getCurrentResult/", function(result) {
-        if (result.status != "ok") {
-            currentResult = "";
-        } else {
-            currentResult = result.data.result;
-            getResultData(currentResult);
-        }
-    }).fail(function(jqXHR) {
+    doJSON("../currentResult", function(result) {
+        currentResult = result.data;
+        $("#result-files").val(currentResult);
+        getResultData(currentResult);
+    }, function() {
         currentResult = "";
-    }).always(function() {setBusy(false);});
+    });
 }
 
 function setCurrentResult(file) {
-    setBusy(true);
-    $.getJSON("../setCurrentResult/"+file, function(result) {
-        if (result.status == "ok") {
-            $("#info_ratfunc").text(result.data.result.ratfunc);
-            currentResult = file;
-        }
-    }).fail(function(jqXHR) {
-        //result = $.parseJSON(jqXHR.responseText);
-        //alert("Failed getting result data: " + result.reason);
-        $("#info_ratfunc").text("Not loaded");
-    }).always(function() {setBusy(false);});
+    var formData = new FormData();
+    formData.append('name', file);
+    doAjax({
+        url: '../currentResult',
+        type: 'POST',
+        // Form data
+        data: formData,
+        //Options to tell jQuery not to process data or worry about content-type.
+        cache: false,
+        contentType: false,
+        processData: false
+    }, function(result) {
+        currentResult = file;
+        getResultData(currentResult);
+    });
 }
 
 function getThreshold() {
-    setBusy(true);
-    $.getJSON("../getThreshold/", function(result) {
-        if (result.status == "ok") {
-            threshold = result.data.threshold;
-            $('#thresholdSlider').val(threshold*1000);
-            $("#thresvalue").text(threshold);
-        }
-    }).always(function() {setBusy(false);});
+    doJSON("../threshold", function(result) {
+        threshold = result.data;
+        threshold = Number(threshold).toFixed(3);
+        $('#thresholdSlider').val(threshold);
+        $("#thresvalue").text(threshold);
+        plotSamples();
+    });
 }
 
 function setThreshold(threshold) {
-    setBusy(true);
-    $.getJSON("../setThreshold/"+threshold)
-    .always(function() {setBusy(false);});
+    var formData = new FormData();
+    formData.append('threshold', threshold);
+    doAjax({
+        url: '../threshold',
+        type: 'POST',
+        // Form data
+        data: formData,
+        //Options to tell jQuery not to process data or worry about content-type.
+        cache: false,
+        contentType: false,
+        processData: false
+    }, function(result) {
+        safe_constraints = [];
+        bad_constraints = [];
+        plotSamples();
+    });
 }
 
 function getSamples() {
-    setBusy(true);
-    $.getJSON("../getSamples", function(result) {
-        if (result.status == "ok") {
-            readSamples(result.data);
-            plotSamples();
-        }
-    }).always(function() {setBusy(false);});
+    doJSON("../samples", function(result) {
+        readSamples(result.data);
+        plotSamples();
+    });
+}
+
+function clearSamples() {
+    doAjax({
+        url: '../samples',
+        type: 'DELETE',
+    }, function(result) {
+        samples = [];
+        plotSamples();
+    });
+}
+
+function getConstraints() {
+    doJSON("../constraints", function(result) {
+        readConstraints(result.data);
+        plotSamples();
+    });
+}
+
+function clearConstraints() {
+    doAjax({
+        url: '../constraints',
+        type: 'DELETE',
+    }, function(result) {
+        safe_constraints = [];
+        bad_constraints = [];
+        plotSamples();
+    });
+}
+
+function listEnv() {
+    doJSON("../environments", function(result) {
+        var pmcTools = $("#mctools");
+        fillSelect(pmcTools, result.data.pmc, pmc);
+
+        var samplers = $("#samplers");
+        fillSelect(samplers, result.data.samplers, sat);
+
+        var smtSolvers = $("#satsolvers");
+        fillSelect(smtSolvers, result.data.sat, sampler);
+        
+        getEnv();
+    });
+}
+
+function setEnv() {
+    var formData = new FormData();
+    formData.append('pmc', $("#mctools").val());
+    formData.append('sampler', $("#samplers").val());
+    formData.append('sat', $("#satsolvers").val());
+    doAjax({
+        url: '../environment',
+        type: 'POST',
+        // Form data
+        data: formData,
+        //Options to tell jQuery not to process data or worry about content-type.
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getEnv() {
+    doJSON("../environment", function(result) {
+        pmc = result.data.pmc;
+        $("#mctools").val(pmc);
+        sampler = result.data.sampler;
+        $("#samplers").val(sampler);
+        sat = result.data.sat;
+        $("#satsolvers").val(sat);
+    });  
 }

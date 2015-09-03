@@ -2,13 +2,11 @@
 
 import sys
 import os
-from shapely.geometry.polygon import Polygon
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
 
 import argparse
-import sampling
 from smt.smtlib import SmtlibSolver
 from smt.isat import IsatSolver
 from smt.smt import setup_smt
@@ -17,7 +15,9 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_polygon import ConstraintPolygon
 from constraints.constraint_quads import ConstraintQuads
 from input.resultfile import read_pstorm_result
-from config import SAMPLING_THRESHOLD_NEW
+from shapely.geometry.polygon import Polygon
+from sampling.sampling import read_samples_file
+from output.plot import Plot
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Build constraints based on a sample file')
@@ -36,15 +36,20 @@ if __name__ == "__main__":
     solvers_group.add_argument('--z3', dest = "z3location", help = "location of z3")
     solvers_group.add_argument('--isat', dest = "isatlocation", help = "location of isat")
     parser.add_argument('--threshold-area', type = float, help = 'threshold for minimal size of new area', default = 0.001)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--safe-above-threshold', action = 'store_true', dest = "safe_above_threshold")
+    group.add_argument('--bad-above-threshold', action = 'store_false', dest = "safe_above_threshold")
     cmdargs = parser.parse_args()
 
-    threshold_area = vars(cmdargs)["threshold_area"]
-    result = read_pstorm_result(vars(cmdargs)['rat_file'])
+    threshold_area = cmdargs.threshold_area
+    result = read_pstorm_result(cmdargs.rat_file)
+
+    if not cmdargs.safe_above_threshold:
+        Plot.flip_green_red = True
 
     print("Loading samples")
-    (parameters, threshold, safe_above_threshold, samples) = sampling.read_samples_file(vars(cmdargs)["samples_file"])
+    (parameters, threshold, samples) = read_samples_file(cmdargs.samples_file)
     print("Threshold: {}".format(threshold))
-    print("Safe above threshold: {}".format(safe_above_threshold))
     print(samples)
 
     print("Setup SMT interface")
@@ -53,18 +58,18 @@ if __name__ == "__main__":
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     smt2interface.run()
-    setup_smt(smt2interface, result, threshold, safe_above_threshold)
+    setup_smt(smt2interface, result, threshold)
 
     print("Generating constraints")
     generator = None
     if cmdargs.planes:
-        generator = ConstraintPlanes(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPlanes(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.rectangles:
-        generator = ConstraintRectangles(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintRectangles(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.quads:
-        generator = ConstraintQuads(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintQuads(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
     elif cmdargs.poly:
-        generator = ConstraintPolygon(samples, result.parameters, threshold, safe_above_threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPolygon(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
         # For testing
         generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
         generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)
@@ -77,5 +82,3 @@ if __name__ == "__main__":
         generator.generate_constraints(cmdargs.area)
 
     smt2interface.stop()
-    print("Executed SMT commands:")
-    smt2interface.print_calls()

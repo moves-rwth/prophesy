@@ -13,9 +13,9 @@
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
+    <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript">
-
 var threshold = "0.5";
 var samples = [];
 var safe_constraints = [];
@@ -27,6 +27,9 @@ var newConstraintComplete = true;
 
 var PlotMode = Object.freeze({SAMPLE: 1, CONSTRAINT: 2});
 var currentPlotMode = PlotMode.SAMPLE;
+
+var websocket = null;
+var websocketActive = false;
 
 var options = {
         axisLabels: {
@@ -70,19 +73,83 @@ var options = {
         },
         legend: {
             labelBoxBorderColor: "black",
-            position: "right"
+            container: '#legend',
+            noColumns: 6
         }};
 
+var isBusy = false;
 function setBusy(busy) {
+    if (busy && isBusy) {
+        alert("Operation in progress");
+        throw "Operation in progress";
+    }
     if (busy) {
-        $("#busy-indicator").show();
+        $("#busy-indicator").css('visibility', 'visible');;
         $("#header").addClass("busy");
     } else {
-        $("#busy-indicator").hide();
+        $("#busy-indicator").css('visibility', 'hidden');;
         $("#header").removeClass("busy");
     }
+    isBusy = busy;
 }
-        
+
+function clearError() {
+    $("#errorbox").removeClass("shown");
+}
+
+function checkError(result) {
+    if (result !== null) {
+        $("#error-message").text(result.reason);
+    } else {
+        $("#error-message").text("Unspecified error");
+    }
+    $("#errorbox").addClass("shown");
+}
+
+function doJSON(url, onSuccess = function(result) {}, onFail = function() {}) {
+    doAjax({
+        dataType: "json",
+        url: url,
+    }, onSuccess, onFail);
+}
+
+function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
+    failHandler = function(jqXHR) {
+        try {
+            return $.parseJSON(jqXHR.responseText);
+        } catch(err) {
+            return null;
+        }
+    }
+
+    try {
+        setBusy(true);
+    } catch(err) {
+        // Don't try and do two things at the same time,
+        // the server serializes session access
+        return null;
+    }
+
+    clearError();
+    $.ajax(ajax)
+    .done(function(data) {
+        setBusy(false);
+        if (data.status == "ok") {
+            onSuccess(data);
+        } else {
+            checkError(data);
+        }
+    })
+    .fail(function(jqXHR) {
+        setBusy(false);
+        checkError(failHandler(jqXHR));
+        onFail();
+    })
+    .always(function() {
+        setBusy(false);
+    });
+}
+
 function plotSamples() {
     safeData = [];
     badData = [];
@@ -105,7 +172,7 @@ function plotSamples() {
 
     plotpoints = [{label: "new", data: [], points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
                   {label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
-                  {label: ">=" + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+                  {label: "&#8805; " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                   {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: fillNewConstraint}, color: "black"},
                   {label: "safe constr", data: [], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"},
                   {label: "bad constr", data: [], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"}];
@@ -119,21 +186,77 @@ function plotSamples() {
     $.plot("#placeholder", plotpoints, options);
 }
 
-function readSamples(new_samples) {
-    samples = [];
+function readSamples(new_samples, clear = true) {
+    if (clear) {
+        samples = [];
+    }
     for (var key in new_samples) {
         var sample = new_samples[key];
         samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
     };
 }
 
-function writeSamples(samples) {
-    data = [];
-    for (var key in samples) {
-        var sample = samples[key];
-        data.push({'coordinate':sample, 'value':-1.0});
+function readConstraints(new_constraints, clear = true) {
+    if (clear) {
+        safe_constraints = [];
+        bad_constraints = [];
+    }
+    for (var key in new_constraints) {
+        var constraint = new_constraints[key];
+        if (constraint[1]) {
+            safe_constraints.push(constraint[0]);
+        } else {
+            bad_constraints.push(constraint[0]);
+        }
     };
-    return data;
+}
+
+function url(s) {
+    var l = window.location;
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + s;
+}
+
+function openSocket() {
+    var ws = new WebSocket(url("/websocket"));
+    websocket = ws;
+    ws.onopen = function(evt) {
+        websocketActive = true;
+        $("#cancel").show();
+    };
+    ws.onmessage = function (evt) {
+        data = $.parseJSON(evt.data);
+        if (data === null) {
+            checkError({'reason':'Socket data invalid'});
+        } else {
+            switch(data.type) {
+                case "samples":
+                    readSamples(data.data, false);
+                    plotSamples();
+                    break;
+                case "constraints":
+                    readConstraints(data.data, false);
+                    plotSamples();
+                    break;
+            }
+        }
+        
+    };
+    ws.onclose = function(evt) {
+        /*
+        evt.code
+        evt.reason
+        evt.wasClean
+        */
+        websocketActive = false;
+        $("#cancel").hide();
+    };
+    ws.onerror = function(evt) {
+        websocketActive = false;
+        $("#cancel").hide();
+        checkError({'reason':'Socket error'});
+    };
+
+    return ws;
 }
 
 $(document).ready(function() {
@@ -144,10 +267,31 @@ $(document).ready(function() {
         jQuery(this).parent('li').addClass('active').siblings().removeClass('active');
         e.preventDefault();
     });
-  
+
     $("#placeholder").bind("plothover", function (event, pos, item) {
-        var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
-        $("#mousePos").text(str);
+        //Tooltip for samples
+        if (item) {
+            var x = item.datapoint[0].toFixed(2);
+            var y = item.datapoint[1].toFixed(2);
+            var str = "(" + x + ", " + y + ")";
+            $("#mousePos").text(str)
+            var string = "";
+            //Search for correct sample
+            for (var i in samples) {
+                var sample = samples[i];
+                if (sample[0].toFixed(2) == x && sample[1].toFixed(2) == y) {
+                    string = sample[2].toFixed(3);
+                }
+            }
+            if (string != "") {
+                //Display tooltip
+                $("#tooltip").html(string).css({top: item.pageY+5, left: item.pageX+5}).fadeIn(200);
+            }
+        } else {
+            var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
+            $("#mousePos").text(str)
+            $("#tooltip").hide();
+        }
     });
 
     $("#placeholder").bind("plotclick", function (event, pos, item) {
@@ -190,15 +334,26 @@ $(document).ready(function() {
         }
     });    
 
+    $("#cancel").click(function(event) {
+        if (websocketActive) {
+            websocket.send("cancel");
+        }
+    });
+
     $("#addSamples").change(function(e) {
         if ($(this).prop('checked')) {
             $("#addConstraint").prop('checked', false);
+            newConstraint = [];
+            plotSamples();
             currentPlotMode = PlotMode.SAMPLE;
         }
     });
+
     $("#addConstraint").change(function(e) {
         if ($(this).prop('checked')) {
             $("#addSamples").prop('checked', false);
+            newSamples = [];
+            plotSamples();
             currentPlotMode = PlotMode.CONSTRAINT;
         }
     });
@@ -208,21 +363,17 @@ $(document).ready(function() {
         event.preventDefault();
 
         var formData = new FormData($(this)[0]);
-        $.ajax({
+        doAjax({
             url: '../uploadPrism',
             type: 'POST',
-            //Ajax events
-            success: function() {
-                getCurrentResult();
-                listAvailableResults();
-            },
-            error: function() {alert('error');},
             // Form data
             data: formData,
             //Options to tell jQuery not to process data or worry about content-type.
             cache: false,
             contentType: false,
             processData: false
+        }, function() {
+            listAvailableResults();
         });
     });
 
@@ -231,21 +382,17 @@ $(document).ready(function() {
         event.preventDefault();
 
         var formData = new FormData($(this)[0]);
-        $.ajax({
+        doAjax({
             url: '../uploadResult',
             type: 'POST',
-            //Ajax events
-            success: function() {
-                getCurrentResult();
-                listAvailableResults();
-            },
-            error: function() {alert('error');},
             // Form data
             data: formData,
             //Options to tell jQuery not to process data or worry about content-type.
             cache: false,
             contentType: false,
             processData: false
+        }, function() {
+            listAvailableResults();
         });
     });
 
@@ -255,146 +402,170 @@ $(document).ready(function() {
 
         result_name = $("#result-files").val();
         setCurrentResult(result_name);
-        getCurrentResult();
     });
-    
 
     $( "#form-samples-manual" ).submit(function( event ) {
         event.preventDefault();
 
-        setBusy(true);
-        $.ajax("../addSamples", {
+        doAjax({
+            url: "../samples",
             type: 'POST',
+            // JSON data
             data: JSON.stringify(newSamples),
             dataType: 'json',
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
             contentType: 'application/json',
-            success: function(result) {
-                    if (result.status == "ok") {
-                        //Clear samples
-                        samples = [];
-                        newSamples = [];
-                        readSamples(result.data);
-                        plotSamples();
-                    }
-                },
             processData: false
-            }).always(function() {setBusy(false);});
+        },function(result) {
+                if (!websocketActive) {
+                    readSamples(result.data, false);
+                }
+                newSamples = [];
+                plotSamples();
+        });
     });
     
     $( "#form-samples-auto" ).submit(function( event ) {
         event.preventDefault();
 
-        iterations = $("#iterations").val();
-        sampling = $("#sampling").val();
-        setBusy(true);
-        $.getJSON("../generateSamples/" + iterations + "/" + sampling, function(result) {
-            if (result.status == "ok") {
-                //Clear samples
-                samples = [];
-                newSamples = [];
-                readSamples(result.data);
+        var formData = new FormData($(this)[0]);
+        doAjax({
+            url: '../generateSamples', // + formData.serialize(),
+            type: 'POST',
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        }, function(result) {
+            if (!websocketActive) {
+                readSamples(result.data, false);
                 plotSamples();
             }
-        }).always(function() {setBusy(false);});
+        });
     });
     
-    // Handler for change of settings
-    $("#thresholdSlider").on('change', function() {
-        threshold = $('#thresholdSlider').val()/1000;
-        $("#thresvalue").text(threshold);
-        setThreshold(threshold);
+    $("#clear-samples-current").click(function(event) {
+        newSamples = [];
         plotSamples();
+    });
+
+    $("#clear-samples-all").click(function(event) {
+        newSamples = [];
+        clearSamples();
     });
 
     $( "#form-constraints-manual" ).submit(function( event ) {
         event.preventDefault();
         
-        setBusy(true);
         var formData = new FormData($(this)[0]);
         formData.append('coordinates', JSON.stringify(newConstraint));
-        $.ajax({
-            url: '../checkConstraint',
+        doAjax({
+            url: '../constraints',
             type: 'POST',
-            dataType: 'json',
-            //Ajax events
-            success: function(result) {
-                if (result.status == "ok") {
-                    for (var key in result.data.sat) {
-                        var sample = result.data.sat[key];
-                        samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
-                    };
-                    var status = result.data.result
-                    for (var key in result.data.unsat) {
-                        var constraint = result.data.unsat[key];
-                        if (constraint[1]) {
-                            safe_constraints.push(constraint[0]);
-                        } else {
-                            bad_constraints.push(constraint[0]);
-                        }
-                    };
-                    newConstraint = [];
-                    plotSamples();
-                }
-            },
             // Form data
             data: formData,
             //Options to tell jQuery not to process data or worry about content-type.
             cache: false,
             contentType: false,
             processData: false
-        }).always(function() {setBusy(false);});
+        },function(result) {
+            if (!websocketActive) {
+                readSamples(result.data.sat, false);
+                readConstraints(result.data.unsat, false);
+            }
+            newConstraint = [];
+            plotSamples();
+        });
     });
     
     $( "#form-constraints-auto" ).submit(function( event ) {
         event.preventDefault();
         
-        setBusy(true);
+        // Clear existing constraints
+        safe_constraints = [];
+        bad_constraints = [];
+        plotSamples();
+        
         var formData = new FormData($(this)[0]);
-        $.ajax({
+        doAjax({
             url: '../generateConstraints',
             type: 'POST',
-            dataType: 'json',
-            //Ajax events
-            success: function(result) {
-                if (result.status == "ok") {
-                    for (var key in result.data.sat) {
-                        var sample = result.data.sat[key];
-                        samples.push([sample.coordinate[0], sample.coordinate[1], sample.value])
-                    };
-                    var status = result.data.result
-                    for (var key in result.data.unsat) {
-                        var constraint = result.data.unsat[key];
-                        if (constraint[1]) {
-                            safe_constraints.push(constraint[0]);
-                        } else {
-                            bad_constraints.push(constraint[0]);
-                        }
-                    };
-                    plotSamples();
-                }
-            },
             // Form data
             data: formData,
             //Options to tell jQuery not to process data or worry about content-type.
             cache: false,
             contentType: false,
             processData: false
-        }).always(function() {setBusy(false);});
+        }, function(result) {
+            if (!websocketActive) {
+                readSamples(result.data.sat, false);
+                readConstraints(result.data.unsat, false);
+                plotSamples();
+            }
+        });
     });
     
-    $("#clear-constraint").click(function(event) {
+    $("#clear-constraint-current").click(function(event) {
         newConstraint = [];
         plotSamples();
     });
+
+    $("#clear-constraint-all").click(function(event) {
+        newConstraint = [];
+        plotSamples();
+        clearConstraints();
+    });
+    
+    // Handler for change of settings
+    // Just change threshold label
+    $("#thresholdSlider").on('input', function() {
+        threshold = $('#thresholdSlider').val();
+        threshold = Number(threshold).toFixed(3)
+        $("#thresvalue").text(threshold);
+    });
+
+    // Change display of samples as well
+    $("#thresholdSlider").on('change', function() {
+        threshold = $('#thresholdSlider').val();
+        threshold = Number(threshold).toFixed(3)
+        $("#thresvalue").text(threshold);
+        setThreshold(threshold);
+        plotSamples();
+    });
+    
+    $("#samplers").on('change', function() {
+        setEnv();
+    });
+    $("#satsolvers").on('change', function() {
+        setEnv();
+    });
+    
+    /////////////////////////
+    // Things to do initially
+    /////////////////////////
     
     // Show the empty graph immediately
     plotSamples();
     
     // Load initial settings
-    getCurrentResult();
+    // Manually set busy to false, server will serialize output
+    listEnv();
+    isBusy = false;
     listAvailableResults();
+    isBusy = false;
     getThreshold();
+    isBusy = false;
     getSamples();
+    isBusy = false;
+    getConstraints();
+    isBusy = false;
+    plotSamples();
+    isBusy = false;
+
+    openSocket();
 });
 
 
@@ -402,12 +573,21 @@ $(document).ready(function() {
 </head>
  
 <body>
-<div id="header"><h1>Prophesy UI</h1><span id="busy-indicator">Working...</span></div>
+<div id="header">
+    <h1>Prophesy UI</h1>
+    <div id="busy-indicator">Working...<br>
+        <button id="cancel" type="button" class="negative">Cancel</button>
+    </div>
+</div>
+<div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
 
 <div id="plotsurround">
+    <div id="legendContainer">
+        <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
+    </div>
     <div id="placeholder"></div>
-    <span id="mousePos">(0.00, 0.00)</span>
 </div>
+<div id='tooltip'></div>
 
 <div id="controlpanel">
     <div id="input">
@@ -420,39 +600,49 @@ $(document).ready(function() {
         <div class="tab-contents">
             <div id="tab-prism" class="tab active cp">
                 <form id="form-prism">
-                    <span>Path to prism file:</span><input type="file" name="file" />
+                    <span class="colLeft">Path to prism file:</span>
+                    <input type="file" name="file" class="colRight"/>
                     <br>
-                    <span>Path to PCTL file:</span><input type="file" name="pctl-file" />
+                    <span class="colLeft">Path to PCTL file:</span>
+                    <input type="file" name="pctl-file" class="colRight"/>
                     <br>
-                    <span>Run with:</span>
-                    <select name="mctool">
-                        <option selected="selected" value="pstorm">Prophesy</option>
-                        <option value="param">param</option>
-                        <!--<option>prism</option>-->
+                    <span class="colLeft">Run with:</span>
+                    <select id="mctools" name="mctool" class="colRight">
+                        <option>No tool available</option>
                     </select>
-                    <br/>
-                    <button id="upload-prism" type="submit" class="upload">Upload</button>
+                    <br>
+                    <div class="button">
+                         <button id="upload-prism" type="submit" class="upload positive">Upload</button>
+                    </div>
                 </form>
             </div>
             
             <div id="tab-upload"  class="tab cp">
                 <form id="form-result">
-                    <span>Path to result file:</span><input type="file" name="file"/>
+                    <span class="colLeft">Path to result file:</span>
+                    <input type="file" name="file" class="colRight"/>
                     <br>
-                    <select name="result-type">
+                    <span class="colLeft">Run with:</span>
+                    <select name="result-type" class="colRight">
                         <option value="pstorm" selected="selected">pstorm</option>
                         <option value="param">param</option>
                     </select>
-                    <br/>
-                    <button id="upload-result" type="submit" class="upload">Upload</button>
+                    <br>
+                    <div class="button">
+                        <button id="upload-result" type="submit" class="upload positive">Upload</button>
+                    </div>
                 </form>
             </div>
             
             <div id="tab-select" class="tab cp">
                 <form id="form-select">
-                    <select id="result-files">
+                    <span class="colLeft">Result file:</span>
+                    <select id="result-files" class="colRight">
                     </select>
-                    <button id="select-result" type="submit" class="positive">Load</button>
+                    <br>
+                    <div class="button">
+                        <button id="select-result" type="submit" class="positive">Load</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -469,16 +659,28 @@ $(document).ready(function() {
                 <form id="form-samples-manual">
                     <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
                     <br>
-                    <button id="submit-samples" type="submit" class="positive">Check New</button>
+                    <div class="button">
+                        <button id="submit-samples" type="submit" class="positive">Check New</button>
+                        <button id="clear-samples-current" type="button">Clear current</button>
+                        <button id="clear-samples-all" type="button" class="negative">Clear all</button>
+                    </div>
                 </form>
             </div>
             <div id="tab-auto" class="tab cp">
                 <form id="form-samples-auto">
-                    <label>Sampling number: <input id="sampling" type="number" min="2" max="50" value="2" size="1"/></label>
-                    <br/>
-                    <label>Number of iterations: <input id="iterations" type="number" min="0" max="10" value="2"/></label>
+                    <span class="colLeft">Number of iterations:</span>
+                    <input name="iterations" class="colRight" type="number" min="0" max="98" value="2"/>
                     <br>
-                    <button id="generate-samples" type="submit">Go</button>
+                    <span class="colLeft">Generator type:</span>
+                    <select name="generator" class="colRight">
+                        <option value="uniform" selected="selected">Uniform grid</option>
+                        <option value="linear" selected="selected">Linear interpolation</option>
+                        <option value="delaunay">Delaunay triangulation</option>
+                    </select>
+                    <br>
+                    <div class="button">
+                        <button id="generate-samples" type="submit" class="positive">Go</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -499,18 +701,27 @@ $(document).ready(function() {
                     <label><input name="constr-mode" type="radio" value="safe" checked="checked"/> Check for safe</label>
                     <label><input name="constr-mode" id="radio-bad" type="radio" value="bad"/> Check for bad</label>
                     <br>
-                    <button id="manualConstraints" type="submit" class="positive">Check New</button>
-                    <button id="clear-constraint" type="button" class="negative">Clear current</button>
+                    <div class="button">
+                        <button id="manualConstraints" type="submit" class="positive">Check New</button>
+                        <button id="clear-constraint-current" type="button">Clear current</button>
+                        <button id="clear-constraint-all" type="button" class="negative">Clear all</button>
+                    </div>
                 </form>
             </div>
             <div id="tab-constr-auto" class="tab cp">
                 <form id="form-constraints-auto">
-                    <select name="generator">
+                    <span class="colLeft">Constraint type:</span>
+                    <select name="generator" class="colRight">
                         <option selected="selected" value="planes">Planes</option>
                         <option value="rectangles">Growing rectangles</option>
                         <option value="quads">Quadrants</option>
                     </select>
-                    <button id="autoConstraints" type="submit" class="positive">Generate</button>
+                    <span class="colLeft">Number of iterations:</span>
+                    <input name="iterations" class="colRight" type="number" min="1" max="100" value="5"/>
+                    <br>
+                    <div class="button">
+                        <button id="autoConstraints" type="submit" class="positive">Generate</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -518,13 +729,17 @@ $(document).ready(function() {
     
     <div id="settings">
         <h2>Settings</h2>
-        <span>Threshold:</span>
-        <input type="range" min="0" max="1000" value="500" id="thresholdSlider" /><span id="thresvalue">0.5</span>
+        <span class="colLeft">Threshold:</span>
+        <input type="range" min="0" max="1" value="0.5" step=".001" id="thresholdSlider" /><span id="thresvalue">0.500</span>
         <br>
-        <span>SMT Solver:</span>
-        <select id="smtsolver">
-            <option selected="selected">Z3</option>
-            <!--<option>SMT-RAT</option>-->
+        <span class="colLeft">Sampler:</span>
+        <select id="samplers" class="colRight">
+            <option>No sampler available</option>
+        </select>
+        <br>
+        <span class="colLeft">SMT Solver:</span>
+        <select id="satsolvers" class="colRight">
+            <option>No solver available</option>
         </select>
     </div>
 </div> <!-- Control panel -->

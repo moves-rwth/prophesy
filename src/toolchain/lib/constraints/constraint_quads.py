@@ -1,4 +1,4 @@
-from constraint_generation import ConstraintGeneration
+from constraints.constraint_generation import ConstraintGeneration
 from shapely.geometry import box, Point
 from functools import total_ordering
 
@@ -11,7 +11,7 @@ class Quad(object):
         self.poly = box(self.origin.x, self.origin.y, self.origin.x+self.size, self.origin.y+self.size)
 
     def split(self):
-        if self.size < 1.0/(2**6):
+        if self.size < (2**-7):
             return None
         new_quads = [Quad(Point(self.origin.x, self.origin.y),                         self.size/2),
                      Quad(Point(self.origin.x+self.size/2, self.origin.y),             self.size/2),
@@ -53,8 +53,8 @@ class Quad(object):
         return False
 
 class ConstraintQuads(ConstraintGeneration):
-    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
-        super().__init__(samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
+    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
+        super().__init__(samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.quads = []
         # Number of consecutive recursive splits() maximum
@@ -63,9 +63,13 @@ class ConstraintQuads(ConstraintGeneration):
         # Setup initial quad
         quad = Quad(Point(0,0), 1.0)
         for pt, v in samples.items():
-            safe = (v >= self.threshold) == self.safe_above_threshold
-            quad.samples.append((Point(pt), safe))
+            pt = Point(pt)
+            if not quad.poly.intersects(pt):
+                continue
+            safe = v >= self.threshold
+            quad.samples.append((pt, safe))
         self.check_quad(quad)
+        self.quads.sort(reverse=True)
 
     def plot_candidate(self):
         boxes = []

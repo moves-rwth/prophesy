@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
-def setup_smt(smt2interface, result, threshold, safe_above_threshold):
+def setup_smt(smt2interface, result, threshold):
     from data.constraint import Constraint
 
     for p in result.parameters:
@@ -13,12 +13,8 @@ def setup_smt(smt2interface, result, threshold, safe_above_threshold):
     smt2interface.add_variable("safe", VariableDomain.Bool)
     smt2interface.add_variable("bad", VariableDomain.Bool)
 
-    if safe_above_threshold:
-        safe_relation = ">="
-        bad_relation = "<="
-    else:
-        safe_relation = "<="
-        bad_relation = ">="
+    safe_relation = ">="
+    bad_relation = "<="
 
     safe_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, safe_relation, result.parameters)
     bad_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, bad_relation, result.parameters)

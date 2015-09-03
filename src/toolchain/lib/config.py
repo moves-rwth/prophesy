@@ -17,7 +17,10 @@ WEB_RESULTFILES_DIR = os.path.join(TMP_DIR, "web/results")
 # directory with webinterface
 WEB_INTERFACE_DIR = os.path.join(thisfilepath, "../../webinterface/")
 
-TOOL_DIR = os.path.join(thisfilepath, "../../../benchmarkfiles/")
+home = os.path.expanduser("~")
+
+TOOL_DIR = "benchmarkfiles" #os.path.join(home, "bin")
+EXAMPLES_DIR = "benchmarkfiles" #os.path.join(home, "examples")
 
 # external tools
 Z3_COMMAND = os.path.join(TOOL_DIR, "z3")

@@ -1,18 +1,18 @@
-from constraint_generation import ConstraintGeneration, Anchor, Direction
+from sampling.sampling import split_samples
+from constraints.constraint_generation import ConstraintGeneration, Anchor, Direction
 from shapely.geometry import box, Point
 from shapely import affinity
-import sampling
 import config
 
 class ConstraintRectangles(ConstraintGeneration):
 
-    def __init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc):
-        ConstraintGeneration.__init__(self, samples, parameters, threshold, safe_above_threshold, threshold_area, _smt2interface, _ratfunc)
+    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
+        ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.anchor_points = []
         for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
             value = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
-            if (self.safe_above_threshold and value >= self.threshold) or (not self.safe_above_threshold and value < self.threshold):
+            if value >= self.threshold:
                 pt_safe = True
             else:
                 pt_safe = False
@@ -131,7 +131,7 @@ class ConstraintRectangles(ConstraintGeneration):
         self.best_other_point = None
 
         # split samples into safe and bad
-        (safe_samples, bad_samples) = sampling.split_samples(self.samples, self.threshold, self.safe_above_threshold)
+        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold)
 
         for anchor in self.anchor_points:
             anchor_pos = anchor.pos
@@ -156,7 +156,7 @@ class ConstraintRectangles(ConstraintGeneration):
                 # choose largest rectangle
                 if self.best_rectangle is None or (rectangle.area > self.best_rectangle.area and rectangle.area > self.threshold_area):
                     # check if nothing of other polarity is inbetween.
-                    safe_area = (value < self.threshold and not self.safe_above_threshold) or (value >= self.threshold and self.safe_above_threshold)
+                    safe_area = value >= self.threshold
                     anchor.safe = safe_area
                     other_points = bad_samples.keys() if safe_area else safe_samples.keys()
                     for point2 in other_points:

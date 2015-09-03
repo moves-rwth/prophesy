@@ -7,6 +7,8 @@ from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
 
 class Plot(object):
+    flip_green_red = False
+
     @staticmethod
     def plot_poly(subplot, poly, *args, **kwargs):
         if isinstance(poly, Polygon):
@@ -27,23 +29,18 @@ class Plot(object):
             subplot.add_patch(p)
 
     @staticmethod
-    def plot_results(parameters, samples_qualitative, anchor_points = [], additional_arrows = [],
+    def plot_results(parameters,
+                     samples_green = [], samples_red = [], samples_blue = [],
                      poly_green = [], poly_red = [], poly_blue = [],
+                     anchor_points = [], additional_arrows = [],
                      path_to_save=None, display=False):
         if len(parameters) == 2:
+            if Plot.flip_green_red:
+                samples_green, samples_red = samples_red, samples_green
+                poly_green, poly_red = poly_red, poly_green
+
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
-            xValid = []
-            yValid = []
-            xInvalid = []
-            yInvalid = []
-            for (key,val) in samples_qualitative.items():
-                if val:
-                    xValid.append(key[0])
-                    yValid.append(key[1])
-                else:
-                    xInvalid.append(key[0])
-                    yInvalid.append(key[1])
 
             for anchor in anchor_points:
                 d = 0.02
@@ -66,8 +63,17 @@ class Plot(object):
                 Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch=".")
 
             # Draw the samples last
-            ax1.scatter(xValid,yValid, marker='o', c='green')
-            ax1.scatter(xInvalid,yInvalid, marker='x', c='red')
+            xCoords = [x for x,y in samples_green]
+            yCoords = [y for x,y in samples_green]
+            ax1.scatter(xCoords, yCoords, marker='o', c='green')
+
+            xCoords = [x for x,y in samples_red]
+            yCoords = [y for x,y in samples_red]
+            ax1.scatter(xCoords, yCoords, marker='x', c='red')
+
+            xCoords = [x for x,y in samples_blue]
+            yCoords = [y for x,y in samples_blue]
+            ax1.scatter(xCoords, yCoords, marker='.', c='blue')
 
             ax1.set_ylim([0,1])
             ax1.set_xlim([0,1])

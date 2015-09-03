@@ -14,7 +14,6 @@ h2 {
 }
 
 h3 {
-    margin-left: 30px;
     font: normal 26px "omnes-pro", Helvetica, Arial, sans-serif;
     color: #666;
 }
@@ -26,14 +25,15 @@ p {
 button {
     font-size: 16px;
     padding: 1px 7px;
+    margin-top: 10px;
 }
 
 input {
     font-size: 16px;
 }
 
-input[type=checkbox] {
-    margin: 7px;
+input[type=radio] {
+    margin-top: 5px;
 }
 
 #header {
@@ -66,7 +66,29 @@ input[type=checkbox] {
 
 #busy-indicator {
     float: right;
-    display: none;
+    display: inline;
+    visibility: hidden;
+}
+
+#errorbox {
+    font-size: 25px;
+    background-color:#FF8000;
+    color: #000;
+    
+    overflow-y: hidden;
+    padding: 0px;
+    max-height: 0px;
+    transition: all 1s;
+}
+
+#errorbox.shown {
+    padding: 10px;
+    max-height: initial;
+}
+
+#error-title {
+}
+#error-message {
 }
 
 #infopanel {
@@ -91,7 +113,7 @@ input[type=checkbox] {
 
 .cp {
     background-color: #ddd;
-    width: 420px;
+    width: 435px;
 }
 
 #footer {
@@ -113,14 +135,62 @@ input[type=checkbox] {
 }
 
 #input .tab {
-    height: 9em;
+    height: 7.5em;
 }
 
 #samples .tab {
-    height: 6em;
+    height: 7.5em;
 }
 
 #constraints .tab {
     height: 6em;
 }
 
+.colLeft {
+    width: 170px;
+    float: left;
+}
+
+.colRight {
+    width: 250px;
+}
+
+form {
+    width: 447px;
+    padding: 7px;
+}
+
+.button {
+    text-align: center;
+}
+
+#legendContainer {
+    min-width:800px;
+    text-align: center;
+    padding-top: 10px;
+}
+
+#legend {
+    width: 550px;
+    margin-left: 25px;
+    float: left;
+}
+
+.legendColorBox {
+    padding: 2px;
+    padding-top: 7px;
+}
+
+.legendLabel {
+    padding: 2px;
+    padding-right: 5px;
+}
+
+#tooltip {
+    position: absolute;
+    display: none;
+    border: 1px solid;
+    padding: 2px;
+    background-color: #F6F6B9;
+    opacity: 0.80;
+}

@@ -5,7 +5,7 @@ import config
 from modelcheckers.pmc import ProbablisticModelChecker
 from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 from collections import OrderedDict
-from sampling import read_samples_file
+from sampling.sampling import read_samples_file
 
 class PrismModelChecker(ProbablisticModelChecker):
     def __init__(self, location = config.PRISM_COMMAND):
@@ -34,7 +34,7 @@ class PrismModelChecker(ProbablisticModelChecker):
                 "-const", const_values_string,
                 "-exportresults", resultpath]
         run_tool(args)
-        (found_parameters, samples) = read_samples_file(resultpath)
+        (found_parameters, samples, _) = read_samples_file(resultpath)
         os.unlink(resultpath)
         if found_parameters != prism_file.parameters:
             raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
