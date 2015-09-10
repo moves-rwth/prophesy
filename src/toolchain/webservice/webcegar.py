@@ -3,8 +3,8 @@ import os
 import sys
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, os.path.join(thisfilepath, '../lib'))
-sys.path.insert(0, os.path.join(thisfilepath, '../../lib'))
+sys.path.insert(0, os.path.join(thisfilepath, '../prophesy'))
+sys.path.insert(0, os.path.join(thisfilepath, '../../prophesy'))
 
 import tempfile
 import re

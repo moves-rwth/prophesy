@@ -10,7 +10,7 @@ def _smtfile_header():
     formula += "Probabilistic verification" + "\n"
     formula += TOOLNAME + "\n"
     formula += "|)\n"
-    formula += "(set-info :smt-lib-version 2.0)\n"
+    formula += "(set-info :smt-prophesy-version 2.0)\n"
     formula += "(set-info :category \"industrial\")\n"
     return formula
 
@@ -51,7 +51,7 @@ class SmtlibSolver(SMTSolver):
             self.process = None
 
     def name(self):
-        return "smt-lib"
+        return "smt-prophesy"
 
     def version(self):
         args = [self.location, "--version"]
