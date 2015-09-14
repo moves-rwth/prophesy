@@ -15,7 +15,7 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location = config.Z3_COMMAND, memout = 4000, timeout = 10):
+    def __init__(self, location = config.Z3_COMMAND, memout = 4000, timeout = 100):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
@@ -59,6 +59,7 @@ class SmtlibSolver(SMTSolver):
         return p.communicate()[0].rstrip()
 
     def check(self):
+        print("check-sat")
         assert self.process != None
         s = "(check-sat)\n"
         self.string += s
@@ -182,7 +183,9 @@ class SmtlibSolver(SMTSolver):
 
     def from_file(self, path): raise NotImplementedError
 
-    def to_file(self, path): raise NotImplementedError
+    def to_file(self, path):
+        with open(path, 'w') as f:
+            f.write(self.string)
 
     def print_calls(self):
         print(self.string)

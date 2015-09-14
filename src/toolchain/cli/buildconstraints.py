@@ -24,6 +24,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--rat-file', help = "file containing rational function", required = True)
     parser.add_argument('--samples-file', help = 'file containing the sample points', required = True)
+    parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination', required = False)
     limit_group = parser.add_mutually_exclusive_group(required = True)
     limit_group.add_argument('--iterations', dest = "iterations", help = "Number of constraints to generate", type=int)
     limit_group.add_argument('--area', dest = "area", help = "Area (in [0,1]) to try to complete", type = float)
@@ -80,5 +81,8 @@ if __name__ == "__main__":
         generator.generate_constraints(cmdargs.iterations)
     else:
         generator.generate_constraints(cmdargs.area)
+
+    if cmdargs.logcallsdestination:
+        smt2interface.to_file(cmdargs.logcallsdestination)
 
     smt2interface.stop()
