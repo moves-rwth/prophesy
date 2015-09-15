@@ -2,10 +2,12 @@
 
 import sys
 import os
+
 # import library. Using this instead of appends prevents naming clashes..
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(thisfilepath, '../prophesy'))
 
+import platform
 import tempfile
 import argparse
 from input.resultfile import read_pstorm_result
@@ -65,4 +67,5 @@ if __name__ == "__main__":
     print("Samples rendered to {}".format(path_to_save))
     write_samples_file([p.name for p in result.parameters], samples, cmdargs.threshold, cmdargs.samples_file)
 
-    os.system("xdg-open {}".format(path_to_save))
+    platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
+    os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path_to_save))
