@@ -3,6 +3,7 @@ from sampling.sampling import SampleGenerator, filter_samples, split_samples,\
     weighed_interpolation
 from shapely.geometry.point import Point
 
+
 class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means
     of linear interpolation to approximate the threshold"""

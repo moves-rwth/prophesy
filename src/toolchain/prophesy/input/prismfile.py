@@ -5,7 +5,9 @@ import shutil
 import os
 from util import ensure_dir_exists
 
-class PrismFile():
+
+class PrismFile:
+    """Wrapper for Prism file; extracts parameter names."""
     def __init__(self, location):
         self.location = location
         self.parameters = []
@@ -22,12 +24,12 @@ class PrismFile():
             self.parameters = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
 
     def make_temporary_copy(self):
-        """Makes a temporary copy of itself, which get deleted automatically.
-        Does nothing if already a temporary copy"""
+        """Makes a temporary copy of itself, which will be deleted automatically.
+           Does nothing if a temporary copy already exists."""
         if self.is_temp:
             return
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, tmpfile) = tempfile.mkstemp(suffix = ".pm", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=config.INTERMEDIATE_FILES_DIR, text=True)
         try:
             shutil.copyfile(self.location, tmpfile)
             self.location = tmpfile
@@ -37,9 +39,12 @@ class PrismFile():
             raise
 
     def replace_parameter_keyword(self, new_keyword):
+        """Substitutes parameter type keywords (e.g. 'const double')
+           with the given string (unless the line is commented out)."""
         with open(self.location, 'r') as f:
             inputstring = f.read()
-            (outputstring, subs) = re.subn("(?<!// )(const double) (\w*\s*;)", r"{0} \2".format(new_keyword), inputstring, re.MULTILINE)
+            substitute_regex = "(?<!// )(const double) (\w*\s*;)"
+            outputstring, subs = re.subn(substitute_regex, r"{0} \2".format(new_keyword), inputstring, re.MULTILINE)
             if subs != len(self.parameters):
                 raise RuntimeError("Number of substitutions does not match number of parameters")
         with open(self.location, 'w') as f:

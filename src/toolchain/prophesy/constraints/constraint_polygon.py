@@ -2,8 +2,8 @@ from constraints.constraint_generation import ConstraintGeneration
 from shapely.ops import triangulate
 from shapely.geometry.polygon import orient
 
-class ConstraintPolygon(ConstraintGeneration):
 
+class ConstraintPolygon(ConstraintGeneration):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
@@ -25,11 +25,11 @@ class ConstraintPolygon(ConstraintGeneration):
         if len(self.safe_polygons) > 0:
             poly = self.safe_polygons[0]
             self.safe_polygons = self.safe_polygons[1:]
-            return (self.poly_constraint(poly), poly, True)
+            return self.poly_constraint(poly), poly, True
         elif len(self.bad_polygons) > 0:
             poly = self.bad_polygons[0]
             self.bad_polygons = self.bad_polygons[1:]
-            return (self.poly_constraint(poly), poly, False)
+            return self.poly_constraint(poly), poly, False
 
         return None
 

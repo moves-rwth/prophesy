@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
 import os
 import sys
+
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
@@ -85,7 +87,7 @@ def getPMC(satname):
     if satname == 'pstorm':
         return ProphesyParametricModelChecker()
     elif satname == 'param':
-        return ParamParametricModelChecker();
+        return ParamParametricModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
 

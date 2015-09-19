@@ -1,4 +1,5 @@
-class Range():
+
+class Range:
     def __init__(self, lower_bound, upper_bound, step_size):
         self.start = lower_bound
         self.stop = upper_bound
@@ -7,6 +8,7 @@ class Range():
     def values(self):
         from numpy import arange
         return list(arange(self.start, self.stop, self.step)) + [self.stop]
+
 
 def create_range_from_interval(interval, nr_samples):
     """Given closed interval [l,h], generate nr_sample

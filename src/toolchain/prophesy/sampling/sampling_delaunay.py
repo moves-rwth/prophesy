@@ -4,6 +4,7 @@ from sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.point import Point
 from shapely.geometry.linestring import LineString
 
+
 class DelaunayRefinement(SampleGenerator):
     def __init__(self, sampler, samples, threshold, distance=0.05):
         super().__init__(sampler)
@@ -12,7 +13,7 @@ class DelaunayRefinement(SampleGenerator):
         self.distance = distance
 
     def _make_points(self, samples):
-        return [Point(x,y,v) for (x,y), v in samples.items()]
+        return [Point(x, y, v) for (x,y), v in samples.items()]
 
     def __iter__(self):
         # Nothing to prime
@@ -28,9 +29,9 @@ class DelaunayRefinement(SampleGenerator):
         lines = self._calc_lines(triangles)
 
         points = []
-        for p1,p2 in lines:
+        for p1, p2 in lines:
             points.append(p1.coords[0])
-            line = LineString([p1,p2])
+            line = LineString([p1, p2])
             for d in numpy.arange(0, line.length, self.distance):
                 pt = line.interpolate(d)
                 points.append(pt.coords[0])
@@ -43,7 +44,7 @@ class DelaunayRefinement(SampleGenerator):
         
         filter_points = []
         for i1 in range(0, len(self.points)):
-            for i2 in range(i1+1, len(self.points)):
+            for i2 in range(i1 + 1, len(self.points)):
                 if self.points[i1].distance(self.points[i2]) < 0.001:
                     break
             else:
@@ -71,7 +72,7 @@ class DelaunayRefinement(SampleGenerator):
             triangles.append(triangle)
         points = [self.points[i] for i in points]
 
-        return (points, triangles)
+        return points, triangles
 
     def _calc_lines(self, triangles):
         """Given set of triangle points, return the set of points
@@ -91,10 +92,10 @@ class DelaunayRefinement(SampleGenerator):
             line = []
             points = triangle + [triangle[0]]
             pairs = zip(points[:-1], points[1:])
-            for p1,p2 in pairs:
+            for p1, p2 in pairs:
                 if (p1.z >= self.threshold) == (p2.z >= self.threshold):
                     continue
-                if (p1.distance(p2) < 0.001):
+                if p1.distance(p2) < 0.001:
                     continue
                 midpoint = weighed_interpolation(p1, p2, p1.z, p2.z, self.threshold, fudge)
                 if midpoint is not None:

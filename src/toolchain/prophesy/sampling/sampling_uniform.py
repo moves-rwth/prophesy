@@ -1,7 +1,9 @@
 from sampling.sampling import SampleGenerator
 
+
 class UniformSampleGenerator(SampleGenerator):
     """Generates a uniform grid of samples"""
+
     def __init__(self, sampler, intervals, samples_per_dimension):
         super().__init__(sampler)
         self.intervals = intervals

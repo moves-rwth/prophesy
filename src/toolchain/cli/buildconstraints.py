@@ -2,6 +2,7 @@
 
 import sys
 import os
+
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         Plot.flip_green_red = True
 
     print("Loading samples")
-    (parameters, threshold, samples) = read_samples_file(cmdargs.samples_file)
+    parameters, threshold, samples = read_samples_file(cmdargs.samples_file)
     print("Threshold: {}".format(threshold))
     print(samples)
 

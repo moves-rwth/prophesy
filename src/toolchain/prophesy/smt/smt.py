@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+
 def setup_smt(smt2interface, result, threshold):
     from data.constraint import Constraint
 
@@ -16,10 +17,13 @@ def setup_smt(smt2interface, result, threshold):
     safe_relation = ">="
     bad_relation = "<="
 
-    safe_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, safe_relation, result.parameters)
-    bad_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, bad_relation, result.parameters)
+    poly = result.ratfunc.nominator - threshold * result.ratfunc.denominator
+    safe_constraint = Constraint(poly, safe_relation, result.parameters)
+    bad_constraint = Constraint(poly, bad_relation, result.parameters)
+
     smt2interface.assert_guarded_constraint("safe", safe_constraint)
     smt2interface.assert_guarded_constraint("bad", bad_constraint)
+
 
 class Answer(Enum):
     sat = 0
@@ -29,46 +33,59 @@ class Answer(Enum):
     memout = 4
     timeout = 5
 
+
 class VariableDomain(Enum):
     Bool = 0
     Real = 1
     Int = 2
 
-class SMTSolver():
+
+class SMTSolver:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def name(self): raise NotImplementedError
+    def name(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def version(self): raise NotImplementedError
+    def version(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def check(self): raise NotImplementedError
+    def check(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def push(self): raise NotImplementedError
+    def push(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def pop(self): raise NotImplementedError
+    def pop(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def add_variable(self): raise NotImplementedError
+    def add_variable(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def assert_constraint(self, c): raise NotImplementedError
+    def assert_constraint(self, c):
+        raise NotImplementedError
 
     @abstractmethod
-    def assert_guarded_constraint(self, c): raise NotImplementedError
+    def assert_guarded_constraint(self, c):
+        raise NotImplementedError
 
     @abstractmethod
-    def set_guard(self, g, v): raise NotImplementedError
+    def set_guard(self, g, v):
+        raise NotImplementedError
 
     @abstractmethod
-    def from_file(self, p): raise NotImplementedError
+    def from_file(self, p):
+        raise NotImplementedError
 
     @abstractmethod
-    def to_file(self, p): raise NotImplementedError
+    def to_file(self, p):
+        raise NotImplementedError
 
     def __enter__(self):
         self.push()

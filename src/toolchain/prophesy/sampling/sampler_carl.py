@@ -9,6 +9,7 @@ import libpycarl
 
 from pprint import pprint
 
+
 class CarlSampling(Sampler):
     """Sample based on CARL library"""
     def __init__(self, ratfunc, parameters):
@@ -26,7 +27,7 @@ class CarlSampling(Sampler):
     def perform_sampling(self, samplepoints):
         samples = {}
         for pt in samplepoints:
-            evaldict = {x:libpycarl.Rational(y) for x,y in zip(self.poly_vars, pt)}
+            evaldict = {x: libpycarl.Rational(y) for x, y in zip(self.poly_vars, pt)}
             value = float((self.poly.evaluate(evaldict)))
             samples[pt] = value
         return OrderedDict(samples.items())

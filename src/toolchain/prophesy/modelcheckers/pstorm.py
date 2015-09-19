@@ -10,16 +10,16 @@ from input.resultfile import read_pstorm_result
 class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
     def __init__(self, location = config.PARAMETRIC_STORM_COMMAND):
         self.location = location
-        self.bisimulation = BisimulationType.strong;
+        self.bisimulation = BisimulationType.strong
 
     def name(self):
         return "pstorm"
 
     def version(self):
         args = [self.location, '--version']
-        pipe = subprocess.Popen(args, stdout = subprocess.PIPE)
+        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
         # pipe.communicate()
-        outputstr = pipe.communicate()[0].decode(encoding = 'UTF-8')
+        outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
         output = outputstr.split("\n")
         return output[len(output) - 2]
 
@@ -48,7 +48,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
 
         # create a temporary file for the result.
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
 
         args = [self.location,
                 '--symbolic', prism_file.location,
@@ -61,6 +61,6 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
             pass
         run_tool(args, False) #.decode('UTF-8')
 
-        paramResult = read_pstorm_result(resultfile)
+        param_result = read_pstorm_result(resultfile)
         os.unlink(resultfile)
-        return paramResult
+        return param_result

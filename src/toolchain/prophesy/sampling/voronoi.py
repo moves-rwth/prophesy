@@ -81,40 +81,40 @@ class Context(object):
         pass
 
     def outSite(self, s):
-        if(self.debug):
-            print( "site (%d) at %f %f" % (s.sitenum, s.x, s.y))
-        elif(self.triangulate):
+        if self.debug:
+            print("site (%d) at %f %f" % (s.sitenum, s.x, s.y))
+        elif self.triangulate:
             pass
-        elif(self.plot):
-            self.circle (s.x, s.y, rad=1.0)
-        elif(self.doPrint):
-            print( "s %f %f" % (s.x, s.y))
+        elif self.plot:
+            self.circle(s.x, s.y, rad=1.0)
+        elif self.doPrint:
+            print("s %f %f" % (s.x, s.y))
 
     def outVertex(self, s):
         self.vertices.append((s.x, s.y))
-        if(self.debug):
-            print(  "vertex(%d) at %f %f" % (s.sitenum, s.x, s.y))
-        elif(self.triangulate):
+        if self.debug:
+            print("vertex(%d) at %f %f" % (s.sitenum, s.x, s.y))
+        elif self.triangulate:
             pass
-        elif(self.doPrint and not self.plot):
-            print( "v %f %f" % (s.x, s.y))
+        elif self.doPrint and not self.plot:
+            print("v %f %f" % (s.x, s.y))
 
     def outTriple(self, s1, s2, s3):
         self.triangles.append((s1.sitenum, s2.sitenum, s3.sitenum))
-        if(self.debug):
-            print( "circle through left=%d right=%d bottom=%d" % (s1.sitenum, s2.sitenum, s3.sitenum))
-        elif(self.triangulate and self.doPrint and not self.plot):
-            print( "%d %d %d" % (s1.sitenum, s2.sitenum, s3.sitenum))
+        if self.debug:
+            print("circle through left=%d right=%d bottom=%d" % (s1.sitenum, s2.sitenum, s3.sitenum))
+        elif self.triangulate and self.doPrint and not self.plot:
+            print("%d %d %d" % (s1.sitenum, s2.sitenum, s3.sitenum))
 
     def outBisector(self, edge):
         self.lines.append((edge.a, edge.b, edge.c))
-        if(self.debug):
-            print( "line(%d) %gx+%gy=%g, bisecting %d %d" % (edge.edgenum, edge.a, edge.b, edge.c, edge.reg[0].sitenum, edge.reg[1].sitenum))
-        elif(self.triangulate):
-            if(self.plot):
+        if self.debug:
+            print("line(%d) %gx+%gy=%g, bisecting %d %d" % (edge.edgenum, edge.a, edge.b, edge.c, edge.reg[0].sitenum, edge.reg[1].sitenum))
+        elif self.triangulate:
+            if self.plot:
                 self.line(edge.reg[0].x, edge.reg[0].y, edge.reg[1].x, edge.reg[1].y)
-        elif(self.doPrint and not self.plot):
-            print( "l %f %f %f" % (edge.a, edge.b, edge.c))
+        elif self.doPrint and not self.plot:
+            print("l %f %f %f" % (edge.a, edge.b, edge.c))
 
     def outEdge(self, edge):
         sitenumL = -1

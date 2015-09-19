@@ -6,9 +6,10 @@ from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
 import numpy
 
+
 class ConstraintPlanes(ConstraintGeneration):
 
-    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc, _steps = 3):
+    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc, _steps=3):
         ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
         self.steps = numpy.linspace(0, -(1 / 2 * numpy.pi), _steps, endpoint=False)
 
@@ -17,7 +18,7 @@ class ConstraintPlanes(ConstraintGeneration):
 
         self.anchor_points = []
         for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
-            value = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
+            value = self.ratfunc.eval({x: y for x, y in zip(self.parameters, pt)}).evalf()
             if value >= self.threshold:
                 pt_safe = True
             else:
@@ -33,7 +34,7 @@ class ConstraintPlanes(ConstraintGeneration):
     def compute_distance(self, point, anchor, orientation_vector):
         # returns distance between point and line with anchor and orientation_vector
         # see https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Vector_formulation
-        difference = numpy.array(anchor)-numpy.array(point)
+        difference = numpy.array(anchor) - numpy.array(point)
         tmp = difference - difference.dot(orientation_vector) * orientation_vector
         distance = numpy.array([numpy.float64(tmp.item(0)), numpy.float64(tmp.item(1))])
         return numpy.linalg.norm(distance)
@@ -62,14 +63,14 @@ class ConstraintPlanes(ConstraintGeneration):
                 min_bad_dist = dist
 
         if abs(min_safe_dist) == abs(min_bad_dist):
-            return (True, 0)
+            return True, 0
         elif abs(min_safe_dist) < abs(min_bad_dist):
             # safe area
-            return (True, min_bad_dist-EPS)
+            return True, min_bad_dist - EPS
         else:
             # unsafe area
             assert(abs(min_safe_dist) > abs(min_bad_dist))
-            return (False, min_safe_dist-EPS)
+            return False, min_safe_dist - EPS
 
     def create_plane(self, anchor, orientation_vector):
         """computes the plane created by splitting along the bounding line
@@ -158,19 +159,19 @@ class ConstraintPlanes(ConstraintGeneration):
         # check for intersection with existing planes
         # TODO make more efficient
         for plane2 in self.safe_planes + self.unsafe_planes:
-            if (self.intersects(polygon, plane2)):
+            if self.intersects(polygon, plane2):
                 polygon = polygon.difference(plane2)
         return polygon
 
     def plot_candidate(self):
-        orientation_line = LineString([self.best_anchor.pos, Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector*self.best_dpt)])
-        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_plane], additional_arrows = [orientation_line], display=True)
+        orientation_line = LineString([self.best_anchor.pos, Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector * self.best_dpt)])
+        self.plot_results(anchor_points=self.anchor_points, poly_blue=[self.best_plane], additional_arrows=[orientation_line], display=True)
 
     def fail_constraint(self, constraint, safe):
         if self.best_dpt < EPS:
             return None
         self.best_dpt *= 0.5
-        plane = self.create_plane(self.best_anchor.pos, self.best_orientation_vector*self.best_dpt)
+        plane = self.create_plane(self.best_anchor.pos, self.best_orientation_vector * self.best_dpt)
         if plane is None:
             return None
         plane = self.refine_with_intersections(plane)
@@ -181,7 +182,7 @@ class ConstraintPlanes(ConstraintGeneration):
             return None
 
         self.best_plane = plane
-        return (self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe)
+        return self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe
 
     def reject_constraint(self, constraint, safe, sample):
         pass
@@ -232,7 +233,7 @@ class ConstraintPlanes(ConstraintGeneration):
                 if abs(dpt) < EPS:
                     continue
 
-                plane = self.create_plane(anchor.pos, orientation_vector*dpt)
+                plane = self.create_plane(anchor.pos, orientation_vector * dpt)
                 if plane is None:
                     continue
 
@@ -265,4 +266,4 @@ class ConstraintPlanes(ConstraintGeneration):
         if self.best_plane is None:
             return None
 
-        return (self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe)
+        return self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe

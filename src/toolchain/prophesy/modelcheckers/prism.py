@@ -16,9 +16,9 @@ class PrismModelChecker(ProbablisticModelChecker):
 
     def version(self):
         args = [self.location, '-version']
-        pipe = subprocess.Popen(args, stdout = subprocess.PIPE)
+        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
         # pipe.communicate()
-        return pipe.communicate()[0].decode(encoding = 'UTF-8')
+        return pipe.communicate()[0].decode(encoding='UTF-8')
 
     def uniform_sample_pctl_formula(self, prism_file, pctl_filepath, ranges):
         assert len(prism_file.parameters) == len(ranges), "Number of value ranges does not match number of parameters"
@@ -28,13 +28,13 @@ class PrismModelChecker(ProbablisticModelChecker):
         const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(prism_file.parameters, range_strings)])
 
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultpath) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
 
         args = [self.location, prism_file.location, pctl_filepath,
                 "-const", const_values_string,
                 "-exportresults", resultpath]
         run_tool(args)
-        (found_parameters, samples, _) = read_samples_file(resultpath)
+        found_parameters, samples, _ = read_samples_file(resultpath)
         os.unlink(resultpath)
         if found_parameters != prism_file.parameters:
             raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
@@ -44,7 +44,7 @@ class PrismModelChecker(ProbablisticModelChecker):
         check_filepath_for_reading(pctl_filepath, "pctl file")
 
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultpath) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
         samples = {}
         for pt in samplepoints:
             const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(prism_file.parameters, pt)])
