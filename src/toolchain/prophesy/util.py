@@ -1,5 +1,6 @@
 import os
 import errno
+import platform
 import subprocess
 
 
@@ -15,9 +16,10 @@ def ensure_dir_exists(path):
 def check_filepath_for_reading(filepath, filedescription_string="file"):
     """Raises exception if file does not exist or is not readable."""
     if not os.path.isfile(filepath):
-        raise IOException(filedescription_string + " not found at " + filepath)
+        raise FileNotFoundError("{} not found at {}".format(filedescription_string, filepath))
     if not os.access(filepath, os.R_OK):
-        raise IOException("No read access on " + filedescription_string + ". Location: '" + "'.")
+        raise PermissionError("No read access on {}. Location: '{}'.".format(filedescription_string, filepath))
+
 
 def run_tool(args, quiet=False):
     """Executes a process, returning the `stdout`"""
@@ -32,4 +34,13 @@ def run_tool(args, quiet=False):
             output = line.decode(encoding='UTF-8').rstrip()
             if output != "":
                 print("\t * " + output)
+
+
+def open_file(path):
+    """Open file with system-default application.
+
+    Works for Mac OS (`open`) and Linux with `xdg-open`."""
+    # TODO: Windows
+    platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
+    os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
 

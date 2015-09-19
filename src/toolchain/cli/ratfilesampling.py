@@ -87,14 +87,6 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     return plot_path
 
 
-def open_file(path):
-    """Open file with system-default application.
-
-    Works for Mac OS (`open`) and Linux with `xdg-open`."""
-    platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
-    os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
-
-
 if __name__ == "__main__":
     cmdargs = parse_cli_args()
 
