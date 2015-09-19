@@ -27,7 +27,7 @@ def run_tool(args, quiet=False):
         return pipe.communicate()[0]
     else:
         for line in iter(pipe.stdout.readline, ""):
-            if not line and pipe.poll() != None:
+            if not line and pipe.poll() is not None:
                 break
             output = line.decode(encoding='UTF-8').rstrip()
             if output != "":

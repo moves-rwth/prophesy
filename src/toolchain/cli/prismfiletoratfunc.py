@@ -29,13 +29,13 @@ if __name__ == "__main__":
 
     prism_file = PrismFile(vars(cmdargs)["file"])
 
-    if vars(cmdargs)["param"] != None:
+    if cmdargs.param is not None:
         prism_file.make_temporary_copy()
         prism_file.replace_parameter_keyword("param float")
         tool = ParamParametricModelChecker(vars(cmdargs)["param"])
-    elif vars(cmdargs)["pstorm"] != None:
+    elif cmdargs.pstorm is not None:
         tool = ProphesyParametricModelChecker(vars(cmdargs)["pstorm"])
-    elif vars(cmdargs)["comics"] != None:
+    elif cmdargs.comics is not None:
         raise NotImplementedError
     else:
         raise RuntimeError("No supported solver available")

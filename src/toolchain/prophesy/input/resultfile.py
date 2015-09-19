@@ -16,11 +16,11 @@ class ParametricResult(object):
         self.ratfunc = ratfunc
 
     def __str__(self):
-        return "Parameters: {0}\nParameter Constraints:\n    {1}\nResult: {2}\n".format(
-                ", ".join(map(str, self.parameters)),
-                "\n    ".join(map(str, self.parameter_constraints)),
-                self.ratfunc
-                )
+        output_template = "Parameters: {params}\nParameter Constraints:\n    {constrs}\nResult: {results}\n"
+        return output_template.format(params=", ".join(map(str, self.parameters)),
+                                      constrs="\n    ".join(map(str, self.parameter_constraints)),
+                                      results=self.ratfunc)
+
 
 def read_pstorm_result(location):
     with open(location) as f:

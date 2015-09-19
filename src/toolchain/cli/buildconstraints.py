@@ -64,21 +64,23 @@ if __name__ == "__main__":
 
     print("Generating constraints")
     generator = None
+    params = samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc
+
     if cmdargs.planes:
-        generator = ConstraintPlanes(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPlanes(*params)
     elif cmdargs.rectangles:
-        generator = ConstraintRectangles(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintRectangles(*params)
     elif cmdargs.quads:
-        generator = ConstraintQuads(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintQuads(*params)
     elif cmdargs.poly:
-        generator = ConstraintPolygon(samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc)
+        generator = ConstraintPolygon(*params)
         # For testing
-        generator.add_polygon(Polygon([(0,0), (0.5, 0.5), (0.5, 0)]), True)
+        generator.add_polygon(Polygon([(0, 0), (0.5, 0.5), (0.5, 0)]), True)
         generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)
     else:
         assert False
 
-    if cmdargs.iterations != None:
+    if cmdargs.iterations is not None:
         generator.generate_constraints(cmdargs.iterations)
     else:
         generator.generate_constraints(cmdargs.area)

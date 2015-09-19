@@ -28,9 +28,9 @@ if __name__ == "__main__":
 
     prism_file = PrismFile(cmdargs.file)
 
-    if cmdargs.prism != None:
+    if cmdargs.prism is not None:
         tool = PrismModelChecker(cmdargs.prism)
-    elif cmdargs.storm != None:
+    elif cmdargs.storm is not None:
         raise NotImplementedError
     else:
         raise RuntimeError("No supported solver available")

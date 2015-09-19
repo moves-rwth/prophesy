@@ -80,7 +80,7 @@ class Plot(object):
             ax1.set_xlim([0, 1])
             ax1.set_xlabel(str(parameters[0]))
             ax1.set_ylabel(str(parameters[1]))
-            if path_to_save != None:
+            if path_to_save is not None:
                 pyplot.savefig(path_to_save, format="PDF")
             if display:
                 pyplot.show()

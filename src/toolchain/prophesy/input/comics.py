@@ -31,7 +31,8 @@ def get_polynomials_from_comics_file(path):
 
     nominator = Poly(nominator_string, parameters)
     denominator = Poly(1, parameters)
-    if denominator_string != None:
+
+    if denominator_string is not None:
         denominator = Poly(denominator_string, parameters)
 
     return [parameters, constraints, nominator, denominator]

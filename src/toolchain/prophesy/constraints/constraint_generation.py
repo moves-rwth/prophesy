@@ -219,7 +219,7 @@ class ConstraintGeneration:
             total_sec = total_sec + benchmark[1]
             if benchmark[0] == smt.smt.Answer.unsat:
                 total_area = total_area + benchmark[2]
-            print("{:3}".format(i) + "   {:>6s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
+            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1], total_sec, benchmark[2], total_area))
             i = i + 1
 
     def plot_candidate(self):
@@ -325,7 +325,7 @@ class ConstraintGeneration:
                     # TODO what to do in GUI?
                     #print("{}: Change constraint for better computation".format(checkresult))
                     result_update = self.fail_constraint(constraint, safe)
-                    if result_update == None:
+                    if result_update is None:
                         break
                     self.plot_candidate()
                     constraint, polygon, safe = result_update
