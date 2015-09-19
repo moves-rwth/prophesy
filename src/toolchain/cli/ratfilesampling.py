@@ -54,7 +54,7 @@ def uniform_samples(interface, dimensions, samples_per_dim):
     return samples
 
 
-def refine_samples(interface, samples, iterations, threshold, safe_above_threshold):
+def refine_samples(interface, samples, iterations, threshold):
     """Refine samples over several iterations."""
     # refinement_generator = LinearRefinement(interface, samples, threshold)
     refinement_generator = DelaunayRefinement(interface, samples, threshold)
@@ -63,7 +63,7 @@ def refine_samples(interface, samples, iterations, threshold, safe_above_thresho
     for (new_samples, i) in zip(refinement_generator, range(0, iterations)):
 
         # uncomment to see intermediate plot before each iteration
-        # open_file(plot_samples(samples, result.parameters, safe_above_threshold, threshold))
+        #open_file(plot_samples(samples, result.parameters, True, threshold))
 
         print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
         samples.update(new_samples)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     initial_samples = uniform_samples(sampling_interface, len(result.parameters), cmdargs.samplingnr)
 
-    refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold, cmdargs.safe_above_threshold)
+    refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
 
     write_samples_file([p.name for p in result.parameters], refined_samples, cmdargs.threshold, cmdargs.samples_file)
 
