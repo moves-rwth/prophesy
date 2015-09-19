@@ -85,3 +85,6 @@ class Plot(object):
             if display:
                 pyplot.show()
             pyplot.close(fig)
+
+        else:
+            assert False
