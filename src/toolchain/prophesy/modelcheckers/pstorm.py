@@ -1,32 +1,34 @@
 import os
-import config
-import tempfile
 import subprocess
-from modelcheckers.ppmc import ParametricProbablisticModelChecker, \
+import tempfile
+
+import config
+from input.resultfile import read_pstorm_result
+from modelcheckers.ppmc import ParametricProbabilisticModelChecker, \
     BisimulationType
 from util import check_filepath_for_reading, run_tool, ensure_dir_exists
-from input.resultfile import read_pstorm_result
 
-class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
-    def __init__(self, location = config.PARAMETRIC_STORM_COMMAND):
+
+class ProphesyParametricModelChecker(ParametricProbabilisticModelChecker):
+    def __init__(self, location=config.PARAMETRIC_STORM_COMMAND):
         self.location = location
-        self.bisimulation = BisimulationType.strong;
+        self.bisimulation = BisimulationType.strong
 
     def name(self):
         return "pstorm"
 
     def version(self):
         args = [self.location, '--version']
-        pipe = subprocess.Popen(args, stdout = subprocess.PIPE)
+        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
         # pipe.communicate()
-        outputstr = pipe.communicate()[0].decode(encoding = 'UTF-8')
+        outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
         output = outputstr.split("\n")
         return output[len(output) - 2]
 
     def set_bisimulation_type(self, t):
         assert(isinstance(t, BisimulationType))
         if t == BisimulationType.weak:
-            raise RuntimeError("pstorm does not support weak bisimimulation")
+            raise RuntimeError("pstorm does not support weak bisimulation")
         self.bisimulation = t
 
     def _parse_pctl_file(self, path):
@@ -40,7 +42,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
         # get the pctl string from the file.
         pctl_formulas = self._parse_pctl_file(pctl_filepath)
         if len(pctl_formulas) == 0:
-            raise
+            raise RuntimeError("No PCTL formula specified")
         if len(pctl_formulas) > 1:
             print("pctl file contains more than one formula. {0} only takes the first.".format(self.name()))
 
@@ -48,7 +50,7 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
 
         # create a temporary file for the result.
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
 
         args = [self.location,
                 '--symbolic', prism_file.location,
@@ -61,6 +63,6 @@ class ProphesyParametricModelChecker(ParametricProbablisticModelChecker):
             pass
         run_tool(args, False) #.decode('UTF-8')
 
-        paramResult = read_pstorm_result(resultfile)
+        param_result = read_pstorm_result(resultfile)
         os.unlink(resultfile)
-        return paramResult
+        return param_result

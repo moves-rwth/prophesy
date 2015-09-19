@@ -4,6 +4,7 @@ from shapely.geometry import box, Point
 from shapely import affinity
 import config
 
+
 class ConstraintRectangles(ConstraintGeneration):
 
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
@@ -11,7 +12,7 @@ class ConstraintRectangles(ConstraintGeneration):
 
         self.anchor_points = []
         for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
-            value = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
+            value = self.ratfunc.eval({x: y for x, y in zip(self.parameters, pt)}).evalf()
             if value >= self.threshold:
                 pt_safe = True
             else:
@@ -26,7 +27,7 @@ class ConstraintRectangles(ConstraintGeneration):
         self.all_boxes = []
 
     def plot_candidate(self):
-        self.plot_results(anchor_points=self.anchor_points, poly_blue = [self.best_rectangle], display = False)
+        self.plot_results(anchor_points=self.anchor_points, poly_blue=[self.best_rectangle], display=False)
 
     def refine_with_intersections(self, polygon):
         # check for intersection with existing rectangles
@@ -71,7 +72,7 @@ class ConstraintRectangles(ConstraintGeneration):
         rectangle3 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=old_other_point)
         self.next_rectangles += [(rectangle1, anchor1), (rectangle2, anchor2), (rectangle3, anchor3)]
 
-        return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe)
+        return self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe
 
     def reject_constraint(self, constraint, safe, sample):
         pass
@@ -94,7 +95,7 @@ class ConstraintRectangles(ConstraintGeneration):
                 y = anchor.pos.y
                 x += config.EPS if anchor.dir.value[0] else -config.EPS
                 y += config.EPS if anchor.dir.value[1] else -config.EPS
-                if Point(x,y).within(self.best_rectangle):
+                if Point(x, y).within(self.best_rectangle):
                     self.anchor_points.remove(anchor)
 
         # update anchor points for direction
@@ -122,7 +123,7 @@ class ConstraintRectangles(ConstraintGeneration):
             (x1, y1, x2, y2) = self.best_rectangle.bounds
             pos_x, pos_y = self.best_anchor.dir.value
             self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
-            return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe)
+            return self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe
 
         # "normal" case where there is no rectangle in the queue
         # reset
@@ -141,9 +142,9 @@ class ConstraintRectangles(ConstraintGeneration):
                 point = Point(point)
                 # check if point lies in correct direction from anchor point
                 if not ((pos_x and point.x > anchor_pos.x) or (not pos_x and point.x < anchor_pos.x)):
-                    continue;
+                    continue
                 if not ((pos_y and point.y > anchor_pos.y) or (not pos_y and point.y < anchor_pos.y)):
-                    continue;
+                    continue
 
                 break_attempt = False
                 (min_x, max_x) = (point.x, anchor_pos.x) if point.x < anchor_pos.x else (anchor_pos.x, point.x)
@@ -173,6 +174,6 @@ class ConstraintRectangles(ConstraintGeneration):
                         self.best_other_point = point
 
         if self.best_rectangle is not None:
-            return (self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe)
+            return self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe
         else:
             return None

@@ -8,25 +8,25 @@ this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
 sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
 
-import platform
 import tempfile
-import argparse
+from argparse import ArgumentParser
 
-from input.resultfile import read_pstorm_result
-from config import PLOT_FILES_DIR
-from sampling.sampling import write_samples_file
-from sampling.sampler_ratfunc import RatFuncSampling
-# from sampling.sampler_prism import McSampling # unused
 # from sampling.sampler_carl import CarlSampling # needs fix
+# from sampling.sampler_prism import McSampling # unused
 # from sampling.sampling_linear import LinearRefinement # unused
+from config import PLOT_FILES_DIR
+from input.resultfile import read_pstorm_result
+from output.plot import Plot
+from sampling.sampler_ratfunc import RatFuncSampling
+from sampling.sampling import write_samples_file
 from sampling.sampling_delaunay import DelaunayRefinement
 from sampling.sampling_uniform import UniformSampleGenerator
-from output.plot import Plot
+from util import open_file
 
 
 def parse_cli_args():
     """Parse and return command-line arguments."""
-    parser = argparse.ArgumentParser(description='Perform sampling based on a rational function.')
+    parser = ArgumentParser(description='Perform sampling based on a rational function.')
 
     parser.add_argument('--rat-file', help='the input file containing the prism file', required=True)
     parser.add_argument('--samples-file', help='resulting file', default="samples.out")
@@ -54,7 +54,7 @@ def uniform_samples(interface, dimensions, samples_per_dim):
     return samples
 
 
-def refine_samples(interface, samples, iterations, threshold, safe_above_threshold):
+def refine_samples(interface, samples, iterations, threshold):
     """Refine samples over several iterations."""
     # refinement_generator = LinearRefinement(interface, samples, threshold)
     refinement_generator = DelaunayRefinement(interface, samples, threshold)
@@ -63,7 +63,7 @@ def refine_samples(interface, samples, iterations, threshold, safe_above_thresho
     for (new_samples, i) in zip(refinement_generator, range(0, iterations)):
 
         # uncomment to see intermediate plot before each iteration
-        # open_file(plot_samples(samples, result.parameters, safe_above_threshold, threshold))
+        #open_file(plot_samples(samples, result.parameters, True, threshold))
 
         print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
         samples.update(new_samples)
@@ -75,7 +75,7 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
     Plot.flip_green_red = True if not safe_above_threshold else False
 
-    (_, plot_path) = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=PLOT_FILES_DIR)
+    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=PLOT_FILES_DIR)
 
     samples_green = [pt for pt, v in samples.items() if v >= threshold]
     samples_red = [pt for pt, v in samples.items() if v < threshold]
@@ -85,14 +85,6 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     print("Samples rendered to {}".format(plot_path))
 
     return plot_path
-
-
-def open_file(path):
-    """Open file with system-default application.
-
-    Works for Mac OS (`open`) and Linux with `xdg-open`."""
-    platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
-    os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
 
 
 if __name__ == "__main__":
@@ -107,7 +99,7 @@ if __name__ == "__main__":
 
     initial_samples = uniform_samples(sampling_interface, len(result.parameters), cmdargs.samplingnr)
 
-    refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold, cmdargs.safe_above_threshold)
+    refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
 
     write_samples_file([p.name for p in result.parameters], refined_samples, cmdargs.threshold, cmdargs.samples_file)
 

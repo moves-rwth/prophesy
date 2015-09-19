@@ -1,13 +1,14 @@
+import os
+import subprocess
 import tempfile
 import config
-import subprocess
-import os
-from modelcheckers.ppmc import ParametricProbablisticModelChecker
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 from input.resultfile import read_param_result
+from modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
-class ParamParametricModelChecker(ParametricProbablisticModelChecker):
-    def __init__(self, location = config.PARAM_COMMAND):
+
+class ParamParametricModelChecker(ParametricProbabilisticModelChecker):
+    def __init__(self, location=config.PARAM_COMMAND):
         self.location = location
 
     def name(self):
@@ -15,9 +16,9 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
 
     def version(self):
         args = [self.location, "--help"]
-        pipe = subprocess.Popen(args, stdout = subprocess.PIPE)
+        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
         # pipe.communicate()
-        outputstr = pipe.communicate()[0].decode(encoding = 'UTF-8')
+        outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
         output = outputstr.split("\n")
         return output[2][1:-1].strip()
 
@@ -27,7 +28,7 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
         # create a temporary file for the result. Note: Param will create its own file
         # based on given prefix, so need to unlink twice
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
         os.unlink(resultfile)
 
         args = [self.location,
@@ -39,9 +40,9 @@ class ParamParametricModelChecker(ParametricProbablisticModelChecker):
 
         # Param adds ".out" extension
         resultfile = resultfile + ".out"
-        paramResult = read_param_result(resultfile)
+        param_result = read_param_result(resultfile)
         os.unlink(resultfile)
         # Param also generates a states and regions file, delete those too
         os.unlink("states")
         os.unlink("regions.tex")
-        return paramResult
+        return param_result

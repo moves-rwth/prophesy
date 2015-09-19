@@ -1,13 +1,14 @@
+from collections import OrderedDict
 from sampling.sampling import Sampler
 from sympy.core.numbers import Rational
-from collections import OrderedDict
-from sympy.polys import Poly
 from sympy.core.sympify import sympify
+from sympy.polys import Poly
 
 from libpycarl import Parser
 import libpycarl
 
 from pprint import pprint
+
 
 class CarlSampling(Sampler):
     """Sample based on CARL library"""
@@ -26,7 +27,7 @@ class CarlSampling(Sampler):
     def perform_sampling(self, samplepoints):
         samples = {}
         for pt in samplepoints:
-            evaldict = {x:libpycarl.Rational(y) for x,y in zip(self.poly_vars, pt)}
+            evaldict = {x: libpycarl.Rational(y) for x, y in zip(self.poly_vars, pt)}
             value = float((self.poly.evaluate(evaldict)))
             samples[pt] = value
         return OrderedDict(samples.items())
