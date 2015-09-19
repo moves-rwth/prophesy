@@ -1,13 +1,14 @@
+import os
+import subprocess
 import tempfile
 import config
-import subprocess
-import os
-from modelcheckers.ppmc import ParametricProbablisticModelChecker
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 from input.resultfile import read_param_result
+from modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
-class ParamParametricModelChecker(ParametricProbablisticModelChecker):
-    def __init__(self, location = config.PARAM_COMMAND):
+
+class ParamParametricModelChecker(ParametricProbabilisticModelChecker):
+    def __init__(self, location=config.PARAM_COMMAND):
         self.location = location
 
     def name(self):

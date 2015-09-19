@@ -8,25 +8,25 @@ this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
 sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
 
-import platform
 import tempfile
-import argparse
+from argparse import ArgumentParser
 
-from input.resultfile import read_pstorm_result
-from config import PLOT_FILES_DIR
-from sampling.sampling import write_samples_file
-from sampling.sampler_ratfunc import RatFuncSampling
-# from sampling.sampler_prism import McSampling # unused
 # from sampling.sampler_carl import CarlSampling # needs fix
+# from sampling.sampler_prism import McSampling # unused
 # from sampling.sampling_linear import LinearRefinement # unused
+from config import PLOT_FILES_DIR
+from input.resultfile import read_pstorm_result
+from output.plot import Plot
+from sampling.sampler_ratfunc import RatFuncSampling
+from sampling.sampling import write_samples_file
 from sampling.sampling_delaunay import DelaunayRefinement
 from sampling.sampling_uniform import UniformSampleGenerator
-from output.plot import Plot
+from util import open_file
 
 
 def parse_cli_args():
     """Parse and return command-line arguments."""
-    parser = argparse.ArgumentParser(description='Perform sampling based on a rational function.')
+    parser = ArgumentParser(description='Perform sampling based on a rational function.')
 
     parser.add_argument('--rat-file', help='the input file containing the prism file', required=True)
     parser.add_argument('--samples-file', help='resulting file', default="samples.out")

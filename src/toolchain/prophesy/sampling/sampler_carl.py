@@ -1,8 +1,8 @@
+from collections import OrderedDict
 from sampling.sampling import Sampler
 from sympy.core.numbers import Rational
-from collections import OrderedDict
-from sympy.polys import Poly
 from sympy.core.sympify import sympify
+from sympy.polys import Poly
 
 from libpycarl import Parser
 import libpycarl

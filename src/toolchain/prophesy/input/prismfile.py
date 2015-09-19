@@ -1,8 +1,8 @@
-import re
-import config
-import tempfile
-import shutil
 import os
+import re
+import shutil
+import tempfile
+import config
 from util import ensure_dir_exists
 
 

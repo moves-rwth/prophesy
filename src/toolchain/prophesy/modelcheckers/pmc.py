@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class ProbablisticModelChecker:
+class ProbabilisticModelChecker:
     __metaclass__ = ABCMeta
 
     @abstractmethod

@@ -1,30 +1,38 @@
 #!/usr/bin/env python3
 
-import sys
 import os
+import sys
+
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
 sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
 
-import argparse
-from modelcheckers.prism import PrismModelChecker
+from argparse import ArgumentParser
+
 from input.prismfile import PrismFile
-from sampling.sampling import write_samples_file
+from modelcheckers.prism import PrismModelChecker
 from sampling.sampler_prism import McSampling
+from sampling.sampling import write_samples_file
+
+
+def parse_cli_args():
+    parser = ArgumentParser(description='Perform sampling on a prism file')
+
+    parser.add_argument('--file', help='the input file containing the prism file', required=True)
+    parser.add_argument('--pctl-file', help='a file with a pctl property', required=True)
+    parser.add_argument('--samples-file', help='resulting file', default="samples.out")
+    parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
+
+    solver_group = parser.add_mutually_exclusive_group(required=True)
+    solver_group.add_argument('--prism', help='the location of the prism binary')
+    solver_group.add_argument('--storm', help='the location of the storm binary')
+
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Perform sampling on a prism file')
-
-    parser.add_argument('--file', help = 'the input file containing the prism file', required = True)
-    parser.add_argument('--pctl-file', help = 'a file with a pctl property', required = True)
-    parser.add_argument('--samples-file', help = 'resulting file', default = "samples.out")
-    parser.add_argument('--samplingnr', type = int, help = 'number of samples per dimension', default = 4)
-
-    solver_group = parser.add_mutually_exclusive_group(required = True)
-    solver_group.add_argument('--prism', help = 'the location of the prism binary')
-    solver_group.add_argument('--storm', help = 'the location of the storm binary')
-    cmdargs = parser.parse_args()
+    cmdargs = parse_cli_args()
 
     prism_file = PrismFile(cmdargs.file)
 

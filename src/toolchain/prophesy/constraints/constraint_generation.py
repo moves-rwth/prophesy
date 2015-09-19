@@ -1,21 +1,29 @@
+import os
+import shutil
 import tempfile
 import time
-import os
-import smt.smt
-from output.plot import Plot
 from abc import ABCMeta, abstractmethod
-# needed for pdf merging for debugging
-from subprocess import call
-from config import PLOT_FILES_DIR, EPS
-from util import ensure_dir_exists
-from data.constraint import Constraint, ComplexConstraint
-from sympy.polys.polytools import Poly
-from numpy import array
-import shutil
-from shapely.geometry.polygon import Polygon, orient, LinearRing
 from enum import Enum
+from subprocess import call
+
+from numpy import array
+from shapely.geometry.polygon import Polygon, orient, LinearRing
+from sympy.polys.polytools import Poly
+
+import smt.smt
+# needed for pdf merging for debugging
+from config import PLOT_FILES_DIR, EPS
+from data.constraint import Constraint, ComplexConstraint
+from output.plot import Plot
+from util import ensure_dir_exists
+
 
 class Direction(Enum):
+    """The four intercardinal directions ('North-East' etc.) as boolean
+    2-tuples.
+
+    The first entry corresponds to the West-East axis (`True` being
+    East), the second to North-South (`true` being North)."""
     NE = (True, True)
     SE = (True, False)
     NW = (False, True)
@@ -184,7 +192,7 @@ class ConstraintGeneration:
 
     @classmethod
     def is_point_fulfilling_constraint(cls, pt, constraint):
-        """Check wether the given point is satisfied by the constraints
+        """Check whether the given point is satisfied by the constraints
         (i.e. is contained by it)"""
         if isinstance(constraint, ComplexConstraint):
             if constraint.operator == "or":

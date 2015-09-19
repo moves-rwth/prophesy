@@ -1,14 +1,16 @@
 import os
-import tempfile
 import subprocess
-import config
-from modelcheckers.pmc import ProbablisticModelChecker
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists
+import tempfile
 from collections import OrderedDict
-from sampling.sampling import read_samples_file
 
-class PrismModelChecker(ProbablisticModelChecker):
-    def __init__(self, location = config.PRISM_COMMAND):
+import config
+from modelcheckers.pmc import ProbabilisticModelChecker
+from sampling.sampling import read_samples_file
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists
+
+
+class PrismModelChecker(ProbabilisticModelChecker):
+    def __init__(self, location=config.PRISM_COMMAND):
         self.location = location
 
     def name(self):

@@ -1,3 +1,5 @@
+from numpy import arange
+
 
 class Range:
     def __init__(self, lower_bound, upper_bound, step_size):
@@ -6,7 +8,6 @@ class Range:
         self.step = step_size
 
     def values(self):
-        from numpy import arange
         return list(arange(self.start, self.stop, self.step)) + [self.stop]
 
 

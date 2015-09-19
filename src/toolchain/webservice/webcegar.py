@@ -11,7 +11,7 @@ sys.path.insert(1, os.path.join(this_file_path, '../../prophesy'))
 
 import tempfile
 import re
-import argparse
+from argparse import ArgumentParser
 import shutil
 import uuid
 
@@ -21,6 +21,7 @@ from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
 from tornado import gen
 from pycket.session import SessionMixin
+from shapely.geometry.polygon import Polygon
 
 import config
 from util import ensure_dir_exists, run_tool
@@ -42,7 +43,6 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
-from shapely.geometry.polygon import Polygon
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -767,13 +767,18 @@ def make_app():
 
     return application
 
+
+def parse_cli_args():
+    parser = ArgumentParser(description='Start a webservice for ' + config.TOOLNAME)
+    parser.add_argument('--server-port', type=int, help='the port the server listens on', default=4242)
+    parser.add_argument('--server-host', help="server host name", default="localhost")
+    parser.add_argument('--server-debug', type=bool, help='run the server in debug mode', default=True)
+    parser.add_argument('--server-quiet', type=bool, help='run the server in quiet mode', default=False)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Start a webservice for ' + config.TOOLNAME)
-    parser.add_argument('--server-port', type = int, help = 'the port the server listens on', default = 4242)
-    parser.add_argument('--server-host', help = "server host name", default = "localhost")
-    parser.add_argument('--server-debug', type = bool, help = 'run the server in debug mode', default = True)
-    parser.add_argument('--server-quiet', type = bool, help = 'run the server in quiet mode', default = False)
-    cmdargs = parser.parse_args()
+    cmdargs = parse_cli_args()
 
     ensure_dir_exists(config.WEB_SESSIONS_DIR)
     ensure_dir_exists(config.WEB_RESULTFILES_DIR)
