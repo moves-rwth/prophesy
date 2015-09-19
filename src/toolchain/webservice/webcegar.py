@@ -2,9 +2,10 @@
 import os
 import sys
 # import library. Using this instead of appends prevents naming clashes..
-thisfilepath = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, os.path.join(thisfilepath, '../prophesy'))
-sys.path.insert(0, os.path.join(thisfilepath, '../../prophesy'))
+this_file_path = os.path.dirname(os.path.realpath(__file__))
+# insert at position 1; leave path[0] (directory at invocation) intact
+sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
+sys.path.insert(1, os.path.join(this_file_path, '../../prophesy'))
 
 import tempfile
 import re
