@@ -25,7 +25,7 @@ class Constraint(object):
         assert isinstance(pol, Poly)
         assert isinstance(syms, list)
         assert self.RELATIONS.__contains__(rel)
-        self.polynomial = pol
+        self.polynomial = pol.as_poly(*syms)
         self.relation = rel
         self.symbols = syms
 
@@ -58,7 +58,7 @@ class Constraint(object):
         return hash(str(self))
 
     def to_smt2_string(self):
-            return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols) + " 0)"
+        return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols) + " 0)"
 
     def subs(self, substitutions):
         """ Performs the given list of substitutions on the polynomial of the constraint and
