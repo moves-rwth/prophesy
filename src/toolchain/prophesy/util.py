@@ -1,19 +1,24 @@
 import os
 import errno
 import subprocess
+from exceptions.IOError import IOError
 
 def ensure_dir_exists(path):
+    assert path != None
     try:
         os.makedirs(path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
-            raise
+            raise IOError("Cannot create directory: " + path)
+    except BaseException as expecption:
+        raise IOError("Path " + path + " seems not valid")
+
 
 def check_filepath_for_reading(filepath, filedescription_string = "file"):
     if not os.path.isfile(filepath):
-        raise IOException(filedescription_string + " not found at " + filepath)
+        raise IOError(filedescription_string + " not found at " + filepath)
     if not os.access(filepath, os.R_OK):
-        raise IOException("No read access on " + filedescription_string + ". Location: '" + "'.")
+        raise IOError("No read access on " + filedescription_string + ". Location: '" + "'.")
 
 def run_tool(args, quiet = False):
     pipe = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
