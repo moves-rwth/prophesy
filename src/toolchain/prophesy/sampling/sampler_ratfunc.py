@@ -2,6 +2,7 @@ from sampling.sampling import Sampler
 from sympy.core.numbers import Rational
 from collections import OrderedDict
 
+
 class RatFuncSampling(Sampler):
     """Sample based on sympy rational function"""
     def __init__(self, ratfunc, parameters, rational=False):
@@ -15,7 +16,7 @@ class RatFuncSampling(Sampler):
         samples = {}
         for pt in samplepoints:
             if self.rational:
-                samples[pt] = self.ratfunc.eval({x:Rational(y) for x,y in zip(self.parameters, pt)}).evalf()
+                samples[pt] = self.ratfunc.eval({x: Rational(y) for x, y in zip(self.parameters, pt)}).evalf()
             else:
-                samples[pt] = self.ratfunc.eval({x:y for x,y in zip(self.parameters, pt)}).evalf()
+                samples[pt] = self.ratfunc.eval({x: y for x, y in zip(self.parameters, pt)}).evalf()
         return OrderedDict(samples.items())

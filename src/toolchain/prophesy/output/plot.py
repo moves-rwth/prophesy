@@ -6,6 +6,7 @@ from matplotlib.colors import ColorConverter
 from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
 
+
 class Plot(object):
     flip_green_red = False
 
@@ -30,9 +31,9 @@ class Plot(object):
 
     @staticmethod
     def plot_results(parameters,
-                     samples_green = [], samples_red = [], samples_blue = [],
-                     poly_green = [], poly_red = [], poly_blue = [],
-                     anchor_points = [], additional_arrows = [],
+                     samples_green=[], samples_red=[], samples_blue=[],
+                     poly_green=[], poly_red=[], poly_blue=[],
+                     anchor_points=[], additional_arrows=[],
                      path_to_save=None, display=False):
         if len(parameters) == 2:
             if Plot.flip_green_red:
@@ -63,24 +64,27 @@ class Plot(object):
                 Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch=".")
 
             # Draw the samples last
-            xCoords = [x for x,y in samples_green]
-            yCoords = [y for x,y in samples_green]
-            ax1.scatter(xCoords, yCoords, marker='o', c='green')
+            x_coords = [x for x, y in samples_green]
+            y_coords = [y for x, y in samples_green]
+            ax1.scatter(x_coords, y_coords, marker='o', c='green')
 
-            xCoords = [x for x,y in samples_red]
-            yCoords = [y for x,y in samples_red]
-            ax1.scatter(xCoords, yCoords, marker='x', c='red')
+            x_coords = [x for x, y in samples_red]
+            y_coords = [y for x, y in samples_red]
+            ax1.scatter(x_coords, y_coords, marker='x', c='red')
 
-            xCoords = [x for x,y in samples_blue]
-            yCoords = [y for x,y in samples_blue]
-            ax1.scatter(xCoords, yCoords, marker='.', c='blue')
+            x_coords = [x for x, y in samples_blue]
+            y_coords = [y for x, y in samples_blue]
+            ax1.scatter(x_coords, y_coords, marker='.', c='blue')
 
-            ax1.set_ylim([0,1])
-            ax1.set_xlim([0,1])
+            ax1.set_ylim([0, 1])
+            ax1.set_xlim([0, 1])
             ax1.set_xlabel(str(parameters[0]))
             ax1.set_ylabel(str(parameters[1]))
-            if path_to_save != None:
+            if path_to_save is not None:
                 pyplot.savefig(path_to_save, format="PDF")
             if display:
                 pyplot.show()
             pyplot.close(fig)
+
+        else:
+            assert False

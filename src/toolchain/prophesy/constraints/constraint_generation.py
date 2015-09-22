@@ -1,22 +1,31 @@
+import os
+import shutil
 import tempfile
 import time
-import os
-import smt.smt
-from output.plot import Plot
 from abc import ABCMeta, abstractmethod
-# needed for pdf merging for debugging
+from enum import Enum
 from subprocess import call
+
+
+from numpy import array
+from shapely.geometry.polygon import Polygon, orient, LinearRing
+from sympy.polys.polytools import Poly
+
+import smt.smt
+# needed for pdf merging for debugging
 from config import configuration
 import config
+rom data.constraint import Constraint, ComplexConstraint
+from output.plot import Plot
 from util import ensure_dir_exists
-from data.constraint import Constraint, ComplexConstraint
-from sympy.polys.polytools import Poly
-from numpy import array
-import shutil
-from shapely.geometry.polygon import Polygon, orient, LinearRing
-from enum import Enum
+
 
 class Direction(Enum):
+    """The four intercardinal directions ('North-East' etc.) as boolean
+    2-tuples.
+
+    The first entry corresponds to the West-East axis (`True` being
+    East), the second to North-South (`true` being North)."""
     NE = (True, True)
     SE = (True, False)
     NW = (False, True)
@@ -36,13 +45,14 @@ class Direction(Enum):
                 return cls.SW
 
     def to_vector(self):
-        vector = {  Direction.NE: array([ 1,  1]),
-                    Direction.SE: array([ 1, -1]),
-                    Direction.NW: array([-1,  1]),
-                    Direction.SW: array([-1, -1])}
+        vector = {Direction.NE: array([ 1,  1]),
+                  Direction.SE: array([ 1, -1]),
+                  Direction.NW: array([-1,  1]),
+                  Direction.SW: array([-1, -1])}
         return vector[self]
 
-class Anchor(object):
+
+class Anchor:
     def __init__(self, pos, dir, safe):
         self.pos = pos
         self.dir = dir
@@ -63,7 +73,8 @@ class Anchor(object):
     def __str__(self):
         return "({}, {}) {} (Safe: {})".format(self.pos.x, self.pos.y, self.dir, self.safe)
 
-class ConstraintGeneration(object):
+
+class ConstraintGeneration:
     """A generator for constraints. This class acts as an iterable that
     generates new constraints (or counterexamples) until the search space is exhausted
     (which possibly never happens)"""
@@ -91,7 +102,7 @@ class ConstraintGeneration(object):
         self.plot = True
         self.first_pdf = True
         ensure_dir_exists(configuration.get(config.DIRECTORIES, "plots"))
-        (_, self.result_file) = tempfile.mkstemp(suffix = ".pdf", prefix = "result_", dir = configuration.get(config.DIRECTORIES, "plots"))
+        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=PLOT_FILES_DIR)
 
     def __iter__(self):
         # Prime the generator
@@ -108,15 +119,17 @@ class ConstraintGeneration(object):
             # get next constraint depending on algorithm
             result_constraint = self.next_constraint()
             while result_constraint is not None:
-                (new_constraint, polygon, area_safe) = result_constraint
+                new_constraint, polygon, area_safe = result_constraint
                 result = self.analyze_constraint(new_constraint, polygon, area_safe)
                 if result is None:
-                    return # End of generator
+                    # End of generator
+                    return
                 yield result
 
                 # get next constraint depending on algorithm
                 result_constraint = self.next_constraint()
-        return # End of generator
+        # End of generator
+        return
 
     def add_pdf(self, name):
         """Adds pdf with name to result.pdf in tmp directory
@@ -126,7 +139,7 @@ class ConstraintGeneration(object):
             shutil.copyfile(name, self.result_file)
             print("Plot file located at {0}".format(self.result_file))
         else:
-            (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = configuration.get(config.DIRECTORIES, "plots"))
+            _, result_tmp_file = tempfile.mkstemp(".pdf", dir = configuration.get(config.DIRECTORIES, "plots"))
             call(["pdfunite", self.result_file, name, result_tmp_file])
             try:
                 shutil.move(result_tmp_file, self.result_file)
@@ -145,7 +158,7 @@ class ConstraintGeneration(object):
 
         if isinstance(polygon, Polygon):
             assert len(list(polygon.interiors)) == 0
-            polygon = orient(polygon, sign = 1.0)
+            polygon = orient(polygon, sign=1.0)
             polygon = polygon.exterior
         points = list(polygon.coords)
         assert len(points) >= 2
@@ -181,7 +194,7 @@ class ConstraintGeneration(object):
 
     @classmethod
     def is_point_fulfilling_constraint(cls, pt, constraint):
-        """Check wether the given point is satisfied by the constraints
+        """Check whether the given point is satisfied by the constraints
         (i.e. is contained by it)"""
         if isinstance(constraint, ComplexConstraint):
             if constraint.operator == "or":
@@ -191,7 +204,7 @@ class ConstraintGeneration(object):
             else:
                 assert False, "Unknown constraint operator {}".format(constraint.operator)
 
-        pol = constraint.polynomial.eval({x:y for x, y in zip(constraint.symbols, pt)}).evalf()
+        pol = constraint.polynomial.eval({x: y for x, y in zip(constraint.symbols, pt)}).evalf()
 
         if constraint.relation == "=":
             return abs(pol) < configuration.get(config.DEFAULT, "precision")
@@ -216,7 +229,7 @@ class ConstraintGeneration(object):
             total_sec = total_sec + benchmark[1]
             if benchmark[0] == smt.smt.Answer.unsat:
                 total_area = total_area + benchmark[2]
-            print("{:3}".format(i) + "   {:>6s}".format(benchmark[0].name) + "  {:5.2f}".format(benchmark[1]) + "     {:6.2f}".format(total_sec) + "  {:4.3f}".format(benchmark[2]) + "      {:4.3f}".format(total_area))
+            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1], total_sec, benchmark[2], total_area))
             i = i + 1
 
     def plot_candidate(self):
@@ -225,7 +238,7 @@ class ConstraintGeneration(object):
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
-        #Extend arguments
+        # Extend arguments
         poly_green = kwargs.get('poly_green')
         if poly_green is None:
             poly_green = []
@@ -235,15 +248,15 @@ class ConstraintGeneration(object):
             poly_red = []
         kwargs['poly_red'] = poly_red + self.bad_polys
 
-        #Split samples appropriately
+        # Split samples appropriately
         samples_green = [pt for pt, v in self.samples.items() if v >= self.threshold]
         samples_red = [pt for pt, v in self.samples.items() if v < self.threshold]
 
-        (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = configuration.get(config.DIRECTORIES, "plots"))
-        Plot.plot_results(parameters = self.parameters,
-                          samples_green = samples_green,
-                          samples_red = samples_red,
-                          path_to_save = result_tmp_file,
+        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=dir = configuration.get(config.DIRECTORIES, "plots"))
+        Plot.plot_results(parameters=self.parameters,
+                          samples_green=samples_green,
+                          samples_red=samples_red,
+                          path_to_save=result_tmp_file,
                           *args, **kwargs)
         self.add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
@@ -322,10 +335,10 @@ class ConstraintGeneration(object):
                     # TODO what to do in GUI?
                     #print("{}: Change constraint for better computation".format(checkresult))
                     result_update = self.fail_constraint(constraint, safe)
-                    if result_update == None:
+                    if result_update is None:
                         break
                     self.plot_candidate()
-                    (constraint, polygon, safe) = result_update
+                    constraint, polygon, safe = result_update
                 else:
                     smt_successful = True
                     if checkresult == smt.smt.Answer.sat:
@@ -340,44 +353,44 @@ class ConstraintGeneration(object):
 
             # update everything in the algorithm according to correct new area
             self.accept_constraint(constraint, safe)
-            return (True, (constraint, polygon, safe))
+            return True, (constraint, polygon, safe)
         elif checkresult == smt.smt.Answer.sat:
             # add new point as counter example to existing constraints
-            modelPoint = ()
+            model_point = ()
             for p in self.parameters:
                 if p.name in smt_model:
-                    modelPoint = modelPoint + (smt_model[p.name],)
+                    model_point = model_point + (smt_model[p.name],)
                 else:
                     # if parameter is undefined set as 0.5
-                    modelPoint = modelPoint + (0.5,)
+                    model_point = model_point + (0.5,)
                     smt_model[p.name] = 0.5
             value = self.ratfunc.subs(smt_model.items()).evalf()
-            self.reject_constraint(constraint, safe, (modelPoint, value))
-            return (False, (modelPoint, value))
+            self.reject_constraint(constraint, safe, (model_point, value))
+            return False, (model_point, value)
         else:
             # SMT failed completely
             return None
 
-    def generate_constraints(self, max_iter = -1, max_area = 1.0):
+    def generate_constraints(self, max_iter=-1, max_area=1.0):
         """Iteratively generates new constraints, heuristically, attempting to
         find the largest safe or unsafe area
         max_iter: Number of constraints to generate/check at most (not counting SMT failures),
         -1 for unbounded"""
         if max_iter == 0:
-            return (self.safe_polys, self.bad_polys, self.new_samples)
+            return self.safe_polys, self.bad_polys, self.new_samples
 
         for result in self:
-            (unsat, data) = result
+            unsat, data = result
             if unsat:
                 self.all_constraints.append(data)
-                (constraint, poly, safe) = data
+                constraint, poly, safe = data
                 if safe:
                     self.safe_polys.append(poly)
                 else:
                     self.bad_polys.append(poly)
                 print("added new polygon {0} with constraint: {1}".format(poly, constraint))
             else:
-                (point, value) = data
+                point, value = data
                 self.new_samples[point] = value
                 print("added new sample {0} with value {1}".format(point, value))
             
@@ -390,12 +403,12 @@ class ConstraintGeneration(object):
 
             # Plot intermediate result
             if len(self.all_constraints) % 20 == 0:
-                self.plot_results(display = False)
+                self.plot_results(display=False)
 
         # Plot the final outcome
         if self.plot:
-            self.plot_results(display = False)
+            self.plot_results(display=False)
             print("Generation complete, plot located at {0}".format(self.result_file))
         self.print_benchmark_output(self.benchmark_output)
 
-        return (self.safe_polys, self.bad_polys, self.new_samples)
+        return self.safe_polys, self.bad_polys, self.new_samples

@@ -1,6 +1,7 @@
 from sampling.sampling import Sampler
 from collections import OrderedDict
 
+
 class McSampling(Sampler):
     """Perform sampling based on the PRISM tool"""
     def __init__(self, tool, prism_file, pctl_file):
@@ -16,6 +17,6 @@ class McSampling(Sampler):
         samples = self.tool.uniform_sample_pctl_formula(self, self.prism_file, self.pctl_file, ranges)
         return OrderedDict(samples.items())
 
-    def perform_sampling(self, samplepoints):
-        samples = self.tool.sample_pctl_formula(self.prism_file, self.pctl_file, samplepoints)
+    def perform_sampling(self, sample_points):
+        samples = self.tool.sample_pctl_formula(self.prism_file, self.pctl_file, sample_points)
         return OrderedDict(samples.items())

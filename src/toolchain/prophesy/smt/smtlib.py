@@ -3,6 +3,7 @@ import functools
 from config import TOOLNAME
 from smt.smt import SMTSolver, Answer, VariableDomain
 
+
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"
     formula += "(set-info :source |\n"
@@ -12,6 +13,7 @@ def _smtfile_header():
     formula += "(set-info :smt-prophesy-version 2.0)\n"
     formula += "(set-info :category \"industrial\")\n"
     return formula
+
 
 class SmtlibSolver(SMTSolver):
     def __init__(self, location, memout = 4000, timeout = 100):
@@ -35,16 +37,17 @@ class SmtlibSolver(SMTSolver):
                 pass
 
     def run(self):
-        if self.process == None:
+        if self.process is None:
             args = [self.location, "-smt2", "-in", "-T:" + str(self.timeout), "-memory:" + str(self.memout)]
-            self.process = subprocess.Popen(args, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
+            self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                                            stderr=subprocess.STDOUT, universal_newlines=True)
             self._write("".join(self.status))
 
         else:
             raise RuntimeError("The solver can only be started once")
 
     def stop(self):
-        if self.process != None:
+        if self.process is not None:
             self.string += "(exit)\n"
             self._write("(exit)\n")
             self.process = None
@@ -54,18 +57,17 @@ class SmtlibSolver(SMTSolver):
 
     def version(self):
         args = [self.location, "--version"]
-        p = subprocess.Popen(args, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
         return p.communicate()[0].rstrip()
 
     def check(self):
-        print("check-sat")
-        assert self.process != None
+        assert self.process is not None
         s = "(check-sat)\n"
         self.string += s
         self._write(s)
 
         for line in iter(self.process.stdout.readline, ""):
-            if not line and self.process.poll() != None:
+            if not line and self.process.poll() is not None:
                 break
             output = line.rstrip()
             print("**\t " + output)
@@ -160,12 +162,12 @@ class SmtlibSolver(SMTSolver):
         self._write(s)
         output = ""
         for line in iter(self.process.stdout.readline, ""):
-            if self.process.poll() != None:
+            if self.process.poll() is not None:
                 break
             output += line.rstrip()
             if output.count('(') == output.count(')'):
                 break
-        print("output::" , output)
+        print("output::", output)
         model = {}
         (cmd, model_cmds) = parse_smt_command(output)
         if cmd == "error":
@@ -180,7 +182,8 @@ class SmtlibSolver(SMTSolver):
         self.run()
         return model
 
-    def from_file(self, path): raise NotImplementedError
+    def from_file(self, path):
+        raise NotImplementedError
 
     def to_file(self, path):
         with open(path, 'w') as f:
@@ -188,6 +191,7 @@ class SmtlibSolver(SMTSolver):
 
     def print_calls(self):
         print(self.string)
+
 
 def parse_smt_expr(expr):
     """Calculates given SMT expression "(OP ARG ARG)" as ARG OP ARG.
@@ -205,15 +209,16 @@ def parse_smt_expr(expr):
     else:
         return float(cmd)
 
+
 def parse_smt_command(command):
     """Breaks the given SMT command "(CMD ARG ARG ARG)" into tuple (CMD, [ARG]),
     where ARG again can be a (non-parsed) command"""
     command = command.strip()
     if command[0] != "(":
-        return (command, [])
+        return command, []
     command = command[1:-1].split(maxsplit=1)
     if len(command) == 1:
-        return (command[0], [])
+        return command[0], []
     (command, arguments) = command
     args = [""]
     paren = 0
@@ -236,4 +241,4 @@ def parse_smt_command(command):
         # Do not end with empty string
         args = args[:-1]
 
-    return (command, args)
+    return command, args

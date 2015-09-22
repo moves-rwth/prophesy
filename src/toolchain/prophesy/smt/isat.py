@@ -5,10 +5,11 @@ import tempfile
 from smt.smt import SMTSolver, VariableDomain
 from util import run_tool, ensure_dir_exists
 
+
 def _constraint_to_isat(constraint):
-    return "{} {} 0".format(
-                            str(constraint.polynomial.as_expr()).replace("**", "^"),
+    return "{} {} 0".format(str(constraint.polynomial.as_expr()).replace("**", "^"),
                             constraint.relation)
+
 
 class IsatSolver(SMTSolver):
     def __init__(self, location = configuration.get(config.EXTERNAL_TOOLS, "isat")):
@@ -22,17 +23,15 @@ class IsatSolver(SMTSolver):
     def stop(self):
         pass
 
-
     def name(self):
         return "Isat"
-
 
     def version(self):
         return "unknown"
 
     def check(self):
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultfile) = tempfile.mkstemp(suffix = ".hys", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+        (_, resultfile) = tempfile.mkstemp(suffix=".hys", dir=config.INTERMEDIATE_FILES_DIR, text=True)
 
         with open(resultfile, "w") as f:
             f.write("DECL\n")
@@ -77,9 +76,11 @@ class IsatSolver(SMTSolver):
         else:
             self.constraintstack[-1].append("!" + guard)
 
-    def from_file(self, p): raise NotImplementedError
+    def from_file(self, p):
+        raise NotImplementedError
 
-    def to_file(self, p): raise NotImplementedError
+    def to_file(self, p):
+        raise NotImplementedError
 
     def print_calls(self):
         pass

@@ -13,6 +13,7 @@ from sympy.core.sympify import sympify
 # @version: 2014-03-12
 ##################################################################################################
 
+
 class Constraint(object):
     """Represents a polynomial constraint pol rel 0.
          @param pol polynomials (Poly)
@@ -39,13 +40,14 @@ class Constraint(object):
         for rel in rels:
             tokens = string.split(rel)
             if len(tokens) == 2:
-                (nom,den) = fraction(tokens[0])
+                (nom, den) = fraction(tokens[0])
                 const = sympify(tokens[1])
-                return cls(Poly(nom - const*den, symbols), rel, symbols)
+                return cls(Poly(nom - const * den, symbols), rel, symbols)
         assert False, "Unable to parse constraint string {}".format(string)
 
     def __eq__(self, other):
-        if not isinstance(other, Constraint): return False
+        if not isinstance(other, Constraint):
+            return False
         return str(self) == str(other)
 
     def __str__(self):
@@ -82,6 +84,7 @@ class Constraint(object):
 
     def __or__(self, other):
         return ComplexConstraint([self, other], "or")
+
 
 class ComplexConstraint(object):
     def __init__(self, constraints, operator):

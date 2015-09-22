@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
+
 import os
 import sys
+
 # import library. Using this instead of appends prevents naming clashes..
-thisfilepath = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, os.path.join(thisfilepath, '../prophesy'))
-sys.path.insert(0, os.path.join(thisfilepath, '../../prophesy'))
+this_file_path = os.path.dirname(os.path.realpath(__file__))
+# insert at position 1; leave path[0] (directory at invocation) intact
+sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
+sys.path.insert(1, os.path.join(this_file_path, '../../prophesy'))
 
 import tempfile
 import re
-import argparse
+from argparse import ArgumentParser
 import shutil
 import uuid
 
@@ -18,6 +21,7 @@ from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
 from tornado import gen
 from pycket.session import SessionMixin
+from shapely.geometry.polygon import Polygon
 
 import config
 from config import configuration
@@ -40,7 +44,6 @@ from constraints.constraint_planes import ConstraintPlanes
 from constraints.constraint_rectangles import ConstraintRectangles
 from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
-from shapely.geometry.polygon import Polygon
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -85,7 +88,7 @@ def getPMC(satname):
     if satname == 'pstorm':
         return ProphesyParametricModelChecker()
     elif satname == 'param':
-        return ParamParametricModelChecker();
+        return ParamParametricModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
 
@@ -721,13 +724,18 @@ def make_app(hostname, port):
 
     return application
 
+
+def parse_cli_args():
+    parser = ArgumentParser(description='Start a webservice for ' + config.TOOLNAME)
+    parser.add_argument('--server-port', type=int, help='the port the server listens on', default=4242)
+    parser.add_argument('--server-host', help="server host name", default="localhost")
+    parser.add_argument('--server-debug', type=bool, help='run the server in debug mode', default=True)
+    parser.add_argument('--server-quiet', type=bool, help='run the server in quiet mode', default=False)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Start a webservice for ' + config.TOOLNAME)
-    parser.add_argument('--server-port', type = int, help = 'the port the server listens on', default = 4242)
-    parser.add_argument('--server-host', help = "server host name", default = "localhost")
-    parser.add_argument('--server-debug', type = bool, help = 'run the server in debug mode', default = True)
-    parser.add_argument('--server-quiet', type = bool, help = 'run the server in quiet mode', default = False)
-    cmdargs = parser.parse_args()
+    cmdargs = parse_cli_args()
 
     ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_sessions"))
     ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_results"))
