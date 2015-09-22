@@ -1,4 +1,5 @@
 import os
+from config import configuration
 import config
 import tempfile
 from smt.smt import SMTSolver, VariableDomain
@@ -10,7 +11,7 @@ def _constraint_to_isat(constraint):
                             constraint.relation)
 
 class IsatSolver(SMTSolver):
-    def __init__(self, location = config.SMTRAT_COMMAND):
+    def __init__(self, location = configuration.get(config.EXTERNAL_TOOLS, "isat")):
         self.location = location
         self.declstack = [list()]
         self.constraintstack = [list()]

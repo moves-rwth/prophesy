@@ -10,4 +10,7 @@ class ProbablisticModelChecker():
     def version(self): raise NotImplementedError
 
     @abstractmethod
-    def uniform_sample_pctl_formula(self, prims_file, pctl_file, parameters, ranges): raise NotImplementedError
+    def uniform_sample_pctl_formula(self, prism_file, pctl_file, parameters, ranges): raise NotImplementedError
+
+    @abstractmethod
+    def sample_pctl_formula(self, prism_file, pctl_file, parameters, points): raise NotImplementedError

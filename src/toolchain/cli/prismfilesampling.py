@@ -30,7 +30,7 @@ if __name__ == "__main__":
     if cmdargs.prism != None:
         tool = PrismModelChecker(cmdargs.prism)
     elif cmdargs.storm != None:
-        raise NotImplementedError
+        tool = StormModelChecker(cmdargs.storm)
     else:
         raise RuntimeError("No supported solver available")
 

@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+from sympy import Symbol, Poly
 
 def setup_smt(smt2interface, result, threshold):
     from data.constraint import Constraint
@@ -10,16 +11,50 @@ def setup_smt(smt2interface, result, threshold):
     for constr in result.parameter_constraints:
         smt2interface.assert_constraint(constr)
 
-    smt2interface.add_variable("safe", VariableDomain.Bool)
-    smt2interface.add_variable("bad", VariableDomain.Bool)
+    vars = list(result.parameters)
+
+    safeVar = Symbol("safe")
+    badVar = Symbol("bad")
+    thresholdVar = Symbol("T")
+    rf1Var = Symbol("rf1")
+    rf2Var = Symbol("rf2")
+
+    vars.append(safeVar)
+    vars.append(badVar)
+    vars.append(thresholdVar)
+    vars.append(rf1Var)
+    vars.append(rf2Var)
+
+    print(vars)
+
+    smt2interface.add_variable(safeVar, VariableDomain.Bool)
+    smt2interface.add_variable(badVar, VariableDomain.Bool)
+    smt2interface.add_variable(thresholdVar, VariableDomain.Real)
+    smt2interface.add_variable(rf1Var, VariableDomain.Real)
+    smt2interface.add_variable(rf2Var, VariableDomain.Real)
 
     safe_relation = ">="
     bad_relation = "<="
 
-    safe_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, safe_relation, result.parameters)
-    bad_constraint = Constraint(result.ratfunc.nominator - threshold * result.ratfunc.denominator, bad_relation, result.parameters)
+
+
+    safe_constraint = Constraint(Poly(rf1Var - thresholdVar * rf2Var, *vars), safe_relation, vars)
+    print(safe_constraint)
+    print(safe_constraint.to_smt2_string())
+    bad_constraint = Constraint(Poly(rf1Var - thresholdVar * rf2Var, *vars, domain="RR"), bad_relation, vars)
+    threshold_constraint = Constraint(Poly(thresholdVar - threshold, *vars), "=", vars)
+    rf1_constraint = Constraint(Poly(rf1Var - result.ratfunc.nominator.as_expr(*result.parameters), *vars, domain="RR"), "=", vars)
+    rf2_constraint = Constraint(Poly(rf2Var - result.ratfunc.denominator.as_expr(*result.parameters), *vars, domain="RR"), "=", vars)
+    smt2interface.assert_constraint(threshold_constraint)
+    smt2interface.assert_constraint(rf1_constraint)
+    smt2interface.assert_constraint(rf2_constraint)
     smt2interface.assert_guarded_constraint("safe", safe_constraint)
     smt2interface.assert_guarded_constraint("bad", bad_constraint)
+    if result.ratfunc.denominator == Poly(1, *result.parameters):
+        ubound = Constraint(Poly(rf1Var - 1), "<=", vars)
+        lbound = Constraint(Poly(rf1Var), ">=", vars)
+        smt2interface.assert_constraint(ubound)
+        smt2interface.assert_constraint(lbound)
 
 class Answer(Enum):
     sat = 0

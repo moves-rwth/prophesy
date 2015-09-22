@@ -1,6 +1,7 @@
 from sampling.sampling import split_samples
 from constraints.constraint_generation import ConstraintGeneration, Anchor, Direction
-from config import EPS
+from config import configuration
+import config
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
@@ -65,11 +66,11 @@ class ConstraintPlanes(ConstraintGeneration):
             return (True, 0)
         elif abs(min_safe_dist) < abs(min_bad_dist):
             # safe area
-            return (True, min_bad_dist-EPS)
+            return (True, min_bad_dist-configuration.get(config.DEFAULT, "precision"))
         else:
             # unsafe area
             assert(abs(min_safe_dist) > abs(min_bad_dist))
-            return (False, min_safe_dist-EPS)
+            return (False, min_safe_dist-configuration.get(config.DEFAULT, "precision"))
 
     def create_plane(self, anchor, orientation_vector):
         """computes the plane created by splitting along the bounding line

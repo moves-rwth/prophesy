@@ -1,5 +1,5 @@
 import itertools
-from config import SAMPLING_DISTANCE
+from config import configuration
 from shapely.geometry import Point
 from numpy import linspace
 from collections import OrderedDict
@@ -36,7 +36,7 @@ def read_samples_file(path):
         if len(lines) > 2:
             parameters = lines[0].split()
             threshold = float(lines[1])
-            for i, line in enumerate(lines[2:]):
+            for i, line in enumerate(lines[3:]):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
                     raise RuntimeError("Invalid input on line " + str(i+2))
@@ -59,7 +59,7 @@ def split_samples(samples, threshold):
     below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
     return (above_threshold, below_threshold)
 
-def filter_samples(samples, threshold, distance = SAMPLING_DISTANCE):
+def filter_samples(samples, threshold, distance = configuration.get("sampling", "distance")):
     """Returns samples which are less than 'distance' away from the threshold"""
     return {pt : val for (pt, val) in samples.items() if abs(threshold - val) <= distance}
 

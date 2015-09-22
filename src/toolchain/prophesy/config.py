@@ -1,38 +1,43 @@
+import configparser
+import util
 import os
-thisfilepath = os.path.dirname(os.path.realpath(__file__))
 
+class Configuration():
+    def __init__(self):
+        self._config = configparser.ConfigParser()
+        self._importedFrom = ""
+        self.modified = False
+
+    def _importFromFile(self):
+        location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy.cfg")
+        util.check_filepath_for_reading(location, "configuration file")
+        self._config.read(location)
+        self._importedFrom = location
+
+
+    def get(self, section, key):
+        if self._importedFrom == "":
+            self._importFromFile()
+        assert section in self._config
+        assert key in self._config[section]
+        return self._config[section][key]
+
+    def set(self, section, key):
+        if(self._importedFrom == ""):
+            self._importFromFile()
+        assert()
+
+    def updateConfigurationFile(self):
+        with open(self._importedFrom, 'w') as f:
+            self._config.write(f)
+
+configuration = Configuration()
+# section names
+EXTERNAL_TOOLS = "external_tools"
+DIRECTORIES = "directories"
+
+# CONSTANTS
+TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
-
-AUTHORS = ["Harold Bruintjes", "Florian Corzilius", "Christian Dehnert", "Nils Jansen", "Sebastian Junges", "Matthias Volk"]
-SUPPORT = ["Nils Jansen", "Sebastian Junges"]
-TOOLNAME = "Prophesy"
-
-# temporary directories, change if you want the files to reside elsewhere.
-TMP_DIR = os.path.join(thisfilepath, "../tmp/")
-INTERMEDIATE_FILES_DIR = os.path.join(TMP_DIR, "intermediate")
-PLOT_FILES_DIR = os.path.join(TMP_DIR, "plots")
-WEB_SESSIONS_DIR = os.path.join(TMP_DIR, "web/sessions")
-WEB_RESULTFILES_DIR = os.path.join(TMP_DIR, "web/results")
-
-# directory with webinterface
-WEB_INTERFACE_DIR = os.path.join(thisfilepath, "../../webinterface/")
-
-home = os.path.expanduser("~")
-
-TOOL_DIR = "benchmarkfiles" #os.path.join(home, "bin")
-EXAMPLES_DIR = "benchmarkfiles" #os.path.join(home, "examples")
-
-# external tools
-Z3_COMMAND = os.path.join(TOOL_DIR, "z3")
-SMTRAT_COMMAND = os.path.join(TOOL_DIR, "smtrat")
-PARAMETRIC_STORM_COMMAND = os.path.join(TOOL_DIR, "pstorm")
-PARAM_COMMAND = os.path.join(TOOL_DIR, "param")
-PRISM_COMMAND = os.path.join(TOOL_DIR, "prism")
-
-# epsilon for constraint generation
-EPS = 0.0001
-
-SAMPLING_DISTANCE = 0.2
-SAMPLING_THRESHOLD_NEW = 50
-
-#CONSTRAINT_GENERATION_COMMAND = "./polyCreator.py"
+SUPPORT = ["Nils Jansen, Sebastian Junges"]
+PRECISION = 0.0001

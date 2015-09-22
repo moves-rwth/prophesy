@@ -6,7 +6,8 @@ from output.plot import Plot
 from abc import ABCMeta, abstractmethod
 # needed for pdf merging for debugging
 from subprocess import call
-from config import PLOT_FILES_DIR, EPS
+from config import configuration
+import config
 from util import ensure_dir_exists
 from data.constraint import Constraint, ComplexConstraint
 from sympy.polys.polytools import Poly
@@ -89,8 +90,8 @@ class ConstraintGeneration(object):
 
         self.plot = True
         self.first_pdf = True
-        ensure_dir_exists(PLOT_FILES_DIR)
-        (_, self.result_file) = tempfile.mkstemp(suffix = ".pdf", prefix = "result_", dir = PLOT_FILES_DIR)
+        ensure_dir_exists(configuration.get(config.DIRECTORIES, "plots"))
+        (_, self.result_file) = tempfile.mkstemp(suffix = ".pdf", prefix = "result_", dir = configuration.get(config.DIRECTORIES, "plots"))
 
     def __iter__(self):
         # Prime the generator
@@ -125,7 +126,7 @@ class ConstraintGeneration(object):
             shutil.copyfile(name, self.result_file)
             print("Plot file located at {0}".format(self.result_file))
         else:
-            (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
+            (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = configuration.get(config.DIRECTORIES, "plots"))
             call(["pdfunite", self.result_file, name, result_tmp_file])
             try:
                 shutil.move(result_tmp_file, self.result_file)
@@ -193,7 +194,7 @@ class ConstraintGeneration(object):
         pol = constraint.polynomial.eval({x:y for x, y in zip(constraint.symbols, pt)}).evalf()
 
         if constraint.relation == "=":
-            return abs(pol) < EPS
+            return abs(pol) < configuration.get(config.DEFAULT, "precision")
         elif constraint.relation == "<":
             return pol < 0
         elif constraint.relation == ">":
@@ -203,7 +204,7 @@ class ConstraintGeneration(object):
         elif constraint.relation == ">=":
             return pol >= 0
         elif constraint.relation == "<>":
-            return abs(pol) > EPS
+            return abs(pol) > configuration.get(config.DEFAULT, "precision")
 
     @staticmethod
     def print_benchmark_output(benchmark_output):
@@ -238,7 +239,7 @@ class ConstraintGeneration(object):
         samples_green = [pt for pt, v in self.samples.items() if v >= self.threshold]
         samples_red = [pt for pt, v in self.samples.items() if v < self.threshold]
 
-        (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = PLOT_FILES_DIR)
+        (_, result_tmp_file) = tempfile.mkstemp(".pdf", dir = configuration.get(config.DIRECTORIES, "plots"))
         Plot.plot_results(parameters = self.parameters,
                           samples_green = samples_green,
                           samples_red = samples_red,

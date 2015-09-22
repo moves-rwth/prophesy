@@ -11,7 +11,8 @@ import platform
 import tempfile
 import argparse
 from input.resultfile import read_pstorm_result
-from config import PLOT_FILES_DIR
+import config
+from config import configuration
 from sampling.sampling import write_samples_file
 from sampling.sampler_ratfunc import RatFuncSampling
 from sampling.sampler_prism import McSampling
@@ -32,13 +33,15 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--safe-above-threshold', action = 'store_true', dest = "safe_above_threshold")
     group.add_argument('--bad-above-threshold', action = 'store_false', dest = "safe_above_threshold")
+
     cmdargs = parser.parse_args()
 
     # Read previously generated result
     result = read_pstorm_result(cmdargs.rat_file)
     print("Parameters:", result.parameters)
-    #sampling_interface = RatFuncSampling(result.ratfunc, result.parameters, False)
-    sampling_interface = CarlSampling(result.ratfunc, result.parameters)
+    print(str(result.ratfunc))
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters, False)
+    #sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
     # Generate sample points (uniform grid)
     samples = {}
@@ -47,10 +50,11 @@ if __name__ == "__main__":
     for new_samples in uniform_generator:
         samples.update(new_samples)
     print("Performing uniform sampling: {} samples".format(len(samples)))
+    print(samples)
 
     # Refine the samples
     refinement_generator = LinearRefinement(sampling_interface, samples, cmdargs.threshold)
-    refinement_generator = DelaunayRefinement(sampling_interface, samples, cmdargs.threshold)
+    #refinement_generator = DelaunayRefinement(sampling_interface, samples, cmdargs.threshold)
     # Using range to limit the number of iterations
     for (new_samples,i) in zip(refinement_generator, range(0, cmdargs.iterations)):
         print("Refining sampling ({}/{}): {} new samples".format(i+1, cmdargs.iterations, len(new_samples)))
@@ -59,7 +63,7 @@ if __name__ == "__main__":
     # Dump the plot
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
-    (_, path_to_save) = tempfile.mkstemp(suffix = ".pdf", prefix = "sampling_", dir = PLOT_FILES_DIR)
+    (_, path_to_save) = tempfile.mkstemp(suffix = ".pdf", prefix = "sampling_", dir = configuration.get(config.DIRECTORIES, "plots"))
     samples_green = [pt for pt, v in samples.items() if v >= cmdargs.threshold]
     samples_red = [pt for pt, v in samples.items() if v < cmdargs.threshold]
     Plot.plot_results(parameters=result.parameters, samples_green=samples_green, samples_red=samples_red,

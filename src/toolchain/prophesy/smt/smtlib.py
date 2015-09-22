@@ -1,6 +1,5 @@
 import subprocess
 import functools
-import config
 from config import TOOLNAME
 from smt.smt import SMTSolver, Answer, VariableDomain
 
@@ -15,7 +14,7 @@ def _smtfile_header():
     return formula
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location = config.Z3_COMMAND, memout = 4000, timeout = 100):
+    def __init__(self, location, memout = 4000, timeout = 100):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
@@ -129,7 +128,7 @@ class SmtlibSolver(SMTSolver):
         self.status.pop()
 
     def add_variable(self, symbol, domain = VariableDomain.Real):
-        s = "(declare-fun " + symbol + " () " + domain.name + ")\n"
+        s = "(declare-fun " + str(symbol) + " () " + domain.name + ")\n"
         self.string += s
         self._write(s)
         self.status[-1] += s

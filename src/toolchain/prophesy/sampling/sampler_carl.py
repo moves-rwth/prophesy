@@ -1,13 +1,9 @@
 from sampling.sampling import Sampler
-from sympy.core.numbers import Rational
 from collections import OrderedDict
-from sympy.polys import Poly
-from sympy.core.sympify import sympify
 
-from libpycarl import Parser
-import libpycarl
+from pycarl import Parser
+import pycarl
 
-from pprint import pprint
 
 class CarlSampling(Sampler):
     """Sample based on CARL library"""
@@ -18,15 +14,20 @@ class CarlSampling(Sampler):
         self.ratfunc = ratfunc
 
         parser = Parser()
-        self.poly_vars = [libpycarl.VariablePool.getFreshVariable(str(p), libpycarl.VariableType.REAL) for p in self.parameters]
+        self.poly_vars = [pycarl.VariablePool.getFreshVariable(str(p), pycarl.VariableType.REAL) for p in self.parameters]
         for v in self.poly_vars:
             parser.addVariable(v)
-        self.poly = parser.rationalFunction(str(self.ratfunc))
+
+        ratfuncstr = str(self.ratfunc).replace("**", "^")
+        print(ratfuncstr)
+        self.poly = parser.rationalFunction(ratfuncstr)
+        print(str(self.poly))
 
     def perform_sampling(self, samplepoints):
         samples = {}
         for pt in samplepoints:
-            evaldict = {x:libpycarl.Rational(y) for x,y in zip(self.poly_vars, pt)}
+            evaldict = {x:pycarl.Rational(y) for x,y in zip(self.poly_vars, pt)}
             value = float((self.poly.evaluate(evaldict)))
             samples[pt] = value
         return OrderedDict(samples.items())
+

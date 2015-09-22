@@ -10,7 +10,7 @@ import argparse
 from input.prismfile import PrismFile
 from input.resultfile import write_pstorm_result
 from modelcheckers.param import ParamParametricModelChecker
-from modelcheckers.pstorm import ProphesyParametricModelChecker
+from modelcheckers.storm import StormModelChecker
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Transform a prism file to a rational function.')
@@ -32,8 +32,8 @@ if __name__ == "__main__":
         prism_file.make_temporary_copy()
         prism_file.replace_parameter_keyword("param float")
         tool = ParamParametricModelChecker(vars(cmdargs)["param"])
-    elif vars(cmdargs)["pstorm"] != None:
-        tool = ProphesyParametricModelChecker(vars(cmdargs)["pstorm"])
+    elif vars(cmdargs)["storm"] != None:
+        tool = StormModelChecker(vars(cmdargs)["pstorm"])
     elif vars(cmdargs)["comics"] != None:
         raise NotImplementedError
     else:

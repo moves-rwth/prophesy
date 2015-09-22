@@ -20,12 +20,13 @@ from tornado import gen
 from pycket.session import SessionMixin
 
 import config
+from config import configuration
 from util import ensure_dir_exists, run_tool
 from input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from input.prismfile import PrismFile
 from modelcheckers.param import ParamParametricModelChecker
-from modelcheckers.pstorm import ProphesyParametricModelChecker
+from modelcheckers.storm import StormModelChecker
 from smt.smt import setup_smt
 from smt.isat import IsatSolver
 from smt.smtlib import SmtlibSolver
@@ -90,7 +91,7 @@ def getPMC(satname):
 
 #@route('/ui/<filepath:path>')
 def server_static(filepath):
-    return static_file(filepath, root = config.WEB_INTERFACE_DIR)
+    return static_file(filepath, root = configuration.get(config.DIRECTORIES, "web_results"))
 
 #@route('/')
 def index():
@@ -298,12 +299,12 @@ class UploadPrism(CegarHandler):
         if upload_pctl is None:
             return self._json_error("Missing PCTL file")
 
-        (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTFILES_DIR)
+        (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = configuration.get(config.DIRECTORIES, "web_results"))
         with os.fdopen(prism_fd, "wb") as prism_f:
             prism_f.write(upload_prism.body)
         prism_file = PrismFile(prism_path)
 
-        (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTFILES_DIR)
+        (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = configuration.get(config.DIRECTORIES, "web_results"))
         with os.fdopen(pctl_fd, "wb") as pctl_f:
             pctl_f.write(upload_pctl.body)
 
@@ -319,7 +320,7 @@ class UploadPrism(CegarHandler):
         os.unlink(pctl_path)
         os.unlink(prism_path)
 
-        (res_fd, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTFILES_DIR)
+        (res_fd, res_file) = tempfile.mkstemp(".result", "param", configuration.get(config.DIRECTORIES, "web_results"))
         os.close(res_fd)
         write_pstorm_result(res_file, result)
 
@@ -346,7 +347,7 @@ class UploadResult(CegarHandler):
 
         result_files = self._get_session('result_files', {})
 
-        (res_fd, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+        (res_fd, res_file) = tempfile.mkstemp(".result", dir = configuration.get(config.DIRECTORIES, "web_results"))
         with os.fdopen(res_fd, "wb") as res_f:
             res_f.write(upload.body)
 
@@ -363,7 +364,7 @@ class UploadResult(CegarHandler):
             os.unlink(res_file)
 
         # Write pstorm result as canonical
-        (res_fd, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTFILES_DIR)
+        (res_fd, res_file) = tempfile.mkstemp(".result", dir = configuration.get(config.DIRECTORIES, "web_results"))
         os.close(res_fd)
         write_pstorm_result(res_file, result)
 
@@ -647,57 +648,13 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
 def initEnv():
     # Check available model checkers, solvers and various other constraints
     # and adjust capabilities based on that
-    print("Checking available tools...")
-
-    try:
-        run_tool([config.PARAM_COMMAND], True)
-        pmcCheckers['param'] = "Param"
-        print("Found param")
-    except:
-        pass
-    try:
-        run_tool([config.PARAMETRIC_STORM_COMMAND], True)
-        pmcCheckers['pstorm'] = "Parametric Storm"
-        print("Found pstorm")
-    except:
-        pass
-
-    samplers['ratfunc'] = "Rational function"
-    samplers['ratfunc_float'] = "Rational function (float)"
-    samplers['carl'] = "Carl library"
-    try:
-        # TODO: Prism sampling not yet supported
-        # run_tool([config.PRISM_COMMAND], True)
-        # samplers['prism'] = "PRISM"
-        # print("Found prism")
-        pass
-    except:
-        pass
-
-    try:
-        run_tool([config.Z3_COMMAND], True)
-        satSolvers['z3'] = "Z3"
-        print("Found z3")
-    except:
-        pass
-    try:
-        run_tool([config.SMTRAT_COMMAND], True)
-        satSolvers['isat'] = "iSAT"
-        print("Found isat")
-    except:
-        pass
-
-    if len(pmcCheckers) == 0:
-        raise RuntimeError("No model checkers in environment")
-    if len(samplers) == 0:
-        # The astute programmer can see that this should never happen
-        raise RuntimeError("No samplers in environment")
-    if len(satSolvers) == 0:
-        raise RuntimeError("No SAT solvers in environment")
+    satSolvers = configuration.getAvailableSMTSolvers()
+    samplers = configuration.getAvailableSamplers()
+    pmcCheckers = configuration.getAvailableParametricMCs()
 
     # Preload some result files for easy startup
     print("Loading default result files...")
-    rat_path = os.path.join(config.EXAMPLES_DIR, 'rat_files')
+    rat_path = configuration.get(config.DIRECTORIES, 'web_examples')
     try:
         ratfiles = os.listdir(rat_path)
         for rfile in ratfiles:
@@ -713,16 +670,16 @@ def initEnv():
     print("Done checking environment")
 
 
-def make_app():
+def make_app(hostname, port):
     settings = {
-        'static_path': config.WEB_INTERFACE_DIR,
+        'static_path': config.configuration.get(config.DIRECTORIES, "web_interface"),
         'static_url_prefix' : '/ui/',
         'cookie_secret' : "sldfjwlekfjLKJLEAQEWjrdjvsl3807(*&SAd",
         'pycket': {
             'engine': 'redis',
             'storage': {
-                'host': 'localhost',
-                'port': 6379,
+                'host': hostname,
+                'port': port,
                 'db_sessions': 10,
                 'db_notifications': 11,
                 'max_connections': 2 ** 31,
@@ -772,19 +729,20 @@ if __name__ == "__main__":
     parser.add_argument('--server-quiet', type = bool, help = 'run the server in quiet mode', default = False)
     cmdargs = parser.parse_args()
 
-    ensure_dir_exists(config.WEB_SESSIONS_DIR)
-    ensure_dir_exists(config.WEB_RESULTFILES_DIR)
+    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_sessions"))
+    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_results"))
+    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_examples"))
 
     session_opts = {
         'session.type': 'file',
-        'session.data_dir': config.WEB_SESSIONS_DIR,
+        'session.data_dir': config.configuration.get(config.DIRECTORIES, "web_sessions"),
         'session.auto': True,
         'session.invalidate_corrupt':False
     }
 
     initEnv()
 
-    app = make_app()
+    app = make_app(cmdargs.server_host, cmdargs.server_port)
 
     if(not cmdargs.server_quiet):
         print("Starting webservice...")
