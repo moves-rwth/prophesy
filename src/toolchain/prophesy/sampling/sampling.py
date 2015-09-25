@@ -1,12 +1,11 @@
 import itertools
-from config import configuration
 import math
 from collections import OrderedDict
 
 from shapely.geometry import Point
 from numpy import linspace
 
-from config import SAMPLING_DISTANCE
+from config import configuration
 
 
 class Sampler(object):

@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 from input.prismfile import PrismFile
 from input.resultfile import write_pstorm_result
 from modelcheckers.param import ParamParametricModelChecker
-from modelcheckers.pstorm import ProphesyParametricModelChecker
+from modelcheckers.storm import StormModelChecker
 
 
 def parse_cli_args():
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         prism_file.replace_parameter_keyword("param float")
         tool = ParamParametricModelChecker(cmdargs.param)
     elif cmdargs.storm is not None:
-        tool = ProphesyParametricModelChecker(cmdargs.pstorm)
+        tool = StormModelChecker(cmdargs.pstorm)
     elif cmdargs.comics is not None:
         tool = ParamParametricModelChecker(vars(cmdargs)["param"])
     else:
