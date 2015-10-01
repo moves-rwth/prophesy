@@ -15,7 +15,7 @@ import smt.smt
 # needed for pdf merging for debugging
 from config import configuration
 import config
-rom data.constraint import Constraint, ComplexConstraint
+from data.constraint import Constraint, ComplexConstraint
 from output.plot import Plot
 from util import ensure_dir_exists
 
@@ -252,7 +252,7 @@ class ConstraintGeneration:
         samples_green = [pt for pt, v in self.samples.items() if v >= self.threshold]
         samples_red = [pt for pt, v in self.samples.items() if v < self.threshold]
 
-        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=dir = configuration.get(config.DIRECTORIES, "plots"))
+        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get(config.DIRECTORIES, "plots"))
         Plot.plot_results(parameters=self.parameters,
                           samples_green=samples_green,
                           samples_red=samples_red,
