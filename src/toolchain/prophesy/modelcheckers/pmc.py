@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-class ProbablisticModelChecker():
+
+class ProbabilisticModelChecker:
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -10,4 +11,4 @@ class ProbablisticModelChecker():
     def version(self): raise NotImplementedError
 
     @abstractmethod
-    def uniform_sample_pctl_formula(self, prims_file, pctl_file, parameters, ranges): raise NotImplementedError
+    def uniform_sample_pctl_formula(self, prism_file, pctl_file, parameters, ranges): raise NotImplementedError
