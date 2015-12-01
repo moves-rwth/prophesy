@@ -2,7 +2,7 @@ This README contains instructions for installing and running the Prophesy toolch
 http://moves.rwth-aachen.de/research/tools/prophesy
 Here, a video tutorial for using the tool can also be found.
 
-Throught this README, we refer to the Prophesy installation directory as
+Throughout this README, we refer to the Prophesy installation directory as
 $PROPHESY_DIR (in the virtual machine, this is /home/cav/prophesy)
 
 ============
@@ -13,7 +13,7 @@ The Prophesy toolchain makes use of the following binaries, for which a few libr
   pstorm: CARL (included), cln, gmp, gpmxx, ginac
   prism:  Oracle Java 7
 
-The toolchain itself is written in Python3, and needs the following additional libraries (for Python) to work. Note: some of these libraries may themselves depend on others, it is recommended to use either Python 'pip' or the system package manager to isntall these:
+The toolchain itself is written in Python3, and needs the following additional libraries (for Python) to work. Note: some of these libraries may themselves depend on others, it is recommended to use either Python 'pip' or the system package manager to install these:
   Prophesy: python3 + numpy, sympy, matplotlib and shapely
 
 The toolset requires at least a 64-bit system. To be able to comfortably run the toolchain, a dualcore system is recommended with 4GB of RAM.
@@ -21,7 +21,7 @@ The toolset requires at least a 64-bit system. To be able to comfortably run the
 ============
 Installation
 ============
-To install the toolset, first the above mentioned libraries have to be installed. Consult documentastion for your operating system on how to obtain these libraries. For the CAV AE virtual machine, the following commands will install these packages:
+To install the toolset, first the above mentioned libraries have to be installed. Consult documentation for your operating system on how to obtain these libraries. For the CAV AE virtual machine, the following commands will install these packages:
 
 sudo apt-get install python3-matplotlib python3-numpy
 sudo apt-get install libgeos-c1 libginac2 libgmpxx4ldbl
@@ -42,7 +42,7 @@ unzip examples.zip
 unzip tools.zip
 echo export PROPHESY_DIR=$PROPHESY_DIR >> ~/.bashrc
 
-Finally, the CARL library (contained in the binaries package) needs to be made visible in the system library search path. That can be done by modifying the search path. For the CAV virtual machine, this ca nbe done by the following commands:
+Finally, the CARL library (contained in the binaries package) needs to be made visible in the system library search path. That can be done by modifying the search path. For the CAV virtual machine, this can be done by the following commands:
 sudo su
 echo $PROPHESY_DIR/lib >> /etc/ld.so.conf.d/prophesy.conf
 ldconfig
@@ -96,8 +96,8 @@ The get an idea of the effect of the parameters on the final probability, and to
 * Auto sampling: Sample points can be generated automatically as well. This is done by generating a uniform grid of points first (the 'Sampling number' parameter), followed by refining points that are close to the threshold (the 'Number of iterations' parameter). Finally, two methods to find points close to the threshold are provided: Linear interpolation and Delaunay triangulation. It strongly depends on the model which performs better, so if one does not function satisfactory try the other. The 'Go' button will then calculate the samples. Note: Doing so will clear any previously determined sample points.
 
 Generating constraints:
-FInally, to prove that parts of the search space are either safe (below the threshold) or bad (above the threshold), constraints can be generated that capture subsets of the search space. Again, two methods are available, manual and automatic:
-* Manual Constraints: Enabling the option on this tab allows one to define a polygon in the plot by drawing its vertices. This polygon is then transformed into a constraint (or multiple if necessary) which can then be checked to be either safe of bad. To select either 'Check for safe' or 'Check for bad', and submit the contraint with 'Check new'. To start drawing a new polygon before submitting the current, press 'Clear current'.
+Finally, to prove that parts of the search space are either safe (below the threshold) or bad (above the threshold), constraints can be generated that capture subsets of the search space. Again, two methods are available, manual and automatic:
+* Manual Constraints: Enabling the option on this tab allows one to define a polygon in the plot by drawing its vertices. This polygon is then transformed into a constraint (or multiple if necessary) which can then be checked to be either safe of bad. To select either 'Check for safe' or 'Check for bad', and submit the constraint with 'Check new'. To start drawing a new polygon before submitting the current, press 'Clear current'.
 * Auto Constraints: This tab presents a list of algorithms to generate constraints automatically. They are
 
 They are described in more detail in the Prophesy paper. After selecting the appropriate algorithm, constraints generated by clicking 'Generate'.
@@ -105,5 +105,5 @@ They are described in more detail in the Prophesy paper. After selecting the app
 For both manual and automatic constraint analysis, Z3 is used. Performance varies greatly depending on the input model and constraint shape. If analysis terminated without result, try changing the parameters and (in case of manual constraints) shape and try again.
 
 Changing settings:
-Throughtout using the GUI, the 'Threshold' setting can be adjusted as required. Sample points will automatically update their color based on this. However, constraints will become invalid and will have to be recalculated.
+Throughout using the GUI, the 'Threshold' setting can be adjusted as required. Sample points will automatically update their color based on this. However, constraints will become invalid and will have to be recalculated.
 The 'Sampler' and 'SMT Solver' determine the tools used for these purposes. Currently, they are fixed to 'Rational function' and 'Z3'. Future versions may provide more alternatives.
