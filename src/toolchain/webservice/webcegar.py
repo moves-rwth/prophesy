@@ -16,7 +16,7 @@ import shutil
 import uuid
 
 from tornado.ioloop import IOLoop
-from tornado.web import Application, RequestHandler
+from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
 from tornado import gen
@@ -96,10 +96,6 @@ def getPMC(satname):
 def server_static(filepath):
     return static_file(filepath, root = configuration.get(config.DIRECTORIES, "web_results"))
 
-#@route('/')
-def index():
-    return redirect("ui/index.html", code = 301)
-
 class CegarHandler(RequestHandler, SessionMixin):
     def write_error(self, status_code, **kwargs):
         message = "Unknown server error"
@@ -176,7 +172,6 @@ class CegarHandler(RequestHandler, SessionMixin):
             return True
         return False
 
-#@route('/invalidateSession')
 class InvalidateSession(CegarHandler):
     def get(self):
         # Delete temporary files
@@ -189,7 +184,6 @@ class InvalidateSession(CegarHandler):
         request.session.invalidate()
         return self._json_ok()
 
-#@route('/threshold')
 class Threshold(CegarHandler):
     def get(self):
         return self._json_ok(self._get_session('threshold', 0.5))
@@ -214,7 +208,6 @@ class Threshold(CegarHandler):
 
         return self._json_ok()
 
-#@route('/currentResult')
 class CurrentResult(CegarHandler):
     def get(self):
         self.setup_results()
@@ -232,7 +225,6 @@ class CurrentResult(CegarHandler):
 
         return self._json_error("No result found", 404)
 
-#@route('/environment')
 class Environment(CegarHandler):
     def get(self):
         return self._json_ok({
@@ -258,12 +250,10 @@ class Environment(CegarHandler):
 
         return self._json_ok()
 
-#@route('/environments')
 class Environments(CegarHandler):
     def get(self):
         return self._json_ok({"pmc":pmcCheckers, "samplers":samplers, "sat":satSolvers})
 
-#@route('/results')
 class Results(CegarHandler):
     def get(self, name=None):
         self.setup_results()
@@ -289,7 +279,6 @@ class Results(CegarHandler):
         str_result = re.sub(r'\>\=', r'&#8805;', str_result)
         return self._json_ok(str_result)
 
-#@route('/uploadPrism', method = 'POST')
 class UploadPrism(CegarHandler):
     def post(self):
         tool = self.get_argument('mctool')
@@ -337,7 +326,6 @@ class UploadPrism(CegarHandler):
 
         return self._json_ok(upload_prism.filename)
 
-#@route('/uploadResult', method = 'POST')
 class UploadResult(CegarHandler):
     def post(self):
         tool = self.get_argument('result-type')
@@ -379,7 +367,6 @@ class UploadResult(CegarHandler):
 
         return self._json_ok({"file" : upload.filename})
 
-#@route('/samples', method = "POST")
 class Samples(CegarHandler):
     def get(self):
         flattenedsamples = _jsonSamples(self._get_session('samples', {}))
@@ -430,7 +417,6 @@ class Samples(CegarHandler):
         self._set_session("samples", {})
         return self._json_ok()
 
-#@route('/generateSamples', method = 'POST')
 class GenerateSamples(CegarHandler):
     @gen.coroutine
     def post(self):
@@ -546,7 +532,6 @@ class ConstraintHandler(CegarHandler):
         
         return (new_samples, unsat)
 
-#@route('/constraints')
 class Constraints(ConstraintHandler):
     def get(self):
         constraints = self._get_session('constraints', [])
@@ -590,7 +575,6 @@ class Constraints(ConstraintHandler):
         self._set_session('constraints', [])
         return self._json_ok()
 
-#@route('/generateConstraints')
 class GenerateConstraints(ConstraintHandler):
     @gen.coroutine
     def post(self):
@@ -705,6 +689,7 @@ def make_app(hostname, port):
     #}
 
     application = Application([
+        (r"/", RedirectHandler, dict(url="ui/index.html")),
         (r'/invalidateSession', InvalidateSession),
         (r'/threshold', Threshold),
         (r'/currentResult', CurrentResult),
