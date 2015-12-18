@@ -3,7 +3,9 @@ import os
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 home = os.path.expanduser("~")
 
+
 def write_initial_config(path):
+    print("Writing config to " + path)
     config = configparser.ConfigParser()
     config_dirs = {}
     config_dirs["tmp"] =  os.path.join(thisfilepath, "../tmp/")

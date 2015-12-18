@@ -1,7 +1,7 @@
 # fetch specific dependencies
---no-index
---find-links deps/
+#--no-index
+#--find-links deps/
 
 # install package
 # NOTE: -e . for editable mode
-.
+. -e

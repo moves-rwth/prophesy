@@ -97,5 +97,5 @@ DIRECTORIES = "directories"
 # CONSTANTS
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
-SUPPORT = ["Nils Jansen, Sebastian Junges"]
+SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
 PRECISION = 0.0001
