@@ -4,3 +4,4 @@ src/toolchain/tmp/
 *.tmp
 *.pyc
 *.bak
+*.cfg
