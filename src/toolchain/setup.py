@@ -15,7 +15,7 @@ def do_setup():
         version="1.1",
         description="Prophesy - Parametric Probabilistic Model Checking",
         packages=find_packages(),
-        install_requires=['tornado', 'pycket', 'sympy', 'shapely', 'numpy', 'matplotlib'],
+        install_requires=['tornado', 'pycket', 'redis', 'sympy', 'shapely', 'numpy', 'matplotlib'],
         extras_require = {
             'carl': ["pycarl"],
             'stormpy' : ["stormpy"]
