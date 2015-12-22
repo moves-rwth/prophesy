@@ -635,6 +635,7 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
 def initEnv():
     # Check available model checkers, solvers and various other constraints
     # and adjust capabilities based on that
+    global satSolvers, samplers, pmcCheckers
     satSolvers = configuration.getAvailableSMTSolvers()
     samplers = configuration.getAvailableSamplers()
     pmcCheckers = configuration.getAvailableParametricMCs()

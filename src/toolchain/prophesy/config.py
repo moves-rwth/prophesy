@@ -33,17 +33,17 @@ class Configuration():
             self._config.write(f)
 
     def getAvailableSMTSolvers(self):
-        smtsolvers = []
+        smtsolvers = {}
         try:
             find_executable(configuration.get(EXTERNAL_TOOLS, "z3"))
-            smtsolvers.append("z3")
-            print("Found z3")
+            smtsolvers['z3'] = "Z3"
+            print("Found Z3")
         except:
             pass
         try:
             util.run_tool(configuration.get(EXTERNAL_TOOLS, "smtrat"), True)
-            smtsolvers.append("smtrat")
-            print("Found smtrat")
+            smtsolvers['smtrat'] = "SMT-RAT"
+            print("Found SMT-RAT")
         except:
             pass
 
@@ -51,18 +51,18 @@ class Configuration():
             raise RuntimeError("No SMT solvers in environment")
         return smtsolvers
 
-    def getAvailableSamplers(self):
+    def getAvailableParametricMCs(self):
         ppmcCheckers = {}
         try:
             util.run_tool([configuration.get(EXTERNAL_TOOLS, "param")], True)
             ppmcCheckers['param'] = "Param"
-            print("Found param")
+            print("Found Param")
         except:
             pass
         try:
             util.run_tool([configuration.get(EXTERNAL_TOOLS, "storm")], True)
             ppmcCheckers['pstorm'] = "Parametric Storm"
-            print("Found pstorm")
+            print("Found Parametric Storm")
         except:
             pass
 
@@ -70,7 +70,7 @@ class Configuration():
             raise RuntimeError("No model checkers in environment")
         return ppmcCheckers
 
-    def getAvailableParametricMCs(self):
+    def getAvailableSamplers(self):
         samplers = {}
         samplers['ratfunc'] = "Rational function"
         samplers['ratfunc_float'] = "Rational function (float)"
