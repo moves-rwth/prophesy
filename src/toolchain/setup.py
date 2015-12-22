@@ -18,6 +18,7 @@ def do_setup():
         install_requires=['tornado', 'pycket', 'sympy', 'shapely', 'numpy', 'matplotlib'],
         extras_require = {
             'carl': ["pycarl"],
+            'stormpy' : ["stormpy"]
         },
         package_data={'prophesy': ['prophesy.cfg']}
     )
