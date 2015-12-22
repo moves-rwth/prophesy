@@ -30,8 +30,8 @@ class IsatSolver(SMTSolver):
         return "unknown"
 
     def check(self):
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        (_, resultfile) = tempfile.mkstemp(suffix=".hys", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        (_, resultfile) = tempfile.mkstemp(suffix=".hys", dir=config.INTERMEDIATE_FILES, text=True)
 
         with open(resultfile, "w") as f:
             f.write("DECL\n")

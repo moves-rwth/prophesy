@@ -6,7 +6,7 @@ from shapely.geometry import Point
 from numpy import linspace
 
 from config import configuration
-
+import config
 
 class Sampler(object):
     """Base class for performing sampling of given set of points"""
@@ -75,7 +75,7 @@ def split_samples(samples, threshold):
     below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
     return above_threshold, below_threshold
 
-def filter_samples(samples, threshold, distance=configuration.get("sampling", "distance")):
+def filter_samples(samples, threshold, distance=configuration.get(config.SAMPLING, "distance")):
     """Returns samples which are less than (or equal) `distance` away
        from the threshold"""
     return {pt: val for pt, val in samples.items() if abs(threshold - val) <= distance}

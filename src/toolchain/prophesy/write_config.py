@@ -32,6 +32,10 @@ def write_initial_config(path):
     config_sampling["sampling_threshold_new"] = str(50)
     config["sampling"] = config_sampling
 
+    config_constraints = {}
+    config_constraints["precision"] = str(0.0001)
+    config["constraints"] = config_constraints
+
     with open(path, 'w') as configfile:
         config.write(configfile)
 

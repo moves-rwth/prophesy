@@ -93,8 +93,8 @@ class ConstraintRectangles(ConstraintGeneration):
                 # Little inaccuracy is OK, it just means extra work if it fails
                 x = anchor.pos.x
                 y = anchor.pos.y
-                x += config.EPS if anchor.dir.value[0] else -config.EPS
-                y += config.EPS if anchor.dir.value[1] else -config.EPS
+                x += config.PRECISION if anchor.dir.value[0] else -config.PRECISION
+                x += config.PRECISION if anchor.dir.value[1] else -config.PRECISION
                 if Point(x, y).within(self.best_rectangle):
                     self.anchor_points.remove(anchor)
 

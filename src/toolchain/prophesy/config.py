@@ -90,12 +90,18 @@ class Configuration():
         return samplers
 
 configuration = Configuration()
+# directories
+DIRECTORIES = "directories"
+INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
+PLOTS = configuration.get(DIRECTORIES, "plots")
+WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
 # section names
 EXTERNAL_TOOLS = "external_tools"
-DIRECTORIES = "directories"
+SAMPLING = "sampling"
+CONSTRAINTS = "constraints"
+PRECISION = configuration.get(CONSTRAINTS, "precision")
 
 # CONSTANTS
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
-PRECISION = 0.0001

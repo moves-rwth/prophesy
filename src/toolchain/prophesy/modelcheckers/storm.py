@@ -50,8 +50,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker, ProbabilisticModelC
         # TODO make sure the pctl formula is supported.
 
         # create a temporary file for the result.
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
 
         args = [self.location,
                 '--symbolic', prism_file.location,

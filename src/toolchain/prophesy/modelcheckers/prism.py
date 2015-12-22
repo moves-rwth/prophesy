@@ -10,7 +10,7 @@ from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
 
 class PrismModelChecker(ProbabilisticModelChecker):
-    def __init__(self, location=config.PRISM_COMMAND):
+    def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "prism")):
         self.location = location
 
     def name(self):
@@ -29,8 +29,8 @@ class PrismModelChecker(ProbabilisticModelChecker):
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
         const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(prism_file.parameters, range_strings)])
 
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
 
         args = [self.location, prism_file.location, pctl_filepath,
                 "-const", const_values_string,
@@ -45,8 +45,8 @@ class PrismModelChecker(ProbabilisticModelChecker):
     def sample_pctl_formula(self, prism_file, pctl_filepath, samplepoints):
         check_filepath_for_reading(pctl_filepath, "pctl file")
 
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
         samples = {}
         for pt in samplepoints:
             const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(prism_file.parameters, pt)])
