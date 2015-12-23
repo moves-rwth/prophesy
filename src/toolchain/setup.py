@@ -18,12 +18,15 @@ def do_setup():
         install_requires=['tornado', 'pycket', 'redis', 'sympy', 'shapely', 'numpy', 'matplotlib'],
         extras_require = {
             'carl': ["pycarl"],
-            'stormpy' : ["stormpy"]
+            'stormpy' : ["stormpy"],
+            'pdf': ["PyPDF2"],
         },
         package_data={'prophesy': ['prophesy.cfg']}
     )
 
     print("Found pycarl: ", package_installed("pycarl"))
+    print("Found stormpy: ", package_installed("stormpy"))
+    print("Found PyPDF2: ", package_installed("PyPDF2"))
 
 if __name__ == "__main__":
       do_setup()
