@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 from collections import OrderedDict
 
+from config import configuration
 import config
 from modelcheckers.pmc import ProbabilisticModelChecker
 from sampling.sampling import read_samples_file

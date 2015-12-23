@@ -34,12 +34,9 @@ class Configuration():
 
     def getAvailableSMTSolvers(self):
         smtsolvers = {}
-        try:
-            find_executable(configuration.get(EXTERNAL_TOOLS, "z3"))
+        if find_executable(configuration.get(EXTERNAL_TOOLS, "z3")):
             smtsolvers['z3'] = "Z3"
             print("Found Z3")
-        except:
-            pass
         try:
             util.run_tool(configuration.get(EXTERNAL_TOOLS, "smtrat"), True)
             smtsolvers['smtrat'] = "SMT-RAT"
@@ -63,6 +60,12 @@ class Configuration():
             util.run_tool([configuration.get(EXTERNAL_TOOLS, "storm")], True)
             ppmcCheckers['pstorm'] = "Parametric Storm"
             print("Found Parametric Storm")
+        except:
+            pass
+        try:
+            util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
+            ppmcCheckers['prism'] = "Prism"
+            print("Found Prism")
         except:
             pass
 

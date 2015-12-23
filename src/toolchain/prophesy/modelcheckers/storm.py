@@ -55,6 +55,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, ProbabilisticModelC
 
         args = [self.location,
                 '--symbolic', prism_file.location,
+                '--parametric',
                 '--prop', str(pctl_formulas[0]),
                 '--parametric:resultfile', resultfile]
         if self.bisimulation == BisimulationType.strong:

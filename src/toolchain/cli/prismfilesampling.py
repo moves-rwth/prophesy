@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 
 from input.prismfile import PrismFile
 from modelcheckers.prism import PrismModelChecker
+from modelcheckers.storm import StormModelChecker
 from sampling.sampler_prism import McSampling
 from sampling.sampling import write_samples_file
 

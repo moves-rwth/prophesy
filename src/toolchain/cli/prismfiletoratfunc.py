@@ -41,7 +41,7 @@ if __name__ == "__main__":
         prism_file.replace_parameter_keyword("param float")
         tool = ParamParametricModelChecker(cmdargs.param)
     elif cmdargs.storm is not None:
-        tool = StormModelChecker(cmdargs.pstorm)
+        tool = StormModelChecker(cmdargs.storm)
     elif cmdargs.comics is not None:
         tool = ParamParametricModelChecker(vars(cmdargs)["param"])
     else:

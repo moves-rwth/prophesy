@@ -1,6 +1,6 @@
 from sampling.sampling import Sampler
 from collections import OrderedDict
-
+import data.range
 
 class McSampling(Sampler):
     """Perform sampling based on the PRISM tool"""
@@ -13,7 +13,7 @@ class McSampling(Sampler):
 
     def perform_uniform_sampling(self, intervals, samples_per_dimension):
         assert samples_per_dimension > 1
-        ranges = [range.create_range_from_interval(interval, samples_per_dimension) for interval in intervals]
+        ranges = [data.range.create_range_from_interval(interval, samples_per_dimension) for interval in intervals]
         samples = self.tool.uniform_sample_pctl_formula(self, self.prism_file, self.pctl_file, ranges)
         return OrderedDict(samples.items())
 
