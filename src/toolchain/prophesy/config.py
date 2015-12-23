@@ -102,7 +102,7 @@ WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
 EXTERNAL_TOOLS = "external_tools"
 SAMPLING = "sampling"
 CONSTRAINTS = "constraints"
-PRECISION = configuration.get(CONSTRAINTS, "precision")
+PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 
 # CONSTANTS
 TOOLNAME = "prophesy"
