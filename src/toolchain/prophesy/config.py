@@ -44,6 +44,13 @@ class Configuration():
         except:
             pass
 
+        try:
+            util.run_tool(configuration.get(EXTERNAL_TOOLS, "isat"), True)
+            smtsolvers['isat'] = "iSAT"
+            print("Found iSAT")
+        except:
+            pass
+
         if len(smtsolvers) == 0:
             raise RuntimeError("No SMT solvers in environment")
         return smtsolvers

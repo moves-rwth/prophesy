@@ -15,15 +15,17 @@ from input.resultfile import write_pstorm_result
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.storm import StormModelChecker
 
+import config
+from config import configuration
 
-def parse_cli_args():
+def parse_cli_args(pmcs):
     parser = ArgumentParser(description='Transform a prism file to a rational function.')
 
     parser.add_argument('--file', help='the input file containing the prism file', required=True)
     parser.add_argument('--pctl-file', help='a file with a pctl property', required=True)
     parser.add_argument('--result-file', help='resulting file', default="result.out")
 
-    solver_group = parser.add_mutually_exclusive_group(required=True)
+    solver_group = parser.add_mutually_exclusive_group(required=not pmcs)
     solver_group.add_argument('--param', help='call the param tool')
     solver_group.add_argument('--storm', help='the location of the pstorm binary')
     solver_group.add_argument('--comics', help='the location of the comics binary')
@@ -32,7 +34,8 @@ def parse_cli_args():
 
 
 if __name__ == "__main__":
-    cmdargs = parse_cli_args()
+    pmcs = configuration.getAvailableParametricMCs()
+    cmdargs = parse_cli_args(pmcs)
 
     prism_file = PrismFile(cmdargs.file)
 
@@ -44,8 +47,12 @@ if __name__ == "__main__":
         tool = StormModelChecker(cmdargs.storm)
     elif cmdargs.comics is not None:
         tool = ParamParametricModelChecker(vars(cmdargs)["param"])
+    elif 'pstorm' in pmcs:
+        tool = StormModelChecker(configuration.get(config.EXTERNAL_TOOLS, "storm"))
+    elif 'param' in pmcs:
+        tool = ParamParametricModelChecker(configuration.get(config.EXTERNAL_TOOLS, "param"))
     else:
-        raise RuntimeError("No supported solver available")
+        raise RuntimeError("No supported model checker defined")
 
     print("Compute the rational function using " + tool.version())
     result = tool.get_rational_function(prism_file, vars(cmdargs)["pctl_file"])

@@ -79,3 +79,5 @@ class StormModelChecker(ParametricProbabilisticModelChecker, ProbabilisticModelC
         if len(pctl_formulas) > 1:
             print("pctl file contains more than one formula. {0} only takes the first.".format(self.name()))
 
+    def uniform_sample_pctl_formula(self, prism_file, pctl_file, ranges):
+        raise NotImplementedError

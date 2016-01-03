@@ -16,8 +16,10 @@ from modelcheckers.storm import StormModelChecker
 from sampling.sampler_prism import McSampling
 from sampling.sampling import write_samples_file
 
+import config
+from config import configuration
 
-def parse_cli_args():
+def parse_cli_args(pmcs):
     parser = ArgumentParser(description='Perform sampling on a prism file')
 
     parser.add_argument('--file', help='the input file containing the prism file', required=True)
@@ -25,7 +27,7 @@ def parse_cli_args():
     parser.add_argument('--samples-file', help='resulting file', default="samples.out")
     parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
 
-    solver_group = parser.add_mutually_exclusive_group(required=True)
+    solver_group = parser.add_mutually_exclusive_group(required=not pmcs)
     solver_group.add_argument('--prism', help='the location of the prism binary')
     solver_group.add_argument('--storm', help='the location of the storm binary')
 
@@ -33,16 +35,21 @@ def parse_cli_args():
 
 
 if __name__ == "__main__":
-    cmdargs = parse_cli_args()
+    pmcs = configuration.getAvailableParametricMCs()
+    cmdargs = parse_cli_args(pmcs)
 
     prism_file = PrismFile(cmdargs.file)
 
     if cmdargs.prism is not None:
         tool = PrismModelChecker(cmdargs.prism)
-    elif cmdargs.storm != None:
+    elif cmdargs.storm is not None:
         tool = StormModelChecker(cmdargs.storm)
+    elif 'pstorm' in pmcs:
+        tool = StormModelChecker(configuration.get(config.EXTERNAL_TOOLS, "storm"))
+    elif 'prism' in pmcs:
+        tool = PrismModelChecker(configuration.get(config.EXTERNAL_TOOLS, "prism"))
     else:
-        raise RuntimeError("No supported solver available")
+        raise RuntimeError("No supported model checker defined")
 
     print("Perform sampling using " + tool.version())
 
