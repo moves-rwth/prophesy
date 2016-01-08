@@ -4,7 +4,7 @@ from sympy.core.numbers import Rational
 from sympy.core.sympify import sympify
 from sympy.polys import Poly
 
-from pycarl import Parser
+from pycarl.core import Parser
 import pycarl
 
 

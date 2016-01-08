@@ -23,7 +23,8 @@ def write_initial_config(path):
     config_tools["isat"] = "isat"
     config_tools["smtrat"] = "smtrat"
     config_tools["param"] = ""
-    config_tools["storm"] = ""
+    config_tools["storm"] = os.path.join(home, "storm")
+    config_tools["prism"] = ""
     config["external_tools"] = config_tools
 
     #
@@ -31,6 +32,10 @@ def write_initial_config(path):
     config_sampling["distance"] = str(0.2)
     config_sampling["sampling_threshold_new"] = str(50)
     config["sampling"] = config_sampling
+
+    config_constraints = {}
+    config_constraints["precision"] = str(0.0001)
+    config["constraints"] = config_constraints
 
     with open(path, 'w') as configfile:
         config.write(configfile)

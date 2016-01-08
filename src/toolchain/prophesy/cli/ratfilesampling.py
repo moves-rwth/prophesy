@@ -14,13 +14,11 @@ from argparse import ArgumentParser
 # from sampling.sampler_carl import CarlSampling # needs fix
 # from sampling.sampler_prism import McSampling # unused
 # from sampling.sampling_linear import LinearRefinement # unused
-from config import PLOT_FILES_DIR
 from input.resultfile import read_pstorm_result
 from output.plot import Plot
 import argparse
 from input.resultfile import read_pstorm_result
 import config
-from config import configuration
 from sampling.sampling import write_samples_file
 from sampling.sampler_ratfunc import RatFuncSampling
 from sampling.sampling import write_samples_file
@@ -80,7 +78,7 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
     Plot.flip_green_red = True if not safe_above_threshold else False
 
-    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=PLOT_FILES_DIR)
+    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=config.PLOTS)
 
     samples_green = [pt for pt, v in samples.items() if v >= threshold]
     samples_red = [pt for pt, v in samples.items() if v < threshold]

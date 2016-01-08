@@ -33,17 +33,21 @@ class Configuration():
             self._config.write(f)
 
     def getAvailableSMTSolvers(self):
-        smtsolvers = []
-        try:
-            find_executable(configuration.get(EXTERNAL_TOOLS, "z3"))
-            smtsolvers.append("z3")
-            print("Found z3")
-        except:
-            pass
+        smtsolvers = {}
+        if find_executable(configuration.get(EXTERNAL_TOOLS, "z3")):
+            smtsolvers['z3'] = "Z3"
+            print("Found Z3")
         try:
             util.run_tool(configuration.get(EXTERNAL_TOOLS, "smtrat"), True)
-            smtsolvers.append("smtrat")
-            print("Found smtrat")
+            smtsolvers['smtrat'] = "SMT-RAT"
+            print("Found SMT-RAT")
+        except:
+            pass
+
+        try:
+            util.run_tool(configuration.get(EXTERNAL_TOOLS, "isat"), True)
+            smtsolvers['isat'] = "iSAT"
+            print("Found iSAT")
         except:
             pass
 
@@ -51,18 +55,24 @@ class Configuration():
             raise RuntimeError("No SMT solvers in environment")
         return smtsolvers
 
-    def getAvailableSamplers(self):
+    def getAvailableParametricMCs(self):
         ppmcCheckers = {}
         try:
             util.run_tool([configuration.get(EXTERNAL_TOOLS, "param")], True)
             ppmcCheckers['param'] = "Param"
-            print("Found param")
+            print("Found Param")
         except:
             pass
         try:
             util.run_tool([configuration.get(EXTERNAL_TOOLS, "storm")], True)
             ppmcCheckers['pstorm'] = "Parametric Storm"
-            print("Found pstorm")
+            print("Found Parametric Storm")
+        except:
+            pass
+        try:
+            util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
+            ppmcCheckers['prism'] = "Prism"
+            print("Found Prism")
         except:
             pass
 
@@ -70,7 +80,7 @@ class Configuration():
             raise RuntimeError("No model checkers in environment")
         return ppmcCheckers
 
-    def getAvailableParametricMCs(self):
+    def getAvailableSamplers(self):
         samplers = {}
         samplers['ratfunc'] = "Rational function"
         samplers['ratfunc_float'] = "Rational function (float)"
@@ -90,12 +100,18 @@ class Configuration():
         return samplers
 
 configuration = Configuration()
+# directories
+DIRECTORIES = "directories"
+INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
+PLOTS = configuration.get(DIRECTORIES, "plots")
+WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
 # section names
 EXTERNAL_TOOLS = "external_tools"
-DIRECTORIES = "directories"
+SAMPLING = "sampling"
+CONSTRAINTS = "constraints"
+PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 
 # CONSTANTS
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
-PRECISION = 0.0001

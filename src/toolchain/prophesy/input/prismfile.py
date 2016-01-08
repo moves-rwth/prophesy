@@ -28,8 +28,8 @@ class PrismFile:
            Does nothing if a temporary copy already exists."""
         if self.is_temp:
             return
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=config.INTERMEDIATE_FILES, text=True)
         try:
             shutil.copyfile(self.location, tmpfile)
             self.location = tmpfile

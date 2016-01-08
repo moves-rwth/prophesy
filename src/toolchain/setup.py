@@ -15,15 +15,18 @@ def do_setup():
         version="1.1",
         description="Prophesy - Parametric Probabilistic Model Checking",
         packages=find_packages(),
-        install_requires=['tornado', 'pycket', 'sympy', 'shapely', 'numpy', 'matplotlib'],
+        install_requires=['tornado', 'pycket', 'redis', 'sympy', 'shapely', 'numpy', 'matplotlib'],
         extras_require = {
             'carl': ["pycarl"],
-            'stormpy' : ["stormpy"]
+            'stormpy' : ["stormpy"],
+            'pdf': ["PyPDF2"],
         },
         package_data={'prophesy': ['prophesy.cfg']}
     )
 
     print("Found pycarl: ", package_installed("pycarl"))
+    print("Found stormpy: ", package_installed("stormpy"))
+    print("Found PyPDF2: ", package_installed("PyPDF2"))
 
 if __name__ == "__main__":
       do_setup()

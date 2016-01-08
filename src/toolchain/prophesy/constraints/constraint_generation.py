@@ -13,7 +13,7 @@ from sympy.polys.polytools import Poly
 
 import smt.smt
 # needed for pdf merging for debugging
-from config import configuration
+from PyPDF2 import PdfFileMerger, PdfFileReader
 import config
 from data.constraint import Constraint, ComplexConstraint
 from output.plot import Plot
@@ -101,8 +101,8 @@ class ConstraintGeneration:
 
         self.plot = True
         self.first_pdf = True
-        ensure_dir_exists(configuration.get(config.DIRECTORIES, "plots"))
-        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=PLOT_FILES_DIR)
+        ensure_dir_exists(config.PLOTS)
+        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=config.PLOTS)
 
     def __iter__(self):
         # Prime the generator
@@ -139,12 +139,10 @@ class ConstraintGeneration:
             shutil.copyfile(name, self.result_file)
             print("Plot file located at {0}".format(self.result_file))
         else:
-            _, result_tmp_file = tempfile.mkstemp(".pdf", dir = configuration.get(config.DIRECTORIES, "plots"))
-            call(["pdfunite", self.result_file, name, result_tmp_file])
-            try:
-                shutil.move(result_tmp_file, self.result_file)
-            except:
-                os.unlink(result_tmp_file)
+            merger = PdfFileMerger()
+            merger.append(PdfFileReader(self.result_file, 'rb'))
+            merger.append(PdfFileReader(name, 'rb'))
+            merger.write(self.result_file)
 
     def compute_constraint(self, polygon):
         """Compute constraints from polygon (Polygon, LineString or LinearRing)
@@ -207,7 +205,7 @@ class ConstraintGeneration:
         pol = constraint.polynomial.eval({x: y for x, y in zip(constraint.symbols, pt)}).evalf()
 
         if constraint.relation == "=":
-            return abs(pol) < configuration.get(config.DEFAULT, "precision")
+            return abs(pol) < config.PRECISION
         elif constraint.relation == "<":
             return pol < 0
         elif constraint.relation == ">":
@@ -217,7 +215,7 @@ class ConstraintGeneration:
         elif constraint.relation == ">=":
             return pol >= 0
         elif constraint.relation == "<>":
-            return abs(pol) > configuration.get(config.DEFAULT, "precision")
+            return abs(pol) > config.PRECISION
 
     @staticmethod
     def print_benchmark_output(benchmark_output):
@@ -252,7 +250,7 @@ class ConstraintGeneration:
         samples_green = [pt for pt, v in self.samples.items() if v >= self.threshold]
         samples_red = [pt for pt, v in self.samples.items() if v < self.threshold]
 
-        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get(config.DIRECTORIES, "plots"))
+        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=config.PLOTS)
         Plot.plot_results(parameters=self.parameters,
                           samples_green=samples_green,
                           samples_red=samples_red,

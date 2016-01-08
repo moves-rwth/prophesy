@@ -41,12 +41,15 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
     def get_rational_function(self):
         # create a temporary file for the result.
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
 
         args = [self.location,
                 '--symbolic', self.prismfile.location,
-                '--prop', self.pctlformula),
+                '--prop', self.pctlformula,
+                '--symbolic', prism_file.location,
+                '--parametric',
+                '--prop', self.pctlformula
                 '--parametric:resultfile', resultfile]
         if self.bisimulation == BisimulationType.strong:
             args.append('--bisimulation')
@@ -70,5 +73,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if len(pctl_formulas) > 1:
             print("pctl file contains more than one formula. {0} only takes the first.".format(self.name()))
 
+<<<<<<< HEAD
 
 
+=======
+    def uniform_sample_pctl_formula(self, prism_file, pctl_file, ranges):
+        raise NotImplementedError
+>>>>>>> d16e32abe56a678081933919add331f52eaa46a9

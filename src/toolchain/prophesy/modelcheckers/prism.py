@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 from collections import OrderedDict
 
+from config import configuration
 import config
 from modelcheckers.pmc import ProbabilisticModelChecker
 from sampling.sampling import read_samples_file
@@ -11,7 +12,7 @@ from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
 
 class PrismModelChecker(ProbabilisticModelChecker):
-    def __init__(self, location=config.PRISM_COMMAND):
+    def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "prism")):
         self.location = location
         self.pctlformula = None
         self.prismfile = None
@@ -39,8 +40,8 @@ class PrismModelChecker(ProbabilisticModelChecker):
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
         const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(self.prismfile.parameters, range_strings)])
 
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
 
 
 
@@ -59,8 +60,8 @@ class PrismModelChecker(ProbabilisticModelChecker):
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
 
 
-        ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
         pctlpath = write_string_to_tmpfile(self.pctlformula)
 
         samples = {}

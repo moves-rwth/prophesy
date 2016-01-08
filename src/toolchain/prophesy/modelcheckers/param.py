@@ -1,4 +1,5 @@
 # import tempfile
+# from config import configuration
 # import config
 # import subprocess
 # import os
@@ -12,7 +13,7 @@ class ParamParametricModelChecker(ParametricProbabilisticModelChecker):
 
 
 # class ParamParametricModelChecker(ParametricProbablisticModelChecker):
-#     def __init__(self, location = config.):
+#     def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "param")):
 #         self.location = location
 #
 #     def name(self):
@@ -31,8 +32,8 @@ class ParamParametricModelChecker(ParametricProbabilisticModelChecker):
 #
 #         # create a temporary file for the result. Note: Param will create its own file
 #         # based on given prefix, so need to unlink twice
-#         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
-#         (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES_DIR, text = True)
+#         ensure_dir_exists(config.INTERMEDIATE_FILES)
+#         (_, resultfile) = tempfile.mkstemp(suffix = ".txt", dir = config.INTERMEDIATE_FILES), text = True)
 #         os.unlink(resultfile)
 #
 #         args = [self.location,

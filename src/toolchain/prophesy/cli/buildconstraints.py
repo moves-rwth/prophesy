@@ -23,8 +23,10 @@ from smt.isat import IsatSolver
 from smt.smt import setup_smt
 from smt.smtlib import SmtlibSolver
 
+import config
+from config import configuration
 
-def parse_cli_args():
+def parse_cli_args(solversConfig):
     parser = ArgumentParser(description='Build constraints based on a sample file')
 
     parser.add_argument('--rat-file', help='file containing rational function', required=True)
@@ -42,7 +44,7 @@ def parse_cli_args():
     method_group.add_argument('--quads', action='store_true', dest='quads')
     method_group.add_argument('--poly', action='store_true', dest='poly')
 
-    solvers_group = parser.add_mutually_exclusive_group(required=True)
+    solvers_group = parser.add_mutually_exclusive_group(required=not solversConfig)
     solvers_group.add_argument('--z3', dest='z3location', help='location of z3')
     solvers_group.add_argument('--isat', dest='isatlocation', help='location of isat')
 
@@ -56,7 +58,8 @@ def parse_cli_args():
 
 
 if __name__ == "__main__":
-    cmdargs = parse_cli_args()
+    solvers = configuration.getAvailableSMTSolvers()
+    cmdargs = parse_cli_args(solvers)
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)
@@ -75,6 +78,13 @@ if __name__ == "__main__":
         smt2interface = SmtlibSolver(cmdargs.z3location)
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
+    elif 'z3' in solvers:
+        smt2interface = SmtlibSolver(configuration.get(config.EXTERNAL_TOOLS, "z3"))
+    elif 'isat' in solvers:
+        smt2interface = IsatSolver(configuration.get(config.EXTERNAL_TOOLS, "isat"))
+    else:
+        raise RuntimeError("No supported SMT defined")
+
     smt2interface.run()
     setup_smt(smt2interface, result, threshold)
 
