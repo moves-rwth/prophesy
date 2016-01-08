@@ -23,7 +23,7 @@ def write_initial_config(path):
     config_tools["isat"] = "isat"
     config_tools["smtrat"] = "smtrat"
     config_tools["param"] = ""
-    config_tools["storm"] = os.path.join(home, "storm")
+    config_tools["storm"] = ""
     config["external_tools"] = config_tools
 
     #
