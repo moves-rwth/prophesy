@@ -2,6 +2,7 @@ import os
 import errno
 import platform
 import subprocess
+import tempfile
 from exceptions.IOError import IOError
 
 
@@ -48,6 +49,24 @@ def open_file(path):
     platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
     os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
 
+
+def write_string_to_file(path, string):
+    """
+    :param path: File where we want to put the string
+    :param string: New content
+    :return:
+    """
+    with open(path, 'w') as f:
+        f.write(string)
+
+def write_string_to_tmpfile(string):
+    """
+    :param string:
+    :return: The path to the temporary file
+    """
+    _, path, = tempfile.mkstemp(suffix=".pctl", text=True)
+    write_string_to_file(path, string)
+    return path
 
 def which(program):
     """

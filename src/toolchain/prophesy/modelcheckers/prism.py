@@ -6,12 +6,21 @@ from collections import OrderedDict
 import config
 from modelcheckers.pmc import ProbabilisticModelChecker
 from sampling.sampling import read_samples_file
+from input.prismfile import PrismFile
 from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 
 
 class PrismModelChecker(ProbabilisticModelChecker):
     def __init__(self, location=config.PRISM_COMMAND):
         self.location = location
+        self.pctlformula = None
+        self.prismfile = None
+
+    def set_pctl_formula(self, formula):
+        self.pctlformula = formula
+
+    def load_model_from_prismfile(self, path):
+        self.prismfile = PrismFile(path)
 
     def name(self):
         return "prism"
@@ -22,35 +31,42 @@ class PrismModelChecker(ProbabilisticModelChecker):
         # pipe.communicate()
         return pipe.communicate()[0].decode(encoding='UTF-8')
 
-    def uniform_sample_pctl_formula(self, prism_file, pctl_filepath, ranges):
-        assert len(prism_file.parameters) == len(ranges), "Number of value ranges does not match number of parameters"
-        check_filepath_for_reading(pctl_filepath, "pctl file")
+    def uniform_sample(self, ranges):
+        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile == None: raise NotEnoughInformationError("model missing")
+        assert len(self..parameters) == len(ranges), "Number of value ranges does not match number of parameters"
 
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
-        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(prism_file.parameters, range_strings)])
+        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(self.prismfile.parameters, range_strings)])
 
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
 
-        args = [self.location, prism_file.location, pctl_filepath,
+
+
+        args = [self.location, self.prismfile.location, pctlpath,
                 "-const", const_values_string,
                 "-exportresults", resultpath]
         run_tool(args)
         found_parameters, samples, _ = read_samples_file(resultpath)
         os.unlink(resultpath)
-        if found_parameters != prism_file.parameters:
+        if found_parameters != self.prismfile.parameters:
             raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
         return samples
 
-    def sample_pctl_formula(self, prism_file, pctl_filepath, samplepoints):
-        check_filepath_for_reading(pctl_filepath, "pctl file")
+    def sample(self,samplepoints):
+        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile == None: raise NotEnoughInformationError("model missing")
+
 
         ensure_dir_exists(config.INTERMEDIATE_FILES_DIR)
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES_DIR, text=True)
+        pctlpath = write_string_to_tmpfile(self.pctlformula)
+
         samples = {}
         for pt in samplepoints:
-            const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(prism_file.parameters, pt)])
-            args = [self.location, prism_file.location, pctl_filepath,
+            const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(self.prismfile.parameters, pt)])
+            args = [self.location, self.prismfile.location, pctlpath,
                     "-const", const_values_string,
                     "-exportresults", resultpath]
             run_tool(args)
