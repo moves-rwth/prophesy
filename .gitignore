@@ -1,7 +1,10 @@
 __pycache__/
-src/toolchain/tmp/
+tmp/
+.idea/
 *.log
 *.tmp
 *.pyc
 *.bak
 *.cfg
+*.egg-link
+*.egg-info
