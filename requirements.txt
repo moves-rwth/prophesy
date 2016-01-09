@@ -4,4 +4,4 @@
 
 # install package
 # NOTE: -e . for editable mode
-. -e
+-e . 
