@@ -5,50 +5,11 @@ Here, a video tutorial for using the tool can also be found.
 Throughout this README, we refer to the Prophesy installation directory as
 $PROPHESY_DIR (in the virtual machine, this is /home/cav/prophesy)
 
-============
-Requirements
-============
-The Prophesy toolchain makes use of the following binaries, for which a few libraries need to be installed. In particular, the following are needed:
-  z3:     libgomp
-  pstorm: CARL (included), cln, gmp, gpmxx, ginac
-  prism:  Oracle Java 7
-
-The toolchain itself is written in Python3, and needs the following additional libraries (for Python) to work. Note: some of these libraries may themselves depend on others, it is recommended to use either Python 'pip' or the system package manager to install these:
-  Prophesy: python3 + numpy, sympy, matplotlib and shapely
-
 The toolset requires at least a 64-bit system. To be able to comfortably run the toolchain, a dualcore system is recommended with 4GB of RAM.
 
 ============
 Installation
 ============
-To install the toolset, first the above mentioned libraries have to be installed. Consult documentation for your operating system on how to obtain these libraries. For the CAV AE virtual machine, the following commands will install these packages:
-
-sudo apt-get install python3-matplotlib python3-numpy
-sudo apt-get install libgeos-c1 libginac2 libgmpxx4ldbl
-sudo apt-get install python3-pip
-sudo pip3 install sympy
-sudo pip3 install shapely
-
-The toolset itself can be downloaded from http://moves.rwth-aachen.de/reasearch/tools/prophesy . 3 packages are available: The toolchain, the binaries and examples. Extracting these packages into the same directory suffices to run the toolchain. In the CAV virtual machine, run the following commands to do so:
-
-export PROPHESY_DIR=/home/cav/prophesy
-mkdir -p $PROPHESY_DIR
-cd $PROPHESY_DIR
-wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/prophesy.zip
-wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/examples.zip
-wget http://moves.rwth-aachen.de/wp-content/uploads/prophesy/tools.zip
-unzip prophesy.zip
-unzip examples.zip
-unzip tools.zip
-echo export PROPHESY_DIR=$PROPHESY_DIR >> ~/.bashrc
-
-Finally, the CARL library (contained in the binaries package) needs to be made visible in the system library search path. That can be done by modifying the search path. For the CAV virtual machine, this can be done by the following commands:
-sudo su
-echo $PROPHESY_DIR/lib >> /etc/ld.so.conf.d/prophesy.conf
-ldconfig
-exit
-
-Restart the terminal to load the $PROPHESY_DIR variable
 
 ==================
 Running benchmarks
