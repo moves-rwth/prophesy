@@ -53,7 +53,7 @@ class SmtlibSolver(SMTSolver):
             self.process = None
 
     def name(self):
-        return "smt-prophesy"
+        return "smtlib-interface"
 
     def version(self):
         args = [self.location, "--version"]

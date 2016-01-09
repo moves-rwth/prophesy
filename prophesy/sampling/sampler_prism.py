@@ -3,7 +3,7 @@ from collections import OrderedDict
 import data.range
 
 class McSampling(Sampler):
-    """Perform sampling based on the PRISM tool"""
+    """Perform sampling based on the PRISM input file"""
     def __init__(self, tool, prism_file, pctl_file):
         super().__init__()
 
