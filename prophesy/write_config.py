@@ -1,8 +1,16 @@
 import configparser
 import os
+from distutils.spawn import find_executable
+
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 home = os.path.expanduser("~")
 
+def find_tool(name, path=None):
+    res = find_executable(name, path)
+    if res:
+        return res
+    else:
+        return ""
 
 def write_initial_config(path):
     print("Writing config to " + path)
@@ -19,12 +27,11 @@ def write_initial_config(path):
     config_dirs["custom_path"] = ""
     config["directories"] = config_dirs
     config_tools = {}
-    config_tools["z3"] = "z3"
-    config_tools["isat"] = "isat"
-    config_tools["smtrat"] = "smtrat"
-    config_tools["param"] = ""
-    config_tools["storm"] = os.path.join(home, "storm")
-    config_tools["prism"] = ""
+    config_tools["z3"] = find_tool("z3")
+    config_tools["isat"] = find_tool("isat")
+    config_tools["param"] = find_tool("param")
+    config_tools["storm"] = find_tool("storm")
+    config_tools["prism"] = find_tool("prism")
     config["external_tools"] = config_tools
 
     #
