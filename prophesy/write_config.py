@@ -1,16 +1,31 @@
 import configparser
 import os
+import importlib
 from distutils.spawn import find_executable
 
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 home = os.path.expanduser("~")
 
 def find_tool(name, path=None):
+    """
+    :param name: Searches for a tool with the given name
+    :param path: Optional PATH envirionment where to search
+    :return: The location of the path, and an empty string otherwise
+    """
     res = find_executable(name, path)
     if res:
         return res
     else:
         return ""
+
+def check_python_api(name):
+    """
+    :param name:
+    :return:
+    """
+    spec = importlib.util.find_spec(name)
+    return spec is not None
+
 
 def write_initial_config(path):
     print("Writing config to " + path)
@@ -33,6 +48,12 @@ def write_initial_config(path):
     config_tools["storm"] = find_tool("storm")
     config_tools["prism"] = find_tool("prism")
     config["external_tools"] = config_tools
+    config_deps = {}
+    config_deps["pycarl"] = check_python_api("pycarl")
+    config_deps["stormpy"] = check_python_api("stormpy")
+    config_deps["pypdf2"] = check_python_api("PyPDF2")
+    config["installed_deps"] = config_deps
+
 
     #
     config_sampling = {}
