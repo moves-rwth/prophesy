@@ -27,7 +27,10 @@ def check_filepath_for_reading(filepath, filedescription_string="file"):
 
 
 def run_tool(args, quiet=False):
-    """Executes a process, returning the `stdout`"""
+    """
+    Executes a process,
+    :returns: the `stdout`
+    """
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     if quiet:

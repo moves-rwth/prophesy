@@ -1,7 +1,10 @@
+from distutils.spawn import find_executable
+
 import configparser
 import util
 import os
-from distutils.spawn import find_executable
+
+from exceptions.configuration_error import ConfigurationError
 
 class Configuration():
     def __init__(self):
@@ -34,6 +37,9 @@ class Configuration():
 
     def getAvailableSMTSolvers(self):
         smtsolvers = {}
+        #TODO replace this as in getAvailableParametricMCs
+
+        # finding executables is a job for write_config.
         if find_executable(configuration.get(EXTERNAL_TOOLS, "z3")):
             smtsolvers['z3'] = "Z3"
             print("Found Z3")
@@ -55,30 +61,69 @@ class Configuration():
             raise RuntimeError("No SMT solvers in environment")
         return smtsolvers
 
-    def getAvailableParametricMCs(self):
-        ppmcCheckers = {}
-        try:
-            util.run_tool([configuration.get(EXTERNAL_TOOLS, "param")], True)
-            ppmcCheckers['param'] = "Param"
-            print("Found Param")
-        except:
-            pass
-        try:
-            util.run_tool([configuration.get(EXTERNAL_TOOLS, "storm")], True)
-            ppmcCheckers['pstorm'] = "Parametric Storm"
-            print("Found Parametric Storm")
-        except:
-            pass
-        try:
-            util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
-            ppmcCheckers['prism'] = "Prism"
-            print("Found Prism")
-        except:
-            pass
+    def getAvailableProbMCs(self):
+        pmcs = set()
+        stormLoc =  configuration.get(EXTERNAL_TOOLS, "storm")
+        if stormLoc != "":
+            try:
+                util.run_tool([stormLoc], True)
+                pmcs.add('storm')
+                #TODO check whether this is really storm
+            except:
+                raise ConfigurationError("Storm is not found at " + stormLoc)
 
-        if len(ppmcCheckers) == 0:
+        prismLoc = configuration.get(EXTERNAL_TOOLS, "prism")
+        if prismLoc != "":
+            try:
+                util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
+                pmcs.add('prism')
+            except:
+                raise ConfigurationError("Prism is not found at " + prismLoc)
+
+        if configuration.get(DEPENDENCIES, "stormpy"):
+            pmcs.add('stormpy')
+
+        if len(pmcs) == 0:
             raise RuntimeError("No model checkers in environment")
-        return ppmcCheckers
+        return pmcs
+
+    def getAvailableParametricMCs(self):
+        """
+        :return: A set with strings describing the available parametric pmcs.
+        """
+        ppmcs = set()
+        paramLoc = configuration.get(EXTERNAL_TOOLS, "param")
+        if paramLoc != "":
+            try:
+                util.run_tool([paramLoc], True)
+                ppmcs.add('param')
+                #TODO check whether this is really param
+            except:
+                raise ConfigurationError("Param not found at " + paramLoc)
+
+        stormLoc =  configuration.get(EXTERNAL_TOOLS, "storm")
+        if stormLoc != "":
+            try:
+                util.run_tool([stormLoc], True)
+                ppmcs.add('storm')
+                #TODO check whether this is really storm
+            except:
+                raise ConfigurationError("Storm is not found at " + stormLoc)
+
+        prismLoc = configuration.get(EXTERNAL_TOOLS, "prism")
+        if prismLoc != "":
+            try:
+                util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
+                ppmcs.add('prism')
+            except:
+                raise ConfigurationError("Prism is not found at " + prismLoc)
+
+        if configuration.get(DEPENDENCIES, "stormpy"):
+            ppmcs.add('stormpy')
+
+        if len(ppmcs) == 0:
+            raise RuntimeError("No model checkers in environment")
+        return ppmcs
 
     def getAvailableSamplers(self):
         samplers = {}
@@ -109,6 +154,7 @@ WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
 EXTERNAL_TOOLS = "external_tools"
 SAMPLING = "sampling"
 CONSTRAINTS = "constraints"
+DEPENDENCIES = "installed_deps"
 PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 
 # CONSTANTS

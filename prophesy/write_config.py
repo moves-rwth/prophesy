@@ -37,7 +37,7 @@ def write_initial_config(path):
     config_dirs["server_tmp"] = os.path.join(thisfilepath, "../tmp/web")
     config_dirs["web_sessions"] = os.path.join(config_dirs["server_tmp"], "sessions")
     config_dirs["web_results"] = os.path.join(config_dirs["server_tmp"], "results")
-    config_dirs["web_interface"] = os.path.join(thisfilepath, "../../webinterface")
+    config_dirs["web_interface"] = os.path.join(thisfilepath, "../webinterface")
     config_dirs["web_examples"] = os.path.join(config_dirs["server_tmp"], "examples")
     config_dirs["custom_path"] = ""
     config["directories"] = config_dirs
