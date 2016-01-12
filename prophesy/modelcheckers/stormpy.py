@@ -1,7 +1,10 @@
+
 import stormpy
 import stormpy.info
 
-class StormpyModelChecker(ParametricProbabilisticModelChecker, ProbabilisticModelChecker):
+from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
+
+class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self):
         self.bisimulation = BisimulationType.strong
 
@@ -11,11 +14,15 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, ProbabilisticMode
     def version(self):
         return stormpy.info.Version.short()
 
-    def set_bisimulation_type(self, t):
-        pass
 
-    def set_pctl_formula(self, formula):
-        pass
+    def set_pctl_formula(self, formula): raise NotImplementedError
 
-    def sample_pctl_formula(self, prism_filepath, pctl_filepath, samplepoints):
-        pass
+    def load_model_from_prismfile(self, prismfile): raise NotImplementedError
+
+    def set_bisimulation(self, BisimulationType): raise NotImplementedError
+
+    def uniform_sample(self, ranges): raise NotImplementedError
+
+    def sample(self, samplePoints): raise NotImplementedError
+
+    def get_rational_function(self): raise NotImplementedError

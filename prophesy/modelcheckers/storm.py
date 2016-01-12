@@ -36,10 +36,13 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
 
-    def load_model_from_prismfile(self, path):
-        self.prismfile = PrismFile(path)
+    def load_model_from_prismfile(self, prismfile):
+        self.prismfile = prismfile
 
     def get_rational_function(self):
+        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile == None: raise NotEnoughInformationError("model missing")
+
         # create a temporary file for the result.
         ensure_dir_exists(config.INTERMEDIATE_FILES)
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
@@ -47,9 +50,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         args = [self.location,
                 '--symbolic', self.prismfile.location,
                 '--prop', self.pctlformula,
-                '--symbolic', prism_file.location,
                 '--parametric',
-                '--prop', self.pctlformula
                 '--parametric:resultfile', resultfile]
         if self.bisimulation == BisimulationType.strong:
             args.append('--bisimulation')
@@ -61,22 +62,37 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         os.unlink(resultfile)
         return param_result
 
-    def sample(self, samplepoints):
+    def uniform_sample(self, ranges):
+        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile == None: raise NotEnoughInformationError("model missing")
+
 
         raise NotImplementedError("The Storm interface does not support sampling")
-        check_filepath_for_reading(pctl_filepath)
-
-        # get the pctl string from the file.
-        pctl_formulas = self._parse_pctl_file(pctl_filepath)
-        if len(pctl_formulas) == 0:
-            raise
-        if len(pctl_formulas) > 1:
-            print("pctl file contains more than one formula. {0} only takes the first.".format(self.name()))
-
-<<<<<<< HEAD
 
 
-=======
-    def uniform_sample_pctl_formula(self, prism_file, pctl_file, ranges):
-        raise NotImplementedError
->>>>>>> d16e32abe56a678081933919add331f52eaa46a9
+    def sample(self, samplepoints):
+        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile == None: raise NotEnoughInformationError("model missing")
+
+        # create a temporary file for the result.
+        ensure_dir_exists(config.INTERMEDIATE_FILES)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
+
+        samples = {}
+        for pt in samplepoints:
+            const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(self.prismfile.parameters, pt)])
+            args = [self.location,
+                    '--symbolic', self.prismfile.location,
+                    '--prop', self.pctlformula,
+                    "-const", const_values_string,
+                    "-exportresults", resultpath]
+            if self.bisimulation == BisimulationType.strong:
+                args.append('--bisimulation')
+
+            run_tool(args)
+            with open(resultpath) as f:
+                f.readline()
+                sample_value = float(f.readline())
+            samples[pt] = sample_value
+        os.unlink(resultpath)
+
