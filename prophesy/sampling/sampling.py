@@ -46,25 +46,31 @@ class SampleGenerator(object):
 def read_samples_file(path):
     parameters = []
     samples = {}
-    threshold = None
     with open(path, 'r') as f:
         lines = [l.strip() for l in f.readlines()]
         if len(lines) > 2:
             parameters = lines[0].split()
-            threshold = float(lines[1])
-            for i, line in enumerate(lines[2:]):
+            if parameters[-1] == "Result":
+                #TODO we thus disallow parameters with the name Result (see restrictions.md)
+                parameters = parameters[:-1]
+            start = 1
+            #Ignore thresholds
+            if lines[1].startswith("Threshold"):
+                if lines[1].split() != 2:
+                    raise IOError("Invalid input on line 2")
+                start += 1
+            for i, line in enumerate(lines[start:]):
                 items = line.split()
                 if len(items) - 1 != len(parameters):
-                    raise RuntimeError("Invalid input on line " + str(i + 2))
+                    raise RuntimeError("Invalid input on line " + str(i + start))
                 samples[tuple(map(float, items[:-1]))] = float(items[-1])
             samples = OrderedDict(samples.items())
-    return parameters, threshold, samples
+    return parameters, samples
 
 
-def write_samples_file(parameters, samples_dict, threshold, path):
+def write_samples_file(parameters, samples_dict, path):
     with open(path, "w") as f:
         f.write(" ".join(parameters) + "\n")
-        f.write("{}\n".format(threshold))
         for k, v in samples_dict.items():
             f.write("\t".join([("%.4f" % c) for c in k]) + "\t\t" + "%.4f" % v + "\n")
 

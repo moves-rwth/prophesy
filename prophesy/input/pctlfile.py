@@ -13,7 +13,7 @@ class PctlFile:
                 if line.startswith('#') or line.strip() == "":
                     pass
                 else:
-                    self.formulas.append(line.strip)
+                    self.formulas.append(line.strip())
 
     def get(self, index):
         if index >= self.get_nr_formulas():

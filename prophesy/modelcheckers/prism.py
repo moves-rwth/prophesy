@@ -8,7 +8,7 @@ import config
 from modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from sampling.sampling import read_samples_file
 from input.prismfile import PrismFile
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists
+from util import check_filepath_for_reading, run_tool, ensure_dir_exists, write_string_to_tmpfile
 
 
 class PrismModelChecker(ParametricProbabilisticModelChecker):
@@ -38,7 +38,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
     def uniform_sample(self, ranges):
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
-        assert len(self.parameters) == len(ranges), "Number of value ranges does not match number of parameters"
+        assert len(self.prismfile.parameters) == len(ranges), "Number of value ranges does not match number of parameters"
 
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
         const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(self.prismfile.parameters, range_strings)])
@@ -53,7 +53,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
                 "-const", const_values_string,
                 "-exportresults", resultpath]
         run_tool(args)
-        found_parameters, samples, _ = read_samples_file(resultpath)
+        found_parameters, samples = read_samples_file(resultpath)
         os.unlink(resultpath)
         os.unlink(pctlpath)
         if found_parameters != self.prismfile.parameters:

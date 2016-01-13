@@ -4,17 +4,15 @@ import tempfile
 import time
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from subprocess import call
-
 
 from numpy import array
 from shapely.geometry.polygon import Polygon, orient, LinearRing
 from sympy.polys.polytools import Poly
 
-import smt.smt
 # needed for pdf merging for debugging
-from PyPDF2 import PdfFileMerger, PdfFileReader
 import config
+
+import smt.smt
 from data.constraint import Constraint, ComplexConstraint
 from output.plot import Plot
 from util import ensure_dir_exists
@@ -131,9 +129,13 @@ class ConstraintGeneration:
         # End of generator
         return
 
-    def add_pdf(self, name):
-        """Adds pdf with name to result.pdf in tmp directory
-        first indicates if resultfile exists already"""
+    def _add_pdf(self, name):
+        """
+        Adds pdf with name to result.pdf in tmp directory
+        """
+        #TODO Only do this if the option is installed.
+        from PyPDF2 import PdfFileMerger, PdfFileReader
+
         if self.first_pdf:
             self.first_pdf = False
             shutil.copyfile(name, self.result_file)
@@ -147,8 +149,8 @@ class ConstraintGeneration:
     def compute_constraint(self, polygon):
         """Compute constraints from polygon (Polygon, LineString or LinearRing)
         Area will be considered at the rhs (ccw) of line segments
-        Polygon must be convex
-        returns single (Complex)Constraint describing the polygon
+        :param polygon: must be convex
+        :return: single (Complex)Constraint describing the polygon
         """
         if isinstance(polygon, LinearRing):
             # Convert to polygon so it can be oriented
@@ -256,7 +258,7 @@ class ConstraintGeneration:
                           samples_red=samples_red,
                           path_to_save=result_tmp_file,
                           *args, **kwargs)
-        self.add_pdf(result_tmp_file)
+        self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
     def is_inside_polygon(self, point, polygon):

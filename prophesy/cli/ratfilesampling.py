@@ -6,17 +6,15 @@ import os
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
-sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
+sys.path.insert(1, os.path.join(this_file_path, '..'))
 
 import tempfile
 from argparse import ArgumentParser
 
 # from sampling.sampler_carl import CarlSampling # needs fix
-# from sampling.sampler_prism import McSampling # unused
 # from sampling.sampling_linear import LinearRefinement # unused
 from input.resultfile import read_pstorm_result
 from output.plot import Plot
-import argparse
 from input.resultfile import read_pstorm_result
 import config
 from sampling.sampling import write_samples_file
@@ -104,7 +102,7 @@ if __name__ == "__main__":
 
     refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
 
-    write_samples_file([p.name for p in result.parameters], refined_samples, cmdargs.threshold, cmdargs.samples_file)
+    write_samples_file([p.name for p in result.parameters], refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
     open_file(plot_path)

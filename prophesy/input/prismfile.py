@@ -3,19 +3,21 @@ import re
 import shutil
 import tempfile
 import config
-from util import ensure_dir_exists
+from util import ensure_dir_exists, check_filepath_for_reading
 
 
 class PrismFile:
     """Wrapper for Prism file; extracts parameter names."""
     def __init__(self, location):
+        assert isinstance(location, str)
+        check_filepath_for_reading(location)
+        self._is_temp = False
         self.location = location
         self.parameters = []
         self._get_parameters()
-        self.is_temp = False
 
     def __del__(self):
-        if self.is_temp:
+        if self._is_temp:
             os.unlink(self.location)
 
     def _get_parameters(self):

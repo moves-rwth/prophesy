@@ -36,26 +36,27 @@ class Configuration():
             self._config.write(f)
 
     def getAvailableSMTSolvers(self):
-        smtsolvers = {}
-        #TODO replace this as in getAvailableParametricMCs
+        smtsolvers = set()
 
         # finding executables is a job for write_config.
-        if find_executable(configuration.get(EXTERNAL_TOOLS, "z3")):
-            smtsolvers['z3'] = "Z3"
-            print("Found Z3")
-        try:
-            util.run_tool(configuration.get(EXTERNAL_TOOLS, "smtrat"), True)
-            smtsolvers['smtrat'] = "SMT-RAT"
-            print("Found SMT-RAT")
-        except:
-            pass
+        z3Loc =  configuration.get(EXTERNAL_TOOLS, "z3")
+        if z3Loc != "":
+            try:
+                util.run_tool([z3Loc], True)
+                smtsolvers.add('z3')
+                #TODO check whether this is really z3
+            except:
+                raise ConfigurationError("Z3 is not found at " + z3Loc)
 
-        try:
-            util.run_tool(configuration.get(EXTERNAL_TOOLS, "isat"), True)
-            smtsolvers['isat'] = "iSAT"
-            print("Found iSAT")
-        except:
-            pass
+        isatLoc =  configuration.get(EXTERNAL_TOOLS, "isat")
+        if isatLoc != "":
+            try:
+                util.run_tool([isatLoc], True)
+                smtsolvers.add('isat')
+                #TODO check whether this is really isat
+            except:
+                raise ConfigurationError("Isat is not found at " + isatLoc)
+
 
         if len(smtsolvers) == 0:
             raise RuntimeError("No SMT solvers in environment")

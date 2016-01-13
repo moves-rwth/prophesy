@@ -78,6 +78,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         ensure_dir_exists(config.INTERMEDIATE_FILES)
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
 
+
+        raise NotImplementedError("The Storm interface does not support sampling")
+
+
         samples = {}
         for pt in samplepoints:
             const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(self.prismfile.parameters, pt)])
@@ -85,12 +89,12 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                     '--symbolic', self.prismfile.location,
                     '--prop', self.pctlformula,
                     "-const", const_values_string,
-                    "-exportresults", resultpath]
+                    "--exportresults", resultfile]
             if self.bisimulation == BisimulationType.strong:
                 args.append('--bisimulation')
 
             run_tool(args)
-            with open(resultpath) as f:
+            with open(resultfile) as f:
                 f.readline()
                 sample_value = float(f.readline())
             samples[pt] = sample_value

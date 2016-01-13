@@ -6,8 +6,7 @@ import sys
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
-sys.path.insert(1, os.path.join(this_file_path, '../prophesy'))
-sys.path.insert(1, os.path.join(this_file_path, '../../prophesy'))
+sys.path.insert(1, os.path.join(this_file_path, '..'))
 
 import tempfile
 import re
@@ -29,11 +28,12 @@ from util import ensure_dir_exists, run_tool
 from input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from input.prismfile import PrismFile
+from input.pctlfile import PctlFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.storm import StormModelChecker
 from smt.smt import setup_smt
 from smt.isat import IsatSolver
-from smt.smtlib import SmtlibSolver
+from smt.Z3cli_solver import Z3CliSolver
 from sampling.sampler_ratfunc import RatFuncSampling
 from sampling.sampler_carl import CarlSampling
 from sampling.sampler_prism import McSampling
@@ -47,9 +47,6 @@ from constraints.constraint_polygon import ConstraintPolygon
 
 from concurrent.futures import ThreadPoolExecutor
 
-pmcCheckers = {}
-samplers = {}
-satSolvers = {}
 
 default_results = {}
 
@@ -65,7 +62,7 @@ def _jsonPoly(polygon):
 
 def getSat(satname):
     if satname == 'z3':
-        return SmtlibSolver()
+        return Z3CliSolver()
     elif satname == 'isat':
         return IsatSolver()
     else:
@@ -84,17 +81,14 @@ def getSampler(satname, result):
     else:
         raise RuntimeError("Unknown sampler requested")
 
-def getPMC(satname):
-    if satname == 'pstorm':
+def getPMC(name):
+    if name == 'storm':
         return StormModelChecker()
-    elif satname == 'param':
+    elif name == 'param':
         return ParamParametricModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
 
-#@route('/ui/<filepath:path>')
-def server_static(filepath):
-    return static_file(filepath, root = config.WEB_RESULTS)
 
 class CegarHandler(RequestHandler, SessionMixin):
     def write_error(self, status_code, **kwargs):
@@ -228,15 +222,17 @@ class CurrentResult(CegarHandler):
 class Environment(CegarHandler):
     def get(self):
         return self._json_ok({
-                         "pmc"     : self._get_session("pmc", next(iter(pmcCheckers.keys()))),
+                         "pmc"     : self._get_session("pmc", next(iter(ppmcs))),
                          "sampler" : self._get_session("sampler", 'ratfunc_float'),
-                         "sat"     : self._get_session("sat", next(iter(satSolvers.keys())))})
+                         "sat"     : self._get_session("sat", next(iter(satSolvers)))})
 
     def post(self):
         pmc = self.get_argument('pmc')
         sampler = self.get_argument('sampler')
         sat = self.get_argument('sat')
-        if not pmc in pmcCheckers:
+        if not pmc in ppmcs:
+            print(pmc)
+            print(ppmcs)
             return self._json_error("Invalid model checker")
         if not sampler in samplers:
             return self._json_error("Invalid sampler")
@@ -252,7 +248,7 @@ class Environment(CegarHandler):
 
 class Environments(CegarHandler):
     def get(self):
-        return self._json_ok({"pmc":pmcCheckers, "samplers":samplers, "sat":satSolvers})
+        return self._json_ok({"pmc": list(ppmcs), "samplers":list(), "sat":list(satSolvers)})
 
 class Results(CegarHandler):
     def get(self, name=None):
@@ -281,10 +277,11 @@ class Results(CegarHandler):
 
 class UploadPrism(CegarHandler):
     def post(self):
+        print("Upload prims ENTRY")
         tool = self.get_argument('mctool')
         upload_prism = self.request.files['file'][0]
         upload_pctl = self.request.files['pctl-file'][0]
-        if tool not in pmcCheckers.keys():
+        if tool not in ppmcs:
             return self._json_error("Invalid tool selected")
         if upload_prism is None:
             return self._json_error("Missing PRISM file")
@@ -299,13 +296,18 @@ class UploadPrism(CegarHandler):
         (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTS)
         with os.fdopen(pctl_fd, "wb") as pctl_f:
             pctl_f.write(upload_pctl.body)
+        pctl_file = PctlFile(pctl_path)
 
         if tool == "param":
             prism_file.replace_parameter_keyword("param float")
         tool = getPMC(tool)
 
+
+        print("Upload prims CALL")
         try:
-            result = tool.get_rational_function(prism_file, pctl_path)
+            tool.load_model_from_prismfile(prism_file)
+            tool.set_pctl_formula(pctl_file.get(0))
+            result = tool.get_rational_function()
         except Exception as e:
             return self._json_error("Error while computing rational function: {}".format(e))
 
@@ -324,6 +326,8 @@ class UploadPrism(CegarHandler):
         self._set_session('current_result', upload_prism.filename)
         self._set_session('result_files', result_files)
 
+
+        print("Upload prims EXIT")
         return self._json_ok(upload_prism.filename)
 
 class UploadResult(CegarHandler):
@@ -331,7 +335,7 @@ class UploadResult(CegarHandler):
         tool = self.get_argument('result-type')
         upload = self.request.files['file'][0]
         # Note: this is not the list of pmcCheckers, but of available result parsers
-        if tool not in ['pstorm', 'param']:
+        if tool not in ['storm', 'param']:
             return self._json_error("Invalid tool selected")
         if upload is None:
             return self._json_error("Missing result file")
@@ -635,10 +639,10 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
 def initEnv():
     # Check available model checkers, solvers and various other constraints
     # and adjust capabilities based on that
-    global satSolvers, samplers, pmcCheckers
+    global satSolvers, samplers, ppmcs
     satSolvers = configuration.getAvailableSMTSolvers()
     samplers = configuration.getAvailableSamplers()
-    pmcCheckers = configuration.getAvailableParametricMCs()
+    ppmcs = configuration.getAvailableParametricMCs()
 
     # Preload some result files for easy startup
     print("Loading default result files...")
@@ -658,7 +662,7 @@ def initEnv():
     print("Done checking environment")
 
 
-def make_app(hostname, port):
+def make_app(hostname):
     settings = {
         'static_path': config.configuration.get(config.DIRECTORIES, "web_interface"),
         'static_url_prefix' : '/ui/',
@@ -667,7 +671,7 @@ def make_app(hostname, port):
             'engine': 'redis',
             'storage': {
                 'host': hostname,
-                'port': port,
+                'port': 6379,
                 'db_sessions': 10,
                 'db_notifications': 11,
                 'max_connections': 2 ** 31,
@@ -736,7 +740,7 @@ if __name__ == "__main__":
 
     initEnv()
 
-    app = make_app(cmdargs.server_host, cmdargs.server_port)
+    app = make_app(cmdargs.server_host)
 
     if(not cmdargs.server_quiet):
         print("Starting webservice...")
