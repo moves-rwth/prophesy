@@ -309,7 +309,15 @@ class UploadPrism(CegarHandler):
         print("Upload prims CALL")
         try:
             tool.load_model_from_prismfile(prism_file)
+        except Exception as e:
+            return self._json_error("Error while loading model: {}".format(e))
+
+        try:
             tool.set_pctl_formula(pctl_file.get(0))
+        except Exception as e:
+            return self._json_error("Error while loading the formula into the tool: {}".format(e))
+
+        try:
             result = tool.get_rational_function()
         except Exception as e:
             return self._json_error("Error while computing rational function: {}".format(e))
