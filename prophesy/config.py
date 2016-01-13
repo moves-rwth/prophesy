@@ -102,7 +102,7 @@ class Configuration():
             except:
                 raise ConfigurationError("Param not found at " + paramLoc)
 
-        stormLoc =  configuration.get(EXTERNAL_TOOLS, "storm")
+        stormLoc = configuration.get(EXTERNAL_TOOLS, "storm")
         if stormLoc != "":
             try:
                 util.run_tool([stormLoc], True)
@@ -130,7 +130,8 @@ class Configuration():
         samplers = {}
         samplers['ratfunc'] = "Rational function"
         samplers['ratfunc_float'] = "Rational function (float)"
-        samplers['carl'] = "Carl library"
+        if configuration.get(DEPENDENCIES, "pycarl"):
+            samplers['carl'] = "Carl library"
 
         try:
             # TODO: Prism sampling not yet supported

@@ -8,6 +8,10 @@ this_file_path = os.path.dirname(os.path.realpath(__file__))
 # insert at position 1; leave path[0] (directory at invocation) intact
 sys.path.insert(1, os.path.join(this_file_path, '..'))
 
+
+import config
+from config import configuration
+
 import tempfile
 import re
 from argparse import ArgumentParser
@@ -22,8 +26,6 @@ from tornado import gen
 from pycket.session import SessionMixin
 from shapely.geometry.polygon import Polygon
 
-import config
-from config import configuration
 from util import ensure_dir_exists, run_tool
 from input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
@@ -35,7 +37,7 @@ from smt.smt import setup_smt
 from smt.isat import IsatSolver
 from smt.Z3cli_solver import Z3CliSolver
 from sampling.sampler_ratfunc import RatFuncSampling
-from sampling.sampler_carl import CarlSampling
+
 from sampling.sampler_prism import McSampling
 from sampling.sampling_uniform import UniformSampleGenerator
 from sampling.sampling_linear import LinearRefinement
@@ -75,6 +77,7 @@ def getSampler(satname, result):
     elif satname == 'ratfunc_float':
         return RatFuncSampling(result.ratfunc, result.parameters, False)
     elif satname == 'carl':
+        from sampling.sampler_carl import CarlSampling
         return CarlSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
         return McSampling(result.prism_file, result.pctl_file)
