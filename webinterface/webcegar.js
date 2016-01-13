@@ -8,7 +8,7 @@ function fillSelect(select, data, selected) {
     select.empty()
     for (var key in data) {
         select.append($('<option>', {
-            value: key,
+            value: data[key],
             text: data[key]
         }));
     }
@@ -133,10 +133,10 @@ function listEnv() {
         fillSelect(pmcTools, result.data.pmc, pmc);
 
         var samplers = $("#samplers");
-        fillSelect(samplers, result.data.samplers, sat);
+        fillSelect(samplers, result.data.samplers, sampler);
 
         var smtSolvers = $("#satsolvers");
-        fillSelect(smtSolvers, result.data.sat, sampler);
+        fillSelect(smtSolvers, result.data.sat, sat);
         
         getEnv();
     });

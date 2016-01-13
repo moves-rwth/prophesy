@@ -1,3 +1,4 @@
+tornado
 # fetch specific dependencies
 #--no-index
 #--find-links deps/
