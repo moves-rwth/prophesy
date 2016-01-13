@@ -15,7 +15,6 @@ from input.pctlfile import PctlFile
 from input.resultfile import write_pstorm_result
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.storm import StormModelChecker
-from modelcheckers.stormpy import StormpyModelChecker
 from modelcheckers.prism import PrismModelChecker
 
 import config
@@ -57,6 +56,7 @@ if __name__ == "__main__":
     elif cmdargs.stormpy:
         if 'stormpy' not in  pmcs:
             raise RuntimeError("Stormpy dependency not configured.")
+        from modelcheckers.stormpy import StormpyModelChecker
         tool = StormpyModelChecker()
     elif cmdargs.prism:
         if 'prism' not in  pmcs:
