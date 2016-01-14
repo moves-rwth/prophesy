@@ -3,7 +3,7 @@ import errno
 import platform
 import subprocess
 import tempfile
-from exceptions.IOError import IOError
+from prophesy.exceptions.IOError import IOError
 
 
 def ensure_dir_exists(path):

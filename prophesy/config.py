@@ -1,10 +1,10 @@
 from distutils.spawn import find_executable
 
 import configparser
-import util
+import prophesy.util as util
 import os
 
-from exceptions.configuration_error import ConfigurationError
+from prophesy.exceptions.configuration_error import ConfigurationError
 
 class Configuration():
     def __init__(self):
