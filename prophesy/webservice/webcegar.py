@@ -77,6 +77,8 @@ def getSampler(satname, result):
     elif satname == 'ratfunc_float':
         return RatFuncSampling(result.ratfunc, result.parameters, False)
     elif satname == 'carl':
+        print("import carl")
+        assert False
         from sampling.sampler_carl import CarlSampling
         return CarlSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
@@ -226,7 +228,7 @@ class Environment(CegarHandler):
     def get(self):
         return self._json_ok({
                          "pmc"     : self._get_session("pmc", next(iter(ppmcs))),
-                         "sampler" : self._get_session("sampler", 'ratfunc_float'),
+                         "sampler" : self._get_session("sampler", next(iter(samplers))),
                          "sat"     : self._get_session("sat", next(iter(satSolvers)))})
 
     def post(self):
@@ -251,7 +253,7 @@ class Environment(CegarHandler):
 
 class Environments(CegarHandler):
     def get(self):
-        return self._json_ok({"pmc": list(ppmcs), "samplers":list(), "sat":list(satSolvers)})
+        return self._json_ok({"pmc": list(ppmcs), "samplers":list(samplers), "sat":list(satSolvers)})
 
 class Results(CegarHandler):
     def get(self, name=None):
