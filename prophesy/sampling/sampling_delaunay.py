@@ -3,10 +3,10 @@ from sampling.sampling import SampleGenerator, weighed_interpolation
 from sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.point import Point
 from shapely.geometry.linestring import LineString
-
+import config
 
 class DelaunayRefinement(SampleGenerator):
-    def __init__(self, sampler, samples, threshold, distance=0.05):
+    def __init__(self, sampler, samples, threshold, distance=config.DISTANCE):
         super().__init__(sampler)
         self.points = self._make_points(samples)
         self.threshold = threshold
