@@ -19,6 +19,7 @@
 var threshold = "0.5";
 // Hard coded interval for coloring the heat map
 var heatmap_thrs = [0.0,0.2,0.4,0.6,0.8,1.0];
+var legend_size = 7;
 var samples = [];
 var safe_constraints = [];
 var bad_constraints = [];
@@ -79,7 +80,7 @@ var options = {
         legend: {
             labelBoxBorderColor: "black",
             container: '#legend',
-            noColumns: 6
+            noColumns: legend_size
         }};
 
 var isBusy = false;
@@ -578,7 +579,7 @@ $(document).ready(function() {
         setEnv();
     });
     $("#cbheatmap").on('change', function() {
-	heatmap = !heatmap;
+	heatmap = $('#cbheatmap').is(':checked');
 	plotSamples();
     });
     
