@@ -1,8 +1,9 @@
 
-import stormpy
-import stormpy.info
+#import stormpy
+#import stormpy.info
 
 from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
+from modelcheckers.pmc import BisimulationType
 
 class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self):

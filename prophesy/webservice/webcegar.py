@@ -33,6 +33,7 @@ from input.prismfile import PrismFile
 from input.pctlfile import PctlFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.storm import StormModelChecker
+from modelcheckers.stormpy import StormpyModelChecker
 from smt.smt import setup_smt
 from smt.isat import IsatSolver
 from smt.Z3cli_solver import Z3CliSolver
@@ -78,7 +79,6 @@ def getSampler(satname, result):
         return RatFuncSampling(result.ratfunc, result.parameters, False)
     elif satname == 'carl':
         print("import carl")
-        assert False
         from sampling.sampler_carl import CarlSampling
         return CarlSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
@@ -91,6 +91,8 @@ def getPMC(name):
         return StormModelChecker()
     elif name == 'param':
         return ParamParametricModelChecker()
+    elif name == 'stormpy':
+        return StormpyModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
 
