@@ -1,5 +1,6 @@
 import stormpy
 import stormpy.info
+import stormpy.core
 
 from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
 from modelcheckers.pmc import BisimulationType
