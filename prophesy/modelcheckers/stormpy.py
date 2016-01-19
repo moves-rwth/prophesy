@@ -42,8 +42,6 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             model = stormpy.core.buildModelFromPrismProgram(self.program, self.pctl_formula)
         else:
             model = stormpy.core.buildModel(self.program, self.pctl_formula[0])
-            print(type(model))
-            print(model.model_type)
             model = model.asPdtmc()
-        stormpy.core.performStateElimination(model, self.pctl_formula[0])
+        return stormpy.core.performStateElimination(model, self.pctl_formula[0])
 
