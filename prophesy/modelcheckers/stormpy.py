@@ -23,11 +23,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def set_pctl_formula(self, formula):
         if self.program == None:
             raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
-        self.pctl_formula = stormpy.core.parseFormulae(formula, self.program)
+        self.pctl_formula = stormpy.core.parse_formulae(formula, self.program)
 
     def load_model_from_prismfile(self, prismfile):
         self.prism_file = prismfile
-        self.program = stormpy.core.parseProgram(prismfile.location)
+        self.program = stormpy.core.parse_program(prismfile.location)
 
 
     def set_bisimulation(self, BisimulationType): raise NotImplementedError
@@ -41,7 +41,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if self.prism_file.nr_parameters() == 0:
             model = stormpy.core.buildModelFromPrismProgram(self.program, self.pctl_formula)
         else:
-            model = stormpy.core.buildModel(self.program, self.pctl_formula[0])
-            model = model.asPdtmc()
-        return stormpy.core.performStateElimination(model, self.pctl_formula[0])
+            model = stormpy.core.build_model(self.program, self.pctl_formula[0])
+            pdtmc = model.asPdtmc()
+            print(type(pdtmc) == type(model))
+            print(model.nr_states)
+            print(pdtmc.nr_states)
+
+        return stormpy.core.perform_state_elimination(pdtmc, self.pctl_formula[0])
 
