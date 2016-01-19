@@ -1,3 +1,4 @@
+.DS_Store
 __pycache__/
 tmp/
 .idea/
@@ -8,3 +9,5 @@ tmp/
 *.cfg
 *.egg-link
 *.egg-info
+.tox
+.cache
