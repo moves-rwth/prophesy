@@ -11,7 +11,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctl_formula = None
         self.prism_file = None
         self.program = None
-        stormpy.core.setUp()
+        stormpy.core.setUp("")
 
     def name(self):
         return "stormpy"
@@ -42,7 +42,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             model = stormpy.core.buildModelFromPrismProgram(self.program, self.pctl_formula)
         else:
             model = stormpy.core.build_model(self.program, self.pctl_formula[0])
-            pdtmc = model.asPdtmc()
+            pdtmc = model.as_pdtmc()
             print(type(pdtmc) == type(model))
             print(model.nr_states)
             print(pdtmc.nr_states)
