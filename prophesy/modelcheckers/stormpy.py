@@ -1,11 +1,8 @@
+import stormpy
 import stormpy.info
-import stormpy.core
 
-from modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
 from modelcheckers.pmc import BisimulationType
-
-from exceptions.not_enough_information_error import NotEnoughInformationError
-
 
 class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self):

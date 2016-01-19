@@ -17,6 +17,9 @@
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript">
 var threshold = "0.5";
+// Hard coded interval for coloring the heat map
+var heatmap_thrs = [0.0,0.2,0.4,0.6,0.8,1.0];
+var legend_size = 7;
 var samples = [];
 var safe_constraints = [];
 var bad_constraints = [];
@@ -30,6 +33,9 @@ var currentPlotMode = PlotMode.SAMPLE;
 
 var websocket = null;
 var websocketActive = false;
+
+// Checkbox flag
+var heatmap = false;
 
 var options = {
         axisLabels: {
@@ -74,7 +80,7 @@ var options = {
         legend: {
             labelBoxBorderColor: "black",
             container: '#legend',
-            noColumns: 6
+            noColumns: legend_size
         }};
 
 var isBusy = false;
@@ -153,14 +159,34 @@ function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
 function plotSamples() {
     safeData = [];
     badData = [];
+    l1 = [];
+    l2 = [];
+    l3 = [];
+    l4 = [];
+    l5 = [];
+    l6 = [];
     for (var key in samples) {
         var sample = samples[key];
         pt = [sample[0], sample[1]];
-        if (sample[2] < threshold) {
+	if(heatmap == false){
+	  if (sample[2] < threshold) {
             safeData.push(pt)
-        } else {
+	  } else {
             badData.push(pt)
-        }
+          }
+	} else {
+	  if(sample[2] <= heatmap_thrs[0]){
+	    l1.push(pt);
+	  } else if(sample[2] <= heatmap_thrs[1]){
+	      l2.push(pt);
+	  } else if(sample[2] <= heatmap_thrs[2]){
+	      l3.push(pt);
+	  } else if(sample[2] <= heatmap_thrs[3]){
+	      l4.push(pt);
+	  } else if(sample[2] <= heatmap_thrs[4]){
+	      l5.push(pt);
+	  } else l6.push(pt);
+	}
     };
     fillNewConstraint = false;
     if (newConstraint.length > 2) {
@@ -170,18 +196,28 @@ function plotSamples() {
         }
     }
 
-    plotpoints = [{label: "new", data: [], points: { symbol: "circle", fillcolor: "orange"}, color: "orange"},
-                  {label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
-                  {label: "&#8805; " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
-                  {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: fillNewConstraint}, color: "black"},
-                  {label: "safe constr", data: [], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"},
-                  {label: "bad constr", data: [], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"}];
+    plotpoints = [{label: "new", data: [], points: { symbol: "circle", fillcolor: "orange"}, color: "orange"}];
+    if(heatmap == true) {
+	plotpoints.push({label: "&#8804; " + heatmap_thrs[0], data: l1, points: { symbol: "circle", fillColor: "#FF0000" }, color: "#FF0000"},
+			{label: "&#8804; " + heatmap_thrs[1], data: l2, points: { symbol: "circle", fillColor: "#FF6B00" }, color: "#FF6B00"},
+		  	{label: "&#8804; " + heatmap_thrs[2], data: l3, points: { symbol: "circle", fillColor: "#FFCD00" }, color: "#FFCD00"},
+		  	{label: "&#8804; " + heatmap_thrs[3], data: l4, points: { symbol: "circle", fillColor: "#DEFF00" }, color: "#DEFF00"},
+		  	{label: "&#8804; " + heatmap_thrs[4], data: l5, points: { symbol: "circle", fillColor: "#9AFF00" }, color: "#9AFF00"},
+		  	{label: "&#8804; " + heatmap_thrs[5], data: l6, points: { symbol: "circle", fillColor: "#33FF00" }, color: "#33FF00"});
+    } else {
+    plotpoints.push({label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
+                    {label: "&#8805; " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
+                    {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: fillNewConstraint}, color: "black"},
+                    {label: "safe constr", data: [], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"},
+                    {label: "bad constr", data: [], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"});
+    }
     for (var key in safe_constraints) {
         plotpoints.push({data: safe_constraints[key], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"});
     }
     for (var key in bad_constraints) {
         plotpoints.push({data: bad_constraints[key], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"});
     }
+    
     plotpoints.push({data: newSamples, points: { symbol: "circle", fillcolor: "orange"}, color: "orange"});
     $.plot("#placeholder", plotpoints, options);
 }
@@ -542,6 +578,10 @@ $(document).ready(function() {
     $("#satsolvers").on('change', function() {
         setEnv();
     });
+    $("#cbheatmap").on('change', function() {
+	heatmap = $('#cbheatmap').is(':checked');
+	plotSamples();
+    });
     
     /////////////////////////
     // Things to do initially
@@ -741,6 +781,9 @@ $(document).ready(function() {
         <select id="satsolvers" class="colRight">
             <option>No solver available</option>
         </select>
+	<br/	>
+	<span class="colLeft">HeatMap:</span>
+	<input type="checkbox" id="cbheatmap" value="true" class="colRight" />
     </div>
 </div> <!-- Control panel -->
 
