@@ -191,16 +191,13 @@ class Threshold(CegarHandler):
 
     def put(self):
         threshold = json_decode(self.request.body)
-        threshold = float(threshold)
-        self._set_session('threshold', threshold)
-
-        # Clear all constraints, they are no longer valid
-        self._set_session('constraints', [])
-
-        return self._json_ok()
+        return self._obtain(threshold)
 
     def post(self):
         threshold = self.get_argument('threshold', None)
+        return self._obtain(threshold);
+
+    def _obtain(self, threshold):
         threshold = float(threshold)
         self._set_session('threshold', threshold)
 
@@ -726,7 +723,6 @@ def make_app(hostname):
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
     ], **settings)
-
     return application
 
 
