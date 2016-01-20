@@ -1,12 +1,17 @@
-
-import stormpy
 import stormpy.info
+import stormpy.logic
+import stormpy.core
 
 from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
+from modelcheckers.pmc import BisimulationType
 
 class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self):
         self.bisimulation = BisimulationType.strong
+        self.pctl_formula = None
+        self.prism_file = None
+        self.program = None
+        stormpy.core.setUp("")
 
     def name(self):
         return "stormpy"
@@ -15,9 +20,15 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return stormpy.info.Version.short()
 
 
-    def set_pctl_formula(self, formula): raise NotImplementedError
+    def set_pctl_formula(self, formula):
+        if self.program == None:
+            raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
+        self.pctl_formula = stormpy.core.parse_formulae(formula, self.program)
 
-    def load_model_from_prismfile(self, prismfile): raise NotImplementedError
+    def load_model_from_prismfile(self, prismfile):
+        self.prism_file = prismfile
+        self.program = stormpy.core.parse_program(prismfile.location)
+
 
     def set_bisimulation(self, BisimulationType): raise NotImplementedError
 
@@ -25,4 +36,17 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def sample(self, samplePoints): raise NotImplementedError
 
-    def get_rational_function(self): raise NotImplementedError
+    def get_rational_function(self):
+        model = None
+        if self.prism_file.nr_parameters() == 0:
+            model = stormpy.core.buildModelFromPrismProgram(self.program, self.pctl_formula)
+        else:
+            print(type(self.pctl_formula[0]))
+            model = stormpy.core.build_model(self.program, self.pctl_formula[0])
+            pdtmc = model.as_pdtmc()
+            print(type(pdtmc) == type(model))
+            print(model.nr_states)
+            print(pdtmc.nr_states)
+
+        return stormpy.core.perform_state_elimination(pdtmc, self.pctl_formula[0])
+

@@ -164,9 +164,10 @@ EXTERNAL_TOOLS = "external_tools"
 SAMPLING = "sampling"
 CONSTRAINTS = "constraints"
 DEPENDENCIES = "installed_deps"
-PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 
 # CONSTANTS
+PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
+DISTANCE = float(configuration.get(SAMPLING, "distance"))
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
