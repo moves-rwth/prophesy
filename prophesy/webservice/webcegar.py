@@ -445,10 +445,10 @@ class GenerateSamples(CegarHandler):
         generator_type = self.get_argument('generator')
         if not generator_type in ['uniform', 'linear', 'delaunay']:
             return self._json_error("Invalid generator set " + generator_type, 400)
-        
+
         if generator_type == 'uniform' and iterations < 2:
             return self._json_error("Number of iterations must be >= 2 for uniform generation", 400)
-        
+
         if iterations == 0:
             # Nothing to do
             return self._json_ok(_jsonSamples({}))
@@ -471,7 +471,7 @@ class GenerateSamples(CegarHandler):
             samples_generator = DelaunayRefinement(sampling_interface, samples, threshold)
         else:
             assert False, "Bad generator"
-        
+
         def generate_samples(samples_generator, iterations):
             for (generated_samples,_) in zip(samples_generator, range(0, iterations)):
                 new_samples.update(generated_samples)
@@ -546,7 +546,7 @@ class ConstraintHandler(CegarHandler):
                 break
 
         smt2interface.stop()
-        
+
         return (new_samples, unsat)
 
 class Constraints(ConstraintHandler):
@@ -620,7 +620,8 @@ class GenerateConstraints(ConstraintHandler):
         self._set_session('samples', samples)
         self._set_session('constraints', constraints)
 
-        return self._json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
+        return self._json_ok({'sat': _jsonSamples(new_samples), 'unsat': unsat})
+
 
 class CegarWebSocket(WebSocketHandler, SessionMixin):
     socket_list = {}
@@ -638,16 +639,37 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
             print("Received cancel operation")
             self.session.set('canceled', True)
         else:
-            print("Got unexpected websocket message: {}".format(message))
+            print(("Got unexpected websocket message: {}".format(message)))
 
     def send_samples(self, samples):
         """samples is dictionary point:value"""
-        self.write_message({"type":"samples", "data":_jsonSamples(samples)})
+        self.write_message({"type": "samples", "data": _jsonSamples(samples)})
         pass
 
     def send_constraints(self, constraints):
         """constraints is list (poly_list, safe)"""
-        self.write_message({"type":"constraints", "data":constraints})
+        self.write_message({"type": "constraints", "data": constraints})
+
+
+class Configuration(CegarHandler):
+
+    # Handler for the Webconfiguartion interface
+
+    # Reads the Configuratuion from the config-file
+    def get(self):
+        print("Try to get the configuration information - call configuration.getAll()")
+        return self._json_ok(configuration.getAll())
+
+    # Sets the given configuartions from the Webinterface (JSON)
+    def put(self):
+        pass
+
+    # Sets the given configurations from the Webinterface (HTTP)
+    def post(self):
+        print("Try to set the data in the configuration - call configuration.set(section, key, value)")
+        configuration.set('constraints', 'precision', '0.1') #Example
+        configuration.updateConfigurationFile()
+        return self._json_ok()
 
 def initEnv():
     # Check available model checkers, solvers and various other constraints
@@ -723,6 +745,7 @@ def make_app(hostname):
         (r'/constraints', Constraints),
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
+        (r'/config', Configuration)
     ], **settings)
 
     return application

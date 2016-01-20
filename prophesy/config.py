@@ -26,10 +26,17 @@ class Configuration():
         assert key in self._config[section]
         return self._config[section][key]
 
-    def set(self, section, key):
+    # Returns the whole configuration as a dictionary
+    def getAll(self):
+        #TODO how to get a serialized form of the config file?
+        return self._config['constraints']['precision']
+
+    def set(self, section, key, value):
         if(self._importedFrom == ""):
             self._importFromFile()
-        assert()
+        assert section in self._config
+        assert key in self._config[section]
+        self._config.set(section, key, value)
 
     def updateConfigurationFile(self):
         with open(self._importedFrom, 'w') as f:

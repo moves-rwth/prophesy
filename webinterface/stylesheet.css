@@ -74,7 +74,7 @@ input[type=radio] {
     font-size: 25px;
     background-color:#FF8000;
     color: #000;
-    
+
     overflow-y: hidden;
     padding: 0px;
     max-height: 0px;
@@ -193,4 +193,9 @@ form {
     padding: 2px;
     background-color: #F6F6B9;
     opacity: 0.80;
+}
+
+.tbheatmap {
+    width: 30px;
+    display: none;
 }

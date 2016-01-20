@@ -102,6 +102,16 @@ function clearError() {
     $("#errorbox").removeClass("shown");
 }
 
+// Displays the interval boundings for the heatmap
+function displayIntervals(status){
+    if(status == true){
+        $(".tbheatmap").css('display', 'inline');;
+    }
+    else{
+        $(".tbheatmap").css('display', 'none');;
+    }
+}
+
 function checkError(result) {
     if (result !== null) {
         $("#error-message").text(result.reason);
@@ -204,7 +214,7 @@ function plotSamples() {
 		  	{label: "&#8804; " + heatmap_thrs[4], data: l5, points: { symbol: "circle", fillColor: "#9AFF00" }, color: "#9AFF00"},
 		  	{label: "&#8804; " + heatmap_thrs[5], data: l6, points: { symbol: "circle", fillColor: "#33FF00" }, color: "#33FF00"});
     } else {
-    plotpoints.push({label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"}, 
+    plotpoints.push({label: "< " + threshold, data: safeData, points: { symbol: "cross", fillColor: "#aa2323" }, color: "#aa2323"},
                     {label: "&#8805; " + threshold, data: badData, points: { symbol: "square", fillColor: "#50B432" }, color: "#50B432"},
                     {label: "new constr", data: newConstraint, points: { symbol: "circle", fillcolor: "black"}, lines: { show: true, fill: fillNewConstraint}, color: "black"},
                     {label: "safe constr", data: [], points: { symbol: "circle", fillcolor: "green"}, lines: { show: true, fill: true}, color: "green"},
@@ -216,7 +226,7 @@ function plotSamples() {
     for (var key in bad_constraints) {
         plotpoints.push({data: bad_constraints[key], points: { symbol: "circle", fillcolor: "red"}, lines: { show: true, fill: true}, color: "red"});
     }
-    
+
     plotpoints.push({data: newSamples, points: { symbol: "circle", fillcolor: "orange"}, color: "orange"});
     $.plot("#placeholder", plotpoints, options);
 }
@@ -274,7 +284,7 @@ function openSocket() {
                     break;
             }
         }
-        
+
     };
     ws.onclose = function(evt) {
         /*
@@ -367,7 +377,7 @@ $(document).ready(function() {
             newConstraint.push(pt);
             plotSamples();
         }
-    });    
+    });
 
     $("#cancel").click(function(event) {
         if (websocketActive) {
@@ -460,7 +470,7 @@ $(document).ready(function() {
                 plotSamples();
         });
     });
-    
+
     $( "#form-samples-auto" ).submit(function( event ) {
         event.preventDefault();
 
@@ -481,7 +491,7 @@ $(document).ready(function() {
             }
         });
     });
-    
+
     $("#clear-samples-current").click(function(event) {
         newSamples = [];
         plotSamples();
@@ -494,7 +504,7 @@ $(document).ready(function() {
 
     $( "#form-constraints-manual" ).submit(function( event ) {
         event.preventDefault();
-        
+
         var formData = new FormData($(this)[0]);
         formData.append('coordinates', JSON.stringify(newConstraint));
         doAjax({
@@ -515,15 +525,15 @@ $(document).ready(function() {
             plotSamples();
         });
     });
-    
+
     $( "#form-constraints-auto" ).submit(function( event ) {
         event.preventDefault();
-        
+
         // Clear existing constraints
         safe_constraints = [];
         bad_constraints = [];
         plotSamples();
-        
+
         var formData = new FormData($(this)[0]);
         doAjax({
             url: '../generateConstraints',
@@ -542,7 +552,7 @@ $(document).ready(function() {
             }
         });
     });
-    
+
     $("#clear-constraint-current").click(function(event) {
         newConstraint = [];
         plotSamples();
@@ -553,7 +563,7 @@ $(document).ready(function() {
         plotSamples();
         clearConstraints();
     });
-    
+
     // Handler for change of settings
     // Just change threshold label
     $("#thresholdSlider").on('input', function() {
@@ -570,7 +580,7 @@ $(document).ready(function() {
         setThreshold(threshold);
         plotSamples();
     });
-    
+
     $("#samplers").on('change', function() {
         setEnv();
     });
@@ -579,16 +589,51 @@ $(document).ready(function() {
     });
     $("#cbheatmap").on('change', function() {
 	heatmap = !heatmap;
+	displayIntervals(heatmap);
 	plotSamples();
     });
-    
+    $("#thresv0").on('change', function(){
+        heatmap_thrs[0] = $("#thresv0").val();
+        plotSamples();
+    });
+    $("#thresv1").on('change', function(){
+        heatmap_thrs[1] = $("#thresv1").val();
+        plotSamples();
+    });
+    $("#thresv2").on('change', function(){
+        heatmap_thrs[2] = $("#thresv2").val();
+        plotSamples();
+    });
+    $("#thresv3").on('change', function(){
+        heatmap_thrs[3] = $("#thresv3").val();
+        plotSamples();
+    });
+    $("#thresv4").on('change', function(){
+        heatmap_thrs[4] = $("#thresv4").val();
+        plotSamples();
+    });
+    $("#tbprec").on('change', function(event) {
+        event.preventDefault();
+        var prec = $("#tbprec").val();
+        doAjax({
+            url: '../config',
+            type: 'POST',
+            // precision
+            data: prec,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    });
+
     /////////////////////////
     // Things to do initially
     /////////////////////////
-    
+
     // Show the empty graph immediately
     plotSamples();
-    
+
     // Load initial settings
     // Manually set busy to false, server will serialize output
     listEnv();
@@ -610,7 +655,7 @@ $(document).ready(function() {
 
 </script>
 </head>
- 
+
 <body>
 <div id="header">
     <h1>Prophesy UI</h1>
@@ -655,7 +700,7 @@ $(document).ready(function() {
                     </div>
                 </form>
             </div>
-            
+
             <div id="tab-upload"  class="tab cp">
                 <form id="form-result">
                     <span class="colLeft">Path to result file:</span>
@@ -672,7 +717,7 @@ $(document).ready(function() {
                     </div>
                 </form>
             </div>
-            
+
             <div id="tab-select" class="tab cp">
                 <form id="form-select">
                     <span class="colLeft">Result file:</span>
@@ -686,7 +731,7 @@ $(document).ready(function() {
             </div>
         </div>
     </div> <!-- Input -->
-    
+
     <div id="samples">
         <h2>Sampling</h2>
         <ul class="tab-links">
@@ -724,8 +769,8 @@ $(document).ready(function() {
             </div>
         </div>
     </div> <!-- Samples -->
-    
-    
+
+
     <div id="constraints">
         <h2>Constraints</h2>
         <ul class="tab-links">
@@ -765,7 +810,7 @@ $(document).ready(function() {
             </div>
         </div>
     </div> <!-- Constraints -->
-    
+
     <div id="settings">
         <h2>Settings</h2>
         <span class="colLeft">Threshold:</span>
@@ -780,9 +825,19 @@ $(document).ready(function() {
         <select id="satsolvers" class="colRight">
             <option>No solver available</option>
         </select>
-	<br/	>
-	<span class="colLeft">HeatMap:</span>
-	<input type="checkbox" id="cbheatmap" value="true" class="colRight" />
+        <br/>
+        <span class="colLeft">HeatMap:</span>
+        <input type="checkbox" id="cbheatmap" value="true" class="colRight" />
+        <span class="tbheatmap">Interval bounds: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <input class="tbheatmap" type="text" id="thresv0" value="0.0"/>&#8804;
+        <input class="tbheatmap" type="text" id="thresv1" value="0.2"/>&#8804;
+        <input class="tbheatmap" type="text" id="thresv2" value="0.4"/>&#8804;
+        <input class="tbheatmap" type="text" id="thresv3" value="0.6"/>&#8804;
+        <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
+        <br/>
+        <span class="colLeft">Precision:</span>
+        <input type="text" id="tbprec" value="0.0001" class ="colRight" />
+        <br/>
     </div>
 </div> <!-- Control panel -->
 
@@ -793,5 +848,5 @@ $(document).ready(function() {
 </div>
 
 </body>
-  
+
 </html>
