@@ -19,7 +19,6 @@
 var threshold = "0.5";
 // Hard coded interval for coloring the heat map
 var heatmap_thrs = [0.0,0.2,0.4,0.6,0.8,1.0];
-var legend_size = 7;
 var samples = [];
 var safe_constraints = [];
 var bad_constraints = [];
@@ -80,7 +79,7 @@ var options = {
         legend: {
             labelBoxBorderColor: "black",
             container: '#legend',
-            noColumns: legend_size
+            noColumns: 6
         }};
 
 var isBusy = false;
@@ -589,28 +588,64 @@ $(document).ready(function() {
         setEnv();
     });
     $("#cbheatmap").on('change', function() {
-<<<<<<< HEAD
 	heatmap = !heatmap;
 	displayIntervals(heatmap);
-=======
-	heatmap = $('#cbheatmap').is(':checked');
->>>>>>> master
 	plotSamples();
     });
     $("#thresv0").on('change', function(){
         heatmap_thrs[0] = $("#thresv0").val();
+        if ($("#thresv1").val() < heatmap_thrs[0]){
+            heatmap_thrs[1] = heatmap_thrs[0];
+            $("#thresv1").val(heatmap_thrs[1]);
+        }
+        if ($("#thresv2").val() < heatmap_thrs[1]){
+            heatmap_thrs[2] = heatmap_thrs[1];
+            $("#thresv2").val(heatmap_thrs[2]);
+        }
+        if ($("#thresv3").val() < heatmap_thrs[2]){
+            heatmap_thrs[3] = heatmap_thrs[2];
+            $("#thresv3").val(heatmap_thrs[3]);
+        }
+        if ($("#thresv4").val() < heatmap_thrs[3]){
+            heatmap_thrs[4] = heatmap_thrs[3];
+            $("#thresv4").val(heatmap_thrs[4]);
+        }
         plotSamples();
     });
     $("#thresv1").on('change', function(){
         heatmap_thrs[1] = $("#thresv1").val();
+        if ($("#thresv2").val() < heatmap_thrs[1]){
+            heatmap_thrs[2] = heatmap_thrs[1];
+            $("#thresv2").val(heatmap_thrs[2]);
+        }
+        if ($("#thresv3").val() < heatmap_thrs[2]){
+            heatmap_thrs[3] = heatmap_thrs[2];
+            $("#thresv3").val(heatmap_thrs[3]);
+        }
+        if ($("#thresv4").val() < heatmap_thrs[3]){
+            heatmap_thrs[4] = heatmap_thrs[3];
+            $("#thresv4").val(heatmap_thrs[4]);
+        }
         plotSamples();
     });
     $("#thresv2").on('change', function(){
         heatmap_thrs[2] = $("#thresv2").val();
+        if ($("#thresv3").val() < heatmap_thrs[2]){
+            heatmap_thrs[3] = heatmap_thrs[2];
+            $("#thresv3").val(heatmap_thrs[3]);
+        }
+        if ($("#thresv4").val() < heatmap_thrs[3]){
+            heatmap_thrs[4] = heatmap_thrs[3];
+            $("#thresv4").val(heatmap_thrs[4]);
+        }
         plotSamples();
     });
     $("#thresv3").on('change', function(){
         heatmap_thrs[3] = $("#thresv3").val();
+        if ($("#thresv4").val() < heatmap_thrs[3]){
+            heatmap_thrs[4] = heatmap_thrs[3];
+            $("#thresv4").val(heatmap_thrs[4]);
+        }
         plotSamples();
     });
     $("#thresv4").on('change', function(){
@@ -619,7 +654,8 @@ $(document).ready(function() {
     });
     $("#tbprec").on('change', function(event) {
         event.preventDefault();
-        var prec = $("#tbprec").val();
+        var prec = new FormData();
+        prec.append('precision', $("#tbprec").val());
         doAjax({
             url: '../config',
             type: 'POST',
@@ -834,10 +870,10 @@ $(document).ready(function() {
         <span class="colLeft">HeatMap:</span>
         <input type="checkbox" id="cbheatmap" value="true" class="colRight" />
         <span class="tbheatmap">Interval bounds: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <input class="tbheatmap" type="text" id="thresv0" value="0.0"/>&#8804;
-        <input class="tbheatmap" type="text" id="thresv1" value="0.2"/>&#8804;
-        <input class="tbheatmap" type="text" id="thresv2" value="0.4"/>&#8804;
-        <input class="tbheatmap" type="text" id="thresv3" value="0.6"/>&#8804;
+        <input class="tbheatmap" type="text" id="thresv0" value="0.0"/><span class="tbheatmap">&#8804;</span>
+        <input class="tbheatmap" type="text" id="thresv1" value="0.2"/><span class="tbheatmap">&#8804;</span>
+        <input class="tbheatmap" type="text" id="thresv2" value="0.4"/><span class="tbheatmap">&#8804;</span>
+        <input class="tbheatmap" type="text" id="thresv3" value="0.6"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
         <br/>
         <span class="colLeft">Precision:</span>

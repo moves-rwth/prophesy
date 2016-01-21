@@ -26,10 +26,19 @@ class Configuration():
         assert key in self._config[section]
         return self._config[section][key]
 
-    # Returns the whole configuration as a dictionary
     def getAll(self):
-        #TODO how to get a serialized form of the config file?
-        return self._config['constraints']['precision']
+        if self._importedFrom == "":
+            self._importFromFile()
+        result = "{"
+        sections = self._config.sections()
+        for section in sections:
+            result = result + section + ':"{'
+            for key in self._config[section]:
+                value = self._config[section][key]
+                result = result + key + ":" + value + ", "
+            result = result + '"}, '
+        result = result + "}"
+        return result
 
     def set(self, section, key, value):
         if(self._importedFrom == ""):
@@ -37,6 +46,7 @@ class Configuration():
         assert section in self._config
         assert key in self._config[section]
         self._config.set(section, key, value)
+        self.modified = True
 
     def updateConfigurationFile(self):
         with open(self._importedFrom, 'w') as f:
@@ -46,7 +56,7 @@ class Configuration():
         smtsolvers = set()
 
         # finding executables is a job for write_config.
-        z3Loc =  configuration.get(EXTERNAL_TOOLS, "z3")
+        z3Loc = configuration.get(EXTERNAL_TOOLS, "z3")
         if z3Loc != "":
             try:
                 util.run_tool([z3Loc], True)
@@ -55,7 +65,7 @@ class Configuration():
             except:
                 raise ConfigurationError("Z3 is not found at " + z3Loc)
 
-        isatLoc =  configuration.get(EXTERNAL_TOOLS, "isat")
+        isatLoc = configuration.get(EXTERNAL_TOOLS, "isat")
         if isatLoc != "":
             try:
                 util.run_tool([isatLoc], True)
@@ -64,14 +74,13 @@ class Configuration():
             except:
                 raise ConfigurationError("Isat is not found at " + isatLoc)
 
-
         if len(smtsolvers) == 0:
             raise RuntimeError("No SMT solvers in environment")
         return smtsolvers
 
     def getAvailableProbMCs(self):
         pmcs = set()
-        stormLoc =  configuration.get(EXTERNAL_TOOLS, "storm")
+        stormLoc = configuration.get(EXTERNAL_TOOLS, "storm")
         if stormLoc != "":
             try:
                 util.run_tool([stormLoc], True)
@@ -154,20 +163,23 @@ class Configuration():
         return samplers
 
 configuration = Configuration()
+
+
 # directories
 DIRECTORIES = "directories"
 INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
 PLOTS = configuration.get(DIRECTORIES, "plots")
 WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
+
+
 # section names
 EXTERNAL_TOOLS = "external_tools"
 SAMPLING = "sampling"
 CONSTRAINTS = "constraints"
 DEPENDENCIES = "installed_deps"
+PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 
 # CONSTANTS
-PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
-DISTANCE = float(configuration.get(SAMPLING, "distance"))
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]

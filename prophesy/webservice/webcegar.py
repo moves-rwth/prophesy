@@ -33,7 +33,6 @@ from input.prismfile import PrismFile
 from input.pctlfile import PctlFile
 from modelcheckers.param import ParamParametricModelChecker
 from modelcheckers.storm import StormModelChecker
-from modelcheckers.stormpy import StormpyModelChecker
 from smt.smt import setup_smt
 from smt.isat import IsatSolver
 from smt.Z3cli_solver import Z3CliSolver
@@ -79,6 +78,7 @@ def getSampler(satname, result):
         return RatFuncSampling(result.ratfunc, result.parameters, False)
     elif satname == 'carl':
         print("import carl")
+        assert False
         from sampling.sampler_carl import CarlSampling
         return CarlSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
@@ -91,8 +91,6 @@ def getPMC(name):
         return StormModelChecker()
     elif name == 'param':
         return ParamParametricModelChecker()
-    elif name == 'stormpy':
-        return StormpyModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
 
@@ -191,13 +189,16 @@ class Threshold(CegarHandler):
 
     def put(self):
         threshold = json_decode(self.request.body)
-        return self._obtain(threshold)
+        threshold = float(threshold)
+        self._set_session('threshold', threshold)
+
+        # Clear all constraints, they are no longer valid
+        self._set_session('constraints', [])
+
+        return self._json_ok()
 
     def post(self):
         threshold = self.get_argument('threshold', None)
-        return self._obtain(threshold);
-
-    def _obtain(self, threshold):
         threshold = float(threshold)
         self._set_session('threshold', threshold)
 
@@ -666,7 +667,9 @@ class Configuration(CegarHandler):
     # Sets the given configurations from the Webinterface (HTTP)
     def post(self):
         print("Try to set the data in the configuration - call configuration.set(section, key, value)")
-        configuration.set('constraints', 'precision', '0.1') #Example
+        prec = self.get_argument('precision', 0.0001)
+        print(prec)
+        configuration.set('constraints', 'precision', str(prec))  # Example
         configuration.updateConfigurationFile()
         return self._json_ok()
 
@@ -746,6 +749,7 @@ def make_app(hostname):
         (r'/websocket', CegarWebSocket),
         (r'/config', Configuration)
     ], **settings)
+
     return application
 
 
