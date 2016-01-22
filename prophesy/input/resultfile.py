@@ -64,7 +64,7 @@ def read_pstorm_result(location):
 
 
 def write_pstorm_result(location, result):
-    if configuration.is_module_available("pycarl"):
+    if configuration.is_module_available("pycarl") and configuration.is_module_available("stormpy"):
         # Use pycarl
         import pycarl.numbers
         import pycarl.core
