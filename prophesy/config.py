@@ -31,7 +31,7 @@ class Configuration():
             self._importFromFile()
         assert DEPENDENCIES in self._config
         assert module in self._config[DEPENDENCIES]
-        self._config.getboolean(DEPENDENCIES, module)
+        return self._config.getboolean(DEPENDENCIES, module)
 
     def getAll(self):
         if self._importedFrom == "":

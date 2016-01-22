@@ -1,5 +1,6 @@
 from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
 from modelcheckers.pmc import BisimulationType
+from config import configuration
 
 if not configuration.is_module_available("stormpy"):
     raise ModuleError("Module stormpy is needed for using the Python API for Storm")
@@ -14,7 +15,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctl_formula = None
         self.prism_file = None
         self.program = None
-        stormpy.core.setUp("")
+        stormpy.core.set_up("")
 
     def name(self):
         return "stormpy"

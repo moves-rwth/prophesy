@@ -71,7 +71,7 @@ def write_pstorm_result(location, result):
 
         with open(location, "w") as f:
             str(result.result_function)
-            vars = result.result_function.gatherVariables()
+            vars = result.result_function.gather_variables()
             print("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
             print("!Result: {0}\n".format(str(result.result_function)))
             print("")
