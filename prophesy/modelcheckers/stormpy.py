@@ -45,7 +45,6 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if self.prism_file.nr_parameters() == 0:
             model = stormpy.core.buildModelFromPrismProgram(self.program, self.pctl_formula)
         else:
-            print(type(self.pctl_formula[0]))
             model = stormpy.core.build_model(self.program, self.pctl_formula[0])
             pdtmc = model.as_pdtmc()
 
