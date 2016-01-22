@@ -104,7 +104,7 @@ class Configuration():
             except:
                 raise ConfigurationError("Prism is not found at " + prismLoc)
 
-        if configuration.get(DEPENDENCIES, "stormpy"):
+        if configuration.is_module_available("stormpy"):
             pmcs.add('stormpy')
 
         if len(pmcs) == 0:
@@ -142,7 +142,7 @@ class Configuration():
             except:
                 raise ConfigurationError("Prism is not found at " + prismLoc)
 
-        if configuration.get(DEPENDENCIES, "stormpy"):
+        if configuration.is_module_available("stormpy"):
             ppmcs.add('stormpy')
 
         if len(ppmcs) == 0:

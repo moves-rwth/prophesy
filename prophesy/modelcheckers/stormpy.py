@@ -1,9 +1,12 @@
-import stormpy.info
-import stormpy.logic
-import stormpy.core
-
 from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
 from modelcheckers.pmc import BisimulationType
+
+if not configuration.is_module_available("stormpy"):
+    raise ModuleError("Module stormpy is needed for using the Python API for Storm")
+else:
+    import stormpy.info
+    import stormpy.logic
+    import stormpy.core
 
 class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self):
