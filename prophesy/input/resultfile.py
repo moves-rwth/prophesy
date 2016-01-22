@@ -3,7 +3,8 @@ from sympy import Symbol, fraction
 from sympy.polys import Poly
 from data.constraint import Constraint
 from data.rationalfunction import RationalFunction
-
+from config import configuration
+from exceptions.module_error import ModuleError
 
 class ParametricResult(object):
     """Wraps the results of pstorm and param
@@ -63,6 +64,12 @@ def read_pstorm_result(location):
 
 
 def write_pstorm_result(location, result):
+    if not configuration.is_module_available("pycarl"):
+        raise ModuleError("Module pycarl is needed for writing the result")
+
+    import pycarl.numbers
+    import pycarl.core
+
     with open(location, "w") as f:
         f.write("!Parameters: {0}\n".format(", ".join([p.name for p in result.parameters])))
         f.write("!Result: {0}\n".format(str(result.ratfunc)))

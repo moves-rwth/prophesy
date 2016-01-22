@@ -26,6 +26,13 @@ class Configuration():
         assert key in self._config[section]
         return self._config[section][key]
 
+    def is_module_available(self, module):
+        if self._importedFrom == "":
+            self._importFromFile()
+        assert DEPENDENCIES in self._config
+        assert module in self._config[DEPENDENCIES]
+        self._config.getboolean(DEPENDENCIES, module)
+
     def getAll(self):
         if self._importedFrom == "":
             self._importFromFile()
@@ -146,7 +153,7 @@ class Configuration():
         samplers = {}
         samplers['ratfunc'] = "Rational function"
         samplers['ratfunc_float'] = "Rational function (float)"
-        if configuration.get(DEPENDENCIES, "pycarl"):
+        if self.is_module_available("pycarl"):
             samplers['carl'] = "Carl library"
 
         try:
