@@ -64,17 +64,27 @@ def read_pstorm_result(location):
 
 
 def write_pstorm_result(location, result):
-    if not configuration.is_module_available("pycarl"):
-        raise ModuleError("Module pycarl is needed for writing the result")
+    if configuration.is_module_available("pycarl"):
+        # Use pycarl
+        import pycarl.numbers
+        import pycarl.core
 
-    import pycarl.numbers
-    import pycarl.core
-
-    with open(location, "w") as f:
-        f.write("!Parameters: {0}\n".format(", ".join([p.name for p in result.parameters])))
-        f.write("!Result: {0}\n".format(str(result.ratfunc)))
-        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
-        f.write("!Graph-preserving Constraints:\n")
+        with open(location, "w") as f:
+            str(result.result_function)
+            vars = result.result_function.gatherVariables()
+            print("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
+            print("!Result: {0}\n".format(str(result.result_function)))
+            print("")
+            f.write("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
+            f.write("!Result: {0}\n".format(str(result.result_function)))
+            f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.constraints_well_formed])))
+            f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.constraints_graph_preserving])))
+    else:
+        with open(location, "w") as f:
+            f.write("!Parameters: {0}\n".format(", ".join([p.name for p in result.parameters])))
+            f.write("!Result: {0}\n".format(str(result.ratfunc)))
+            f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
+            f.write("!Graph-preserving Constraints:\n")
 
 
 def read_param_result(location):
