@@ -54,6 +54,9 @@ default_results = {}
 
 executor = ThreadPoolExecutor(max_workers=1)
 
+if configuration.is_module_available('stormpy'):
+    from modelcheckers.stormpy import StormpyModelChecker
+
 def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
 
@@ -91,6 +94,8 @@ def getPMC(name):
         return StormModelChecker()
     elif name == 'param':
         return ParamParametricModelChecker()
+    elif name == 'stormpy':
+        return StormpyModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
 
@@ -282,7 +287,7 @@ class Results(CegarHandler):
 
 class UploadPrism(CegarHandler):
     def post(self):
-        print("Upload prims ENTRY")
+        print("Upload prism ENTRY")
         tool = self.get_argument('mctool')
         upload_prism = self.request.files['file'][0]
         upload_pctl = self.request.files['pctl-file'][0]
@@ -306,9 +311,9 @@ class UploadPrism(CegarHandler):
         if tool == "param":
             prism_file.replace_parameter_keyword("param float")
         tool = getPMC(tool)
+        print(tool)
 
-
-        print("Upload prims CALL")
+        print("Upload prism CALL")
         try:
             tool.load_model_from_prismfile(prism_file)
         except Exception as e:
