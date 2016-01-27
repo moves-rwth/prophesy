@@ -749,7 +749,8 @@ def make_app(hostname):
         (r'/constraints', Constraints),
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
-        (r'/config/(.*)/(.*)$', Configuration)
+        (r'/config/(.*)/(.*)$', Configuration),
+        (r'/config', Configuration)
     ], **settings)
 
     return application
