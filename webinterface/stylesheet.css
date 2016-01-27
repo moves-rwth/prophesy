@@ -4,7 +4,6 @@ body {
     background-color: #eee;
     font: 16px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
 }
-
 /*a { color: #069; }
 a:hover { color: #28b; }*/
 
@@ -197,5 +196,9 @@ form {
 
 .tbheatmap {
     width: 30px;
+    display: none;
+}
+
+#expert {
     display: none;
 }

@@ -656,8 +656,10 @@ class Configuration(CegarHandler):
     # Handler for the Webconfiguartion interface
 
     # Reads the Configuratuion from the config-file
-    def get(self):
-        print("Try to get the configuration information - call configuration.getAll()")
+    def get(self, section=None, key=None):
+        if section:
+            if key:
+                return self._json_ok(configuration.get(section, key))
         return self._json_ok(configuration.getAll())
 
     # Sets the given configuartions from the Webinterface (JSON)
@@ -665,13 +667,13 @@ class Configuration(CegarHandler):
         pass
 
     # Sets the given configurations from the Webinterface (HTTP)
-    def post(self):
-        print("Try to set the data in the configuration - call configuration.set(section, key, value)")
-        prec = self.get_argument('precision', 0.0001)
-        print(prec)
-        configuration.set('constraints', 'precision', str(prec))  # Example
-        configuration.updateConfigurationFile()
-        return self._json_ok()
+    def post(self, section=None, key=None):
+        if section:
+            if key:
+                configuration.set(section, key, str(self.get_argument("data")))
+                configuration.updateConfigurationFile()
+                return self._json_ok()
+        return self._json_error()
 
 def initEnv():
     # Check available model checkers, solvers and various other constraints
@@ -747,7 +749,7 @@ def make_app(hostname):
         (r'/constraints', Constraints),
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
-        (r'/config', Configuration)
+        (r'/config/(.*)/(.*)$', Configuration)
     ], **settings)
 
     return application

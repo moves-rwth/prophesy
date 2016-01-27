@@ -21,7 +21,7 @@ function listAvailableResults() {
     doJSON("../results", function(result) {
         var availableFiles = $("#result-files");
         fillSelect(availableFiles, result.data, currentResult);
-        
+
         getCurrentResult();
     });
 }
@@ -72,6 +72,90 @@ function getThreshold() {
         plotSamples();
     });
 }
+
+// -------------------------------------- Getter and Setter for expert Config
+
+
+/* TODO: Create one generic Setter
+** THIS ONE IS JUST HOW IT MAY BE LOOK LIKE
+**/
+function setConfig(section, key, data){
+    var formData = new FormData();
+    formData.append('data',$("#"+data).val());
+    doAjax({
+        url: '../config/'+section+'/'+key,
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+// -----------------------------------------
+
+function getStormConfig(){
+    doJSON("../config/external_tools/storm", function(result) {
+        cfgStorm = result.data;
+        $("#stormpath").val(cfgStorm);
+        $("#stormpath").text(cfgStorm);
+    });
+}
+
+function setStormPath(){
+    var formData = new FormData();
+    formData.append('data',$("#stormpath").val());
+    doAjax({
+        url: '../config/external_tools/storm',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function setZ3Path(){
+    var formData = new FormData();
+    formData.append('data',$("#z3path").val());
+    doAjax({
+        url: '../config/external_tools/z3',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getPrecisionConfig(){
+    doJSON("../config/constraints/precision", function(result) {
+        cfgPrec = result.data;
+        $("#precision").val(cfgPrec);
+        $("#precision").val(cfgPrec);
+    });
+}
+
+function setPrecision(){
+    var formData = new FormData();
+    formData.append('data',$("#precision").val());
+    doAjax({
+        url: '../config/constraints/precision',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getZ3Config(){
+    doJSON("../config/external_tools/z3", function(result) {
+        cfgZ3 = result.data;
+        $("#z3path").val(cfgZ3);
+        $("#z3path").text(cfgZ3);
+    });
+}
+// ------------------------------------ End of Getter/Setter for Expert Config
 
 function setThreshold(threshold) {
     var formData = new FormData();
@@ -137,7 +221,7 @@ function listEnv() {
 
         var smtSolvers = $("#satsolvers");
         fillSelect(smtSolvers, result.data.sat, sat);
-        
+
         getEnv();
     });
 }
@@ -167,5 +251,5 @@ function getEnv() {
         $("#samplers").val(sampler);
         sat = result.data.sat;
         $("#satsolvers").val(sat);
-    });  
+    });
 }

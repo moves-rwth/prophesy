@@ -15,9 +15,9 @@
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
     <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
+    <script language="javascript" type="text/javascript" src="plot.js"></script>
     <script language="javascript">
-var threshold = "0.5";
-// Hard coded interval for coloring the heat map
+var heatmap = false;
 var heatmap_thrs = [0.0,0.2,0.4,0.6,0.8,1.0];
 var samples = [];
 var safe_constraints = [];
@@ -29,12 +29,12 @@ var newConstraintComplete = true;
 
 var PlotMode = Object.freeze({SAMPLE: 1, CONSTRAINT: 2});
 var currentPlotMode = PlotMode.SAMPLE;
+var threshold = "0.5";
 
 var websocket = null;
 var websocketActive = false;
 
-// Checkbox flag
-var heatmap = false;
+var isBusy = false;
 
 var options = {
         axisLabels: {
@@ -82,88 +82,7 @@ var options = {
             noColumns: 6
         }};
 
-var isBusy = false;
-function setBusy(busy) {
-    if (busy && isBusy) {
-        alert("Operation in progress");
-        throw "Operation in progress";
-    }
-    if (busy) {
-        $("#busy-indicator").css('visibility', 'visible');;
-        $("#header").addClass("busy");
-    } else {
-        $("#busy-indicator").css('visibility', 'hidden');;
-        $("#header").removeClass("busy");
-    }
-    isBusy = busy;
-}
 
-function clearError() {
-    $("#errorbox").removeClass("shown");
-}
-
-// Displays the interval boundings for the heatmap
-function displayIntervals(status){
-    if(status == true){
-        $(".tbheatmap").css('display', 'inline');;
-    }
-    else{
-        $(".tbheatmap").css('display', 'none');;
-    }
-}
-
-function checkError(result) {
-    if (result !== null) {
-        $("#error-message").text(result.reason);
-    } else {
-        $("#error-message").text("Unspecified error");
-    }
-    $("#errorbox").addClass("shown");
-}
-
-function doJSON(url, onSuccess = function(result) {}, onFail = function() {}) {
-    doAjax({
-        dataType: "json",
-        url: url,
-    }, onSuccess, onFail);
-}
-
-function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
-    failHandler = function(jqXHR) {
-        try {
-            return $.parseJSON(jqXHR.responseText);
-        } catch(err) {
-            return null;
-        }
-    }
-
-    try {
-        setBusy(true);
-    } catch(err) {
-        // Don't try and do two things at the same time,
-        // the server serializes session access
-        return null;
-    }
-
-    clearError();
-    $.ajax(ajax)
-    .done(function(data) {
-        setBusy(false);
-        if (data.status == "ok") {
-            onSuccess(data);
-        } else {
-            checkError(data);
-        }
-    })
-    .fail(function(jqXHR) {
-        setBusy(false);
-        checkError(failHandler(jqXHR));
-        onFail();
-    })
-    .always(function() {
-        setBusy(false);
-    });
-}
 
 function plotSamples() {
     safeData = [];
@@ -254,6 +173,88 @@ function readConstraints(new_constraints, clear = true) {
             bad_constraints.push(constraint[0]);
         }
     };
+}
+
+function setBusy(busy) {
+    if (busy && isBusy) {
+        alert("Operation in progress");
+        throw "Operation in progress";
+    }
+    if (busy) {
+        $("#busy-indicator").css('visibility', 'visible');;
+        $("#header").addClass("busy");
+    } else {
+        $("#busy-indicator").css('visibility', 'hidden');;
+        $("#header").removeClass("busy");
+    }
+    isBusy = busy;
+}
+
+function clearError() {
+    $("#errorbox").removeClass("shown");
+}
+
+// Displays the interval boundings for the heatmap
+function displayIntervals(status){
+    if(status == true){
+        $(".tbheatmap").css('display', 'inline');;
+    }
+    else{
+        $(".tbheatmap").css('display', 'none');;
+    }
+}
+
+function checkError(result) {
+    if (result !== null) {
+        $("#error-message").text(result.reason);
+    } else {
+        $("#error-message").text("Unspecified error");
+    }
+    $("#errorbox").addClass("shown");
+}
+
+function doJSON(url, onSuccess = function(result) {}, onFail = function() {}) {
+    doAjax({
+        dataType: "json",
+        url: url,
+    }, onSuccess, onFail);
+}
+
+function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
+    failHandler = function(jqXHR) {
+        try {
+            return $.parseJSON(jqXHR.responseText);
+        } catch(err) {
+            return null;
+        }
+    }
+
+    try {
+        setBusy(true);
+    } catch(err) {
+        // Don't try and do two things at the same time,
+        // the server serializes session access
+        return null;
+    }
+
+    clearError();
+    $.ajax(ajax)
+    .done(function(data) {
+        setBusy(false);
+        if (data.status == "ok") {
+            onSuccess(data);
+        } else {
+            checkError(data);
+        }
+    })
+    .fail(function(jqXHR) {
+        setBusy(false);
+        checkError(failHandler(jqXHR));
+        onFail();
+    })
+    .always(function() {
+        setBusy(false);
+    });
 }
 
 function url(s) {
@@ -592,6 +593,13 @@ $(document).ready(function() {
 	displayIntervals(heatmap);
 	plotSamples();
     });
+    $("#cbexpert").on('change', function(){
+        if($("#cbexpert").is(":checked")){
+            $("#expert").css('display', 'inline-block');
+        } else {
+            $("#expert").css('display', 'none');
+        }
+    });
     $("#thresv0").on('change', function(){
         heatmap_thrs[0] = $("#thresv0").val();
         if ($("#thresv1").val() < heatmap_thrs[0]){
@@ -652,20 +660,36 @@ $(document).ready(function() {
         heatmap_thrs[4] = $("#thresv4").val();
         plotSamples();
     });
-    $("#tbprec").on('change', function(event) {
+
+    $("#form-settings").submit(function(event){
         event.preventDefault();
-        var prec = new FormData();
-        prec.append('precision', $("#tbprec").val());
-        doAjax({
-            url: '../config',
-            type: 'POST',
-            // precision
-            data: prec,
-            //Options to tell jQuery not to process data or worry about content-type.
-            cache: false,
-            contentType: false,
-            processData: false
-        });
+
+        var formData = new FormData($(this)[0]);
+        formData.append('blau','gruen');
+        alert("Wie bekomme ich die Formdata geschickt?!?!");
+    });
+    $("#loadConfig").click(function(event){
+        event.preventDefault();
+
+        // Load from Config (Updates automatically the textfields)
+        getPrecisionConfig();
+        isBusy=false;
+        getStormConfig();
+        isBusy=false;
+        getZ3Config();
+        isBusy=false;
+    });
+    $("#saveConfig").click(function(event) {
+        event.preventDefault();
+
+        // Write to Configfile
+        setPrecision();
+        isBusy = false;
+        setStormPath();
+        isBusy = false;
+        setZ3Path();
+        isBusy = false;
+        alert("Configuration has been saved!");
     });
 
     /////////////////////////
@@ -876,8 +900,22 @@ $(document).ready(function() {
         <input class="tbheatmap" type="text" id="thresv3" value="0.6"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
         <br/>
+        <span class="colLeft"> Expert mode: </span>
+        <input type="checkbox" id="cbexpert" value="false" class="colRight" />
+        <br />
+        <div id="expert">
         <span class="colLeft">Precision:</span>
-        <input type="text" id="tbprec" value="0.0001" class ="colRight" />
+        <input type="text" id="precision" value="" class="colRight" />
+        <br />
+        <span class="colLeft">Storm path:</span>
+        <input type="text" id="stormpath" value="" class="colRight" />
+        <br />
+        <span class="colLeft">Z3 path:</span>
+        <input type="text" id="z3path" value="" class="colRight" />
+        <br />
+        <button id="loadConfig" class="colLeft">Load config</button>
+        <button id="saveConfig" class="upload colRight">Change config</button>
+        </div>
         <br/>
     </div>
 </div> <!-- Control panel -->
