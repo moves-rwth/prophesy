@@ -26,18 +26,15 @@ class Configuration():
         assert key in self._config[section]
         return self._config[section][key]
 
+    # TODO: REPAIR THIS
     def getAll(self):
         if self._importedFrom == "":
             self._importFromFile()
-        result = "{"
+        result = {}
         sections = self._config.sections()
         for section in sections:
-            result = result + section + ':"{'
-            for key in self._config[section]:
-                value = self._config[section][key]
-                result = result + key + ":" + value + ", "
-            result = result + '"}, '
-        result = result + "}"
+            result[section] = self._config[section]
+        print(result)
         return result
 
     def set(self, section, key, value):

@@ -405,7 +405,7 @@ $(document).ready(function() {
     });
 
     // Handler for upload of PRISM
-    $('#form-prism').submit(function(event){
+    $("#form-prism").submit(function(event){
         event.preventDefault();
 
         var formData = new FormData($(this)[0]);
@@ -661,13 +661,6 @@ $(document).ready(function() {
         plotSamples();
     });
 
-    $("#form-settings").submit(function(event){
-        event.preventDefault();
-
-        var formData = new FormData($(this)[0]);
-        formData.append('blau','gruen');
-        alert("Wie bekomme ich die Formdata geschickt?!?!");
-    });
     $("#loadConfig").click(function(event){
         event.preventDefault();
 
