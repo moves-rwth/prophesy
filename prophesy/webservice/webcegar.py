@@ -156,7 +156,7 @@ class CegarHandler(RequestHandler, SessionMixin):
                 results[name] = res_file
                 shutil.copyfile(path, res_file)
             self._set_session('result_files', results)
-            self._set_session('current_result', next(iter(results.keys())))
+            self._set_session('current_result', next(iter(results.keys()), None))
 
     def _get_socket(self):
         socket_id = self._get_session('socket_id', None)
@@ -232,9 +232,9 @@ class CurrentResult(CegarHandler):
 class Environment(CegarHandler):
     def get(self):
         return self._json_ok({
-                         "pmc"     : self._get_session("pmc", next(iter(ppmcs))),
-                         "sampler" : self._get_session("sampler", next(iter(samplers))),
-                         "sat"     : self._get_session("sat", next(iter(satSolvers)))})
+                         "pmc"     : self._get_session("pmc", next(iter(ppmcs), None)),
+                         "sampler" : self._get_session("sampler", next(iter(samplers), None)),
+                         "sat"     : self._get_session("sat", next(iter(satSolvers), None))})
 
     def post(self):
         pmc = self.get_argument('pmc')
