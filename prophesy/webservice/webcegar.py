@@ -307,7 +307,6 @@ class UploadPrism(CegarHandler):
         return self._json_ok();
 
     def get(self):
-        # DEBUG METHOD
         result = {}
         result["prism"] = self._get_session("prism-files", {})
         result["pctl"] = self._get_session("pctl-files", {})
@@ -317,17 +316,26 @@ class UploadPrism(CegarHandler):
 class RunPrism(CegarHandler):
     def post(self):
         # Run the uploaded prism file with the coosen mctool
-        print("Upload prism CALL")
-        # Get session info about filenames
-        prism_files = self._get_session("prism-files")
-        if not prism_files:
-            return self._json_error("Error: No prism files uploaded")
-        pctl_files = self._get_session("pctl-files")
-        if not pctl_files:
-            return self._json_error("error: No pctl files uploaded")
+        print("Prism CALL")
+        prism_files = self._get_session("prism-files", {})
+        current_prism_file = self.get_argument("prism")
+        assert current_prism_file in prism_files
+        prism_file = PrismFile(prism_files[current_prism_file])
+
+        pctl_files = self._get_session("pctl-files", {})
+        current_pctl_file = self.get_argument("pctl")
+        assert current_pctl_file in pctl_files
+        pctl_file = PctlFile(pctl_files[current_pctl_file])
+
+        toolname = self.get_argument("mctool")
+        assert toolname in ppmcs
+        if toolname == "param":
+            prism_file.replace_parameter_keyword("param float")
+        tool = getPMC(toolname)
+
         # Try to load the model
         try:
-            tool.load_model_from_prismfile(prism_files)
+            tool.load_model_from_prismfile(prism_file)
         except Exception as e:
             return self._json_error("Error while loading model: {}".format(e))
 
@@ -343,10 +351,6 @@ class RunPrism(CegarHandler):
         except Exception as e:
             return self._json_error("Error while computing rational function: {}".format(e))
 
-        # Delete temporary files
-        os.unlink(pctl_path)
-        os.unlink(prism_path)
-
         # Save the result temporarily
         (res_fd, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTS)
         os.close(res_fd)
@@ -354,15 +358,15 @@ class RunPrism(CegarHandler):
 
         result_files = self._get_session('result_files', {})
 
-        if upload_prism.filename in result_files:
-            os.unlink(result_files[upload_prism.filename])
-        result_files[upload_prism.filename] = res_file
-        self._set_session('current_result', upload_prism.filename)
+        if current_prism_file in result_files:
+            os.unlink(result_files[current_prism_file])
+        result_files[current_prism_file] = res_file
+        self._set_session('current_result', current_prism_file)
         self._set_session('result_files', result_files)
 
 
-        print("Upload prims EXIT")
-        return self._json_ok(upload_prism.filename)
+        print("Prism run EXIT")
+        return self._json_ok(current_prism_file)
 
 class UploadResult(CegarHandler):
     def post(self):
@@ -763,6 +767,7 @@ def make_app(hostname):
         (r'/results/(.*)', Results),
         (r'/results', Results),
         (r'/uploadPrism', UploadPrism),
+        (r'/runPrism', RunPrism),
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),
         (r'/samples', Samples),

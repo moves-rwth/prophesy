@@ -261,7 +261,7 @@ function listPRISMFiles() {
         hSelect.empty();
         for (var filename in files) {
             hSelect.append($('<option>', {
-                value: files[filename],
+                value: filename,
                 text: filename
             }));
         }
@@ -275,7 +275,7 @@ function listPCTLFiles() {
         hSelect.empty();
         for (var filename in files){
             hSelect.append($('<option>', {
-                value: files[filename],
+                value: filename,
                 text: filename
                 }));
             }

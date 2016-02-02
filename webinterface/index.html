@@ -423,6 +423,23 @@ $(document).ready(function() {
         });
     });
 
+    // Handler for running PRISM
+    $("#form-prism-run").submit(function(event){
+        event.preventDefault();
+
+        var formData = new FormData($(this)[0]);
+        doAjax({
+            url: '../runPrism',
+            type: 'POST',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false
+        }, function(){
+            listAvailableResults();
+        });
+    });
+
     // Handler for upload of result
     $('#form-result').submit(function(event){
         event.preventDefault();
@@ -706,6 +723,8 @@ $(document).ready(function() {
     isBusy = false;
     plotSamples();
     isBusy = false;
+    listAvailableFiles();
+    isBusy=false;
 
     openSocket();
 });
@@ -758,17 +777,17 @@ $(document).ready(function() {
             <div id="tab-run" class="tab cp">
                 <form id="form-prism-run">
                     <span class="colLeft">Prism file:</span>
-                    <select id="uploaded-prism-files" class="colRight">
+                    <select id="uploaded-prism-files" class="colRight" name="prism">
                         <option> No files uploaded </option>
                     </select>
                     <br/>
                     <span class="colLeft"> PCTL file:</span>
-                    <select id="uploaded-pctl-files" class="colRight">
+                    <select id="uploaded-pctl-files" class="colRight" name="pctl">
                         <option> No files uploaded </option>
                     </select>
                     <br/>
                     <span class="colLeft"> Run with:</span>
-                    <select id="mctools" class="colRight">
+                    <select id="mctools" class="colRight" name="mctool">
                         <option> No tools available </option>
                     </select>
                     <br>
