@@ -269,7 +269,7 @@ function listPRISMFiles() {
 }
 
 function listPCTLFiles() {
-    doJSON("../uploadPrism", function(result){
+    doJSON("../uploadPctl", function(result){
         var hSelect = $("#uploaded-pctl-files");
         var files = result.data.pctl;
         hSelect.empty();
@@ -286,4 +286,41 @@ function listAvailableFiles(){
     listPRISMFiles();
     isBusy=false;
     listPCTLFiles();
+}
+
+function listFilesForManager(){
+    doJSON("../uploadPrism", function(result){
+        var list = $("#prism");
+        var files = result.data.prism;
+        list.empty();
+        for (var filename in files) {
+            list.append($('<li>', {
+                value: filename,
+                text: filename
+            }));
+        }
+    });
+    doJSON("../uploadPctl", function(result){
+        var list = $("#pctl");
+        var files = result.data.pctl;
+        list.empty();
+        for (var filename in files) {
+            list.append($('<li>', {
+                value: filename,
+                text: filename
+            }));
+        }
+    });
+    doJSON("../results", function(result) {
+        var list = $("#result-files");
+        var files = result.data
+        list.empty();
+        for (var filename in result.data){
+            list.append($('<li>', {
+                value: filename,
+                text: filename
+            }));
+        }
+        getCurrentResult();
+    });
 }

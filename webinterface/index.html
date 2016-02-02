@@ -3,9 +3,6 @@
 <head>
     <title>Prophesy UI</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-    <style>
-
-    </style>
     <link href="buttons.css" rel="stylesheet" type="text/css">
     <link href="tabs.css" rel="stylesheet" type="text/css">
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
@@ -752,29 +749,13 @@ $(document).ready(function() {
 
 <div id="controlpanel">
     <div id="input">
-        <h2>Input</h2>
+        <h2>Input - <a id="filemanager" href="./filemanager.html">Filemanager</a></h2>
         <ul class="tab-links">
-            <li class="active" ><a href="#tab-prism">Upload Prism</a></li>
-            <li><a href="#tab-run">Run Prism</a></li>
-            <li><a href="#tab-upload">Upload result</a></li>
+            <li class="active"><a href="#tab-run">Run Prism</a></li>
             <li><a href="#tab-select">Select result</a></li>
         </ul>
         <div class="tab-contents">
-            <div id="tab-prism" class="tab active cp">
-                <form id="form-prism">
-                    <span class="colLeft">Path to prism file:</span>
-                    <input type="file" name="file" class="colRight"/>
-                    <br>
-                    <span class="colLeft">Path to PCTL file:</span>
-                    <input type="file" name="pctl-file" class="colRight"/>
-                    <br>
-                    <div class="button">
-                         <button id="upload-prism" type="submit" class="upload positive">Upload</button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="tab-run" class="tab cp">
+            <div id="tab-run" class="tab cp active">
                 <form id="form-prism-run">
                     <span class="colLeft">Prism file:</span>
                     <select id="uploaded-prism-files" class="colRight" name="prism">
@@ -795,24 +776,6 @@ $(document).ready(function() {
                         <button id="run-prism" type="submit" class="upload positive"> Run</button>
                     </div>
             </div>
-
-            <div id="tab-upload"  class="tab cp">
-                <form id="form-result">
-                    <span class="colLeft">Path to result file:</span>
-                    <input type="file" name="file" class="colRight"/>
-                    <br>
-                    <span class="colLeft">Run with:</span>
-                    <select name="result-type" class="colRight">
-                        <option value="pstorm" selected="selected">pstorm</option>
-                        <option value="param">param</option>
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="upload-result" type="submit" class="upload positive">Upload</button>
-                    </div>
-                </form>
-            </div>
-
             <div id="tab-select" class="tab cp">
                 <form id="form-select">
                     <span class="colLeft">Result file:</span>

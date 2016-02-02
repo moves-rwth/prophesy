@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Prophesy Filemanager</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script language="javascript" type="text/javascript" src="webcegar.js"></script>
+    <script language="javascript" type="text/javascript" src="filemanager.js"></script>
+    <link rel="stylesheet" type="text/css" href="filemanager.css"/>
+</head>
+<body>
+    <div class="header">
+        <h1>Filemanager</h1>
+    </div>
+    <div class="column">
+        <div class="column-title">
+            <h2> PRISM-Files </h2>
+        </div>
+        <div class ="content">
+            <ul id="prism" class="file-list">
+                <li>No prism files Uploaded</li>
+            </ul>
+        </div>
+        <div class="upload">
+            <form id="upload-prism">
+                <span class="colLeft"> Path to PRISM file:</span>
+                <input type="file" name="prism-file" class colRight/>
+                <button type="sumbit">Upload</button>
+            </form>
+        </div>
+    </div>
+    <div class="column">
+        <div class="column-title">
+            <h2> PCTL-Files </h2>
+        </div>
+        <div class="content">
+            <ul id="pctl" class="file-list">
+                <li>No pctl files Uploaded</li>
+            </ul>
+        </div>
+        <div class="upload">
+            <form id="upload-pctl">
+                <span class="colLeft"> Path to PCTL file:</span>
+                <input type="file" name="pctl-file" class colRight/>
+                <button type="sumbit">Upload</button>
+            </form>
+        </div>
+    </div>
+    <div class="column">
+        <div class="column-title">
+            <h2> Result-Files </h2>
+        </div>
+        <div class="content">
+            <ul id="result-files" class="file-list">
+                <li>No result files Uploaded</li>
+            </ul>
+        </div>
+        <div class="upload">
+            <form id="upload-result">
+                <span class="colLeft"> Path to RESULT file:</span>
+                <input type="file" name="result-file" class colRight/>
+                <button type="sumbit">Upload</button>
+            </form>
+        </div>
+    </div>
+    <div class="footer">
+        <a href="./index.html"><button id="home">Back</button></a>
+    </div>
+</body>
+</html>

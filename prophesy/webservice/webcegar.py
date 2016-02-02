@@ -284,12 +284,9 @@ class UploadPrism(CegarHandler):
     def post(self):
         # Save the files which the user wants to upload
         print("Upload prism ENTRY")
-        upload_prism = self.request.files['file'][0]
-        upload_pctl = self.request.files['pctl-file'][0]
+        upload_prism = self.request.files["prism-file"][0]
         if upload_prism is None:
             return self._json_error("Missing PRISM file")
-        if upload_pctl is None:
-            return self._json_error("Missing PCTL file")
 
         (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTS)
         with os.fdopen(prism_fd, "wb") as prism_f:
@@ -298,20 +295,31 @@ class UploadPrism(CegarHandler):
         prism_files[upload_prism.filename] = prism_path
         self._set_session("prism-files", prism_files)
 
+        return self._json_ok();
+
+    def get(self):
+        result = {}
+        result["prism"] = self._get_session("prism-files", {})
+        return self._json_ok(result)
+
+class UploadPctl(CegarHandler):
+    def post(self):
+        print("Upload pctl ENTRY")
+        upload_pctl = self.request.files["pctl-file"][0]
+        if upload_pctl is None:
+            return self._json_error("Missing PCTL file")
         (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTS)
         with os.fdopen(pctl_fd, "wb") as pctl_f:
             pctl_f.write(upload_pctl.body)
         pctl_files = self._get_session("pctl-files", {})
         pctl_files[upload_pctl.filename] = pctl_path
         self._set_session("pctl-files", pctl_files)
-        return self._json_ok();
+        return self._json_ok()
 
     def get(self):
         result = {}
-        result["prism"] = self._get_session("prism-files", {})
         result["pctl"] = self._get_session("pctl-files", {})
         return self._json_ok(result)
-
 
 class RunPrism(CegarHandler):
     def post(self):
@@ -371,7 +379,7 @@ class RunPrism(CegarHandler):
 class UploadResult(CegarHandler):
     def post(self):
         tool = self.get_argument('result-type')
-        upload = self.request.files['file'][0]
+        upload = self.request.files['result-file'][0]
         # Note: this is not the list of pmcCheckers, but of available result parsers
         if tool not in ['storm', 'param']:
             return self._json_error("Invalid tool selected")
@@ -759,6 +767,7 @@ def make_app(hostname):
 
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
+        (r"/files", RedirectHandler, dict(url="ui/filemanager.html")),
         (r'/invalidateSession', InvalidateSession),
         (r'/threshold', Threshold),
         (r'/currentResult', CurrentResult),
@@ -767,6 +776,7 @@ def make_app(hostname):
         (r'/results/(.*)', Results),
         (r'/results', Results),
         (r'/uploadPrism', UploadPrism),
+        (r'/uploadPctl', UploadPctl),
         (r'/runPrism', RunPrism),
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),
