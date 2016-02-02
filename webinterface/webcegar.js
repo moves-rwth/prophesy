@@ -253,3 +253,37 @@ function getEnv() {
         $("#satsolvers").val(sat);
     });
 }
+
+function listPRISMFiles() {
+    doJSON("../uploadPrism", function(result){
+        var hSelect = $("#uploaded-prism-files");
+        var files = result.data.prism;
+        hSelect.empty();
+        for (var filename in files) {
+            hSelect.append($('<option>', {
+                value: files[filename],
+                text: filename
+            }));
+        }
+    });
+}
+
+function listPCTLFiles() {
+    doJSON("../uploadPrism", function(result){
+        var hSelect = $("#uploaded-pctl-files");
+        var files = result.data.pctl;
+        hSelect.empty();
+        for (var filename in files){
+            hSelect.append($('<option>', {
+                value: files[filename],
+                text: filename
+                }));
+            }
+        })
+}
+
+function listAvailableFiles(){
+    listPRISMFiles();
+    isBusy=false;
+    listPCTLFiles();
+}

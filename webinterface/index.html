@@ -418,8 +418,8 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false
-        }, function() {
-            listAvailableResults();
+        }, function(){
+            listAvailableFiles();
         });
     });
 
@@ -736,6 +736,7 @@ $(document).ready(function() {
         <h2>Input</h2>
         <ul class="tab-links">
             <li class="active" ><a href="#tab-prism">Upload Prism</a></li>
+            <li><a href="#tab-run">Run Prism</a></li>
             <li><a href="#tab-upload">Upload result</a></li>
             <li><a href="#tab-select">Select result</a></li>
         </ul>
@@ -748,15 +749,32 @@ $(document).ready(function() {
                     <span class="colLeft">Path to PCTL file:</span>
                     <input type="file" name="pctl-file" class="colRight"/>
                     <br>
-                    <span class="colLeft">Run with:</span>
-                    <select id="mctools" name="mctool" class="colRight">
-                        <option>No tool available</option>
-                    </select>
-                    <br>
                     <div class="button">
                          <button id="upload-prism" type="submit" class="upload positive">Upload</button>
                     </div>
                 </form>
+            </div>
+
+            <div id="tab-run" class="tab cp">
+                <form id="form-prism-run">
+                    <span class="colLeft">Prism file:</span>
+                    <select id="uploaded-prism-files" class="colRight">
+                        <option> No files uploaded </option>
+                    </select>
+                    <br/>
+                    <span class="colLeft"> PCTL file:</span>
+                    <select id="uploaded-pctl-files" class="colRight">
+                        <option> No files uploaded </option>
+                    </select>
+                    <br/>
+                    <span class="colLeft"> Run with:</span>
+                    <select id="mctools" class="colRight">
+                        <option> No tools available </option>
+                    </select>
+                    <br>
+                    <div class="button">
+                        <button id="run-prism" type="submit" class="upload positive"> Run</button>
+                    </div>
             </div>
 
             <div id="tab-upload"  class="tab cp">

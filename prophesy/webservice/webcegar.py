@@ -282,12 +282,10 @@ class Results(CegarHandler):
 
 class UploadPrism(CegarHandler):
     def post(self):
-        print("Upload prims ENTRY")
-        tool = self.get_argument('mctool')
+        # Save the files which the user wants to upload
+        print("Upload prism ENTRY")
         upload_prism = self.request.files['file'][0]
         upload_pctl = self.request.files['pctl-file'][0]
-        if tool not in ppmcs:
-            return self._json_error("Invalid tool selected")
         if upload_prism is None:
             return self._json_error("Missing PRISM file")
         if upload_pctl is None:
@@ -296,37 +294,60 @@ class UploadPrism(CegarHandler):
         (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTS)
         with os.fdopen(prism_fd, "wb") as prism_f:
             prism_f.write(upload_prism.body)
-        prism_file = PrismFile(prism_path)
+        prism_files = self._get_session("prism-files", {})
+        prism_files[upload_prism.filename] = prism_path
+        self._set_session("prism-files", prism_files)
 
         (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTS)
         with os.fdopen(pctl_fd, "wb") as pctl_f:
             pctl_f.write(upload_pctl.body)
-        pctl_file = PctlFile(pctl_path)
+        pctl_files = self._get_session("pctl-files", {})
+        pctl_files[upload_pctl.filename] = pctl_path
+        self._set_session("pctl-files", pctl_files)
+        return self._json_ok();
 
-        if tool == "param":
-            prism_file.replace_parameter_keyword("param float")
-        tool = getPMC(tool)
+    def get(self):
+        # DEBUG METHOD
+        result = {}
+        result["prism"] = self._get_session("prism-files", {})
+        result["pctl"] = self._get_session("pctl-files", {})
+        return self._json_ok(result)
 
 
-        print("Upload prims CALL")
+class RunPrism(CegarHandler):
+    def post(self):
+        # Run the uploaded prism file with the coosen mctool
+        print("Upload prism CALL")
+        # Get session info about filenames
+        prism_files = self._get_session("prism-files")
+        if not prism_files:
+            return self._json_error("Error: No prism files uploaded")
+        pctl_files = self._get_session("pctl-files")
+        if not pctl_files:
+            return self._json_error("error: No pctl files uploaded")
+        # Try to load the model
         try:
-            tool.load_model_from_prismfile(prism_file)
+            tool.load_model_from_prismfile(prism_files)
         except Exception as e:
             return self._json_error("Error while loading model: {}".format(e))
 
+        # Try to load the formula
         try:
             tool.set_pctl_formula(pctl_file.get(0))
         except Exception as e:
             return self._json_error("Error while loading the formula into the tool: {}".format(e))
 
+        # Run the mctool to evaluate the current ration function
         try:
             result = tool.get_rational_function()
         except Exception as e:
             return self._json_error("Error while computing rational function: {}".format(e))
 
+        # Delete temporary files
         os.unlink(pctl_path)
         os.unlink(prism_path)
 
+        # Save the result temporarily
         (res_fd, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTS)
         os.close(res_fd)
         write_pstorm_result(res_file, result)
