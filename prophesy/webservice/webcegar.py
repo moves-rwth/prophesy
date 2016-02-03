@@ -17,6 +17,7 @@ import re
 from argparse import ArgumentParser
 import shutil
 import uuid
+import subprocess
 
 from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler, RedirectHandler
@@ -48,6 +49,7 @@ from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_polygon import ConstraintPolygon
 
 from concurrent.futures import ThreadPoolExecutor
+from subprocess import Popen
 
 
 default_results = {}
@@ -420,16 +422,9 @@ class UploadResult(CegarHandler):
 class PingRedis(CegarHandler):
 
     def get(self):
-        fname = "tmpanswer.txt"
-        os.system("redis-cli ping > " + fname)
-        f = open(fname, 'r')
-        result = f.readline()
-        if result == "PONG\n":
-            f.close()
-            os.unlink(fname)
-            return self._json_ok("running")
-        f.close()
-        os.unlink(fname)
+        with Popen(["redis-cli", "ping"], stdout=subprocess.PIPE) as proc:
+            if proc.stdout.readline() == b'PONG\n':
+                return self._json_ok("running")
         return self._json_error("Redis not running")
 
 class Samples(CegarHandler):
