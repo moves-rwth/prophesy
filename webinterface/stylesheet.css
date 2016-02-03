@@ -7,6 +7,16 @@ body {
 /*a { color: #069; }
 a:hover { color: #28b; }*/
 
+.menu-link {
+    color: #4c4c4c;
+    text-decoration: none;
+    display: inline-block;
+    width: 300px;
+    text-align: center;
+    border-style: outset;
+    font-size: 16px;
+}
+
 h2 {
     margin-top: 15px;
     font: normal 32px "omnes-pro", Helvetica, Arial, sans-serif;
@@ -35,12 +45,31 @@ input[type=radio] {
     margin-top: 5px;
 }
 
+#menu {
+    display: inline-block;
+    font-size: 12px;
+    padding-top: 2px;
+    background-color: #ddd;
+    width: 100%;
+    vertical-align: top;
+    position: absolute;
+}
+
+.menu-link:hover{
+    background-color: #eee;
+}
+
+.menu-link:active{
+    border-style: inset;
+}
+
 #header {
     position: relative;
     height: 80px;
     background-color:#cd0010;
     color: #eee;
     margin: 0px;
+    width: 100%;
 }
 
 #header.busy {
@@ -73,6 +102,7 @@ input[type=radio] {
     font-size: 25px;
     background-color:#FF8000;
     color: #000;
+    width: 100%;
 
     overflow-y: hidden;
     padding: 0px;
