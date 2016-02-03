@@ -595,10 +595,10 @@ $(document).ready(function() {
         threshold = $('#thresholdSlider').val();
         threshold = Number(threshold).toFixed(3)
         $("#thresvalue").val(threshold);
-        plotSamples();
     });
 
     // Change display of samples as well
+
     $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val();
         threshold = Number(threshold).toFixed(3)
@@ -608,7 +608,7 @@ $(document).ready(function() {
     });
 
     // Change if value is entered directly
-    $("#thresvalue").on('input', function(){
+    $("#thresvalue").on('change', function(){
         threshold = $("#thresvalue").val();
         if (Number(threshold) < 0 || Number(threshold) > 1){
             alert("threshold should only be between 0 and 1");
@@ -619,7 +619,7 @@ $(document).ready(function() {
         $('#thresholdSlider').val(threshold);
         setThreshold(threshold);
         plotSamples();
-        });
+    });
 
     $("#samplers").on('change', function() {
         setEnv();
