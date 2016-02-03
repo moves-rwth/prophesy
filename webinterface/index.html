@@ -589,21 +589,37 @@ $(document).ready(function() {
     });
 
     // Handler for change of settings
+
     // Just change threshold label
     $("#thresholdSlider").on('input', function() {
         threshold = $('#thresholdSlider').val();
         threshold = Number(threshold).toFixed(3)
-        $("#thresvalue").text(threshold);
+        $("#thresvalue").val(threshold);
+        plotSamples();
     });
 
     // Change display of samples as well
     $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val();
         threshold = Number(threshold).toFixed(3)
-        $("#thresvalue").text(threshold);
+        $("#thresvalue").value(threshold);
         setThreshold(threshold);
         plotSamples();
     });
+
+    // Change if value is entered directly
+    $("#thresvalue").on('input', function(){
+        threshold = $("#thresvalue").val();
+        if (Number(threshold) < 0 || Number(threshold) > 1){
+            alert("threshold should only be between 0 and 1");
+            threshold = 0.500;
+            $("#thresvalue").val(threshold);
+        }
+        threshold = Number(threshold).toFixed(3);
+        $('#thresholdSlider').val(threshold);
+        setThreshold(threshold);
+        plotSamples();
+        });
 
     $("#samplers").on('change', function() {
         setEnv();
@@ -883,7 +899,7 @@ $(document).ready(function() {
     <div id="settings">
         <h2>Settings</h2>
         <span class="colLeft">Threshold:</span>
-        <input type="range" min="0" max="1" value="0.5" step=".001" id="thresholdSlider" /><span id="thresvalue">0.500</span>
+        <input type="range" min="0" max="1" value="0.5" step=".001" id="thresholdSlider" />&nbsp;<input type="text" id="thresvalue" value="0.5" style="width: 45px;"/>
         <br>
         <span class="colLeft">Sampler:</span>
         <select id="samplers" class="colRight">
