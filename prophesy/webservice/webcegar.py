@@ -426,8 +426,10 @@ class PingRedis(CegarHandler):
         result = f.readline()
         if result == "PONG\n":
             f.close()
+            os.unlink(fname)
             return self._json_ok("running")
         f.close()
+        os.unlink(fname)
         return self._json_error("Redis not running")
 
 class Samples(CegarHandler):
