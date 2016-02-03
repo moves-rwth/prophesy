@@ -31,7 +31,7 @@ var threshold = "0.5";
 var websocket = null;
 var websocketActive = false;
 
-var redis_timer = setInterval(pingRedis, 1000);
+var redis_timer = setInterval(pingRedis, 10000);
 var isBusy = false;
 
 var options = {
@@ -84,7 +84,10 @@ function pingRedis(){
     doAjax({
         url: "../checkRedis",
         type: "GET"
-        });
+        },function(){},function(){
+            clearInterval(redis_timer);
+            redis_timer = setInterval(pingRedis, 3000);
+    });
 }
 
 function plotSamples() {
