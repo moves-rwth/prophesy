@@ -31,6 +31,7 @@ var threshold = "0.5";
 var websocket = null;
 var websocketActive = false;
 
+var redis_timer = setInterval(pingRedis, 1000);
 var isBusy = false;
 
 var options = {
@@ -79,7 +80,12 @@ var options = {
             noColumns: 6
         }};
 
-
+function pingRedis(){
+    doAjax({
+        url: "../checkRedis",
+        type: "GET"
+        });
+}
 
 function plotSamples() {
     safeData = [];
@@ -702,6 +708,8 @@ $(document).ready(function() {
     /////////////////////////
     // Things to do initially
     /////////////////////////
+
+    // Set the timer to check if Redis server is running
 
     // Show the empty graph immediately
     plotSamples();

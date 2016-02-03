@@ -417,6 +417,19 @@ class UploadResult(CegarHandler):
 
         return self._json_ok({"file" : upload.filename})
 
+class PingRedis(CegarHandler):
+
+    def get(self):
+        fname = "tmpanswer.txt"
+        os.system("redis-cli ping > " + fname)
+        f = open(fname, 'r')
+        result = f.readline()
+        if result == "PONG\n":
+            f.close()
+            return self._json_ok("running")
+        f.close()
+        return self._json_error("Redis not running")
+
 class Samples(CegarHandler):
     def get(self):
         flattenedsamples = _jsonSamples(self._get_session('samples', {}))
@@ -786,7 +799,8 @@ def make_app(hostname):
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
         (r'/config/(.*)/(.*)$', Configuration),
-        (r'/config', Configuration)
+        (r'/config', Configuration),
+        (r'/checkRedis', PingRedis)
     ], **settings)
 
     return application
