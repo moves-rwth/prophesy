@@ -1,9 +1,13 @@
-import stormpy.info
-import stormpy.logic
-import stormpy.core
-
 from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
 from modelcheckers.pmc import BisimulationType
+from config import configuration
+
+if not configuration.is_module_available("stormpy"):
+    raise ModuleError("Module stormpy is needed for using the Python API for Storm")
+else:
+    import stormpy.info
+    import stormpy.logic
+    import stormpy.core
 
 class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self):
@@ -11,7 +15,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctl_formula = None
         self.prism_file = None
         self.program = None
-        stormpy.core.setUp("")
+        stormpy.core.set_up("")
 
     def name(self):
         return "stormpy"
@@ -41,12 +45,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if self.prism_file.nr_parameters() == 0:
             model = stormpy.core.buildModelFromPrismProgram(self.program, self.pctl_formula)
         else:
-            print(type(self.pctl_formula[0]))
             model = stormpy.core.build_model(self.program, self.pctl_formula[0])
             pdtmc = model.as_pdtmc()
-            print(type(pdtmc) == type(model))
-            print(model.nr_states)
-            print(pdtmc.nr_states)
 
         return stormpy.core.perform_state_elimination(pdtmc, self.pctl_formula[0])
 

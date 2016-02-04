@@ -3,7 +3,8 @@ from sympy import Symbol, fraction
 from sympy.polys import Poly
 from data.constraint import Constraint
 from data.rationalfunction import RationalFunction
-
+from config import configuration
+from exceptions.module_error import ModuleError
 
 class ParametricResult(object):
     """Wraps the results of pstorm and param
@@ -63,11 +64,27 @@ def read_pstorm_result(location):
 
 
 def write_pstorm_result(location, result):
-    with open(location, "w") as f:
-        f.write("!Parameters: {0}\n".format(", ".join([p.name for p in result.parameters])))
-        f.write("!Result: {0}\n".format(str(result.ratfunc)))
-        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
-        f.write("!Graph-preserving Constraints:\n")
+    if configuration.is_module_available("pycarl") and configuration.is_module_available("stormpy"):
+        # Use pycarl
+        import pycarl.numbers
+        import pycarl.core
+
+        with open(location, "w") as f:
+            str(result.result_function)
+            vars = result.result_function.gather_variables()
+            print("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
+            print("!Result: {0}\n".format(str(result.result_function)))
+            print("")
+            f.write("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
+            f.write("!Result: {0}\n".format(str(result.result_function)))
+            f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.constraints_well_formed])))
+            f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.constraints_graph_preserving])))
+    else:
+        with open(location, "w") as f:
+            f.write("!Parameters: {0}\n".format(", ".join([p.name for p in result.parameters])))
+            f.write("!Result: {0}\n".format(str(result.ratfunc)))
+            f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
+            f.write("!Graph-preserving Constraints:\n")
 
 
 def read_param_result(location):

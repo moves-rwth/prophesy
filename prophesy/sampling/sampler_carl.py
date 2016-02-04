@@ -3,17 +3,18 @@ from sampling.sampling import Sampler
 from sympy.core.numbers import Rational
 from sympy.core.sympify import sympify
 from sympy.polys import Poly
+from config import configuration
 
-from pycarl.core import Parser
-import pycarl
-
-
+if not configuration.is_module_available("pycarl"):
+    raise ModuleError("Module pycarl is needed for sampling with CARL")
+else:
+    from pycarl.core import Parser
+    import pycarl
 
 class CarlSampling(Sampler):
     """Sample based on CARL library"""
     def __init__(self, ratfunc, parameters):
         super().__init__()
-
         self.parameters = parameters
         self.ratfunc = ratfunc
 

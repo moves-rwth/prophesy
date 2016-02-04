@@ -26,6 +26,13 @@ class Configuration():
         assert key in self._config[section]
         return self._config[section][key]
 
+    def is_module_available(self, module):
+        if self._importedFrom == "":
+            self._importFromFile()
+        assert DEPENDENCIES in self._config
+        assert module in self._config[DEPENDENCIES]
+        return self._config.getboolean(DEPENDENCIES, module)
+
     # TODO: REPAIR THIS
     def getAll(self):
         if self._importedFrom == "":
@@ -95,7 +102,7 @@ class Configuration():
             except:
                 raise ConfigurationError("Prism is not found at " + prismLoc)
 
-        if configuration.get(DEPENDENCIES, "stormpy"):
+        if configuration.is_module_available("stormpy"):
             pmcs.add('stormpy')
 
         if len(pmcs) == 0:
@@ -133,7 +140,7 @@ class Configuration():
             except:
                 raise ConfigurationError("Prism is not found at " + prismLoc)
 
-        if configuration.get(DEPENDENCIES, "stormpy"):
+        if configuration.is_module_available("stormpy"):
             ppmcs.add('stormpy')
 
         if len(ppmcs) == 0:
@@ -144,7 +151,7 @@ class Configuration():
         samplers = {}
         samplers['ratfunc'] = "Rational function"
         samplers['ratfunc_float'] = "Rational function (float)"
-        if configuration.get(DEPENDENCIES, "pycarl"):
+        if self.is_module_available("pycarl"):
             samplers['carl'] = "Carl library"
 
         try:
