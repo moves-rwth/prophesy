@@ -1,6 +1,6 @@
 import math
-from sampling.sampling import SampleGenerator, filter_samples, split_samples,\
-    weighed_interpolation
+from sampling.sample_generator import SampleGenerator, weighed_interpolation
+from sampling.sampling import filter_samples, split_samples
 from shapely.geometry.point import Point
 
 

@@ -1,8 +1,5 @@
 from collections import OrderedDict
-from sampling.sampling import Sampler
-from sympy.core.numbers import Rational
-from sympy.core.sympify import sympify
-from sympy.polys import Poly
+from sampling.sampler import Sampler
 from config import configuration
 
 if not configuration.is_module_available("pycarl"):

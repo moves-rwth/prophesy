@@ -1,4 +1,4 @@
-from sampling.sampling import Sampler
+from sampling.sampler import Sampler
 from sympy.core.numbers import Rational
 from collections import OrderedDict
 

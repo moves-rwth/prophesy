@@ -13,15 +13,14 @@ from argparse import ArgumentParser
 
 # from sampling.sampler_carl import CarlSampling # needs fix
 # from sampling.sampling_linear import LinearRefinement # unused
-from input.resultfile import read_pstorm_result
+
 from output.plot import Plot
 from input.resultfile import read_pstorm_result
 import config
-from sampling.sampling import write_samples_file
+from input.samplefile import write_samples_file
+from sampling.sampling import uniform_samples
 from sampling.sampler_ratfunc import RatFuncSampling
-from sampling.sampling import write_samples_file
 from sampling.sampling_delaunay import DelaunayRefinement
-from sampling.sampling_uniform import UniformSampleGenerator
 from util import open_file
 
 
@@ -42,17 +41,6 @@ def parse_cli_args():
     return parser.parse_args()
 
 
-def uniform_samples(interface, dimensions, samples_per_dim):
-    """Generate a uniform grid of samples."""
-    samples = {}
-    intervals = [(0.01, 0.99)] * dimensions
-    uniform_generator = UniformSampleGenerator(interface, intervals, samples_per_dim)
-
-    for new_samples in uniform_generator:
-        samples.update(new_samples)
-
-    print("Performing uniform sampling: {} samples".format(len(samples)))
-    return samples
 
 
 def refine_samples(interface, samples, iterations, threshold):
@@ -99,6 +87,7 @@ if __name__ == "__main__":
     # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
     initial_samples = uniform_samples(sampling_interface, len(result.parameters), cmdargs.samplingnr)
+    print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
 

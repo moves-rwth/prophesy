@@ -1,4 +1,4 @@
-from sampling.sampling import Sampler
+from sampling.sampler import Sampler
 from collections import OrderedDict
 import data.range
 

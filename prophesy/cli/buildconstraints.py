@@ -18,7 +18,7 @@ from constraints.constraint_quads import ConstraintQuads
 from constraints.constraint_rectangles import ConstraintRectangles
 from input.resultfile import read_pstorm_result
 from output.plot import Plot
-from sampling.sampling import read_samples_file
+from input.samplefile import read_samples_file
 from smt.isat import IsatSolver
 from smt.smt import setup_smt
 from smt.smtlib import SmtlibSolver

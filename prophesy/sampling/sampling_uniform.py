@@ -1,5 +1,4 @@
-from sampling.sampling import SampleGenerator
-
+from sampling.sample_generator import SampleGenerator
 
 class UniformSampleGenerator(SampleGenerator):
     """Generates a uniform grid of samples"""

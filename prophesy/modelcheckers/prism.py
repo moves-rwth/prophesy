@@ -6,8 +6,7 @@ from collections import OrderedDict
 from config import configuration
 import config
 from modelcheckers.ppmc import ParametricProbabilisticModelChecker
-from sampling.sampling import read_samples_file
-from input.prismfile import PrismFile
+from input.samplefile import read_samples_file
 from util import check_filepath_for_reading, run_tool, ensure_dir_exists, write_string_to_tmpfile
 
 

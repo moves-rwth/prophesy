@@ -1,5 +1,5 @@
 import numpy
-from sampling.sampling import SampleGenerator, weighed_interpolation
+from sampling.sample_generator import SampleGenerator, weighed_interpolation
 from sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.point import Point
 from shapely.geometry.linestring import LineString
