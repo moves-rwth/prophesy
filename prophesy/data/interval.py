@@ -44,6 +44,9 @@ class Interval:
         self._right_bound_type = right_bt
         self._right_value = right_value
 
+    def __str__(self):
+        return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
+
     def left_bound(self):
         return self._left_value
 
