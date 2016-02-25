@@ -1,9 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from sympy import Symbol, Poly
+from data.interval import Interval, BoundType
 
 
-def setup_smt(smt2interface, result, threshold):
+# Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
+def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, BoundType.closed, None, BoundType.open)):
     from data.constraint import Constraint
 
     for p in result.parameters:
@@ -52,11 +54,18 @@ def setup_smt(smt2interface, result, threshold):
     smt2interface.assert_constraint(rf2_constraint)
     smt2interface.assert_guarded_constraint("safe", safe_constraint)
     smt2interface.assert_guarded_constraint("bad", bad_constraint)
+
+    #TODO why do we only do this if the denominator is 1
     if result.ratfunc.denominator == Poly(1, *rat_vars):
-        ubound = Constraint(Poly(rf1Var - 1), "<=", vars)
-        lbound = Constraint(Poly(rf1Var), ">=", vars)
-        smt2interface.assert_constraint(ubound)
-        smt2interface.assert_constraint(lbound)
+        if rat_func_bound.left_bound() != None:
+            ineq_type = ">=" if rat_func_bound.left_bound_type() == BoundType.closed else ">"
+            lbound = Constraint(Poly(rf1Var), ineq_type, vars)
+            smt2interface.assert_constraint(lbound)
+        if rat_func_bound.right_bound() != None:
+            ineq_type = "<=" if rat_func_bound.left_bound_type() == BoundType.closed else "<"
+            ubound = Constraint(Poly(rf1Var - 1), ineq_type, vars)
+            smt2interface.assert_constraint(ubound)
+
 
 
 class Answer(Enum):
