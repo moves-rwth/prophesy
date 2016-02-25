@@ -3,6 +3,7 @@ from sympy import Symbol, fraction
 from sympy.polys import Poly
 from data.constraint import Constraint
 from data.rationalfunction import RationalFunction
+import data.interval
 from config import configuration
 from exceptions.module_error import ModuleError
 
@@ -29,14 +30,22 @@ def read_pstorm_result(location):
 
     # Build parameters
     #print("Reading parameters...")
-    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(",")
-    parameters = [Symbol(name.strip()) for name in parameter_strings if name.strip()]
+    parameters = []
+    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
+    for parameter_string in parameter_strings:
+        if parameter_string.strip():
+            name_and_info = parameter_string.split()
+            if len(name_and_info) == 1:
+                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.Interval(0, data.interval.BoundType.open, 1, data.interval.BoundType.open)]))
+            else:
+                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.string_to_interval(name_and_info[1], int)]))
 
     # Build well-defined constraints
     #print("Reading constraints...")
+    symbols = [x[0] for x in parameters]
     constraints_string = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
-    constraints = [Constraint.__from_str__(cond, parameters) for cond in constraints_string[1:]]
+    constraints = [Constraint.__from_str__(cond, symbols) for cond in constraints_string[1:]]
 
     # Build graph-preserving constraints
     constraints_string = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
@@ -44,19 +53,19 @@ def read_pstorm_result(location):
         constraints_string = constraints_string[0].split("\n")[:-1]
     else:
         constraints_string = []
-    gpconstraints = [Constraint.__from_str__(cond, parameters) for cond in constraints_string[1:]]
+    gpconstraints = [Constraint.__from_str__(cond, symbols) for cond in constraints_string[1:]]
     constraints += gpconstraints
 
     # Build rational function
     #print("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     nom, den = fraction(match)
-    nom = Poly(nom, parameters)
-    den = Poly(den, parameters)
+    nom = Poly(nom, symbols)
+    den = Poly(den, symbols)
 
     #print("Building rational function...")
-    nominator = Poly(nom, parameters)
-    denominator = Poly(den, parameters)
+    nominator = Poly(nom, symbols)
+    denominator = Poly(den, symbols)
     ratfunc = RationalFunction(nominator, denominator)
 
     #print("Parsing complete")
@@ -64,7 +73,7 @@ def read_pstorm_result(location):
 
 
 def write_pstorm_result(location, result):
-    if configuration.is_module_available("pycarl") and configuration.is_module_available("stormpy"):
+    if False and configuration.is_module_available("pycarl") and configuration.is_module_available("stormpy"):
         # Use pycarl
         import pycarl.numbers
         import pycarl.core
@@ -72,7 +81,7 @@ def write_pstorm_result(location, result):
         with open(location, "w") as f:
             str(result.result_function)
             vars = result.result_function.gather_variables()
-            print("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
+            print("!Parameters: {0}\n".format("; ".join([str(p) for p in vars])))
             print("!Result: {0}\n".format(str(result.result_function)))
             print("")
             f.write("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
@@ -81,7 +90,7 @@ def write_pstorm_result(location, result):
             f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.constraints_graph_preserving])))
     else:
         with open(location, "w") as f:
-            f.write("!Parameters: {0}\n".format(", ".join([p.name for p in result.parameters])))
+            f.write("!Parameters: {0}\n".format("; ".join([p[0].name + " " + str(p[1]) for p in result.parameters])))
             f.write("!Result: {0}\n".format(str(result.ratfunc)))
             f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
             f.write("!Graph-preserving Constraints:\n")

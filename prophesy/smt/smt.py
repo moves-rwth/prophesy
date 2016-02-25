@@ -7,12 +7,13 @@ def setup_smt(smt2interface, result, threshold):
     from data.constraint import Constraint
 
     for p in result.parameters:
-        smt2interface.add_variable(p.name, VariableDomain.Real)
+        smt2interface.add_variable(p[0].name, VariableDomain.Real)
 
     for constr in result.parameter_constraints:
         smt2interface.assert_constraint(constr)
 
-    vars = list(result.parameters)
+    rat_vars = list([x[0] for x in result.parameters])
+    vars = rat_vars
 
     safeVar = Symbol("safe")
     badVar = Symbol("bad")
@@ -44,14 +45,14 @@ def setup_smt(smt2interface, result, threshold):
     print(safe_constraint.to_smt2_string())
     bad_constraint = Constraint(Poly(rf1Var - thresholdVar * rf2Var, *vars, domain="RR"), bad_relation, vars)
     threshold_constraint = Constraint(Poly(thresholdVar - threshold, *vars), "=", vars)
-    rf1_constraint = Constraint(Poly(rf1Var - result.ratfunc.nominator.as_expr(*result.parameters), *vars, domain="RR"), "=", vars)
-    rf2_constraint = Constraint(Poly(rf2Var - result.ratfunc.denominator.as_expr(*result.parameters), *vars, domain="RR"), "=", vars)
+    rf1_constraint = Constraint(Poly(rf1Var - result.ratfunc.nominator.as_expr(*rat_vars), *vars, domain="RR"), "=", vars)
+    rf2_constraint = Constraint(Poly(rf2Var - result.ratfunc.denominator.as_expr(*rat_vars), *vars, domain="RR"), "=", vars)
     smt2interface.assert_constraint(threshold_constraint)
     smt2interface.assert_constraint(rf1_constraint)
     smt2interface.assert_constraint(rf2_constraint)
     smt2interface.assert_guarded_constraint("safe", safe_constraint)
     smt2interface.assert_guarded_constraint("bad", bad_constraint)
-    if result.ratfunc.denominator == Poly(1, *result.parameters):
+    if result.ratfunc.denominator == Poly(1, *rat_vars):
         ubound = Constraint(Poly(rf1Var - 1), "<=", vars)
         lbound = Constraint(Poly(rf1Var), ">=", vars)
         smt2interface.assert_constraint(ubound)

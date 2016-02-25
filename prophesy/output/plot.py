@@ -76,10 +76,11 @@ class Plot(object):
             y_coords = [y for x, y in samples_blue]
             ax1.scatter(x_coords, y_coords, marker='.', c='blue')
 
-            ax1.set_ylim([0, 1])
-            ax1.set_xlim([0, 1])
-            ax1.set_xlabel(str(parameters[0]))
-            ax1.set_ylabel(str(parameters[1]))
+
+            ax1.set_xlim([parameters[0][1].left_bound(), parameters[0][1].right_bound()])
+            ax1.set_ylim([parameters[1][1].left_bound(), parameters[1][1].right_bound()])
+            ax1.set_xlabel(str(parameters[0][0]))
+            ax1.set_ylabel(str(parameters[1][0]))
             if path_to_save is not None:
                 pyplot.savefig(path_to_save, format="PDF")
             if display:

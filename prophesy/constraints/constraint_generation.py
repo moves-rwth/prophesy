@@ -16,7 +16,8 @@ import smt.smt
 from data.constraint import Constraint, ComplexConstraint
 from output.plot import Plot
 from util import ensure_dir_exists
-
+from config import configuration
+from exceptions.module_error import ModuleError
 
 class Direction(Enum):
     """The four intercardinal directions ('North-East' etc.) as boolean
@@ -84,6 +85,7 @@ class ConstraintGeneration:
 
         self.samples = samples.copy()
         self.parameters = parameters
+        print(type(self.parameters))
         self.threshold = threshold
         self.threshold_area = threshold_area
 
@@ -106,13 +108,16 @@ class ConstraintGeneration:
         # Prime the generator
         return next(self)
 
+    def _symbols(self):
+        return list([x[0] for x in self.parameters])
+
     def __next__(self):
         with self.smt2interface as smtcontext:
             # initial constraints
-            for param in self.parameters:
+            for param in self._symbols():
                 # add constraints 0 <= param <= 1
-                smtcontext.assert_constraint(Constraint(Poly(param, self.parameters), ">=", self.parameters))
-                smtcontext.assert_constraint(Constraint(Poly(param - 1, self.parameters), "<=", self.parameters))
+                smtcontext.assert_constraint(Constraint(Poly(param, self._symbols()), ">=", self._symbols()))
+                smtcontext.assert_constraint(Constraint(Poly(param - 1, self._symbols()), "<=", self._symbols()))
 
             # get next constraint depending on algorithm
             result_constraint = self.next_constraint()
@@ -134,6 +139,8 @@ class ConstraintGeneration:
         Adds pdf with name to result.pdf in tmp directory
         """
         #TODO Only do this if the option is installed.
+        if not configuration.is_module_available("pypdf2"):
+            raise ModuleError("Module pypdf2 is needed for using the pdf export for constraints. Maybe your config is oudated?")
         from PyPDF2 import PdfFileMerger, PdfFileReader
 
         if self.first_pdf:
@@ -177,13 +184,13 @@ class ConstraintGeneration:
             # Constant is dot-product of directional vector and origin
             c = sum([c1 * c2 for c1, c2 in zip(dvec, p1)])
             # Construct polynomial for line
-            poly = Poly(-c, self.parameters)
-            for parameter, coefficient in zip(self.parameters, dvec):
+            poly = Poly(-c, self._symbols())
+            for parameter, coefficient in zip(self._symbols(), dvec):
                 if coefficient != 0:
-                    poly = Poly(poly + parameter * coefficient, self.parameters)
+                    poly = Poly(poly + parameter * coefficient, self._symbols())
 
             # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
-            new_constraint = Constraint(poly, "<=", self.parameters)
+            new_constraint = Constraint(poly, "<=", self._symbols())
             if constraint is None:
                 constraint = new_constraint
             else:
@@ -357,7 +364,7 @@ class ConstraintGeneration:
         elif checkresult == smt.smt.Answer.sat:
             # add new point as counter example to existing constraints
             model_point = ()
-            for p in self.parameters:
+            for p in self._symbols():
                 if p.name in smt_model:
                     model_point = model_point + (smt_model[p.name],)
                 else:

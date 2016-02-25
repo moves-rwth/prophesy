@@ -8,7 +8,7 @@ class RatFuncSampling(Sampler):
     def __init__(self, ratfunc, parameters, rational=False):
         super().__init__()
 
-        self.parameters = parameters
+        self.symbols = [x[0] for x in parameters]
         self.ratfunc = ratfunc
         self.rational = rational
 
@@ -16,7 +16,7 @@ class RatFuncSampling(Sampler):
         samples = {}
         for pt in samplepoints:
             if self.rational:
-                samples[pt] = self.ratfunc.eval({x: Rational(y) for x, y in zip(self.parameters, pt)}).evalf()
+                samples[pt] = self.ratfunc.eval({x: Rational(y) for x, y in zip(self.symbols, pt)}).evalf()
             else:
-                samples[pt] = self.ratfunc.eval({x: y for x, y in zip(self.parameters, pt)}).evalf()
+                samples[pt] = self.ratfunc.eval({x: y for x, y in zip(self.symbols, pt)}).evalf()
         return OrderedDict(samples.items())

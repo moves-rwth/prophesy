@@ -32,7 +32,7 @@ def parse_cli_args(solversConfig):
     parser.add_argument('--rat-file', help='file containing rational function', required=True)
     parser.add_argument('--samples-file', help='file containing the sample points', required=True)
     parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination', required = False)
-    
+    parser.add_argument('--threshold', help='gives the threshold', type=float)
 
     limit_group = parser.add_mutually_exclusive_group(required=True)
     limit_group.add_argument('--iterations', dest='iterations', help='Number of constraints to generate', type=int)
@@ -63,15 +63,26 @@ if __name__ == "__main__":
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)
+    threshold = None
 
-    # is this still needed?
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
 
     print("Loading samples")
-    parameters, threshold, samples = read_samples_file(cmdargs.samples_file)
+    parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file)
+    if cmdargs.threshold:
+        threshold = cmdargs.threshold
+    else:
+        print("Using threshold from samples file.")
+        threshold = samples_threshold
+
+    if threshold == None:
+        raise("No threshold specified via command line or samples file.")
     print("Threshold: {}".format(threshold))
     print(samples)
+
+    if [x[0].name for x in result.parameters] != parameters:
+        raise RuntimeError("Sampling and Result parameters are not equal")
 
     print("Setup SMT interface")
     if cmdargs.z3location:

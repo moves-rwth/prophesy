@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
 
-    write_samples_file([p.name for p in result.parameters], refined_samples, cmdargs.samples_file)
+    write_samples_file([p[0].name for p in result.parameters], refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
     open_file(plot_path)
