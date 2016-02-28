@@ -3,10 +3,9 @@ from sampling.sampling_uniform import UniformSampleGenerator
 import config
 
 
-def uniform_samples(interface, dimensions, samples_per_dim):
+def uniform_samples(interface, intervals, samples_per_dim):
     """Generate a uniform grid of samples."""
     samples = {}
-    intervals = [(0.01, 0.99)] * dimensions
     uniform_generator = UniformSampleGenerator(interface, intervals, samples_per_dim)
 
     for new_samples in uniform_generator:

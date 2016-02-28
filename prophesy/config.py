@@ -187,6 +187,7 @@ DEPENDENCIES = "installed_deps"
 
 
 # CONSTANTS
+INTERVAL_EPSILON = 0.01
 PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 DISTANCE = float(configuration.get(SAMPLING, "distance"))
 TOOLNAME = "prophesy"
