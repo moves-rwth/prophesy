@@ -47,6 +47,15 @@ class Interval:
     def __str__(self):
         return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
 
+    def __eq__(self, other):
+        assert isinstance(other, Interval)
+        if self.empty() and other.empty(): return True
+        if not self._left_bound_type == other._left_bound_type: return False
+        if not self._left_value == other._left_value: return False
+        if not self._right_bound_type == other._right_bound_type: return False
+        if not self._right_value == other._right_value: return False
+        return True
+
     def left_bound(self):
         return self._left_value
 
@@ -64,7 +73,7 @@ class Interval:
         if self._left_value == self._right_value and (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open): return False
 
     def contains(self, pt):
-        if pt > self._left_value and pt < self._right_value: return True
+        if self._left_value < pt < self._right_value: return True
         if pt == self._left_value and self._left_bound_type == BoundType.closed: return True
         if pt == self._right_value and self._right_bound_type == BoundType.closed: return True
         return False
@@ -81,8 +90,6 @@ class Interval:
 
     def intersect(self, other):
         assert isinstance(other, Interval)
-        newleft = None
-        newLB = None
         if self._left_value > other._left_value:
             newleft = self._left_value
             newLB = self._left_bound_type
@@ -92,8 +99,6 @@ class Interval:
         else:
             newleft = self._left_value
             newLB = self._left_bound_type if self.left_bound_type == BoundType.open else other._left_bound_type
-        newright = None
-        newRB = None
         if self._right_value < other._right_value:
             newright = self._right_value
             newRB = self._right_bound_type
