@@ -69,6 +69,16 @@ class Interval:
         if pt == self._right_value and self._right_bound_type == BoundType.closed: return True
         return False
 
+    def width(self):
+        return self._right_value - self._left_value
+
+    def split(self):
+        mid = self._left_value + self.width()/2
+        return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
+
+    def close(self):
+        return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
+
     def intersect(self, other):
         assert isinstance(other, Interval)
         newleft = None
