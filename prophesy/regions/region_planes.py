@@ -1,5 +1,5 @@
 from sampling.sampling import split_samples
-from constraints.constraint_generation import ConstraintGeneration, Anchor, Direction
+from regions.region_generation import ConstraintGeneration, Anchor, Direction
 import config
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.point import Point

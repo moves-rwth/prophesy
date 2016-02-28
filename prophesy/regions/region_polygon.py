@@ -1,4 +1,4 @@
-from constraints.constraint_generation import ConstraintGeneration
+from regions.region_generation import ConstraintGeneration
 from shapely.ops import triangulate
 from shapely.geometry.polygon import orient
 

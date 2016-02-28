@@ -74,8 +74,8 @@ class Anchor:
 
 
 class ConstraintGeneration:
-    """A generator for constraints. This class acts as an iterable that
-    generates new constraints (or counterexamples) until the search space is exhausted
+    """A generator for regions. This class acts as an iterable that
+    generates new regions (or counterexamples) until the search space is exhausted
     (which possibly never happens)"""
     __metaclass__ = ABCMeta
 
@@ -93,7 +93,7 @@ class ConstraintGeneration:
         self.ratfunc = _ratfunc
 
         self.benchmark_output = []
-        # Stores all constraints as triple ([constraint], polygon representation, bad/safe)
+        # Stores all regions as triple ([constraint], polygon representation, bad/safe)
         self.all_constraints = []
         self.safe_polys = []
         self.bad_polys = []
@@ -108,14 +108,12 @@ class ConstraintGeneration:
         # Prime the generator
         return next(self)
 
-    def _symbols(self):
-        return list([x[0] for x in self.parameters])
-
     def __next__(self):
         with self.smt2interface as smtcontext:
-            # initial constraints
+            # initial regions
             for param in self._symbols():
-                # add constraints 0 <= param <= 1
+                #TODO fix assumption that param is between zero and 1
+                # add regions 0 <= param <= 1
                 smtcontext.assert_constraint(Constraint(Poly(param, self._symbols()), ">=", self._symbols()))
                 smtcontext.assert_constraint(Constraint(Poly(param - 1, self._symbols()), "<=", self._symbols()))
 
@@ -134,13 +132,19 @@ class ConstraintGeneration:
         # End of generator
         return
 
+    def _symbols(self):
+        return list([x[0] for x in self.parameters])
+
+    def _intervals(self):
+        return list([x[1] for x in self.parameters])
+
     def _add_pdf(self, name):
         """
         Adds pdf with name to result.pdf in tmp directory
         """
         #TODO Only do this if the option is installed.
         if not configuration.is_module_available("pypdf2"):
-            raise ModuleError("Module pypdf2 is needed for using the pdf export for constraints. Maybe your config is oudated?")
+            raise ModuleError("Module pypdf2 is needed for using the pdf export for regions. Maybe your config is oudated?")
         from PyPDF2 import PdfFileMerger, PdfFileReader
 
         if self.first_pdf:
@@ -154,7 +158,7 @@ class ConstraintGeneration:
             merger.write(self.result_file)
 
     def compute_constraint(self, polygon):
-        """Compute constraints from polygon (Polygon, LineString or LinearRing)
+        """Compute regions from polygon (Polygon, LineString or LinearRing)
         Area will be considered at the rhs (ccw) of line segments
         :param polygon: must be convex
         :return: single (Complex)Constraint describing the polygon
@@ -201,7 +205,7 @@ class ConstraintGeneration:
 
     @classmethod
     def is_point_fulfilling_constraint(cls, pt, constraint):
-        """Check whether the given point is satisfied by the constraints
+        """Check whether the given point is satisfied by the regions
         (i.e. is contained by it)"""
         if isinstance(constraint, ComplexConstraint):
             if constraint.operator == "or":
@@ -286,14 +290,14 @@ class ConstraintGeneration:
 
     @abstractmethod
     def next_constraint(self):
-        """Generate a new set of constraints ([constraints], area, area_safe),
-        where [constraints] is a list of Constraint, area is a polygon representation of the new area
+        """Generate a new set of regions ([regions], area, area_safe),
+        where [regions] is a list of Constraint, area is a polygon representation of the new area
         and area_safe indicated whether the area should be determined safe (or not)"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
     def fail_constraint(self, constraint, safe):
-        """Update current set of constraints, usually to avoid mem or time out.
+        """Update current set of regions, usually to avoid mem or time out.
         Returns same as next_constraint"""
         raise NotImplementedError("Abstract parent method")
 
@@ -310,7 +314,7 @@ class ConstraintGeneration:
 
     def analyze_constraint(self, constraint, polygon, safe):
         """Extends the current area by using the new polygon
-        constraints are the newly added constraints for the polygon
+        regions are the newly added regions for the polygon
         polygon marks the new area to cover
         safe indicates whether the area is safe or bad
         returns tuple (valid constraint, polygon/counterexample point)
@@ -353,7 +357,7 @@ class ConstraintGeneration:
                     break
 
         if checkresult == smt.smt.Answer.unsat:
-            # remove unnecessary samples which are covered already by constraints
+            # remove unnecessary samples which are covered already by regions
             for pt in list(self.samples.keys()):
                 if self.is_point_fulfilling_constraint(pt, constraint):
                     del self.samples[pt]
@@ -362,7 +366,7 @@ class ConstraintGeneration:
             self.accept_constraint(constraint, safe)
             return True, (constraint, polygon, safe)
         elif checkresult == smt.smt.Answer.sat:
-            # add new point as counter example to existing constraints
+            # add new point as counter example to existing regions
             model_point = ()
             for p in self._symbols():
                 if p.name in smt_model:
@@ -379,9 +383,9 @@ class ConstraintGeneration:
             return None
 
     def generate_constraints(self, max_iter=-1, max_area=1.0):
-        """Iteratively generates new constraints, heuristically, attempting to
+        """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
-        max_iter: Number of constraints to generate/check at most (not counting SMT failures),
+        max_iter: Number of regions to generate/check at most (not counting SMT failures),
         -1 for unbounded"""
         if max_iter == 0:
             return self.safe_polys, self.bad_polys, self.new_samples

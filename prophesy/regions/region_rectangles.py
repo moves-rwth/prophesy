@@ -1,5 +1,5 @@
 from sampling.sampling import split_samples
-from constraints.constraint_generation import ConstraintGeneration, Anchor, Direction
+from regions.region_generation import ConstraintGeneration, Anchor, Direction
 from shapely.geometry import box, Point
 from shapely import affinity
 import config

@@ -86,7 +86,7 @@ if __name__ == "__main__":
     sampling_interface = RatFuncSampling(result.ratfunc, result.parameters, False)
     # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
-    initial_samples = uniform_samples(sampling_interface, len(result.parameters), cmdargs.samplingnr)
+    initial_samples = uniform_samples(sampling_interface, [x[1] for x in result.parameters], cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)

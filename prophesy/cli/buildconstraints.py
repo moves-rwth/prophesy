@@ -12,10 +12,10 @@ from argparse import ArgumentParser
 
 from shapely.geometry.polygon import Polygon
 
-from constraints.constraint_planes import ConstraintPlanes
-from constraints.constraint_polygon import ConstraintPolygon
-from constraints.constraint_quads import ConstraintQuads
-from constraints.constraint_rectangles import ConstraintRectangles
+from regions.region_planes import ConstraintPlanes
+from regions.region_polygon import ConstraintPolygon
+from regions.region_quads import ConstraintQuads
+from regions.region_rectangles import ConstraintRectangles
 from input.resultfile import read_pstorm_result
 from output.plot import Plot
 from input.samplefile import read_samples_file
@@ -27,7 +27,7 @@ import config
 from config import configuration
 
 def parse_cli_args(solversConfig):
-    parser = ArgumentParser(description='Build constraints based on a sample file')
+    parser = ArgumentParser(description='Build regions based on a sample file')
 
     parser.add_argument('--rat-file', help='file containing rational function', required=True)
     parser.add_argument('--samples-file', help='file containing the sample points', required=True)
@@ -35,7 +35,7 @@ def parse_cli_args(solversConfig):
     parser.add_argument('--threshold', help='gives the threshold', type=float)
 
     limit_group = parser.add_mutually_exclusive_group(required=True)
-    limit_group.add_argument('--iterations', dest='iterations', help='Number of constraints to generate', type=int)
+    limit_group.add_argument('--iterations', dest='iterations', help='Number of regions to generate', type=int)
     limit_group.add_argument('--area', dest='area', help='Area (in [0,1]) to try to complete', type=float)
 
     method_group = parser.add_mutually_exclusive_group(required=True)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     smt2interface.run()
     setup_smt(smt2interface, result, threshold)
 
-    print("Generating constraints")
+    print("Generating regions")
     generator = None
     params = samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc
 

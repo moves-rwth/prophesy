@@ -42,10 +42,10 @@ from sampling.sampler_prism import McSampling
 from sampling.sampling_uniform import UniformSampleGenerator
 from sampling.sampling_linear import LinearRefinement
 from sampling.sampling_delaunay import DelaunayRefinement
-from constraints.constraint_planes import ConstraintPlanes
-from constraints.constraint_rectangles import ConstraintRectangles
-from constraints.constraint_quads import ConstraintQuads
-from constraints.constraint_polygon import ConstraintPolygon
+from regions.region_planes import ConstraintPlanes
+from regions.region_rectangles import ConstraintRectangles
+from regions.region_quads import ConstraintQuads
+from regions.region_polygon import ConstraintPolygon
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -197,8 +197,8 @@ class Threshold(CegarHandler):
         threshold = float(threshold)
         self._set_session('threshold', threshold)
 
-        # Clear all constraints, they are no longer valid
-        self._set_session('constraints', [])
+        # Clear all regions, they are no longer valid
+        self._set_session('regions', [])
 
         return self._json_ok()
 
@@ -207,8 +207,8 @@ class Threshold(CegarHandler):
         threshold = float(threshold)
         self._set_session('threshold', threshold)
 
-        # Clear all constraints, they are no longer valid
-        self._set_session('constraints', [])
+        # Clear all regions, they are no longer valid
+        self._set_session('regions', [])
 
         return self._json_ok()
 
@@ -556,7 +556,7 @@ class ConstraintHandler(CegarHandler):
 
 class Constraints(ConstraintHandler):
     def get(self):
-        constraints = self._get_session('constraints', [])
+        constraints = self._get_session('regions', [])
         return self._json_ok(constraints)
 
     @gen.coroutine
@@ -582,19 +582,19 @@ class Constraints(ConstraintHandler):
             return self._json_error("SMT solver did not return an answer")
 
         samples = self._get_session('samples', {})
-        constraints = self._get_session('constraints', [])
+        constraints = self._get_session('regions', [])
 
         samples.update(new_samples)
         constraints += unsat
 
         self._set_session('samples', samples)
-        self._set_session('constraints', constraints)
+        self._set_session('regions', constraints)
 
         return self._json_ok({'sat':_jsonSamples(new_samples), 'unsat':unsat})
         # TODO: redirect?
 
     def delete(self):
-        self._set_session('constraints', [])
+        self._set_session('regions', [])
         return self._json_ok()
 
 class GenerateConstraints(ConstraintHandler):
@@ -616,14 +616,14 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("SMT solver did not return an answer")
 
         samples = self._get_session('samples', {})
-        # Clear all constraints, resumption not supported (yet)
-        constraints = [] #self._get_session('constraints', [])
+        # Clear all regions, resumption not supported (yet)
+        constraints = [] #self._get_session('regions', [])
 
         samples.update(new_samples)
         constraints += unsat
 
         self._set_session('samples', samples)
-        self._set_session('constraints', constraints)
+        self._set_session('regions', constraints)
 
         return self._json_ok({'sat': _jsonSamples(new_samples), 'unsat': unsat})
 
@@ -652,8 +652,8 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
         pass
 
     def send_constraints(self, constraints):
-        """constraints is list (poly_list, safe)"""
-        self.write_message({"type": "constraints", "data": constraints})
+        """regions is list (poly_list, safe)"""
+        self.write_message({"type": "regions", "data": constraints})
 
 
 class Configuration(CegarHandler):
@@ -674,12 +674,12 @@ class Configuration(CegarHandler):
         print("Try to set the data in the configuration - call configuration.set(section, key, value)")
         prec = self.get_argument('precision', 0.0001)
         print(prec)
-        configuration.set('constraints', 'precision', str(prec))  # Example
+        configuration.set('regions', 'precision', str(prec))  # Example
         configuration.updateConfigurationFile()
         return self._json_ok()
 
 def initEnv():
-    # Check available model checkers, solvers and various other constraints
+    # Check available model checkers, solvers and various other regions
     # and adjust capabilities based on that
     global satSolvers, samplers, ppmcs
     satSolvers = configuration.getAvailableSMTSolvers()
@@ -749,7 +749,7 @@ def make_app(hostname):
         (r'/uploadResult', UploadResult),
         (r'/samples', Samples),
         (r'/generateSamples', GenerateSamples),
-        (r'/constraints', Constraints),
+        (r'/regions', Constraints),
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
         (r'/config', Configuration)
