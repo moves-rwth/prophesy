@@ -6,8 +6,8 @@ from shapely.geometry.linestring import LineString
 import config
 
 class DelaunayRefinement(SampleGenerator):
-    def __init__(self, sampler, samples, threshold, distance=config.DISTANCE):
-        super().__init__(sampler)
+    def __init__(self, sampler, intervals, samples, threshold, distance=config.DISTANCE):
+        super().__init__(sampler, intervals)
         self.points = self._make_points(samples)
         self.threshold = threshold
         self.distance = distance

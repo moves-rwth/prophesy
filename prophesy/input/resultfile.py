@@ -36,9 +36,9 @@ def read_pstorm_result(location):
         if parameter_string.strip():
             name_and_info = parameter_string.split()
             if len(name_and_info) == 1:
-                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.Interval(0, data.interval.BoundType.open, 1, data.interval.BoundType.open)]))
+                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.Interval(0.0, data.interval.BoundType.open, 1.0, data.interval.BoundType.open)]))
             else:
-                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.string_to_interval(name_and_info[1], int)]))
+                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.string_to_interval(name_and_info[1], float)]))
 
     # Build well-defined constraints
     #print("Reading constraints...")

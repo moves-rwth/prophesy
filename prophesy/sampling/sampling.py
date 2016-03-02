@@ -1,4 +1,6 @@
 from sampling.sampling_uniform import UniformSampleGenerator
+from sampling.sampling_delaunay import DelaunayRefinement
+from sampling.sampling_linear import LinearRefinement
 
 import config
 
@@ -15,17 +17,18 @@ def uniform_samples(interface, intervals, samples_per_dim):
     return samples
 
 
+def refine_samples(interface, intervals, samples, iterations, threshold):
+    """Refine samples over several iterations."""
+    # refinement_generator = LinearRefinement(interface, samples, threshold)
+    refinement_generator = DelaunayRefinement(interface, intervals, samples, threshold)
 
-def split_samples(samples, threshold):
-    """returns (>=, <)"""
-    above_threshold = dict([(k, v) for k, v in samples.items() if v >= threshold])
-    below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
-    return above_threshold, below_threshold
+    # Using range to limit the number of iterations
+    for (new_samples, i) in zip(refinement_generator, range(0, iterations)):
 
-def filter_samples(samples, threshold, distance=config.DISTANCE):
-    """Returns samples which are less than (or equal) `distance` away
-       from the threshold"""
-    return {pt: val for pt, val in samples.items() if abs(threshold - val) <= distance}
+        # uncomment to see intermediate plot before each iteration
+        #open_file(plot_samples(samples, result.parameters, True, threshold))
 
+        print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
+        samples.update(new_samples)
 
-
+    return samples

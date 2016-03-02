@@ -1,4 +1,4 @@
-from sampling.sampling import split_samples
+from data.samples import split_samples
 from regions.region_generation import ConstraintGeneration, Anchor, Direction
 from shapely.geometry import box, Point
 from shapely import affinity
@@ -12,7 +12,7 @@ class ConstraintRectangles(ConstraintGeneration):
 
         self.anchor_points = []
         for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
-            value = self.ratfunc.eval({x: y for x, y in zip(self.parameters, pt)}).evalf()
+            value = self.ratfunc.eval({x: y for x, y in zip(self._symbols(), pt)}).evalf()
             if value >= self.threshold:
                 pt_safe = True
             else:

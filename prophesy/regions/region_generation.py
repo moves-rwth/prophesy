@@ -85,7 +85,6 @@ class ConstraintGeneration:
 
         self.samples = samples.copy()
         self.parameters = parameters
-        print(type(self.parameters))
         self.threshold = threshold
         self.threshold_area = threshold_area
 

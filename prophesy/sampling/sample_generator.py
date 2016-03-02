@@ -4,8 +4,9 @@ from shapely.geometry import Point
 
 class SampleGenerator(object):
     """Class to refine a given set of samples"""
-    def __init__(self, sampler):
+    def __init__(self, sampler, intervals):
         self.sampler = sampler
+        self.intervals = intervals
 
     def refine_samples(self):
         raise NotImplemented()
@@ -30,4 +31,3 @@ def weighed_interpolation(point1, point2, value1, value2, threshold, fudge=0.0):
     weight += offset
 
     return Point(dx*weight + point1.x, dy*weight + point1.y)
-

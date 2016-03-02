@@ -18,9 +18,8 @@ from output.plot import Plot
 from input.resultfile import read_pstorm_result
 import config
 from input.samplefile import write_samples_file
-from sampling.sampling import uniform_samples
+from sampling.sampling import uniform_samples,refine_samples
 from sampling.sampler_ratfunc import RatFuncSampling
-from sampling.sampling_delaunay import DelaunayRefinement
 from util import open_file
 
 
@@ -41,23 +40,6 @@ def parse_cli_args():
     return parser.parse_args()
 
 
-
-
-def refine_samples(interface, samples, iterations, threshold):
-    """Refine samples over several iterations."""
-    # refinement_generator = LinearRefinement(interface, samples, threshold)
-    refinement_generator = DelaunayRefinement(interface, samples, threshold)
-
-    # Using range to limit the number of iterations
-    for (new_samples, i) in zip(refinement_generator, range(0, iterations)):
-
-        # uncomment to see intermediate plot before each iteration
-        #open_file(plot_samples(samples, result.parameters, True, threshold))
-
-        print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
-        samples.update(new_samples)
-
-    return samples
 
 
 def plot_samples(samples, parameters, safe_above_threshold, threshold):
@@ -89,7 +71,7 @@ if __name__ == "__main__":
     initial_samples = uniform_samples(sampling_interface, [x[1] for x in result.parameters], cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
-    refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
+    refined_samples = refine_samples(sampling_interface, [x[1] for x in result.parameters], initial_samples, cmdargs.iterations, cmdargs.threshold)
 
     write_samples_file([p[0].name for p in result.parameters], refined_samples, cmdargs.samples_file)
 
