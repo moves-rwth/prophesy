@@ -1,4 +1,5 @@
 from prophesy.data.interval import Interval, BoundType
+from prophesy.data.point import Point
 
 class HyperRectangle(object):
     """
@@ -6,12 +7,12 @@ class HyperRectangle(object):
     i.e. the n-dimensional variant of a box.
     """
 
-    def __init__(self, intervals):
+    def __init__(self, *intervals):
         """
         :param intervals: An iterable with intervals for each dimension.
         :return:
         """
-        self.intervals = intervals
+        self.intervals = tuple(intervals)
 
     @classmethod
     def from_extremal_points(cls, lowerpoint, upperpoint, boundtype ):
@@ -40,6 +41,16 @@ class HyperRectangle(object):
         for interv in self.intervals:
             if interv.empty(): return True
         return False
+
+    def vertices(self):
+        result = []
+        for i in range(0,pow(2,self.dimension()), 1):
+            num_bits = self.dimension()
+            bits = [(i >> bit) & 1 for bit in range(num_bits - 1, -1, -1)]
+            result.append(Point([(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i,x in zip(range(0, self.dimension()), bits)]))
+        return result
+
+    #def vertices_and_inward_dir(self):
 
     def split_in_every_dimension(self):
         """
