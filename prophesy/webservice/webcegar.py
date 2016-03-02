@@ -783,6 +783,7 @@ def make_app(hostname):
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
         (r"/files", RedirectHandler, dict(url="ui/filemanager.html")),
+        (r"/configuration", RedirectHandler, dict(url="ui/configuration.html")),
         (r'/invalidateSession', InvalidateSession),
         (r'/threshold', Threshold),
         (r'/currentResult', CurrentResult),

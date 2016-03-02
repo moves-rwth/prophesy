@@ -3,9 +3,12 @@
 body {
     background-color: #eee;
     font: 16px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
+    height: 100vh;
 }
-/*a { color: #069; }
-a:hover { color: #28b; }*/
+
+#wrapper {
+    height: 100%;
+}
 
 .menu-link {
     color: #4c4c4c;
@@ -45,14 +48,19 @@ input[type=radio] {
     margin-top: 5px;
 }
 
+#content {
+    margin-top: 4px;
+    width: 100%;
+    height: 80%;
+}
+
 #menu {
-    display: inline-block;
     font-size: 12px;
     padding-top: 2px;
     background-color: #ddd;
     width: 100%;
     vertical-align: top;
-    position: absolute;
+    height: 4%;
 }
 
 .menu-link:hover{
@@ -64,7 +72,6 @@ input[type=radio] {
 }
 
 #header {
-    position: relative;
     height: 80px;
     background-color:#cd0010;
     color: #eee;
@@ -82,6 +89,7 @@ input[type=radio] {
     50%  { background-color:#ff4050; }
     100% { background-color:#cd0010; }
 }
+
 
 #header h1 {
     margin-left: 10px;
@@ -129,7 +137,7 @@ input[type=radio] {
     display:inline-block;
     width: 447px;
 }
-
+/* Auslagern in eigene css für Plot */
 #plotsurround {
     width: 800px;
     display:inline-block;
@@ -153,12 +161,14 @@ input[type=radio] {
     color: #999;
 }
 
+/* Auslagern in eigene css für Plot */
 #info_ratfunc {
     white-space: pre-wrap;
     height: 700px;
     overflow: auto;
 }
 
+/* Auslagern in eigene css für Plot */
 .legend table {
     border-spacing: 5px;
 }
@@ -193,12 +203,14 @@ form {
     text-align: center;
 }
 
+/* Auslagern in eigene css für Plot */
 #legendContainer {
     min-width:800px;
     text-align: center;
     padding-top: 10px;
 }
 
+/* Auslagern in eigene css für Plot */
 #legend {
     width: 550px;
     margin-left: 25px;
@@ -231,4 +243,22 @@ form {
 
 #expert {
     display: none;
+}
+
+
+/* Ab hier alles in eigenes Stylesheet für die config */
+
+.configelement {
+    width: 19.7%;
+    border: 1px solid black;
+    display: inline-block;
+    min-height: 200px;
+}
+
+.configelement h3{
+    text-align: center;
+}
+
+#configchange {
+    text-align: center;
 }

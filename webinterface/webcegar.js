@@ -91,6 +91,12 @@ function setConfig(section, key, data){
         processData: false
     });
 }
+
+function getConfig(section, key){
+    doJSON("../config/"+section+"/"+key, function(result) {
+        return result.data;
+    });
+}
 // -----------------------------------------
 
 function getStormConfig(){
@@ -130,7 +136,6 @@ function setZ3Path(){
 function getPrecisionConfig(){
     doJSON("../config/constraints/precision", function(result) {
         cfgPrec = result.data;
-        $("#precision").val(cfgPrec);
         $("#precision").val(cfgPrec);
     });
 }

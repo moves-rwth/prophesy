@@ -81,13 +81,15 @@ var options = {
         }};
 
 function pingRedis(){
-    doAjax({
-        url: "../checkRedis",
-        type: "GET"
-        },function(){},function(){
-            clearInterval(redis_timer);
-            redis_timer = setInterval(pingRedis, 3000);
-    });
+    if(isBusy == false){
+        doAjax({
+            url: "../checkRedis",
+            type: "GET"
+            },function(){},function(){
+                clearInterval(redis_timer);
+                redis_timer = setInterval(pingRedis, 3000);
+        });
+    }
 }
 
 function plotSamples() {
@@ -765,9 +767,9 @@ $(document).ready(function() {
     </div>
 </div>
 <div id="menu">
-    <a href="./index.html" class="menu-link">Plot</a>
-    <a href="./filemanager.html" class="menu-link">Filemanager</a>
-    <a href="./configuration.html" class="menu-link">Configuration</a>
+    <a href="../" class="menu-link">Plot</a>
+    <a href="../files" class="menu-link">Filemanager</a>
+    <a href="../configuration" class="menu-link">Configuration</a>
 </div>
 <div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
 
