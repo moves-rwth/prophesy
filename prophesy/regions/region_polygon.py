@@ -1,11 +1,11 @@
-from regions.region_generation import ConstraintGeneration
+from regions.region_generation import RegionGenerator
 from shapely.ops import triangulate
 from shapely.geometry.polygon import orient
 
 
-class ConstraintPolygon(ConstraintGeneration):
+class ConstraintPolygon(RegionGenerator):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
-        ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
+        RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.safe_polygons = []
         self.bad_polygons = []

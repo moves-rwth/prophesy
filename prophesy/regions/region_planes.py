@@ -1,5 +1,5 @@
 from data.samples import split_samples
-from regions.region_generation import ConstraintGeneration, Anchor, Direction
+from regions.region_generation import RegionGenerator, Anchor, Direction
 import config
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.point import Point
@@ -7,10 +7,10 @@ from shapely.geometry.polygon import Polygon
 import numpy
 
 
-class ConstraintPlanes(ConstraintGeneration):
+class ConstraintPlanes(RegionGenerator):
 
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc, _steps=3):
-        ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
+        RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
         self.steps = numpy.linspace(0, -(1 / 2 * numpy.pi), _steps, endpoint=False)
 
         self.safe_planes = []

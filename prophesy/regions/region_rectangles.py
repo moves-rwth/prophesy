@@ -1,14 +1,14 @@
 from data.samples import split_samples
-from regions.region_generation import ConstraintGeneration, Anchor, Direction
+from regions.region_generation import RegionGenerator, Anchor, Direction
 from shapely.geometry import box, Point
 from shapely import affinity
 import config
 
 
-class ConstraintRectangles(ConstraintGeneration):
+class ConstraintRectangles(RegionGenerator):
 
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
-        ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
+        RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.anchor_points = []
         for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
@@ -60,7 +60,7 @@ class ConstraintRectangles(ConstraintGeneration):
         pos_x, pos_y = self.best_anchor.dir.value
         self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
 
-        # remember discared part of rectangle for future constaraints
+        # remember discarded part of rectangle for future constaraints
         anchor1_pt = Point(self.best_anchor.pos.x, self.best_other_point.y)
         anchor2_pt = Point(self.best_other_point.x, self.best_anchor.pos.y)
         anchor3_pt = Point(self.best_other_point)
@@ -72,7 +72,7 @@ class ConstraintRectangles(ConstraintGeneration):
         rectangle3 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=old_other_point)
         self.next_rectangles += [(rectangle1, anchor1), (rectangle2, anchor2), (rectangle3, anchor3)]
 
-        return self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe
+        return self.best_rectangle, self.best_anchor.safe
 
     def reject_constraint(self, constraint, safe, sample):
         pass
@@ -123,7 +123,7 @@ class ConstraintRectangles(ConstraintGeneration):
             (x1, y1, x2, y2) = self.best_rectangle.bounds
             pos_x, pos_y = self.best_anchor.dir.value
             self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
-            return self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe
+            return  self.best_rectangle, self.best_anchor.safe
 
         # "normal" case where there is no rectangle in the queue
         # reset
@@ -174,6 +174,6 @@ class ConstraintRectangles(ConstraintGeneration):
                         self.best_other_point = point
 
         if self.best_rectangle is not None:
-            return self.compute_constraint(self.best_rectangle), self.best_rectangle, self.best_anchor.safe
+            return self.best_rectangle, self.best_anchor.safe
         else:
             return None

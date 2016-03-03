@@ -4,7 +4,6 @@ from sympy import Rational, Integer, Float
 
 def print_term(term, variables):
     """Prints ((v1=2,v2=3),c1) as (* c v1 v1  v2 v2 v2)"""
-    assert term[1] != 0
     factors = []
     if term[1] != 1 or sum(term[0]) == 0:
         factors.append(strNum(term[1]))

@@ -5,13 +5,25 @@ from matplotlib import patches
 from matplotlib.colors import ColorConverter
 from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
+from data.hyperrectangle import  HyperRectangle
 
+import numpy as np
 
 class Plot(object):
     flip_green_red = False
 
     @staticmethod
     def plot_poly(subplot, poly, *args, **kwargs):
+        if isinstance(poly, HyperRectangle):
+            verts = poly.np_vertices()
+            tmp = np.array(verts[3])
+            verts[3] = verts[2]
+            verts[2] = tmp
+            p = patches.Polygon(verts, *args, **kwargs)
+
+            subplot.add_patch(p)
+            return
+
         if isinstance(poly, Polygon):
             poly = poly.exterior
             
@@ -19,6 +31,7 @@ class Plot(object):
         if poly.__class__ != LineString and 'hatch' in kwargs:
             kwargs['ec'] = 'none'
 
+        print(poly.coords)
         p = patches.Polygon(poly.coords, *args, **kwargs)
         subplot.add_patch(p)
 

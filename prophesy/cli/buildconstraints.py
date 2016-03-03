@@ -16,12 +16,14 @@ from regions.region_planes import ConstraintPlanes
 from regions.region_polygon import ConstraintPolygon
 from regions.region_quads import ConstraintQuads
 from regions.region_rectangles import ConstraintRectangles
+from regions.region_smtchecker import SmtRegionChecker
 from input.resultfile import read_pstorm_result
 from output.plot import Plot
 from input.samplefile import read_samples_file
 from smt.isat import IsatSolver
 from smt.smt import setup_smt
 from smt.smtlib import SmtlibSolver
+from smt.Z3cli_solver import Z3CliSolver
 
 import config
 from config import configuration
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     elif 'z3' in solvers:
-        smt2interface = SmtlibSolver(configuration.get(config.EXTERNAL_TOOLS, "z3"))
+        smt2interface = Z3CliSolver(configuration.get(config.EXTERNAL_TOOLS, "z3"))
     elif 'isat' in solvers:
         smt2interface = IsatSolver(configuration.get(config.EXTERNAL_TOOLS, "isat"))
     else:
@@ -101,16 +103,17 @@ if __name__ == "__main__":
 
     print("Generating regions")
     generator = None
-    params = samples, result.parameters, threshold, threshold_area, smt2interface, result.ratfunc
+    checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
+    arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
     if cmdargs.planes:
-        generator = ConstraintPlanes(*params)
+        generator = ConstraintPlanes(*arguments)
     elif cmdargs.rectangles:
-        generator = ConstraintRectangles(*params)
+        generator = ConstraintRectangles(*arguments)
     elif cmdargs.quads:
-        generator = ConstraintQuads(*params)
+        generator = ConstraintQuads(*arguments)
     elif cmdargs.poly:
-        generator = ConstraintPolygon(*params)
+        generator = ConstraintPolygon(*arguments)
         # For testing
         generator.add_polygon(Polygon([(0, 0), (0.5, 0.5), (0.5, 0)]), True)
         generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)

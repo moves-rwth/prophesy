@@ -1,6 +1,8 @@
 from prophesy.data.interval import Interval, BoundType
 from prophesy.data.point import Point
 
+import numpy as np
+
 class HyperRectangle(object):
     """
     Defines a hyper-rectangle, that is the Cartisean product of intervals,
@@ -50,6 +52,10 @@ class HyperRectangle(object):
             result.append(Point([(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i,x in zip(range(0, self.dimension()), bits)]))
         return result
 
+    def np_vertices(self):
+        verts = self.vertices()
+        return np.array([np.array(v.coordinates) for v in verts])
+
     #def vertices_and_inward_dir(self):
 
     def split_in_every_dimension(self):
@@ -58,11 +64,12 @@ class HyperRectangle(object):
         :return: The 2^n many hyperrectangles obtained by the split
         """
         result = []
+        print(self.intervals)
         splitted_intervals =  [tuple(interv.split()) for interv in self.intervals]
         for i in range(0,pow(2,self.dimension()), 1):
             num_bits = self.dimension()
             bits = [(i >> bit) & 1 for bit in range(num_bits - 1, -1, -1)]
-            result.append(HyperRectangle([splitted_intervals[i][x] for i,x in zip(range(0, self.dimension()), bits)]))
+            result.append(HyperRectangle(*[splitted_intervals[i][x] for i,x in zip(range(0, self.dimension()), bits)]))
         return result
 
     def size(self):
@@ -76,10 +83,10 @@ class HyperRectangle(object):
 
     def is_inside(self, point):
         """
-        :param point: An iterable over the coordinates of the point
+        :param point: A Point
         :return: True if inside, False otherwise
         """
-        for p, interv  in zip(point, self.intervals):
+        for p, interv  in zip(point.coordinates, self.intervals):
             if not interv.contains(p): return False
         return True
 

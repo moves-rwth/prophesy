@@ -79,6 +79,7 @@ class Constraint(object):
         self.polynomial = Poly(self.polynomial.subs(switch_list, simultaneous=True), self.symbols)
         return self
 
+
     def __and__(self, other):
         return ComplexConstraint([self, other], "and")
 
