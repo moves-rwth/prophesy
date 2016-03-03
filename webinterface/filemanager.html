@@ -7,64 +7,94 @@
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
     <script language="javascript" type="text/javascript" src="filemanager.js"></script>
     <link rel="stylesheet" type="text/css" href="filemanager.css"/>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+    <link href="buttons.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <div class="header">
-        <h1>Filemanager</h1>
+<!--
+    Wraps the whole wegpage
+-->
+<div id="wrapper">
+
+    <!-- Header of the Webpage -->
+    <div id="header">
+        <h1>Prophesy - Filemanager</h1>
     </div>
-    <div class="column">
-        <div class="column-title">
-            <h2> PRISM-Files </h2>
+    <!-- Menu Bar of the webpage -->
+    <div id="menu">
+        <a href="../" class="menu-link">Plot</a>
+        <a href="../files" class="menu-link">Filemanager</a>
+        <a href="../configuration" class="menu-link">Configuration</a>
+    </div>
+    <!-- All content stored in the webpage -->
+    <div id="content">
+
+        <!-- Split up the upload interface into 3 columns
+             the first one for PRISM
+             second one for PCTL
+             third one for RESULT Files (actually only storm results)
+        -->
+
+        <div class="column">
+            <h3> PRISM-Files </h3>
+            <div class ="files_container">
+                <!-- List will get dynamically filled by JS -->
+                <ul id="prism" class="file-list">
+                    <li>No prism files Uploaded</li>
+                </ul>
+            </div>
+            <div class="upload_container">
+                <form id="upload-prism">
+                    <p>Path to PRISM file:</p>
+                    <input type="file" name="prism-file"/><button type="sumbit">Upload</button>
+                </form>
+            </div>
         </div>
-        <div class ="content">
-            <ul id="prism" class="file-list">
-                <li>No prism files Uploaded</li>
-            </ul>
+
+        <div class="column">
+            <h3> PCTL-Files </h3>
+            <div class="files_container">
+                <!-- List will get dynamically filled by JS -->
+                <ul id="pctl" class="file-list">
+                    <li>No pctl files Uploaded</li>
+                </ul>
+            </div>
+            <div class="upload_container">
+                <form id="upload-pctl">
+                    <p> Path to PCTL file:</p>
+                    <input type="file" name="pctl-file"/>
+                    <button type="sumbit">Upload</button>
+                </form>
+            </div>
         </div>
-        <div class="upload">
-            <form id="upload-prism">
-                <span class="colLeft"> Path to PRISM file:</span>
-                <input type="file" name="prism-file" class colRight/>
-                <button type="sumbit">Upload</button>
-            </form>
+
+        <div class="column">
+            <h3> Result-Files </h3>
+            <div class="files_container">
+                <!-- List will get dynamically filled by JS -->
+                <ul id="result-files" class="file-list">
+                    <li>No result files Uploaded</li>
+                </ul>
+            </div>
+            <div class="upload_container">
+                <form id="upload-result">
+                    <p> Path to RESULT file:</p>
+                    <input type="file" name="result-file"/>
+                    <button type="sumbit">Upload</button>
+                </form>
+            </div>
         </div>
     </div>
-    <div class="column">
-        <div class="column-title">
-            <h2> PCTL-Files </h2>
-        </div>
-        <div class="content">
-            <ul id="pctl" class="file-list">
-                <li>No pctl files Uploaded</li>
-            </ul>
-        </div>
-        <div class="upload">
-            <form id="upload-pctl">
-                <span class="colLeft"> Path to PCTL file:</span>
-                <input type="file" name="pctl-file" class colRight/>
-                <button type="sumbit">Upload</button>
-            </form>
-        </div>
+    <!-- End of the content-->
+
+
+    <!-- Footer of the Webpage -->
+    <div id="footer">
+        <p> RWTH Aachen University - Chair of Computer science I2</p>
     </div>
-    <div class="column">
-        <div class="column-title">
-            <h2> Result-Files </h2>
-        </div>
-        <div class="content">
-            <ul id="result-files" class="file-list">
-                <li>No result files Uploaded</li>
-            </ul>
-        </div>
-        <div class="upload">
-            <form id="upload-result">
-                <span class="colLeft"> Path to RESULT file:</span>
-                <input type="file" name="result-file" class colRight/>
-                <button type="sumbit">Upload</button>
-            </form>
-        </div>
-    </div>
-    <div class="footer">
-        <a href="./index.html"><button id="home">Back</button></a>
-    </div>
+
+</div>
+<!-- Wrapper end -->
+
 </body>
 </html>

@@ -6,6 +6,7 @@
     <link href="buttons.css" rel="stylesheet" type="text/css">
     <link href="tabs.css" rel="stylesheet" type="text/css">
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
+    <link href="index.css" rel="stylesheet" type="text/css">
     <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
@@ -634,13 +635,6 @@ $(document).ready(function() {
 	displayIntervals(heatmap);
 	plotSamples();
     });
-    $("#cbexpert").on('change', function(){
-        if($("#cbexpert").is(":checked")){
-            $("#expert").css('display', 'inline-block');
-        } else {
-            $("#expert").css('display', 'none');
-        }
-    });
     $("#thresv0").on('change', function(){
         heatmap_thrs[0] = $("#thresv0").val();
         if ($("#thresv1").val() < heatmap_thrs[0]){
@@ -926,24 +920,6 @@ $(document).ready(function() {
         <input class="tbheatmap" type="text" id="thresv2" value="0.4"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv3" value="0.6"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
-        <br/>
-        <span class="colLeft"> Expert mode: </span>
-        <input type="checkbox" id="cbexpert" value="false" class="colRight" />
-        <br />
-        <div id="expert">
-        <span class="colLeft">Precision:</span>
-        <input type="text" id="precision" value="" class="colRight" />
-        <br />
-        <span class="colLeft">Storm path:</span>
-        <input type="text" id="stormpath" value="" class="colRight" />
-        <br />
-        <span class="colLeft">Z3 path:</span>
-        <input type="text" id="z3path" value="" class="colRight" />
-        <br />
-        <button id="loadConfig" class="colLeft">Load config</button>
-        <button id="saveConfig" class="upload colRight">Change config</button>
-        </div>
-        <br/>
     </div>
 </div> <!-- Control panel -->
 

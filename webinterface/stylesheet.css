@@ -1,3 +1,5 @@
+/* This is the general template for the Prophesy Web-UI */
+
 * { padding: 0; margin: 0px; vertical-align: top; }
 
 body {
@@ -128,25 +130,6 @@ input[type=radio] {
 #error-message {
 }
 
-#infopanel {
-    display:inline-block;
-    width: 300px;
-}
-
-#controlpanel {
-    display:inline-block;
-    width: 447px;
-}
-/* Auslagern in eigene css für Plot */
-#plotsurround {
-    width: 800px;
-    display:inline-block;
-}
-
-#placeholder {
-    min-width:800px;
-    min-height:800px;
-}
 
 .cp {
     background-color: #ddd;
@@ -161,104 +144,11 @@ input[type=radio] {
     color: #999;
 }
 
-/* Auslagern in eigene css für Plot */
-#info_ratfunc {
-    white-space: pre-wrap;
-    height: 700px;
-    overflow: auto;
-}
-
-/* Auslagern in eigene css für Plot */
-.legend table {
-    border-spacing: 5px;
-}
-
-#input .tab {
-    height: 7.5em;
-}
-
-#samples .tab {
-    height: 7.5em;
-}
-
-#constraints .tab {
-    height: 6em;
-}
-
-.colLeft {
-    width: 170px;
-    float: left;
-}
-
-.colRight {
-    width: 250px;
-}
-
 form {
     width: 447px;
     padding: 7px;
 }
 
 .button {
-    text-align: center;
-}
-
-/* Auslagern in eigene css für Plot */
-#legendContainer {
-    min-width:800px;
-    text-align: center;
-    padding-top: 10px;
-}
-
-/* Auslagern in eigene css für Plot */
-#legend {
-    width: 550px;
-    margin-left: 25px;
-    float: left;
-}
-
-.legendColorBox {
-    padding: 2px;
-    padding-top: 7px;
-}
-
-.legendLabel {
-    padding: 2px;
-    padding-right: 5px;
-}
-
-#tooltip {
-    position: absolute;
-    display: none;
-    border: 1px solid;
-    padding: 2px;
-    background-color: #F6F6B9;
-    opacity: 0.80;
-}
-
-.tbheatmap {
-    width: 30px;
-    display: none;
-}
-
-#expert {
-    display: none;
-}
-
-
-/* Ab hier alles in eigenes Stylesheet für die config */
-
-.configelement {
-    width: 19.7%;
-    border: 1px solid black;
-    display: inline-block;
-    min-height: 200px;
-}
-
-.configelement h3{
-    text-align: center;
-}
-
-#configchange {
     text-align: center;
 }

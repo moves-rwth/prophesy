@@ -1,0 +1,86 @@
+#legend {
+    width: 550px;
+    margin-left: 25px;
+    float: left;
+}
+
+.legendColorBox {
+    padding: 2px;
+    padding-top: 7px;
+}
+
+.legendLabel {
+    padding: 2px;
+    padding-right: 5px;
+}
+
+#tooltip {
+    position: absolute;
+    display: none;
+    border: 1px solid;
+    padding: 2px;
+    background-color: #F6F6B9;
+    opacity: 0.80;
+}
+
+.tbheatmap {
+    width: 30px;
+    display: none;
+}
+
+#legendContainer {
+    min-width:800px;
+    text-align: center;
+    padding-top: 10px;
+}
+
+.legend table {
+    border-spacing: 5px;
+}
+
+#input .tab {
+    height: 7.5em;
+}
+
+#samples .tab {
+    height: 7.5em;
+}
+
+#constraints .tab {
+    height: 6em;
+}
+
+.colLeft {
+    width: 170px;
+    float: left;
+}
+
+.colRight {
+    width: 250px;
+}
+
+#info_ratfunc {
+    white-space: pre-wrap;
+    height: 700px;
+    overflow: auto;
+}
+
+#infopanel {
+    display:inline-block;
+    width: 300px;
+}
+
+#controlpanel {
+    display:inline-block;
+    width: 447px;
+}
+
+#plotsurround {
+    width: 800px;
+    display:inline-block;
+}
+
+#placeholder {
+    min-width:800px;
+    min-height:800px;
+}
