@@ -49,7 +49,7 @@ $(document).ready(function() {
     doJSON("../config", function(result) {
         jQuery.each(result.data, function(section, keys) {
             jQuery.each(keys, function(key, value) {
-                $("#" + section).append("<input type=\"text\" id=\""+key+"\" value=\""+value+"\">"+key+"</input>");
+                $("#" + section).append("<tr><td>"+key+"</td><td><input type=\"text\" id=\""+key+"\" value=\""+value+"\"/></td></tr>");
                 });
         });
     });

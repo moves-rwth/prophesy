@@ -12,3 +12,16 @@
 #configchange {
     text-align: center;
 }
+
+.colLeft {
+    float: left;
+    width: 30%;
+}
+
+input {
+    width: 90%;
+}
+
+table {
+    width: 100%;
+}

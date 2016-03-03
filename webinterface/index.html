@@ -7,7 +7,7 @@
     <link href="tabs.css" rel="stylesheet" type="text/css">
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
     <link href="index.css" rel="stylesheet" type="text/css">
-    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.1.min.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
@@ -598,14 +598,15 @@ $(document).ready(function() {
         threshold = $('#thresholdSlider').val();
         threshold = Number(threshold).toFixed(3)
         $("#thresvalue").val(threshold);
+
     });
 
     // Change display of samples as well
 
     $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val();
-        threshold = Number(threshold).toFixed(3)
-        $("#thresvalue").value(threshold);
+        threshold = Number(threshold).toFixed(3);
+        $("#thresvalue").val(threshold);
         setThreshold(threshold);
         plotSamples();
     });
