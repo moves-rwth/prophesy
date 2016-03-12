@@ -315,33 +315,44 @@ class UploadPctl(CegarHandler):
         upload_pctl = self.request.files["pctl-file"][0]
         if upload_pctl is None:
             return self._json_error("Missing PCTL file")
-        (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTS)
-        with os.fdopen(pctl_fd, "wb") as pctl_f:
-            pctl_f.write(upload_pctl.body)
-        pctl_files = self._get_session("pctl-files", {})
-        pctl_files[upload_pctl.filename] = pctl_path
-        self._set_session("pctl-files", pctl_files)
+
+        pctl_content = upload_pctl.body.decode("utf-8").splitlines()
+        pctl_formulas = self._get_session("pctl-formulas", {})
+        group_formulas = {}
+        if upload_pctl.filename in pctl_formulas.keys():
+            group_formulas = pctl_formulas[upload_pctl.filename]
+        for formula in pctl_content:
+            group_formulas[formula] = formula
+
+        pctl_formulas[upload_pctl.filename] = group_formulas
+        self._set_session("pctl-formulas", pctl_formulas)
         return self._json_ok()
 
     def get(self):
         result = {}
-        result["pctl"] = self._get_session("pctl-files", {})
+        result["pctl"] = self._get_session("pctl-formulas", {})
         return self._json_ok(result)
 
 class RunPrism(CegarHandler):
     def post(self):
         # Run the uploaded prism file with the coosen mctool
         print("Prism CALL")
+
+        # Get the current prism file and save it temporarily
         prism_files = self._get_session("prism-files", {})
         current_prism_file = self.get_argument("prism")
         assert current_prism_file in prism_files
         prism_file = PrismFile(prism_files[current_prism_file])
 
-        pctl_files = self._get_session("pctl-files", {})
-        current_pctl_file = self.get_argument("pctl")
-        assert current_pctl_file in pctl_files
-        pctl_file = PctlFile(pctl_files[current_pctl_file])
+        # Get the pctl formulas from session and use the ones choosen from UI
+        pctl_formulas = self._get_session("pctl-formulas", {})
+        current_pctl_group = self.get_argument("pctl_group")
+        current_pctl_formula = self.get_argument("pctl_property")
+        print("Use Group: {0} with formula {1}".format(current_pctl_group, current_pctl_formula))
+        pctl_string = pctl_formulas[current_pctl_group][current_pctl_formula]
 
+
+        # Special pre-processing if choosen tool is param
         toolname = self.get_argument("mctool")
         assert toolname in ppmcs
         if toolname == "param":
@@ -356,7 +367,7 @@ class RunPrism(CegarHandler):
 
         # Try to load the formula
         try:
-            tool.set_pctl_formula(pctl_file.get(0))
+            tool.set_pctl_formula(pctl_string)
         except Exception as e:
             return self._json_error("Error while loading the formula into the tool: {}".format(e))
 

@@ -721,11 +721,13 @@ $(document).ready(function() {
         alert("Configuration has been saved!");
     });
 
+    $("#uploaded-pctl-groups").on('change', function(){
+        listPCTLPropertys();
+    });
+
     /////////////////////////
     // Things to do initially
     /////////////////////////
-
-    // Set the timer to check if Redis server is running
 
     // Show the empty graph immediately
     plotSamples();
@@ -791,8 +793,13 @@ $(document).ready(function() {
                         <option> No files uploaded </option>
                     </select>
                     <br/>
-                    <span class="colLeft"> PCTL file:</span>
-                    <select id="uploaded-pctl-files" class="colRight" name="pctl">
+                    <span class="colLeft"> PCTL group:</span>
+                    <select id="uploaded-pctl-groups" class="colRight" name="pctl_group">
+                        <option> No files uploaded </option>
+                    </select>
+                    <br/>
+                    <span class="colLeft"> PCTL property:</span>
+                    <select id="uploaded-pctl-propertys" class="colRight" name="pctl_property">
                         <option> No files uploaded </option>
                     </select>
                     <br/>

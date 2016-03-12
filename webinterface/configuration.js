@@ -62,6 +62,7 @@ $(document).ready(function() {
                 setConfig(section, key, key);
             });
         });
+        alert("Configuration saved");
     });
     });
 

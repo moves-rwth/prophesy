@@ -273,24 +273,41 @@ function listPRISMFiles() {
     });
 }
 
-function listPCTLFiles() {
+function listPCTLGroups() {
     doJSON("../uploadPctl", function(result){
-        var hSelect = $("#uploaded-pctl-files");
-        var files = result.data.pctl;
+        var hSelect = $("#uploaded-pctl-groups");
+        var groups = result.data.pctl;
         hSelect.empty();
-        for (var filename in files){
+        for (var groupname in groups){
             hSelect.append($('<option>', {
-                value: filename,
-                text: filename
+                value: groupname,
+                text: groupname
                 }));
             }
-        })
+        });
+}
+
+function listPCTLPropertys() {
+    doJSON("../uploadPctl", function(result){
+            var hSelect = $("#uploaded-pctl-propertys");
+            var selected_group = $("#uploaded-pctl-groups").val();
+            var props = result.data.pctl[selected_group];
+            hSelect.empty();
+            for (var prop in props){
+                hSelect.append($('<option>', {
+                    value: props.prop,
+                    text: prop
+                    }));
+            }
+        });
 }
 
 function listAvailableFiles(){
     listPRISMFiles();
     isBusy=false;
-    listPCTLFiles();
+    listPCTLGroups();
+    isBusy=false;
+    listPCTLPropertys();
 }
 
 function listFilesForManager(){
