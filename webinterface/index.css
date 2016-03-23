@@ -28,17 +28,6 @@
     display: none;
 }
 
-#legendContainer {
-    min-width:800px;
-    text-align: center;
-    padding-top: 10px;
-    height: 50px;
-}
-
-.legend table {
-    border-spacing: 5px;
-}
-
 #input .tab {
     height: 7.5em;
 }
@@ -62,26 +51,60 @@
 
 #info_ratfunc {
     white-space: pre-wrap;
-    height: 700px;
+    max-height: 700px;
     overflow: auto;
 }
 
 #infopanel {
     display:inline-block;
-    width: 300px;
+    width: 20%;
 }
 
 #controlpanel {
     display:inline-block;
-    width: 447px;
+    width: 30%;
+    min-width: 435px;
 }
 
 #plotsurround {
-    width: 800px;
+    width: 50%;
+    height: 100%;
+    min-width:400px;
+    min-height:400px;
     display:inline-block;
+    position: relative;
+}
+
+#placeholderWrapper {
+    width: 100%;
+    position: relative;
+}
+#placeholderWrapper:before{
+    content: "";
+    display: block;
+    padding-top: 100%;
 }
 
 #placeholder {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+#legendContainer {
     min-width:800px;
-    min-height:800px;
+    text-align: center;
+    padding-top: 10px;
+    height: 50px;
+}
+
+.legend table {
+    border-spacing: 5px;
+}
+
+.cp {
+    background-color: #ddd;
+    min-width: 435px;
 }

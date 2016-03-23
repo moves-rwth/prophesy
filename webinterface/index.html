@@ -757,74 +757,83 @@ $(document).ready(function() {
 </head>
 
 <body>
-<div id="header">
-    <h1>Prophesy - Plot</h1>
-    <div id="busy-indicator">Working...<br>
-        <button id="cancel" type="button" class="negative">Cancel</button>
-    </div>
-</div>
-<div id="menu">
-    <a href="../" class="menu-link">Plot</a>
-    <a href="../files" class="menu-link">Filemanager</a>
-    <a href="../configuration" class="menu-link">Configuration</a>
-</div>
-<div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
-
-<div id="plotsurround">
-    <div id="legendContainer">
-        <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
-    </div>
-    <div id="placeholder"></div>
-</div>
-<div id='tooltip'></div>
-
-<div id="controlpanel">
-    <div id="input">
-        <h2>Input</h2>
-        <ul class="tab-links">
-            <li class="active"><a href="#tab-run">Run Prism</a></li>
-            <li><a href="#tab-select">Select result</a></li>
-        </ul>
-        <div class="tab-contents">
-            <div id="tab-run" class="tab cp active">
-                <form id="form-prism-run">
-                    <span class="colLeft">Prism file:</span>
-                    <select id="uploaded-prism-files" class="colRight" name="prism">
-                        <option> No files uploaded </option>
-                    </select>
-                    <br/>
-                    <span class="colLeft"> PCTL group:</span>
-                    <select id="uploaded-pctl-groups" class="colRight" name="pctl_group">
-                        <option> No files uploaded </option>
-                    </select>
-                    <br/>
-                    <span class="colLeft"> PCTL property:</span>
-                    <select id="uploaded-pctl-propertys" class="colRight" name="pctl_property">
-                        <option> No files uploaded </option>
-                    </select>
-                    <br/>
-                    <span class="colLeft"> Run with:</span>
-                    <select id="mctools" class="colRight" name="mctool">
-                        <option> No tools available </option>
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="run-prism" type="submit" class="upload positive"> Run</button>
-                    </div>
-            </div>
-            <div id="tab-select" class="tab cp">
-                <form id="form-select">
-                    <span class="colLeft">Result file:</span>
-                    <select id="result-files" class="colRight">
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="select-result" type="submit" class="positive">Load</button>
-                    </div>
-                </form>
-            </div>
+<div id="wrapper">
+    <!-- Header of Prophesy Web Page -->
+    <div id="header">
+        <h1>Prophesy - Plot</h1>
+        <div id="busy-indicator">Working...<br>
+            <button id="cancel" type="button" class="negative">Cancel</button>
         </div>
-    </div> <!-- Input -->
+    </div>
+    <!-- Menu bar from Prophesy Webpage -->
+    <div id="menu">
+        <a href="../" class="menu-link">Plot</a>
+        <a href="../files" class="menu-link">Filemanager</a>
+        <a href="../configuration" class="menu-link">Configuration</a>
+    </div>
+
+    <div id="content">
+        <!-- The Errorbox is very special.... Maybe some refactoring here -->
+        <div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
+
+        <div id="plotsurround">
+            <div id="legendContainer">
+                <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
+            </div>
+        <div id="placeholderWrapper"><div id="placeholder"><!-- Plot is generated right here --></div></div>
+        </div>
+        <div id="tooltip"></div><!--
+        End of Plot
+
+        Start with the choosable options for the plot
+        --><div id="controlpanel">
+            <div id="input">
+                <h2>Input</h2>
+                <ul class="tab-links">
+                    <li class="active"><a href="#tab-run">Run Prism</a></li>
+                    <li><a href="#tab-select">Select result</a></li>
+                </ul>
+                <div class="tab-contents">
+                    <div id="tab-run" class="tab cp active">
+                        <form id="form-prism-run">
+                            <span class="colLeft">Prism file:</span>
+                            <select id="uploaded-prism-files" class="colRight" name="prism">
+                                <option> No files uploaded </option>
+                            </select>
+                            <br/>
+                            <span class="colLeft"> PCTL group:</span>
+                            <select id="uploaded-pctl-groups" class="colRight" name="pctl_group">
+                                <option> No files uploaded </option>
+                            </select>
+                            <br/>
+                            <span class="colLeft"> PCTL property:</span>
+                            <select id="uploaded-pctl-propertys" class="colRight" name="pctl_property">
+                                <option> No files uploaded </option>
+                            </select>
+                            <br/>
+                            <span class="colLeft"> Run with:</span>
+                            <select id="mctools" class="colRight" name="mctool">
+                                <option> No tools available </option>
+                            </select>
+                            <br>
+                            <div class="button">
+                                <button id="run-prism" type="submit" class="upload positive"> Run</button>
+                            </div>
+                    </div>
+                    <div id="tab-select" class="tab cp">
+                        <form id="form-select">
+                            <span class="colLeft">Result file:</span>
+                            <select id="result-files" class="colRight">
+                            </select>
+                            <br>
+                            <div class="button">
+                                <button id="select-result" type="submit" class="positive">Load</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- End of Input -->
 
     <div id="samples">
         <h2>Sampling</h2>
@@ -929,14 +938,21 @@ $(document).ready(function() {
         <input class="tbheatmap" type="text" id="thresv3" value="0.6"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
     </div>
-</div> <!-- Control panel -->
+</div><!-- Control panel
 
-<div id="infopanel">
+Print out the rational function. Maybe unneccessary
+--><div id="infopanel">
     <h2>Info</h2>
     <h3>Rational Function</h3>
     <div id="info_ratfunc">Not loaded</div>
 </div>
-
+<!-- End of Rational function box-->
+</div>
+<!--End of Content-->
+<div id="footer">
+    <p> RWTH Aachen University - Chair of Computer science I2</p>
+</div>
+</div>
 </body>
 
 </html>
