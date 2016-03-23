@@ -309,6 +309,32 @@ class UploadPrism(CegarHandler):
         result["prism"] = self._get_session("prism-files", {})
         return self._json_ok(result)
 
+class UploadFormula(CegarHandler):
+
+    def post(self):
+        print("Upload PCTL Formula")
+        uploaded_pctl_formula = self.get_argument("pctl-formula")
+        uploaded_pctl_group = self.get_argument("pctl-group-select")
+        uploaded_pctl_name = self.get_argument("pctl-formula-name")
+        if uploaded_pctl_group == "addNew" :
+            uploaded_pctl_group = self.get_argument("pctl-group-name")
+        print(uploaded_pctl_formula)
+        print(uploaded_pctl_group)
+        print(uploaded_pctl_name)
+
+        pctl_formulas = self._get_session("pctl-formulas", {})
+        group_formulas = {}
+        if uploaded_pctl_group in pctl_formulas.keys():
+            group_formulas = pctl_formulas[uploaded_pctl_group]
+        group_formulas[uploaded_pctl_name] = uploaded_pctl_formula
+
+        pctl_formulas[uploaded_pctl_group] = group_formulas
+        self._set_session("pctl-formulas", pctl_formulas)
+        return self._json_ok()
+
+    def get(self):
+        print("Test")
+
 class UploadPctl(CegarHandler):
     def post(self):
         print("Upload pctl ENTRY")
@@ -804,6 +830,7 @@ def make_app(hostname):
         (r'/results', Results),
         (r'/uploadPrism', UploadPrism),
         (r'/uploadPctl', UploadPctl),
+        (r'/uploadFormula', UploadFormula),
         (r'/runPrism', RunPrism),
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),

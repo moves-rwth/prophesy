@@ -323,6 +323,8 @@ $(document).ready(function() {
         e.preventDefault();
     });
 
+    $(window).resize(plotSamples);
+
     $("#placeholder").bind("plothover", function (event, pos, item) {
         //Tooltip for samples
         if (item) {
@@ -748,6 +750,9 @@ $(document).ready(function() {
     isBusy = false;
     listAvailableFiles();
     isBusy=false;
+    listPCTLGroups();
+    isBusy=false;
+    listPCTLPropertys();
 
     openSocket();
 });
@@ -778,9 +783,11 @@ $(document).ready(function() {
 
         <div id="plotsurround">
             <div id="legendContainer">
-                <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
+                <div id="legend"><!-- Legend is created by flot --></div><span id="mousePos">(0.00, 0.00)</span>
             </div>
-        <div id="placeholderWrapper"><div id="placeholder"><!-- Plot is generated right here --></div></div>
+            <div id="placeholderWrapper">
+                <div id="placeholder"><!-- Plot is generated right here --></div>
+            </div>
         </div>
         <div id="tooltip"></div><!--
         End of Plot
@@ -832,46 +839,46 @@ $(document).ready(function() {
                         </form>
                     </div>
                 </div>
-            </div>
-            <!-- End of Input -->
-
-    <div id="samples">
-        <h2>Sampling</h2>
-        <ul class="tab-links">
-            <li class="active" ><a href="#tab-manual">Manual Sampling</a></li>
-            <li><a href="#tab-auto">Auto Sampling</a></li>
-        </ul>
-        <div class="tab-contents">
-            <div id="tab-manual" class="tab active cp">
-                <form id="form-samples-manual">
-                    <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
-                    <br>
-                    <div class="button">
-                        <button id="submit-samples" type="submit" class="positive">Check New</button>
-                        <button id="clear-samples-current" type="button">Clear current</button>
-                        <button id="clear-samples-all" type="button" class="negative">Clear all</button>
-                    </div>
-                </form>
-            </div>
-            <div id="tab-auto" class="tab cp">
-                <form id="form-samples-auto">
-                    <span class="colLeft">Number of iterations:</span>
-                    <input name="iterations" class="colRight" type="number" min="0" max="98" value="2"/>
-                    <br>
-                    <span class="colLeft">Generator type:</span>
-                    <select name="generator" class="colRight">
-                        <option value="uniform" selected="selected">Uniform grid</option>
-                        <option value="linear" selected="selected">Linear interpolation</option>
-                        <option value="delaunay">Delaunay triangulation</option>
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="generate-samples" type="submit" class="positive">Go</button>
-                    </div>
-                </form>
-            </div>
+            </div><!--
+            End of Input
+            -------------
+        --><div id="samples">
+            <h2>Sampling</h2>
+            <ul class="tab-links">
+                <li class="active" ><a href="#tab-manual">Manual Sampling</a></li>
+                <li><a href="#tab-auto">Auto Sampling</a></li>
+            </ul>
+            <div class="tab-contents">
+                <div id="tab-manual" class="tab active cp">
+                    <form id="form-samples-manual">
+                        <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
+                        <br>
+                        <div class="button">
+                            <button id="submit-samples" type="submit" class="positive">Check New</button>
+                            <button id="clear-samples-current" type="button">Clear current</button>
+                            <button id="clear-samples-all" type="button" class="negative">Clear all</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="tab-auto" class="tab cp">
+                    <form id="form-samples-auto">
+                        <span class="colLeft">Number of iterations:</span>
+                        <input name="iterations" class="colRight" type="number" min="0" max="98" value="2"/>
+                        <br>
+                        <span class="colLeft">Generator type:</span>
+                        <select name="generator" class="colRight">
+                            <option value="uniform" selected="selected">Uniform grid</option>
+                            <option value="linear" selected="selected">Linear interpolation</option>
+                            <option value="delaunay">Delaunay triangulation</option>
+                        </select>
+                        <br>
+                        <div class="button">
+                            <button id="generate-samples" type="submit" class="positive">Go</button>
+                        </div>
+                    </form>
+                </div>
+            </div> <!-- Samples -->
         </div>
-    </div> <!-- Samples -->
 
 
     <div id="constraints">
@@ -938,14 +945,14 @@ $(document).ready(function() {
         <input class="tbheatmap" type="text" id="thresv3" value="0.6"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
     </div>
-</div><!-- Control panel
+</div><!-- Control panel-->
 
-Print out the rational function. Maybe unneccessary
---><div id="infopanel">
-    <h2>Info</h2>
-    <h3>Rational Function</h3>
-    <div id="info_ratfunc">Not loaded</div>
-</div>
+
+    <div id="infopanel">
+        <h2>Info</h2>
+        <h3>Rational Function</h3>
+        <div id="info_ratfunc">Not loaded</div>
+    </div>
 <!-- End of Rational function box-->
 </div>
 <!--End of Content-->

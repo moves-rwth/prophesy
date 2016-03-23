@@ -2,12 +2,57 @@
 
 * { padding: 0; margin: 0px; vertical-align: top; }
 
+
+/* The general Layout divided into
+ * Body containing
+ *  -  Wrapper containing
+ *        - header
+ *        - menu
+ *        - content
+ *        - footer
+ */
 body {
     background-color: #eee;
     font: 16px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
 }
 
 #wrapper {
+}
+
+#header {
+    height: 5.5em;
+    background-color:#cd0010;
+    color: #eee;
+    width: 100%;
+}
+
+#header h1 {
+    margin-left: 10px;
+    padding-top: 30px;
+    font-size: 55px;
+    font-weight: bold;
+    text-decoration: none;
+    color: #eee;
+}
+
+#header.busy {
+    animation: backgroundColor 2s linear infinite;
+}
+
+#menu {
+    font-size: 12px;
+    padding-top: 2px;
+    background-color: #ddd;
+    width: 100%;
+    border-bottom: 1px solid grey;
+}
+
+.menu-link:hover{
+    background-color: #eee;
+}
+
+.menu-link:active{
+    border-style: inset;
 }
 
 .menu-link {
@@ -19,6 +64,46 @@ body {
     border-style: outset;
     font-size: 16px;
 }
+
+#content {
+    width: 100%;
+    min-height: calc(100vh - 50px - 10.5em);
+    position: relative;
+}
+
+#footer {
+    margin-top: 25px;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    height: 50px;
+}
+
+#errorbox {
+    font-size: 25px;
+    background-color:#FF8000;
+    color: #000;
+    width: 100%;
+
+    overflow-y: hidden;
+    padding: 0px;
+    max-height: 0px;
+    transition: all 1s;
+}
+
+#errorbox.shown {
+    padding: 10px;
+    max-height: initial;
+}
+
+#error-title {
+}
+#error-message {
+}
+
+/* General layout style for headlines buttons and other standard html elements */
 
 h2 {
     margin-top: 15px;
@@ -48,41 +133,7 @@ input[type=radio] {
     margin-top: 5px;
 }
 
-#content {
-    margin-top: 4px;
-    width: 100%;
-    min-height: calc(100vh - 50px - 10.5em);
-    position: relative;
-}
 
-#menu {
-    font-size: 12px;
-    padding-top: 2px;
-    background-color: #ddd;
-    width: 100%;
-    vertical-align: top;
-    height: 3em;
-}
-
-.menu-link:hover{
-    background-color: #eee;
-}
-
-.menu-link:active{
-    border-style: inset;
-}
-
-#header {
-    height: 5.5em;
-    background-color:#cd0010;
-    color: #eee;
-    margin: 0px;
-    width: 100%;
-}
-
-#header.busy {
-    animation: backgroundColor 2s linear infinite;
-}
 
 @keyframes backgroundColor
 {
@@ -92,51 +143,10 @@ input[type=radio] {
 }
 
 
-#header h1 {
-    margin-left: 10px;
-    padding-top: 30px;
-    font-size: 55px;
-    font-weight: bold;
-    text-decoration: none;
-    color: #eee;
-}
-
 #busy-indicator {
     float: right;
     display: inline;
     visibility: hidden;
-}
-
-#errorbox {
-    font-size: 25px;
-    background-color:#FF8000;
-    color: #000;
-    width: 100%;
-
-    overflow-y: hidden;
-    padding: 0px;
-    max-height: 0px;
-    transition: all 1s;
-}
-
-#errorbox.shown {
-    padding: 10px;
-    max-height: initial;
-}
-
-#error-title {
-}
-#error-message {
-}
-
-#footer {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
-    color: #999;
-    height: 50px;
 }
 
 form {

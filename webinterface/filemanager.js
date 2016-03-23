@@ -85,6 +85,55 @@ $(document).ready(function() {
         });
     });
 
+    $("#upload-pctl-manual").submit(function(event){
+        event.preventDefault();
+
+        var formData = new FormData($(this)[0]);
+        doAjax({
+            url: '../uploadFormula',
+            type: 'POST',
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        }, function(){
+            listFilesForManager();
+        });
+    });
+
+    $("#pctl-groups").on('change', function(){
+            if($("#pctl-groups").val()=="addNew"){
+                $("#add-group").css("display","inline");
+            }
+            else{
+                $("#add-group").css("display","none");
+            }
+
+        });
+
+    // Load the groups to select
+    listPCTLGroups();
 
     listFilesForManager();
 });
+
+
+function listPCTLGroups() {
+    doJSON("../uploadPctl", function(result){
+        var hSelect = $("#pctl-groups");
+        var groups = result.data.pctl;
+        hSelect.empty();
+        for (var groupname in groups){
+            hSelect.append($('<option>', {
+                value: groupname,
+                text: groupname
+                }));
+        }
+        hSelect.append($('<option>', {
+                value: "addNew",
+                text: "New Group"
+                }));
+        });
+}

@@ -60,6 +60,19 @@
                 </ul>
             </div>
             <div class="upload_container">
+                <form id="upload-pctl-manual">
+                    <label> Formula: </label>
+                    <input type="text" name="pctl-formula"/>
+                    <br/>
+                    <label> PCTL Group </label>
+                    <select id="pctl-groups" name="pctl-group-select"></select>
+                    <input type="text" name="pctl-group-name" id="add-group" style="display:none;"/>
+                    <br/>
+                    <label> Formula Name </label>
+                    <input type="text" name="pctl-formula-name"/>
+                    </br>
+                    <button type="submit">Upload</button>
+                </form>
                 <form id="upload-pctl">
                     <p> Path to PCTL file:</p>
                     <input type="file" name="pctl-file"/>
