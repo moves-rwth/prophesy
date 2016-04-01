@@ -121,9 +121,9 @@ if __name__ == "__main__":
         assert False
 
     if cmdargs.iterations is not None:
-        generator.generate_constraints(cmdargs.iterations)
+        generator.generate_constraints(max_iter = cmdargs.iterations)
     else:
-        generator.generate_constraints(cmdargs.area)
+        generator.generate_constraints(max_area = cmdargs.area)
 
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
