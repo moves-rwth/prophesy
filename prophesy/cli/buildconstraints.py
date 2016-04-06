@@ -20,6 +20,7 @@ from regions.region_smtchecker import SmtRegionChecker
 from input.resultfile import read_pstorm_result
 from output.plot import Plot
 from input.samplefile import read_samples_file
+from util import open_file
 from smt.isat import IsatSolver
 from smt.smt import setup_smt
 from smt.smtlib import SmtlibSolver
@@ -124,6 +125,8 @@ if __name__ == "__main__":
         generator.generate_constraints(max_iter = cmdargs.iterations)
     else:
         generator.generate_constraints(max_area = cmdargs.area)
+
+    open_file(generator.result_file)
 
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
