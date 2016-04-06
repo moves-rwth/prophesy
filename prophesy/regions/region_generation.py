@@ -254,7 +254,10 @@ class RegionGenerator:
                 pass
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
-            if area_sum > max_area:
+            max_area_sum = HyperRectangle(*self._intervals()).size()
+            print("max area {}".format(max_area * max_area_sum))
+            print("area sum {}".format(area_sum))
+            if area_sum > max_area * max_area_sum:
                 break
             max_iter -= 1
             if max_iter == 0:
