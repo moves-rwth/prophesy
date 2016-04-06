@@ -17,6 +17,7 @@ import re
 from argparse import ArgumentParser
 import shutil
 import uuid
+import subprocess
 
 from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler, RedirectHandler
@@ -48,6 +49,7 @@ from regions.region_quads import ConstraintQuads
 from regions.region_polygon import ConstraintPolygon
 
 from concurrent.futures import ThreadPoolExecutor
+from subprocess import Popen
 
 
 default_results = {}
@@ -287,71 +289,141 @@ class Results(CegarHandler):
 
 class UploadPrism(CegarHandler):
     def post(self):
+        # Save the files which the user wants to upload
         print("Upload prism ENTRY")
-        tool = self.get_argument('mctool')
-        upload_prism = self.request.files['file'][0]
-        upload_pctl = self.request.files['pctl-file'][0]
-        if tool not in ppmcs:
-            return self._json_error("Invalid tool selected")
+        upload_prism = self.request.files["prism-file"][0]
         if upload_prism is None:
             return self._json_error("Missing PRISM file")
-        if upload_pctl is None:
-            return self._json_error("Missing PCTL file")
 
         (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTS)
         with os.fdopen(prism_fd, "wb") as prism_f:
             prism_f.write(upload_prism.body)
-        prism_file = PrismFile(prism_path)
+        prism_files = self._get_session("prism-files", {})
+        prism_files[upload_prism.filename] = prism_path
+        self._set_session("prism-files", prism_files)
 
-        (pctl_fd, pctl_path) = tempfile.mkstemp(".pctl", dir = config.WEB_RESULTS)
-        with os.fdopen(pctl_fd, "wb") as pctl_f:
-            pctl_f.write(upload_pctl.body)
-        pctl_file = PctlFile(pctl_path)
+        return self._json_ok();
 
-        if tool == "param":
+    def get(self):
+        result = {}
+        result["prism"] = self._get_session("prism-files", {})
+        return self._json_ok(result)
+
+class UploadFormula(CegarHandler):
+
+    def post(self):
+        print("Upload PCTL Formula")
+        uploaded_pctl_formula = self.get_argument("pctl-formula")
+        uploaded_pctl_group = self.get_argument("pctl-group-select")
+        uploaded_pctl_name = self.get_argument("pctl-formula-name")
+        if uploaded_pctl_group == "addNew" :
+            uploaded_pctl_group = self.get_argument("pctl-group-name")
+        print(uploaded_pctl_formula)
+        print(uploaded_pctl_group)
+        print(uploaded_pctl_name)
+
+        pctl_formulas = self._get_session("pctl-formulas", {})
+        group_formulas = {}
+        if uploaded_pctl_group in pctl_formulas.keys():
+            group_formulas = pctl_formulas[uploaded_pctl_group]
+        group_formulas[uploaded_pctl_name] = uploaded_pctl_formula
+
+        pctl_formulas[uploaded_pctl_group] = group_formulas
+        self._set_session("pctl-formulas", pctl_formulas)
+        return self._json_ok()
+
+    def get(self):
+        print("Test")
+
+class UploadPctl(CegarHandler):
+    def post(self):
+        print("Upload pctl ENTRY")
+        upload_pctl = self.request.files["pctl-file"][0]
+        if upload_pctl is None:
+            return self._json_error("Missing PCTL file")
+
+        pctl_content = upload_pctl.body.decode("utf-8").splitlines()
+        pctl_formulas = self._get_session("pctl-formulas", {})
+        group_formulas = {}
+        if upload_pctl.filename in pctl_formulas.keys():
+            group_formulas = pctl_formulas[upload_pctl.filename]
+        for formula in pctl_content:
+            group_formulas[formula] = formula
+
+        pctl_formulas[upload_pctl.filename] = group_formulas
+        self._set_session("pctl-formulas", pctl_formulas)
+        return self._json_ok()
+
+    def get(self):
+        result = {}
+        result["pctl"] = self._get_session("pctl-formulas", {})
+        return self._json_ok(result)
+
+class RunPrism(CegarHandler):
+    def post(self):
+        # Run the uploaded prism file with the coosen mctool
+        print("Prism CALL")
+
+        # Get the current prism file and save it temporarily
+        prism_files = self._get_session("prism-files", {})
+        current_prism_file = self.get_argument("prism")
+        assert current_prism_file in prism_files
+        prism_file = PrismFile(prism_files[current_prism_file])
+
+        # Get the pctl formulas from session and use the ones choosen from UI
+        pctl_formulas = self._get_session("pctl-formulas", {})
+        current_pctl_group = self.get_argument("pctl_group")
+        current_pctl_formula = self.get_argument("pctl_property")
+        print("Use Group: {0} with formula {1}".format(current_pctl_group, current_pctl_formula))
+        pctl_string = pctl_formulas[current_pctl_group][current_pctl_formula]
+
+
+        # Special pre-processing if choosen tool is param
+        toolname = self.get_argument("mctool")
+        assert toolname in ppmcs
+        if toolname == "param":
             prism_file.replace_parameter_keyword("param float")
-        tool = getPMC(tool)
-        print(tool)
+        tool = getPMC(toolname)
 
-        print("Upload prism CALL")
+        # Try to load the model
         try:
             tool.load_model_from_prismfile(prism_file)
         except Exception as e:
             return self._json_error("Error while loading model: {}".format(e))
 
+        # Try to load the formula
         try:
-            tool.set_pctl_formula(pctl_file.get(0))
+            tool.set_pctl_formula(pctl_string)
         except Exception as e:
             return self._json_error("Error while loading the formula into the tool: {}".format(e))
 
+        # Run the mctool to evaluate the current ration function
         try:
             result = tool.get_rational_function()
         except Exception as e:
             return self._json_error("Error while computing rational function: {}".format(e))
 
-        os.unlink(pctl_path)
-        os.unlink(prism_path)
-
+        # Save the result temporarily
         (res_fd, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTS)
         os.close(res_fd)
         write_pstorm_result(res_file, result)
 
         result_files = self._get_session('result_files', {})
 
-        if upload_prism.filename in result_files:
-            os.unlink(result_files[upload_prism.filename])
-        result_files[upload_prism.filename] = res_file
-        self._set_session('current_result', upload_prism.filename)
+        if current_prism_file in result_files:
+            os.unlink(result_files[current_prism_file])
+        result_files[current_prism_file] = res_file
+        self._set_session('current_result', current_prism_file)
         self._set_session('result_files', result_files)
 
 
-        print("Upload prims EXIT")
-        return self._json_ok(upload_prism.filename)
+        print("Prism run EXIT")
+        return self._json_ok(current_prism_file)
 
 class UploadResult(CegarHandler):
     def post(self):
         tool = self.get_argument('result-type')
-        upload = self.request.files['file'][0]
+        upload = self.request.files['result-file'][0]
         # Note: this is not the list of pmcCheckers, but of available result parsers
         if tool not in ['storm', 'param']:
             return self._json_error("Invalid tool selected")
@@ -388,6 +460,14 @@ class UploadResult(CegarHandler):
         self._set_session('result_files', result_files)
 
         return self._json_ok({"file" : upload.filename})
+
+class PingRedis(CegarHandler):
+
+    def get(self):
+        with Popen(["redis-cli", "ping"], stdout=subprocess.PIPE) as proc:
+            if proc.stdout.readline() == b'PONG\n':
+                return self._json_ok("running")
+        return self._json_error("Redis not running")
 
 class Samples(CegarHandler):
     def get(self):
@@ -661,8 +741,10 @@ class Configuration(CegarHandler):
     # Handler for the Webconfiguartion interface
 
     # Reads the Configuratuion from the config-file
-    def get(self):
-        print("Try to get the configuration information - call configuration.getAll()")
+    def get(self, section=None, key=None):
+        if section:
+            if key:
+                return self._json_ok(configuration.get(section, key))
         return self._json_ok(configuration.getAll())
 
     # Sets the given configuartions from the Webinterface (JSON)
@@ -670,13 +752,13 @@ class Configuration(CegarHandler):
         pass
 
     # Sets the given configurations from the Webinterface (HTTP)
-    def post(self):
-        print("Try to set the data in the configuration - call configuration.set(section, key, value)")
-        prec = self.get_argument('precision', 0.0001)
-        print(prec)
-        configuration.set('regions', 'precision', str(prec))  # Example
-        configuration.updateConfigurationFile()
-        return self._json_ok()
+    def post(self, section=None, key=None):
+        if section:
+            if key:
+                configuration.set(section, key, str(self.get_argument("data")))
+                configuration.updateConfigurationFile()
+                return self._json_ok()
+        return self._json_error()
 
 def initEnv():
     # Check available model checkers, solvers and various other regions
@@ -737,6 +819,8 @@ def make_app(hostname):
 
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
+        (r"/files", RedirectHandler, dict(url="ui/filemanager.html")),
+        (r"/configuration", RedirectHandler, dict(url="ui/configuration.html")),
         (r'/invalidateSession', InvalidateSession),
         (r'/threshold', Threshold),
         (r'/currentResult', CurrentResult),
@@ -745,6 +829,9 @@ def make_app(hostname):
         (r'/results/(.*)', Results),
         (r'/results', Results),
         (r'/uploadPrism', UploadPrism),
+        (r'/uploadPctl', UploadPctl),
+        (r'/uploadFormula', UploadFormula),
+        (r'/runPrism', RunPrism),
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),
         (r'/samples', Samples),
@@ -752,7 +839,9 @@ def make_app(hostname):
         (r'/regions', Constraints),
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
-        (r'/config', Configuration)
+        (r'/config/(.*)/(.*)$', Configuration),
+        (r'/config', Configuration),
+        (r'/checkRedis', PingRedis)
     ], **settings)
 
     return application

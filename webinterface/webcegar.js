@@ -21,7 +21,7 @@ function listAvailableResults() {
     doJSON("../results", function(result) {
         var availableFiles = $("#result-files");
         fillSelect(availableFiles, result.data, currentResult);
-        
+
         getCurrentResult();
     });
 }
@@ -72,6 +72,95 @@ function getThreshold() {
         plotSamples();
     });
 }
+
+// -------------------------------------- Getter and Setter for expert Config
+
+
+/* TODO: Create one generic Setter
+** THIS ONE IS JUST HOW IT MAY BE LOOK LIKE
+**/
+function setConfig(section, key, data){
+    var formData = new FormData();
+    formData.append('data',$("#"+data).val());
+    doAjax({
+        url: '../config/'+section+'/'+key,
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getConfig(section, key){
+    doJSON("../config/"+section+"/"+key, function(result) {
+        return result.data;
+    });
+}
+// -----------------------------------------
+
+function getStormConfig(){
+    doJSON("../config/external_tools/storm", function(result) {
+        cfgStorm = result.data;
+        $("#stormpath").val(cfgStorm);
+        $("#stormpath").text(cfgStorm);
+    });
+}
+
+function setStormPath(){
+    var formData = new FormData();
+    formData.append('data',$("#stormpath").val());
+    doAjax({
+        url: '../config/external_tools/storm',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function setZ3Path(){
+    var formData = new FormData();
+    formData.append('data',$("#z3path").val());
+    doAjax({
+        url: '../config/external_tools/z3',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getPrecisionConfig(){
+    doJSON("../config/constraints/precision", function(result) {
+        cfgPrec = result.data;
+        $("#precision").val(cfgPrec);
+    });
+}
+
+function setPrecision(){
+    var formData = new FormData();
+    formData.append('data',$("#precision").val());
+    doAjax({
+        url: '../config/constraints/precision',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false
+    });
+}
+
+function getZ3Config(){
+    doJSON("../config/external_tools/z3", function(result) {
+        cfgZ3 = result.data;
+        $("#z3path").val(cfgZ3);
+        $("#z3path").text(cfgZ3);
+    });
+}
+// ------------------------------------ End of Getter/Setter for Expert Config
 
 function setThreshold(threshold) {
     var formData = new FormData();
@@ -137,7 +226,7 @@ function listEnv() {
 
         var smtSolvers = $("#satsolvers");
         fillSelect(smtSolvers, result.data.sat, sat);
-        
+
         getEnv();
     });
 }
@@ -167,5 +256,93 @@ function getEnv() {
         $("#samplers").val(sampler);
         sat = result.data.sat;
         $("#satsolvers").val(sat);
-    });  
+    });
+}
+
+function listPRISMFiles() {
+    doJSON("../uploadPrism", function(result){
+        var hSelect = $("#uploaded-prism-files");
+        var files = result.data.prism;
+        hSelect.empty();
+        for (var filename in files) {
+            hSelect.append($('<option>', {
+                value: filename,
+                text: filename
+            }));
+        }
+    });
+}
+
+function listPCTLGroups() {
+    doJSON("../uploadPctl", function(result){
+        var hSelect = $("#uploaded-pctl-groups");
+        var groups = result.data.pctl;
+        hSelect.empty();
+        for (var groupname in groups){
+            hSelect.append($('<option>', {
+                value: groupname,
+                text: groupname
+                }));
+            }
+        });
+}
+
+function listPCTLPropertys() {
+    doJSON("../uploadPctl", function(result){
+            var hSelect = $("#uploaded-pctl-propertys");
+            var selected_group = $("#uploaded-pctl-groups").val();
+            var props = result.data.pctl[selected_group];
+            hSelect.empty();
+            for (var prop in props){
+                hSelect.append($('<option>', {
+                    value: props.prop,
+                    text: prop
+                    }));
+            }
+        });
+}
+
+function listAvailableFiles(){
+    listPRISMFiles();
+    isBusy=false;
+    listPCTLGroups();
+    isBusy=false;
+    listPCTLPropertys();
+}
+
+function listFilesForManager(){
+    doJSON("../uploadPrism", function(result){
+        var list = $("#prism");
+        var files = result.data.prism;
+        list.empty();
+        for (var filename in files) {
+            list.append($('<li>', {
+                value: filename,
+                text: filename
+            }));
+        }
+    });
+    doJSON("../uploadPctl", function(result){
+        var list = $("#pctl");
+        var files = result.data.pctl;
+        list.empty();
+        for (var filename in files) {
+            list.append($('<li>', {
+                value: filename,
+                text: filename
+            }));
+        }
+    });
+    doJSON("../results", function(result) {
+        var list = $("#result-files");
+        var files = result.data
+        list.empty();
+        for (var filename in result.data){
+            list.append($('<li>', {
+                value: filename,
+                text: filename
+            }));
+        }
+        getCurrentResult();
+    });
 }

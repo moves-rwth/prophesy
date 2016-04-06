@@ -33,18 +33,16 @@ class Configuration():
         assert module in self._config[DEPENDENCIES]
         return self._config.getboolean(DEPENDENCIES, module)
 
+    # TODO: REPAIR THIS
     def getAll(self):
         if self._importedFrom == "":
             self._importFromFile()
-        result = "{"
+        # Convert configuration into dict of dicts
+        # where each section has its own dictionary with (key,value)
+        result = {}
         sections = self._config.sections()
         for section in sections:
-            result = result + section + ':"{'
-            for key in self._config[section]:
-                value = self._config[section][key]
-                result = result + key + ":" + value + ", "
-            result = result + '"}, '
-        result = result + "}"
+             result[section] = dict(self._config.items(section))
         return result
 
     def set(self, section, key, value):

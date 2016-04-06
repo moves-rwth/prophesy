@@ -1,0 +1,27 @@
+.column {
+    width: 33%;
+    min-height: calc(100vh - 50px - 10.5em);
+    display: inline-block;
+    background-color:#eee;
+    border: 1px solid black;
+    position: relative;
+}
+
+.column h3 {
+    text-align: center;
+}
+
+.files_container {
+    width: 100%;
+    height: 80%;
+}
+
+.upload_container {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+}
+
+.file-list {
+    list-style-type: none;
+}
