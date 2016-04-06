@@ -1,4 +1,4 @@
-from prophesy.data.interval import Interval, BoundType
+from prophesy.data.interval import Interval
 from prophesy.data.point import Point
 
 import numpy as np
