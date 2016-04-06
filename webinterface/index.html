@@ -3,21 +3,19 @@
 <head>
     <title>Prophesy UI</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-    <style>
-
-    </style>
     <link href="buttons.css" rel="stylesheet" type="text/css">
     <link href="tabs.css" rel="stylesheet" type="text/css">
     <link href="stylesheet.css" rel="stylesheet" type="text/css">
-    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <link href="index.css" rel="stylesheet" type="text/css">
+    <script src="//code.jquery.com/jquery-1.12.1.min.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
     <script type="text/javascript" language="javascript" src="flot/jquery.flot.symbol.js"></script>
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
     <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
+    <script language="javascript" type="text/javascript" src="plot.js"></script>
     <script language="javascript">
-var threshold = "0.5";
-// Hard coded interval for coloring the heat map
+var heatmap = false;
 var heatmap_thrs = [0.0,0.2,0.4,0.6,0.8,1.0];
 var samples = [];
 var safe_constraints = [];
@@ -29,12 +27,13 @@ var newConstraintComplete = true;
 
 var PlotMode = Object.freeze({SAMPLE: 1, CONSTRAINT: 2});
 var currentPlotMode = PlotMode.SAMPLE;
+var threshold = "0.5";
 
 var websocket = null;
 var websocketActive = false;
 
-// Checkbox flag
-var heatmap = false;
+var redis_timer = setInterval(pingRedis, 10000);
+var isBusy = false;
 
 var options = {
         axisLabels: {
@@ -82,87 +81,16 @@ var options = {
             noColumns: 6
         }};
 
-var isBusy = false;
-function setBusy(busy) {
-    if (busy && isBusy) {
-        alert("Operation in progress");
-        throw "Operation in progress";
+function pingRedis(){
+    if(isBusy == false){
+        doAjax({
+            url: "../checkRedis",
+            type: "GET"
+            },function(){},function(){
+                clearInterval(redis_timer);
+                redis_timer = setInterval(pingRedis, 3000);
+        });
     }
-    if (busy) {
-        $("#busy-indicator").css('visibility', 'visible');;
-        $("#header").addClass("busy");
-    } else {
-        $("#busy-indicator").css('visibility', 'hidden');;
-        $("#header").removeClass("busy");
-    }
-    isBusy = busy;
-}
-
-function clearError() {
-    $("#errorbox").removeClass("shown");
-}
-
-// Displays the interval boundings for the heatmap
-function displayIntervals(status){
-    if(status == true){
-        $(".tbheatmap").css('display', 'inline');;
-    }
-    else{
-        $(".tbheatmap").css('display', 'none');;
-    }
-}
-
-function checkError(result) {
-    if (result !== null) {
-        $("#error-message").text(result.reason);
-    } else {
-        $("#error-message").text("Unspecified error");
-    }
-    $("#errorbox").addClass("shown");
-}
-
-function doJSON(url, onSuccess = function(result) {}, onFail = function() {}) {
-    doAjax({
-        dataType: "json",
-        url: url,
-    }, onSuccess, onFail);
-}
-
-function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
-    failHandler = function(jqXHR) {
-        try {
-            return $.parseJSON(jqXHR.responseText);
-        } catch(err) {
-            return null;
-        }
-    }
-
-    try {
-        setBusy(true);
-    } catch(err) {
-        // Don't try and do two things at the same time,
-        // the server serializes session access
-        return null;
-    }
-
-    clearError();
-    $.ajax(ajax)
-    .done(function(data) {
-        setBusy(false);
-        if (data.status == "ok") {
-            onSuccess(data);
-        } else {
-            checkError(data);
-        }
-    })
-    .fail(function(jqXHR) {
-        setBusy(false);
-        checkError(failHandler(jqXHR));
-        onFail();
-    })
-    .always(function() {
-        setBusy(false);
-    });
 }
 
 function plotSamples() {
@@ -256,6 +184,88 @@ function readConstraints(new_constraints, clear = true) {
     };
 }
 
+function setBusy(busy) {
+    if (busy && isBusy) {
+        alert("Operation in progress");
+        throw "Operation in progress";
+    }
+    if (busy) {
+        $("#busy-indicator").css('visibility', 'visible');;
+        $("#header").addClass("busy");
+    } else {
+        $("#busy-indicator").css('visibility', 'hidden');;
+        $("#header").removeClass("busy");
+    }
+    isBusy = busy;
+}
+
+function clearError() {
+    $("#errorbox").removeClass("shown");
+}
+
+// Displays the interval boundings for the heatmap
+function displayIntervals(status){
+    if(status == true){
+        $(".tbheatmap").css('display', 'inline');;
+    }
+    else{
+        $(".tbheatmap").css('display', 'none');;
+    }
+}
+
+function checkError(result) {
+    if (result !== null) {
+        $("#error-message").text(result.reason);
+    } else {
+        $("#error-message").text("Unspecified error");
+    }
+    $("#errorbox").addClass("shown");
+}
+
+function doJSON(url, onSuccess = function(result) {}, onFail = function() {}) {
+    doAjax({
+        dataType: "json",
+        url: url,
+    }, onSuccess, onFail);
+}
+
+function doAjax(ajax, onSuccess = function(result) {}, onFail = function() {}) {
+    failHandler = function(jqXHR) {
+        try {
+            return $.parseJSON(jqXHR.responseText);
+        } catch(err) {
+            return null;
+        }
+    }
+
+    try {
+        setBusy(true);
+    } catch(err) {
+        // Don't try and do two things at the same time,
+        // the server serializes session access
+        return null;
+    }
+
+    clearError();
+    $.ajax(ajax)
+    .done(function(data) {
+        setBusy(false);
+        if (data.status == "ok") {
+            onSuccess(data);
+        } else {
+            checkError(data);
+        }
+    })
+    .fail(function(jqXHR) {
+        setBusy(false);
+        checkError(failHandler(jqXHR));
+        onFail();
+    })
+    .always(function() {
+        setBusy(false);
+    });
+}
+
 function url(s) {
     var l = window.location;
     return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + s;
@@ -312,6 +322,8 @@ $(document).ready(function() {
         jQuery(this).parent('li').addClass('active').siblings().removeClass('active');
         e.preventDefault();
     });
+
+    $(window).resize(plotSamples);
 
     $("#placeholder").bind("plothover", function (event, pos, item) {
         //Tooltip for samples
@@ -404,7 +416,7 @@ $(document).ready(function() {
     });
 
     // Handler for upload of PRISM
-    $('#form-prism').submit(function(event){
+    $("#form-prism").submit(function(event){
         event.preventDefault();
 
         var formData = new FormData($(this)[0]);
@@ -417,7 +429,24 @@ $(document).ready(function() {
             cache: false,
             contentType: false,
             processData: false
-        }, function() {
+        }, function(){
+            listAvailableFiles();
+        });
+    });
+
+    // Handler for running PRISM
+    $("#form-prism-run").submit(function(event){
+        event.preventDefault();
+
+        var formData = new FormData($(this)[0]);
+        doAjax({
+            url: '../runPrism',
+            type: 'POST',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false
+        }, function(){
             listAvailableResults();
         });
     });
@@ -565,18 +594,35 @@ $(document).ready(function() {
     });
 
     // Handler for change of settings
+
     // Just change threshold label
     $("#thresholdSlider").on('input', function() {
         threshold = $('#thresholdSlider').val();
         threshold = Number(threshold).toFixed(3)
-        $("#thresvalue").text(threshold);
+        $("#thresvalue").val(threshold);
+
     });
 
     // Change display of samples as well
+
     $("#thresholdSlider").on('change', function() {
         threshold = $('#thresholdSlider').val();
-        threshold = Number(threshold).toFixed(3)
-        $("#thresvalue").text(threshold);
+        threshold = Number(threshold).toFixed(3);
+        $("#thresvalue").val(threshold);
+        setThreshold(threshold);
+        plotSamples();
+    });
+
+    // Change if value is entered directly
+    $("#thresvalue").on('change', function(){
+        threshold = $("#thresvalue").val();
+        if (Number(threshold) < 0 || Number(threshold) > 1){
+            alert("threshold should only be between 0 and 1");
+            threshold = 0.500;
+            $("#thresvalue").val(threshold);
+        }
+        threshold = Number(threshold).toFixed(3);
+        $('#thresholdSlider').val(threshold);
         setThreshold(threshold);
         plotSamples();
     });
@@ -652,20 +698,33 @@ $(document).ready(function() {
         heatmap_thrs[4] = $("#thresv4").val();
         plotSamples();
     });
-    $("#tbprec").on('change', function(event) {
+
+    $("#loadConfig").click(function(event){
         event.preventDefault();
-        var prec = new FormData();
-        prec.append('precision', $("#tbprec").val());
-        doAjax({
-            url: '../config',
-            type: 'POST',
-            // precision
-            data: prec,
-            //Options to tell jQuery not to process data or worry about content-type.
-            cache: false,
-            contentType: false,
-            processData: false
-        });
+
+        // Load from Config (Updates automatically the textfields)
+        getPrecisionConfig();
+        isBusy=false;
+        getStormConfig();
+        isBusy=false;
+        getZ3Config();
+        isBusy=false;
+    });
+    $("#saveConfig").click(function(event) {
+        event.preventDefault();
+
+        // Write to Configfile
+        setPrecision();
+        isBusy = false;
+        setStormPath();
+        isBusy = false;
+        setZ3Path();
+        isBusy = false;
+        alert("Configuration has been saved!");
+    });
+
+    $("#uploaded-pctl-groups").on('change', function(){
+        listPCTLPropertys();
     });
 
     /////////////////////////
@@ -689,6 +748,11 @@ $(document).ready(function() {
     isBusy = false;
     plotSamples();
     isBusy = false;
+    listAvailableFiles();
+    isBusy=false;
+    listPCTLGroups();
+    isBusy=false;
+    listPCTLPropertys();
 
     openSocket();
 });
@@ -698,118 +762,123 @@ $(document).ready(function() {
 </head>
 
 <body>
-<div id="header">
-    <h1>Prophesy UI</h1>
-    <div id="busy-indicator">Working...<br>
-        <button id="cancel" type="button" class="negative">Cancel</button>
+<div id="wrapper">
+    <!-- Header of Prophesy Web Page -->
+    <div id="header">
+        <h1>Prophesy - Plot</h1>
+        <div id="busy-indicator">Working...<br>
+            <button id="cancel" type="button" class="negative">Cancel</button>
+        </div>
     </div>
-</div>
-<div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
-
-<div id="plotsurround">
-    <div id="legendContainer">
-        <div id="legend"></div><span id="mousePos">(0.00, 0.00)</span>
+    <!-- Menu bar from Prophesy Webpage -->
+    <div id="menu">
+        <a href="../" class="menu-link">Plot</a>
+        <a href="../files" class="menu-link">Filemanager</a>
+        <a href="../configuration" class="menu-link">Configuration</a>
     </div>
-    <div id="placeholder"></div>
-</div>
-<div id='tooltip'></div>
 
-<div id="controlpanel">
-    <div id="input">
-        <h2>Input</h2>
-        <ul class="tab-links">
-            <li class="active" ><a href="#tab-prism">Upload Prism</a></li>
-            <li><a href="#tab-upload">Upload result</a></li>
-            <li><a href="#tab-select">Select result</a></li>
-        </ul>
-        <div class="tab-contents">
-            <div id="tab-prism" class="tab active cp">
-                <form id="form-prism">
-                    <span class="colLeft">Path to prism file:</span>
-                    <input type="file" name="file" class="colRight"/>
-                    <br>
-                    <span class="colLeft">Path to PCTL file:</span>
-                    <input type="file" name="pctl-file" class="colRight"/>
-                    <br>
-                    <span class="colLeft">Run with:</span>
-                    <select id="mctools" name="mctool" class="colRight">
-                        <option>No tool available</option>
-                    </select>
-                    <br>
-                    <div class="button">
-                         <button id="upload-prism" type="submit" class="upload positive">Upload</button>
-                    </div>
-                </form>
+    <div id="content">
+        <!-- The Errorbox is very special.... Maybe some refactoring here -->
+        <div id="errorbox"><span id="error-title">Error occured:</span> <span id="error-message">Error value not set</span></div>
+
+        <div id="plotsurround">
+            <div id="legendContainer">
+                <div id="legend"><!-- Legend is created by flot --></div><span id="mousePos">(0.00, 0.00)</span>
             </div>
-
-            <div id="tab-upload"  class="tab cp">
-                <form id="form-result">
-                    <span class="colLeft">Path to result file:</span>
-                    <input type="file" name="file" class="colRight"/>
-                    <br>
-                    <span class="colLeft">Run with:</span>
-                    <select name="result-type" class="colRight">
-                        <option value="pstorm" selected="selected">pstorm</option>
-                        <option value="param">param</option>
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="upload-result" type="submit" class="upload positive">Upload</button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="tab-select" class="tab cp">
-                <form id="form-select">
-                    <span class="colLeft">Result file:</span>
-                    <select id="result-files" class="colRight">
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="select-result" type="submit" class="positive">Load</button>
-                    </div>
-                </form>
+            <div id="placeholderWrapper">
+                <div id="placeholder"><!-- Plot is generated right here --></div>
             </div>
         </div>
-    </div> <!-- Input -->
+        <div id="tooltip"></div><!--
+        End of Plot
 
-    <div id="samples">
-        <h2>Sampling</h2>
-        <ul class="tab-links">
-            <li class="active" ><a href="#tab-manual">Manual Sampling</a></li>
-            <li><a href="#tab-auto">Auto Sampling</a></li>
-        </ul>
-        <div class="tab-contents">
-            <div id="tab-manual" class="tab active cp">
-                <form id="form-samples-manual">
-                    <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
-                    <br>
-                    <div class="button">
-                        <button id="submit-samples" type="submit" class="positive">Check New</button>
-                        <button id="clear-samples-current" type="button">Clear current</button>
-                        <button id="clear-samples-all" type="button" class="negative">Clear all</button>
+        Start with the choosable options for the plot
+        --><div id="controlpanel">
+            <div id="input">
+                <h2>Input</h2>
+                <ul class="tab-links">
+                    <li class="active"><a href="#tab-run">Run Prism</a></li>
+                    <li><a href="#tab-select">Select result</a></li>
+                </ul>
+                <div class="tab-contents">
+                    <div id="tab-run" class="tab cp active">
+                        <form id="form-prism-run">
+                            <span class="colLeft">Prism file:</span>
+                            <select id="uploaded-prism-files" class="colRight" name="prism">
+                                <option> No files uploaded </option>
+                            </select>
+                            <br/>
+                            <span class="colLeft"> PCTL group:</span>
+                            <select id="uploaded-pctl-groups" class="colRight" name="pctl_group">
+                                <option> No files uploaded </option>
+                            </select>
+                            <br/>
+                            <span class="colLeft"> PCTL property:</span>
+                            <select id="uploaded-pctl-propertys" class="colRight" name="pctl_property">
+                                <option> No files uploaded </option>
+                            </select>
+                            <br/>
+                            <span class="colLeft"> Run with:</span>
+                            <select id="mctools" class="colRight" name="mctool">
+                                <option> No tools available </option>
+                            </select>
+                            <br>
+                            <div class="button">
+                                <button id="run-prism" type="submit" class="upload positive"> Run</button>
+                            </div>
                     </div>
-                </form>
-            </div>
-            <div id="tab-auto" class="tab cp">
-                <form id="form-samples-auto">
-                    <span class="colLeft">Number of iterations:</span>
-                    <input name="iterations" class="colRight" type="number" min="0" max="98" value="2"/>
-                    <br>
-                    <span class="colLeft">Generator type:</span>
-                    <select name="generator" class="colRight">
-                        <option value="uniform" selected="selected">Uniform grid</option>
-                        <option value="linear" selected="selected">Linear interpolation</option>
-                        <option value="delaunay">Delaunay triangulation</option>
-                    </select>
-                    <br>
-                    <div class="button">
-                        <button id="generate-samples" type="submit" class="positive">Go</button>
+                    <div id="tab-select" class="tab cp">
+                        <form id="form-select">
+                            <span class="colLeft">Result file:</span>
+                            <select id="result-files" class="colRight">
+                            </select>
+                            <br>
+                            <div class="button">
+                                <button id="select-result" type="submit" class="positive">Load</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
-            </div>
+                </div>
+            </div><!--
+            End of Input
+            -------------
+        --><div id="samples">
+            <h2>Sampling</h2>
+            <ul class="tab-links">
+                <li class="active" ><a href="#tab-manual">Manual Sampling</a></li>
+                <li><a href="#tab-auto">Auto Sampling</a></li>
+            </ul>
+            <div class="tab-contents">
+                <div id="tab-manual" class="tab active cp">
+                    <form id="form-samples-manual">
+                        <label><input id="addSamples" type="radio" checked="checked"/> Add samples by mouse clicks</label>
+                        <br>
+                        <div class="button">
+                            <button id="submit-samples" type="submit" class="positive">Check New</button>
+                            <button id="clear-samples-current" type="button">Clear current</button>
+                            <button id="clear-samples-all" type="button" class="negative">Clear all</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="tab-auto" class="tab cp">
+                    <form id="form-samples-auto">
+                        <span class="colLeft">Number of iterations:</span>
+                        <input name="iterations" class="colRight" type="number" min="0" max="98" value="2"/>
+                        <br>
+                        <span class="colLeft">Generator type:</span>
+                        <select name="generator" class="colRight">
+                            <option value="uniform" selected="selected">Uniform grid</option>
+                            <option value="linear" selected="selected">Linear interpolation</option>
+                            <option value="delaunay">Delaunay triangulation</option>
+                        </select>
+                        <br>
+                        <div class="button">
+                            <button id="generate-samples" type="submit" class="positive">Go</button>
+                        </div>
+                    </form>
+                </div>
+            </div> <!-- Samples -->
         </div>
-    </div> <!-- Samples -->
 
 
     <div id="constraints">
@@ -855,7 +924,7 @@ $(document).ready(function() {
     <div id="settings">
         <h2>Settings</h2>
         <span class="colLeft">Threshold:</span>
-        <input type="range" min="0" max="1" value="0.5" step=".001" id="thresholdSlider" /><span id="thresvalue">0.500</span>
+        <input type="range" min="0" max="1" value="0.5" step=".001" id="thresholdSlider" />&nbsp;<input type="text" id="thresvalue" value="0.5" style="width: 45px;"/>
         <br>
         <span class="colLeft">Sampler:</span>
         <select id="samplers" class="colRight">
@@ -875,19 +944,22 @@ $(document).ready(function() {
         <input class="tbheatmap" type="text" id="thresv2" value="0.4"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv3" value="0.6"/><span class="tbheatmap">&#8804;</span>
         <input class="tbheatmap" type="text" id="thresv4" value="0.8"/>
-        <br/>
-        <span class="colLeft">Precision:</span>
-        <input type="text" id="tbprec" value="0.0001" class ="colRight" />
-        <br/>
     </div>
-</div> <!-- Control panel -->
+</div><!-- Control panel-->
 
-<div id="infopanel">
-    <h2>Info</h2>
-    <h3>Rational Function</h3>
-    <div id="info_ratfunc">Not loaded</div>
+
+    <div id="infopanel">
+        <h2>Info</h2>
+        <h3>Rational Function</h3>
+        <div id="info_ratfunc">Not loaded</div>
+    </div>
+<!-- End of Rational function box-->
 </div>
-
+<!--End of Content-->
+<div id="footer">
+    <p> RWTH Aachen University - Chair of Computer science I2</p>
+</div>
+</div>
 </body>
 
 </html>

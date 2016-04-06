@@ -1,0 +1,27 @@
+.configelement {
+    width: 19.7%;
+    border: 1px solid black;
+    display: inline-block;
+    height: 90%;
+}
+
+.configelement h3{
+    text-align: center;
+}
+
+#configchange {
+    text-align: center;
+}
+
+.colLeft {
+    float: left;
+    width: 30%;
+}
+
+input {
+    width: 90%;
+}
+
+table {
+    width: 100%;
+}

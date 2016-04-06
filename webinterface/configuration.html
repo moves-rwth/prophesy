@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Prophesy UI</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link href="buttons.css" rel="stylesheet" type="text/css">
+    <link href="tabs.css" rel="stylesheet" type="text/css">
+    <link href="stylesheet.css" rel="stylesheet" type="text/css">
+    <link href="configuration.css" rel="stylesheet" type="text/css">
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script language="javascript" type="text/javascript" src="configuration.js"></script>
+</head>
+<body>
+<!-- wrapper is just to position the rest of the webpage -->
+<div id="wrapper">
+
+    <!-- Always stick to the same UI layout. -->
+    <div id="header">
+        <h1> Prophesy - Configuration </h1>
+    </div>
+
+    <!-- Navigation bar for using the different states of Phrophesy user mode-->
+    <div id="menu">
+    <a href="../" class="menu-link">Plot</a>
+    <a href="../files" class="menu-link">Filemanager</a>
+    <a href="../configuration" class="menu-link">Configuration</a>
+    </div>
+
+    <!-- Create a nicely human readable config file representation-->
+    <div id="content">
+        <div class="configelement">
+            <h3> Directories</h3>
+            <div class="table_container">
+            <!-- Content has to be filled in dynamically -->
+                <table>
+                    <tbody id="directories">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="configelement">
+            <h3> External Tools</h3>
+            <div class="table_container">
+            <!-- Content has to be filled in dynamically -->
+                <table>
+                    <tbody id="external_tools">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="configelement">
+            <h3> Installed dependencies</h3>
+            <div class="table_container">
+            <!-- Content has to be filled in dynamically -->
+                <table>
+                    <tbody id="installed_deps">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="configelement">
+            <h3> Sampling options</h3>
+            <div class="table_container">
+            <!-- Content has to be filled in dynamically -->
+                <table>
+                    <tbody id="sampling">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="configelement">
+            <h3> Various constraints</h3>
+            <div class="table_container">
+            <!-- Content has to be filled in dynamically -->
+                <table>
+                    <tbody id="constraints">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="configchange"><button>Save Config</button></div>
+    </div>
+
+
+    <!-- Footer just for the completness -->
+    <div id="footer">
+        <p> RWTH Aachen University - Chair of Computer science I2</p>
+    </div>
+</div>
+</body>
+</html>
