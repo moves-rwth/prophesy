@@ -8,23 +8,17 @@ from pycarl import Rational
 from prophesy.data.constraint import region_from_hyperrectangle
 
 class SmtRegionChecker(RegionChecker):
-    def __init__(self, smt2interface, variables, ratfunc):
+    def __init__(self, smt2interface, parameters, ratfunc):
         """
         @param smt2interface SMTSolver to check regions with
-        @param variables VariableOrder
+        @param parameters ParameterOrder
         @param ratfunc RationalFunction, used to evaluate solutions
         """
         self._smt2interface = smt2interface
-        self._parameters = variables
+        self.parameters = parameters
         self._ratfunc = ratfunc
 
         self.benchmark_output = []
-
-    def _symbols(self):
-        return list([x[0] for x in self._parameters])
-
-    def _intervals(self):
-        return list([x[1] for x in self._parameters])
 
     def print_info(self):
         i = 1
@@ -53,10 +47,11 @@ class SmtRegionChecker(RegionChecker):
         smt_successful = False
         smt_model = None
 
+        variables = self.parameters.get_variable_order()
         if isinstance(polygon, HyperRectangle):
-            constraint = region_from_hyperrectangle(polygon, self._parameters)
+            constraint = region_from_hyperrectangle(polygon, variables)
         else:
-            constraint = self.region_from_polygon(polygon, self._parameters)
+            constraint = self.region_from_polygon(polygon, variables)
 
         while not smt_successful:
             # check constraint with smt
@@ -93,12 +88,12 @@ class SmtRegionChecker(RegionChecker):
         elif checkresult == Answer.sat:
             # add new point as counter example to existing regions
             sample = SamplePoint()
-            for var in self._parameters:
+            for var in variables:
                 value = smt_model[var.name]
                 rational = Rational(value)
                 sample[var] = rational
             value = self._ratfunc.eval(sample)
-            return RegionCheckResult.sat, Sample.from_sample_point(sample, self._parameters, value)
+            return RegionCheckResult.sat, Sample.from_sample_point(sample, variables, value)
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None

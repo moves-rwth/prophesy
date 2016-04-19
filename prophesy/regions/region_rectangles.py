@@ -12,7 +12,7 @@ class ConstraintRectangles(RegionGenerator):
 
         self.anchor_points = []
         for pt, direction in [(Point(0, 0), Direction.NE), (Point(1, 0), Direction.NW), (Point(1, 1), Direction.SW), (Point(0, 1), Direction.SE)]:
-            sp = SamplePoint.from_point(pt, self.parameters)
+            sp = SamplePoint.from_point(pt, self.parameters.get_variable_order())
             value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True

@@ -102,6 +102,8 @@ class RegionGenerator:
         self.threshold = threshold
         self.threshold_area = threshold_area
 
+        self.max_area_sum = HyperRectangle(*self.parameters.get_variable_bounds()).size()
+
         self.checker = checker
         self.ratfunc = _ratfunc
 
@@ -136,12 +138,6 @@ class RegionGenerator:
                 result_constraint = self.next_constraint()
         # End of generator
         #return
-
-    def _symbols(self):
-        return list([x[0] for x in self.parameters])
-
-    def _intervals(self):
-        return list([x[1] for x in self.parameters])
 
     def _add_pdf(self, name):
         """
@@ -264,10 +260,10 @@ class RegionGenerator:
                 pass
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
-            max_area_sum = HyperRectangle(*self._intervals()).size()
-            print("max area {}".format(max_area * max_area_sum))
+            
+            print("max area {}".format(max_area * self.max_area_sum))
             print("area sum {}".format(area_sum))
-            if area_sum > max_area * max_area_sum:
+            if area_sum > max_area * self.max_area_sum:
                 break
             max_iter -= 1
             if max_iter == 0:

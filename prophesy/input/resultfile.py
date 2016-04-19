@@ -1,18 +1,20 @@
 import re
-from sympy import Symbol, fraction
-from sympy.polys import Poly
 from prophesy.data.rationalfunction import RationalFunction
 from prophesy.data import interval
 from prophesy.config import configuration
-from exceptions.module_error import ModuleError
 
 class ParametricResult(object):
     """Wraps the results of pstorm and param
        self.parameters: List of Symbol()
        self.parameter_constraints: List of Constraint()
        self.ratfunc: Instance of RationalFunction"""
-    def __init__(self, params, parameter_constraints, ratfunc):
-        self.parameters = params
+    def __init__(self, variables, parameter_constraints, ratfunc):
+        """
+        @param variables VariableOrder
+        @param parameter_constraints List of constraints (pycarl.Formula or pycarl.Constraint)
+        @param ratfunc pycarl.RationalFunction (or lower)
+        """
+        self.parameters = variables
         self.parameter_constraints = parameter_constraints
         self.ratfunc = ratfunc
 
