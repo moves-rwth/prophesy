@@ -65,7 +65,7 @@ if __name__ == "__main__":
     result = read_pstorm_result(cmdargs.rat_file)
     print("Parameters:", result.parameters)
 
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
     # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
     initial_samples = uniform_samples(sampling_interface, result.parameters, cmdargs.samplingnr)

@@ -14,13 +14,16 @@ class SamplePoint(dict):
     """Simple dictionary mapping a pycarl.Variable to pycarl.Rational.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def get_point(self, variables):
         """Return the Point corresponding to this sample, given variable
         ordering provided as argument
         @param variables VariableOrder. Must correspond to variables of this
             sample point.
         """
-        return Point(*[self[var.name] for var in variables])
+        return Point(*[self[var] for var in variables])
 
     @classmethod
     def from_point(cls, pt, variables):
@@ -62,11 +65,17 @@ class SamplePoints(object):
         for pt in self.points:
             assert len(pt) == len(self.variables), \
                 "Sample point not defined for all variables"
-            tups = zip(pt, self.variables)
-            yield {var:val for var, val in tups}
+            tups = zip(self.variables, pt)
+            yield SamplePoint({var:val for var, val in tups})
 
     def __item__(self, index):
         pass
+
+    def __str__(self):
+        return "SamplePoints({}, {})".format(self.points, self.variables)
+
+    def __repr__(self):
+        return "SamplePoints({!r}, {!r})".format(self.points, self.variables)
 
 class Sample(object):
     """Class to represent a single sample. Maps a point (tuple of
@@ -122,6 +131,7 @@ class SampleDict(OrderedDict):
         """
         @param variables, VariableOrder (Optional)
         """
+        super().__init__()
         self.variables = variables
 
     def add_sample(self, sample):

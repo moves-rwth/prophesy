@@ -4,10 +4,10 @@ from prophesy.data.samples import SampleDict
 class RatFuncSampling(Sampler):
     """Simple sampler based on pycarl rational function"""
 
-    def __init__(self, ratfunc, variables=None):
+    def __init__(self, ratfunc, variables):
         """
         @param ratfunc pycarl.RationalFunction (or lower)
-        @param variables VariableOrder (Optional)
+        @param variables VariableOrder
         """
         super().__init__()
 
@@ -20,6 +20,7 @@ class RatFuncSampling(Sampler):
         @return SampleDict
         """
         samples = SampleDict(self.variables)
-        for pt in samplepoints:
-            samples[pt] = self.ratfunc.eval(pt)
+        for sample_point in samplepoints:
+            pt = sample_point.get_point(self.variables)
+            samples[pt] = self.ratfunc.eval(sample_point)
         return samples

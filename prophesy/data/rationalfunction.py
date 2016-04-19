@@ -24,7 +24,8 @@ class RationalFunction:
         @param: evaluation SamplePoint
         @return pycarl.Rational
         """
-        assert set(evaluation.keys()) == self._variables, "Evaluating a wrong bunch of variables"
+        #TODO: pycarl does not compare Variable correctly, hash fail?
+        #assert set(evaluation.keys()) == self._variables, "Evaluating a wrong bunch of variables"
         return self.rational_func.evaluate(evaluation)
 
     def __str__(self):

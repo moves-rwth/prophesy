@@ -26,9 +26,11 @@ class Point:
         """
         self.coordinates = tuple(args)
         #TODO: backwards compatibility for Delaunay
-        self.x = tuple[0]
-        self.y = tuple[1]
-        self.z = tuple[2]
+        self.x = self.coordinates[0]
+        if len(self.coordinates) > 1:
+            self.y = self.coordinates[1]
+        if len(self.coordinates) > 2:
+            self.z = self.coordinates[2]
 
     def distance(self, other):
         res = 0.0
