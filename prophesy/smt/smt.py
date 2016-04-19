@@ -1,20 +1,18 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from pycarl import Variable, VariableType, Rational, Polynomial
-from data.interval import Interval, BoundType
-
+from prophesy.data.interval import Interval, BoundType
+from pycarl.formula.formula import Constraint, Relation
 
 # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
 def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, BoundType.closed, None, BoundType.open)):
-    from data.constraint import Constraint
-
     for p in result.parameters:
-        smt2interface.add_variable(p[0].name, VariableDomain.Real)
+        smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
     for constr in result.parameter_constraints:
         smt2interface.assert_constraint(constr)
 
-    rat_vars = list([x[0] for x in result.parameters])
+    rat_vars = result.parameters.get_variable_order()
     vars = rat_vars
 
     safeVar = Variable("safe", VariableType.BOOL)
@@ -35,16 +33,16 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     smt2interface.add_variable(rf1Var, VariableDomain.Real)
     smt2interface.add_variable(rf2Var, VariableDomain.Real)
 
-    safe_relation = ">="
-    bad_relation = "<="
+    safe_relation = Relation.GEQ
+    bad_relation = Relation.LESS
 
-    safe_constraint = Constraint(rf1Var - thresholdVar * rf2Var, safe_relation, vars)
+    safe_constraint = Constraint(rf1Var - thresholdVar * rf2Var, safe_relation)
     print(safe_constraint)
-    print(safe_constraint.to_smt2_string())
-    bad_constraint = Constraint(rf1Var - thresholdVar * rf2Var, bad_relation, vars)
-    threshold_constraint = Constraint(thresholdVar - threshold, "=", vars)
-    rf1_constraint = Constraint(rf1Var - result.ratfunc.nominator, "=", vars)
-    rf2_constraint = Constraint(rf2Var - result.ratfunc.denominator, "=", vars)
+    bad_constraint = Constraint(rf1Var - thresholdVar * rf2Var, bad_relation)
+    #TODO: pycarl cannot deal with float everywhere, cast to rational
+    threshold_constraint = Constraint(thresholdVar - Rational(threshold), Relation.EQ)
+    rf1_constraint = Constraint(rf1Var - result.ratfunc.nominator, Relation.EQ)
+    rf2_constraint = Constraint(rf2Var - result.ratfunc.denominator, Relation.EQ)
     smt2interface.assert_constraint(threshold_constraint)
     smt2interface.assert_constraint(rf1_constraint)
     smt2interface.assert_constraint(rf2_constraint)
@@ -54,15 +52,13 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     #TODO why do we only do this if the denominator is 1
     if result.ratfunc.denominator == Polynomial(Rational(1)):
         if rat_func_bound.left_bound() != None:
-            ineq_type = ">=" if rat_func_bound.left_bound_type() == BoundType.closed else ">"
-            lbound = Constraint(rf1Var, ineq_type, vars)
+            ineq_type = Relation.GEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.GREATER
+            lbound = Constraint(Polynomial(rf1Var), ineq_type)
             smt2interface.assert_constraint(lbound)
         if rat_func_bound.right_bound() != None:
-            ineq_type = "<=" if rat_func_bound.left_bound_type() == BoundType.closed else "<"
-            ubound = Constraint(rf1Var - Rational(1), ineq_type, vars)
+            ineq_type = Relation.LEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.LESS
+            ubound = Constraint(Polynomial(rf1Var) - Rational(1), ineq_type)
             smt2interface.assert_constraint(ubound)
-
-
 
 class Answer(Enum):
     sat = 0

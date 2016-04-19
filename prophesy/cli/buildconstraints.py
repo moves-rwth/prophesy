@@ -2,6 +2,7 @@
 
 import os
 import sys
+from prophesy import config
 
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
@@ -12,22 +13,21 @@ from argparse import ArgumentParser
 
 from shapely.geometry.polygon import Polygon
 
-from regions.region_planes import ConstraintPlanes
-from regions.region_polygon import ConstraintPolygon
-from regions.region_quads import ConstraintQuads
-from regions.region_rectangles import ConstraintRectangles
-from regions.region_smtchecker import SmtRegionChecker
-from input.resultfile import read_pstorm_result
-from output.plot import Plot
-from input.samplefile import read_samples_file
-from util import open_file
-from smt.isat import IsatSolver
-from smt.smt import setup_smt
-from smt.smtlib import SmtlibSolver
-from smt.Z3cli_solver import Z3CliSolver
+from prophesy.regions.region_planes import ConstraintPlanes
+from prophesy.regions.region_polygon import ConstraintPolygon
+from prophesy.regions.region_quads import ConstraintQuads
+from prophesy.regions.region_rectangles import ConstraintRectangles
+from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.input.resultfile import read_pstorm_result
+from prophesy.output.plot import Plot
+from prophesy.input.samplefile import read_samples_file
+from prophesy.util import open_file
+from prophesy.smt.isat import IsatSolver
+from prophesy.smt.smt import setup_smt
+from prophesy.smt.smtlib import SmtlibSolver
+from prophesy.smt.Z3cli_solver import Z3CliSolver
 
-import config
-from config import configuration
+from prophesy.config import configuration
 
 def parse_cli_args(solversConfig):
     parser = ArgumentParser(description='Build regions based on a sample file')
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         Plot.flip_green_red = True
 
     print("Loading samples")
-    parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file)
+    variables, samples_threshold, samples = read_samples_file(cmdargs.samples_file)
     if cmdargs.threshold:
         threshold = cmdargs.threshold
     else:
@@ -82,9 +82,8 @@ if __name__ == "__main__":
     if threshold == None:
         raise("No threshold specified via command line or samples file.")
     print("Threshold: {}".format(threshold))
-    print(samples)
 
-    if [x[0].name for x in result.parameters] != parameters:
+    if result.parameters.get_variable_order() != variables:
         raise RuntimeError("Sampling and Result parameters are not equal")
 
     print("Setup SMT interface")

@@ -2,6 +2,7 @@ import subprocess
 import functools
 from config import TOOLNAME
 from smt.smt import SMTSolver, Answer, VariableDomain
+from pycarl.formula.formula import Formula
 
 
 def _smtfile_header():
@@ -14,6 +15,11 @@ def _smtfile_header():
     formula += "(set-info :category \"industrial\")\n"
     return formula
 
+def constraint_to_smt2(constraint):
+    #TODO: Use carl built-in printer
+    return str(constraint)
+    #TODO: segfault
+    return str(Formula(constraint))
 
 class SmtlibSolver(SMTSolver):
     def __init__(self, location, memout = 4000, timeout = 100):
@@ -136,13 +142,13 @@ class SmtlibSolver(SMTSolver):
         self.status[-1] += s
 
     def assert_constraint(self, constraint):
-        s = "(assert " + constraint.to_smt2_string() + " )\n"
+        s = "(assert " + constraint_to_smt2(constraint) + " )\n"
         self.string += s
         self._write(s)
         self.status[-1] += s
 
     def assert_guarded_constraint(self, guard, constraint):
-        s = "(assert (=> " + guard + " " + constraint.to_smt2_string() + " ))\n"
+        s = "(assert (=> " + guard + " " + constraint_to_smt2(constraint) + " ))\n"
         self.string += s
         self._write(s)
         self.status[-1] += s

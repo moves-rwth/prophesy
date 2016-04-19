@@ -48,7 +48,8 @@ def read_samples_file(path):
             elif items[-1] == "above":
                 value = SAMPLE_ABOVE
             else:
-                value = Rational(items[-1])
+                #TODO: falling back to Python float parser, but a good Rational parser is better
+                value = Rational(float(items[-1]))
             coords = map(Rational, items[:-1])
             samples[Point(*coords)] = value
 
