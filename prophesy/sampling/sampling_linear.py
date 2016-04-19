@@ -1,7 +1,7 @@
 import math
 from prophesy.sampling.sample_generator import SampleGenerator
-from shapely.geometry.point import Point
 from prophesy.data.samples import weighed_interpolation
+from prophesy.data.point import Point
 
 class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means

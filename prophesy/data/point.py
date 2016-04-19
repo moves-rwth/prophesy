@@ -5,7 +5,7 @@ def _sqrt_approx(i):
     :param i: a positive number
     :return: the approximate square root of i
     """
-    orig_type = i.type
+    orig_type = type(i)
     if not isinstance(i, (int, float)):
         # if i is a rational number for which the sqrt might be not a
         # ratonal number, then use some approx.
@@ -63,4 +63,4 @@ class Point:
         return hash(self.coordinates)
 
     def __repr__(self):
-        return "Point({})".format(self.coordinates)
+        return "Point({})".format(", ".join(map(repr,self.coordinates)))

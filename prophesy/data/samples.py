@@ -223,4 +223,4 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
 
     weight += offset
 
-    return tuple([d*weight + pt] for d, pt in zip(deltas, sample1.pt))
+    return Point(*[d*weight + pt for d, pt in zip(deltas, sample1.pt)])
