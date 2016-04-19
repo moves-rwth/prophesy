@@ -17,7 +17,7 @@ class ConstraintQuads(RegionGenerator):
         self.check_depth = 64
 
         # Setup initial quad
-        quad = HyperRectangle(*self._intervals())
+        quad = HyperRectangle(*self.parameters.get_variable_bounds())
         quadsamples = []
 
         for pt, v in samples.items():
