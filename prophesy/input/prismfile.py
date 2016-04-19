@@ -2,9 +2,8 @@ import os
 import re
 import shutil
 import tempfile
-import config
-from util import ensure_dir_exists, check_filepath_for_reading
-
+from prophesy import config
+from prophesy.util import ensure_dir_exists, check_filepath_for_reading
 
 class PrismFile:
     """Wrapper for Prism file; extracts parameter names."""
