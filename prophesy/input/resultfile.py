@@ -107,8 +107,8 @@ def read_param_result(location):
     constraints = []
     for (p, ran) in zip(parameters, ranges):
         # ran = [lower .. upper]
-        constraints.append(Constraint(p.variable - Rational(ran[0]), Relation.GEQ))
-        constraints.append(Constraint(p.variable - Rational(ran[1]), Relation.LEQ))
+        constraints.append(Constraint(p.variable - ran[0], Relation.GEQ))
+        constraints.append(Constraint(p.variable - ran[1], Relation.LEQ))
     #print(constraints)
 
     # Build rational function

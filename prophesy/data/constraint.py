@@ -16,13 +16,13 @@ def region_from_hyperrectangle(hyperrectangle, variables):
     constraint = None
     for variable, interval in zip(variables, hyperrectangle.intervals):
         lbound_relation = Relation.GEQ if interval.left_bound_type() == BoundType.closed else Relation.GREATER
-        lbound = Constraint(variable-Rational(interval.left_bound()), lbound_relation)
+        lbound = Constraint(variable-interval.left_bound(), lbound_relation)
         if constraint is None:
             constraint = lbound
         else:
             constraint = constraint & lbound
         rbound_relation = Relation.LEQ if interval.right_bound() == BoundType.closed else Relation.LESS
-        rbound = Constraint(variable-Rational(interval.right_bound()), rbound_relation)
+        rbound = Constraint(variable-interval.right_bound(), rbound_relation)
         constraint = constraint & rbound
     return constraint
 

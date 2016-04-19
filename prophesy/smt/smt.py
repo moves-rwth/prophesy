@@ -40,7 +40,7 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     print(safe_constraint)
     bad_constraint = Constraint(rf1Var - thresholdVar * rf2Var, bad_relation)
     #TODO: pycarl cannot deal with float everywhere, cast to rational
-    threshold_constraint = Constraint(thresholdVar - Rational(threshold), Relation.EQ)
+    threshold_constraint = Constraint(thresholdVar - threshold, Relation.EQ)
     rf1_constraint = Constraint(rf1Var - result.ratfunc.nominator, Relation.EQ)
     rf2_constraint = Constraint(rf2Var - result.ratfunc.denominator, Relation.EQ)
     smt2interface.assert_constraint(threshold_constraint)
@@ -57,7 +57,7 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
             smt2interface.assert_constraint(lbound)
         if rat_func_bound.right_bound() != None:
             ineq_type = Relation.LEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.LESS
-            ubound = Constraint(Polynomial(rf1Var) - Rational(1), ineq_type)
+            ubound = Constraint(Polynomial(rf1Var) - 1, ineq_type)
             smt2interface.assert_constraint(ubound)
 
 class Answer(Enum):
