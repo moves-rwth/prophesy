@@ -14,13 +14,13 @@ from argparse import ArgumentParser
 # from sampling.sampler_carl import CarlSampling # needs fix
 # from sampling.sampling_linear import LinearRefinement # unused
 
-from output.plot import Plot
-from input.resultfile import read_pstorm_result
-import config
-from input.samplefile import write_samples_file
-from sampling.sampling import uniform_samples,refine_samples
-from sampling.sampler_ratfunc import RatFuncSampling
-from util import open_file
+from prophesy.output.plot import Plot
+from prophesy.input.resultfile import read_pstorm_result
+from prophesy import config
+from prophesy.input.samplefile import write_samples_file
+from prophesy.sampling.sampling import uniform_samples,refine_samples
+from prophesy.sampling.sampler_ratfunc import RatFuncSampling
+from prophesy.util import open_file
 
 
 def parse_cli_args():
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     result = read_pstorm_result(cmdargs.rat_file)
     print("Parameters:", result.parameters)
 
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters, False)
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
     # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
     initial_samples = uniform_samples(sampling_interface, [x[1] for x in result.parameters], cmdargs.samplingnr)

@@ -151,8 +151,7 @@ class Configuration():
         samplers = {}
         samplers['ratfunc'] = "Rational function"
         samplers['ratfunc_float'] = "Rational function (float)"
-        if self.is_module_available("pycarl"):
-            samplers['carl'] = "Carl library"
+        samplers['carl'] = "Carl library"
 
         try:
             # TODO: Prism sampling not yet supported

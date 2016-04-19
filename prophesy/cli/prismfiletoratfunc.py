@@ -10,15 +10,14 @@ sys.path.insert(1, os.path.join(this_file_path, '..'))
 
 from argparse import ArgumentParser
 
-from input.prismfile import PrismFile
-from input.pctlfile import PctlFile
-from input.resultfile import write_pstorm_result
-from modelcheckers.param import ParamParametricModelChecker
-from modelcheckers.storm import StormModelChecker
-from modelcheckers.prism import PrismModelChecker
+from prophesy.input.prismfile import PrismFile
+from prophesy.input.pctlfile import PctlFile
+from prophesy.input.resultfile import write_pstorm_result
+from prophesy.modelcheckers.param import ParamParametricModelChecker
+from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.modelcheckers.prism import PrismModelChecker
 
-import config
-from config import configuration
+from prophesy.config import configuration
 
 def parse_cli_args():
     parser = ArgumentParser(description='Transform a prism file to a rational function.')
@@ -56,7 +55,7 @@ if __name__ == "__main__":
     elif cmdargs.stormpy:
         if 'stormpy' not in  pmcs:
             raise RuntimeError("Stormpy dependency not configured.")
-        from modelcheckers.stormpy import StormpyModelChecker
+        from prophesy.modelcheckers.stormpy import StormpyModelChecker
         tool = StormpyModelChecker()
     elif cmdargs.prism:
         if 'prism' not in  pmcs:
@@ -70,4 +69,3 @@ if __name__ == "__main__":
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
     write_pstorm_result(vars(cmdargs)["result_file"], result)
-

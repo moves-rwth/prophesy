@@ -49,7 +49,6 @@ def write_initial_config(path):
     config_tools["prism"] = find_tool("prism")
     config["external_tools"] = config_tools
     config_deps = {}
-    config_deps["pycarl"] = check_python_api("pycarl")
     config_deps["stormpy"] = check_python_api("stormpy")
     config_deps["pypdf2"] = check_python_api("PyPDF2")
     config["installed_deps"] = config_deps

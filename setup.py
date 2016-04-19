@@ -27,7 +27,6 @@ def do_setup():
         install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely', 'numpy', 'matplotlib'],
         tests_require=['pytest'],
         extras_require = {
-            'carl': ["pycarl"],
             'stormpy' : ["stormpy"],
             'pdf': ["PyPDF2"],
         },
