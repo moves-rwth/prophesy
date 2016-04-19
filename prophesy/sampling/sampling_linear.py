@@ -51,6 +51,7 @@ class LinearRefinement(SampleGenerator):
         if len(self.samples) == 0:
             raise StopIteration()
 
+        print(self.samples)
         (safe_samples, bad_samples) = self.samples.split(self.threshold)
         delta = self._min_dist()
         new_points = []
