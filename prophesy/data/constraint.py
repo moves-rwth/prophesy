@@ -5,7 +5,7 @@ from shapely.geometry.polygon import LinearRing, Polygon, orient
 from pycarl import Polynomial, Rational
 
 def parse_constraint(constraint_str):
-    return pycarl.parse(constraint_str)
+    return pycarl.parse.parse(constraint_str)
 
 def region_from_hyperrectangle(hyperrectangle, variables):
     """Given HyperRectangle and VariableOrder, compute constraints

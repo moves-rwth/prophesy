@@ -1,16 +1,19 @@
+from prophesy import config
+from prophesy.data.samples import SampleDict
+
 class SampleGenerator(object):
-    """Class to refine a given set of samples
+    """Class to generate samples given a sampler. SampleGenerator uses the
+    iteration interface to do so.
     """
-    def __init__(self, sampler, intervals):
+
+    def __init__(self, sampler, variables, samples):
         """
-        @param Sampler used to generate new samples
-        @param intervals iterable of Interval in between which to sample
+        @param sampler Sampler used to generate new samples
+        @param variables VariableOrder
+        @param samples SampleDict pre-existing samples, which is copied.
+            None is allowed
         """
         self.sampler = sampler
-        self.intervals = intervals
-
-    def refine_samples(self):
-        """Based on current set of known samples, generate a refinement which
-        samples closer to the estimated threshold boundaries.
-        """
-        raise NotImplemented()
+        self.variables = variables
+        self.samples = samples.copy() if samples else SampleDict(self.variables)
+        self.distance = config.DISTANCE

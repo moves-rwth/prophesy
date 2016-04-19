@@ -91,7 +91,7 @@ class HyperRectangle(object):
         return " x ".join([str(i) for i in self.intervals])
 
     def __repr__(self):
-        return "HyperRectangle({})".format(", ".join(map(str,self.intervals)))
+        return "HyperRectangle({})".format(", ".join(map(repr,self.intervals)))
 
     def __eq__(self, other):
         for i, j in zip(self.intervals, other.intervals):

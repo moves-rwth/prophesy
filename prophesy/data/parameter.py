@@ -20,6 +20,9 @@ class Parameter(object):
     def __str__(self):
         return "{} {}".format(self.variable, self.interval)
 
+    def __repr__(self):
+        return "Parameter({!r}, {!r})".format(self.variable, self.interval)
+
 class ParameterOrder(list):
     """Class to represent on ordered list of parameters
     """

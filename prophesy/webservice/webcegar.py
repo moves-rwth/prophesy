@@ -2,6 +2,7 @@
 
 import os
 import sys
+from prophesy.modelcheckers.prism import PrismModelChecker
 
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +40,6 @@ from smt.isat import IsatSolver
 from smt.Z3cli_solver import Z3CliSolver
 from sampling.sampler_ratfunc import RatFuncSampling
 
-from sampling.sampler_prism import McSampling
 from sampling.sampling_uniform import UniformSampleGenerator
 from sampling.sampling_linear import LinearRefinement
 from sampling.sampling_delaunay import DelaunayRefinement
@@ -87,7 +87,9 @@ def getSampler(satname, result):
         from sampling.sampler_carl import CarlSampling
         return CarlSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
-        return McSampling(result.prism_file, result.pctl_file)
+        mc = PrismModelChecker()
+        mc.load_model_from_prismfile(result.prism_file)
+        return mc
     else:
         raise RuntimeError("Unknown sampler requested")
 

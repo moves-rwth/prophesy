@@ -37,7 +37,7 @@ def read_pstorm_result(location):
     # Build parameters
     #print("Reading parameters...")
     parameters = ParameterOrder()
-    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
+    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(",")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
@@ -46,6 +46,7 @@ def read_pstorm_result(location):
                 bound = interval.Interval(0.0, interval.BoundType.open,
                     1.0, interval.BoundType.open)
             else:
+                print( name_and_info)
                 bound = interval.string_to_interval(name_and_info[1], Rational)
             parameters.append(Parameter(var, bound))
 

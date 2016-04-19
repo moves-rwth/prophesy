@@ -54,8 +54,8 @@ def read_samples_file(path):
 
     return variables, threshold, samples
 
-def write_samples_file(parameters, samples_dict, path):
+def write_samples_file(variables, samples_dict, path):
     with open(path, "w") as f:
-        f.write(" ".join(parameters) + "\n")
+        f.write(" ".join(map(str, variables)) + "\n")
         for k, v in samples_dict.items():
             f.write("\t".join([("%.4f" % c) for c in k]) + "\t\t" + "%.4f" % v + "\n")

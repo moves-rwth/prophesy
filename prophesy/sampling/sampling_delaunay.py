@@ -3,16 +3,15 @@ from prophesy.sampling.sample_generator import SampleGenerator
 from prophesy.sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.point import Point
 from shapely.geometry.linestring import LineString
-from prophesy import config
 from prophesy.data.samples import Sample, weighed_interpolation
 from pycarl import Rational
 
 class DelaunayRefinement(SampleGenerator):
-    def __init__(self, sampler, intervals, samples, threshold, distance=config.DISTANCE):
-        super().__init__(sampler, intervals)
-        self.points = self._make_points(samples)
+    def __init__(self, sampler, variables, samples, threshold):
+        super().__init__(sampler, variables, samples)
+        assert len(variables) == 2, "DelaunayRefinement only works for the 2D case"
+        self.points = list(samples.keys())
         self.threshold = threshold
-        self.distance = distance
 
     def _make_points(self, samples):
         return [Point(x, y, v) for (x,y), v in samples.items()]

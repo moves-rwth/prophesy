@@ -187,6 +187,7 @@ DEPENDENCIES = "installed_deps"
 # Smallest discernable difference for intervals (used for strict bounds)
 INTERVAL_EPSILON = 0.01
 PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
+# Minimum distance between points to allow further sampling
 DISTANCE = float(configuration.get(SAMPLING, "distance"))
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]

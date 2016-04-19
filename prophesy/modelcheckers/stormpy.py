@@ -2,6 +2,7 @@ from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
 from modelcheckers.pmc import BisimulationType
 from config import configuration
 from exceptions.module_error import ModuleError
+from prophesy.sampling.sampler import Sampler
 if not configuration.is_module_available("stormpy"):
     raise ModuleError("Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 else:
@@ -9,7 +10,7 @@ else:
     import stormpy.logic
     import stormpy.core
 
-class StormpyModelChecker(ParametricProbabilisticModelChecker):
+class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def __init__(self):
         self.bisimulation = BisimulationType.strong
         self.pctl_formula = None
@@ -36,9 +37,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def set_bisimulation(self, BisimulationType): raise NotImplementedError
 
-    def uniform_sample(self, ranges): raise NotImplementedError
-
-    def sample(self, samplePoints): raise NotImplementedError
+    def sample(self, samplepoints):
+        raise NotImplementedError
 
     def get_rational_function(self):
         model = None

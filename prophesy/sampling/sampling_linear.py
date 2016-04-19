@@ -1,21 +1,20 @@
 import math
 from prophesy.sampling.sample_generator import SampleGenerator
 from shapely.geometry.point import Point
-from prophesy.data.samples import split_samples, weighed_interpolation
-from prophesy import config
-
+from prophesy.data.samples import weighed_interpolation
 
 class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means
     of linear interpolation to approximate the threshold"""
-    def __init__(self, sampler, intervals, samples, threshold):
-        super().__init__(sampler, intervals)
-        self.samples = samples.copy()
+    def __init__(self, sampler, variables, samples, threshold):
+        super().__init__(sampler, variables, samples)
         self.threshold = threshold
+
         self.first = True
 
     def _min_dist(self):
         """Max. distance between two points to be considered"""
+        #TODO: What is going on here, hrmmm
         samplenr = math.sqrt(len(self.samples))
         if samplenr <= 1:
             return 0

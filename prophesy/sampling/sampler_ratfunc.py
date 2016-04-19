@@ -16,7 +16,7 @@ class RatFuncSampling(Sampler):
 
     def perform_sampling(self, samplepoints):
         """
-        @param samplepoints iterable of SamplePoint (pref.SamplePoints)
+        @param samplepoints iterable of SamplePoint (preferably SamplePoints)
         @return SampleDict
         """
         samples = SampleDict(self.variables)

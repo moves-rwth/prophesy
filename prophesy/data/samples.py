@@ -170,6 +170,12 @@ class SampleDict(OrderedDict):
             sorted_dict[pt] = v
         return sorted_dict
 
+    def copy(self):
+        copy_dict = SampleDict(self.variables)
+        for k, v in self.items():
+            copy_dict[k] = v
+        return copy_dict
+
 def split_samples(samples, threshold):
     """
     @see SampleDict.split

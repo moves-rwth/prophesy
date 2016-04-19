@@ -68,12 +68,12 @@ if __name__ == "__main__":
     sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
     # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
-    initial_samples = uniform_samples(sampling_interface, [x[1] for x in result.parameters], cmdargs.samplingnr)
+    initial_samples = uniform_samples(sampling_interface, result.parameters, cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
-    refined_samples = refine_samples(sampling_interface, [x[1] for x in result.parameters], initial_samples, cmdargs.iterations, cmdargs.threshold)
+    refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations, cmdargs.threshold)
 
-    write_samples_file([p[0].name for p in result.parameters], refined_samples, cmdargs.samples_file)
+    write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
     open_file(plot_path)

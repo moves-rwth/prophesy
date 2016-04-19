@@ -25,6 +25,10 @@ class Point:
             recommended pycarl.Rational
         """
         self.coordinates = tuple(args)
+        #TODO: backwards compatibility for Delaunay
+        self.x = tuple[0]
+        self.y = tuple[1]
+        self.z = tuple[2]
 
     def distance(self, other):
         res = 0.0
