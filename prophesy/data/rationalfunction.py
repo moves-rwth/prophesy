@@ -21,20 +21,11 @@ class RationalFunction:
 
     def eval(self, evaluation):
         """
-        @param: evaluation Dictionary mapping pycarl.Variable to pycarl.Rational
+        @param: evaluation SamplePoint
         @return pycarl.Rational
         """
         assert set(evaluation.keys()) == self.variables, "Evaluating a wrong bunch of variables"
         return self.rational_func.evaluate(evaluation)
-
-    def evalf(self, evaluation):
-        """
-        @param: evaluation Dictionary mapping pycarl.Variable to pycarl.Rational
-        @return float
-        @see eval()
-        """
-        rational = self.eval(evaluation)
-        return float(rational)
 
     def __str__(self):
         return str(self.rational_func)

@@ -4,24 +4,21 @@ import tempfile
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
-from regions.region_checker import RegionCheckResult
+from prophesy.regions.region_checker import RegionCheckResult
 
 from numpy import array
-from shapely.geometry.polygon import Polygon, orient, LinearRing
-from sympy.polys.polytools import Poly
 import shapely.geometry
 
-from data.hyperrectangle import HyperRectangle
-from data.point import Point
+from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.point import Point
 
 # needed for pdf merging for debugging
-import config
+from prophesy import config
 
-import smt.smt
-from output.plot import Plot
-from util import ensure_dir_exists
-from config import configuration
-from exceptions.module_error import ModuleError
+from prophesy.output.plot import Plot
+from prophesy.util import ensure_dir_exists
+from prophesy.config import configuration
+from prophesy.exceptions.module_error import ModuleError
 
 class Direction(Enum):
     """The four intercardinal directions ('North-East' etc.) as boolean
@@ -36,6 +33,11 @@ class Direction(Enum):
 
     @classmethod
     def from_bool(cls, pos_x, pos_y):
+        """
+        @param pos_x Boolean indicating of x axis should be positive or negative
+        @param pos_y Boolean indicating of y axis should be positive or negative
+        @return Direction
+        """
         if pos_x:
             if pos_y:
                 return cls.NE
@@ -56,9 +58,17 @@ class Direction(Enum):
 
 
 class Anchor:
-    def __init__(self, pos, dir, safe):
+    """Represents an 'Anchor' point, used to define certain locations useful,
+    for instance to iniate growing rectangles from
+    """
+    def __init__(self, pos, direction, safe):
+        """
+        @param pos Point
+        @param direction Direction
+        @param safe Boolean to indiavte if Anchor is considered in a safe area
+        """
         self.pos = pos
-        self.dir = dir
+        self.dir = direction
         self.safe = safe
 
     def __hash__(self, *args, **kwargs):

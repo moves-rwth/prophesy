@@ -1,13 +1,14 @@
 import os
 import subprocess
 import tempfile
-from collections import OrderedDict
 
-from config import configuration
-import config
-from modelcheckers.ppmc import ParametricProbabilisticModelChecker
-from input.samplefile import read_samples_file
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists, write_string_to_tmpfile
+from prophesy.config import configuration
+from prophesy import config
+from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from prophesy.input.samplefile import read_samples_file
+from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
+from prophesy.data.samples import SampleDict
+from pycarl import Rational
 
 
 class PrismModelChecker(ParametricProbabilisticModelChecker):
@@ -46,8 +47,6 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
         pctlpath = write_string_to_tmpfile(self.pctlformula)
 
-
-
         args = [self.location, self.prismfile.location, pctlpath,
                 "-const", const_values_string,
                 "-exportresults", resultpath]
@@ -59,7 +58,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
         return samples
 
-    def sample(self,samplepoints):
+    def sample(self, samplepoints):
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
 
@@ -68,8 +67,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
         pctlpath = write_string_to_tmpfile(self.pctlformula)
 
-        samples = {}
+        samples = SampleDict(self.prismfile.parameters)
         for pt in samplepoints:
+            pt = pt.get_point(self.prismfile.parameters)
             const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(self.prismfile.parameters, pt)])
             args = [self.location, self.prismfile.location, pctlpath,
                     "-const", const_values_string,
@@ -77,8 +77,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             run_tool(args)
             with open(resultpath) as f:
                 f.readline()
-                sample_value = float(f.readline())
+                sample_value = Rational(f.readline())
             samples[pt] = sample_value
         os.unlink(resultpath)
         os.unlink(pctlpath)
-        return OrderedDict(sorted(samples))
+        return samples

@@ -1,10 +1,9 @@
 import re
 from sympy import Symbol, fraction
 from sympy.polys import Poly
-from data.constraint import Constraint
-from data.rationalfunction import RationalFunction
-import data.interval
-from config import configuration
+from prophesy.data.rationalfunction import RationalFunction
+from prophesy.data import interval
+from prophesy.config import configuration
 from exceptions.module_error import ModuleError
 
 class ParametricResult(object):
@@ -36,9 +35,9 @@ def read_pstorm_result(location):
         if parameter_string.strip():
             name_and_info = parameter_string.split()
             if len(name_and_info) == 1:
-                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.Interval(0.0, data.interval.BoundType.open, 1.0, data.interval.BoundType.open)]))
+                parameters.append(tuple([Symbol(name_and_info[0].strip()), interval.Interval(0.0, interval.BoundType.open, 1.0, interval.BoundType.open)]))
             else:
-                parameters.append(tuple([Symbol(name_and_info[0].strip()), data.interval.string_to_interval(name_and_info[1], float)]))
+                parameters.append(tuple([Symbol(name_and_info[0].strip()), interval.string_to_interval(name_and_info[1], float)]))
 
     # Build well-defined constraints
     #print("Reading constraints...")

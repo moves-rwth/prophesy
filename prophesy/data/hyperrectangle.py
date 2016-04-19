@@ -11,8 +11,7 @@ class HyperRectangle(object):
 
     def __init__(self, *intervals):
         """
-        :param intervals: An iterable with intervals for each dimension.
-        :return:
+        :param intervals: Multiple Intervals as arguments
         """
         self.intervals = tuple(intervals)
 
@@ -20,16 +19,15 @@ class HyperRectangle(object):
     def from_extremal_points(cls, lowerpoint, upperpoint, boundtype ):
         """
         :param lowerpoint: A point corresponding to the lower boundary
-        :param upperpoint:
-        :return:
+        :param upperpoint: A point corresponding to the upper boundary
+        :param boundtype: BoundType to use as bounds for the resulting
+            HyperRectangle
+        :return HyperRectangle
         """
         return cls.__init__([Interval(l,boundtype,r,boundtype) for l,r in zip(lowerpoint, upperpoint)])
 
     def __str__(self):
         return " x ".join([str(i) for i in self.intervals])
-
-    def __repr__(self):
-        return self.__str__()
 
     def __eq__(self, other):
         for i, j in zip(self.intervals, other.intervals):
@@ -96,12 +94,3 @@ class HyperRectangle(object):
         :return:
         """
         return HyperRectangle([i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
-
-
-
-
-
-
-
-
-

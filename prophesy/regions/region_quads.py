@@ -1,6 +1,6 @@
-from regions.region_generation import RegionGenerator
-from data.point import Point
-from data.hyperrectangle import HyperRectangle
+from prophesy.regions.region_generation import RegionGenerator
+from prophesy.data.point import Point
+from prophesy.data.hyperrectangle import HyperRectangle
 
 
 class QuadAndSamples:
@@ -21,7 +21,6 @@ class ConstraintQuads(RegionGenerator):
         quadsamples = []
 
         for pt, v in samples.items():
-            pt = Point(pt)
             if not quad.is_inside(pt):
                 continue
             safe = v >= self.threshold

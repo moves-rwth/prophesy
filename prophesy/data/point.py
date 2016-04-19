@@ -5,15 +5,25 @@ def _sqrt_approx(i):
     :param i: a positive number
     :return: the approximate square root of i
     """
+    orig_type = i.type
+    if not isinstance(i, (int, float)):
+        # if i is a rational number for which the sqrt might be not a
+        # ratonal number, then use some approx.
+        i = float(i)
+
     #TODO this might be much closer than necessary here.
-    return math.sqrt(i)
-    #TODO if i is a rational number for which the sqrt might be not a rat. number, then use some approx.
+    float_sqrt = math.sqrt(i)
+    return orig_type(float_sqrt)
 
 class Point:
     """
     A n-dimensional point class.
     """
     def __init__(self, *args):
+        """
+        @param args Numerical values to represent the point. Any numerical type,
+            recommended pycarl.Rational
+        """
         self.coordinates = tuple(*args)
 
     def distance(self, other):
@@ -31,5 +41,11 @@ class Point:
     def __str__(self):
         return "(" + ",".join([str(i) for i in self.coordinates]) + ")"
 
-    def __repr__(self):
-        return str(self)
+    def __iter__(self):
+        return iter(self.coordinates)
+
+    def __len__(self):
+        return len(self.coordinates)
+
+    def __getitem__(self, key):
+        return self.coordinates[key]

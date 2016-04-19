@@ -1,5 +1,6 @@
 from pycarl import Rational, Variable, Monomial, Term, Polynomial, \
-    FactorizedPolynomial, RationalFunction, FactorizedRationalFunction, Formula
+    FactorizedPolynomial, RationalFunction, FactorizedRationalFunction
+from pycarl.formula import Formula
 
 def ratfunc_to_smtlib(func):
     """Walks throughthe argument and returns it as SMTLib constraint

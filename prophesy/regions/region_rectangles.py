@@ -1,9 +1,9 @@
-from data.samples import split_samples
-from regions.region_generation import RegionGenerator, Anchor, Direction
-from shapely.geometry import box, Point
+from prophesy.data.samples import split_samples, SamplePoint
+from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
+from shapely.geometry import box
 from shapely import affinity
-import config
-
+from prophesy import config
+from prophesy.data.point import Point
 
 class ConstraintRectangles(RegionGenerator):
 
@@ -11,13 +11,14 @@ class ConstraintRectangles(RegionGenerator):
         RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.anchor_points = []
-        for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
-            value = self.ratfunc.eval({x: y for x, y in zip(self._symbols(), pt)}).evalf()
+        for pt, direction in [(Point(0, 0), Direction.NE), (Point(1, 0), Direction.NW), (Point(1, 1), Direction.SW), (Point(0, 1), Direction.SE)]:
+            sp = SamplePoint.from_point(pt, self.parameters)
+            value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True
             else:
                 pt_safe = False
-            self.anchor_points.append(Anchor(Point(pt), dir, pt_safe))
+            self.anchor_points.append(Anchor(Point(pt), direction, pt_safe))
 
         self.best_anchor = None
         self.best_rectangle = None

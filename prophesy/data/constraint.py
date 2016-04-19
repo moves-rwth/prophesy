@@ -1,113 +1,73 @@
-#
-# -*- coding: utf-8 -*-
-import sympy
-from sympy.polys.polytools import Poly
-from sympy.simplify.simplify import fraction
-from prophesy.smt.polynomial_to_smt2 import smt2strPoly
-from sympy.core.sympify import sympify
+import pycarl.parse
+from pycarl.formula.formula import Relation, Constraint
+from prophesy.data.interval import BoundType
+from shapely.geometry.polygon import LinearRing, Polygon, orient
+from pycarl import Polynomial, Rational
 
-##################################################################################################
-# Class representing a polynomial constraint.
-# @author: Ulrich Loup
-# @since: 2010-09-24
-# @version: 2014-03-12
-##################################################################################################
+def parse_constraint(constraint_str):
+    return pycarl.parse(constraint_str)
 
-
-class Constraint(object):
-    """Represents a polynomial constraint pol rel 0.
-         @param pol polynomials (Poly)
-         @param rel (str)
-         @param syms main variables of this constraint (list<Symbol>)
+def region_from_hyperrectangle(hyperrectangle, variables):
+    """Given HyperRectangle and VariableOrder, compute constraints
+    @param hyperrectangle HyperRectangle
+    @param variables VariableOrder
+    @return pycarl.Formula or pycarl.Constraint
     """
-    RELATIONS = ["<", ">", "=", ">=", "<=", "<>"]
+    constraint = None
+    for variable, interval in zip(variables, hyperrectangle.intervals):
+        lbound_relation = Relation.GEQ if interval.left_bound_type() == BoundType.closed else Relation.GREATER
+        lbound = Constraint(variable-interval.left_bound(), lbound_relation)
+        if constraint is None:
+            constraint = lbound
+        else:
+            constraint = constraint & lbound
+        rbound_relation = Relation.LEQ if interval.right_bound() == BoundType.closed else Relation.LESS
+        rbound = Constraint(variable-interval.right_bound(), rbound_relation)
+        constraint = constraint & rbound
+    return constraint
 
-    def __init__(self, pol, rel, syms):
-        assert isinstance(pol, Poly)
-        assert isinstance(syms, list)
-        assert self.RELATIONS.__contains__(rel)
-        self.polynomial = pol.as_poly(*syms)
-        self.relation = rel
-        self.symbols = syms
+def region_from_polygon(polygon, variables):
+        """Compute regions from polygon (Polygon, LineString or LinearRing)
+        Area will be considered at the rhs (ccw) of line segments
+        @param polygon Polygon, LineString or LinearRing, must be convex
+        @return pycarl.Formula or pycarl.Constraint
+        """
+        if isinstance(polygon, LinearRing):
+            # Convert to polygon so it can be oriented
+            polygon = Polygon(polygon)
 
-    @classmethod
-    def __from_str__(cls, string, symbols):
-        assert isinstance(string, str)
-        assert isinstance(symbols, set) or isinstance(symbols, list)
-        symbols = list(symbols)
-        # Sort in reverse order of length, matching longest symbol first
-        rels = sorted(Constraint.RELATIONS, key=len, reverse=True)
-        for rel in rels:
-            tokens = string.split(rel)
-            if len(tokens) == 2:
-                (nom, den) = fraction(tokens[0])
-                const = sympify(tokens[1])
-                return cls(Poly(nom - const * den, symbols), rel, symbols)
-        assert False, "Unable to parse constraint string {}".format(string)
+        if isinstance(polygon, Polygon):
+            assert len(list(polygon.interiors)) == 0
+            polygon = orient(polygon, sign=1.0)
+            polygon = polygon.exterior
+        points = list(polygon.coords)
+        assert len(points) >= 2
 
-    def __eq__(self, other):
-        if not isinstance(other, Constraint):
-            return False
-        return str(self) == str(other)
+        constraint = None
+        # Calculate half-plane for each pair of points
+        # http://math.stackexchange.com/questions/82151/find-the-equation-of-the-plane-passing-through-a-point-and-a-vector-orthogonal
+        for p1, p2 in zip(points[:-1], points[1:]):
+            # Get vector direction (parallel to hyperplane)
+            dvec = tuple([c2 - c1 for c1, c2 in zip(p1, p2)])
+            # Make vector orthogonal to hyperplane
+            # NOTE: rotate clockwise
+            # TODO: 2D only
+            dvec = (dvec[1], -dvec[0])
 
-    def __str__(self):
-        return str(self.polynomial.as_expr()) + " " + self.relation + " 0"
+            # Constant is dot-product of directional vector and origin
+            c = sum([c1 * c2 for c1, c2 in zip(dvec, p1)])
+            # Construct polynomial for line
+            poly = Polynomial(-Rational(c))
+            for variable, coefficient in zip(variables, dvec):
+                if coefficient != 0:
+                    poly = Polynomial(poly + variable * coefficient)
 
-    def __repr__(self):
-        return str(self.polynomial) + " " + self.relation + " 0"
+            # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
+            new_constraint = Constraint(poly, Relation.LEQ)
+            if constraint is None:
+                constraint = new_constraint
+            else:
+                constraint = constraint & new_constraint
 
-    def __hash__(self):  # exclude identical constraints
-        return hash(str(self))
-
-    def to_smt2_string(self):
-        return "(" + self.relation + " " + smt2strPoly(self.polynomial, self.symbols) + " 0)"
-
-    def subs(self, substitutions):
-        """ Performs the given list of substitutions on the polynomial of the constraint and
-        adds all variables given by the substitutions to the new constraint. """
-        #self.symbols += [substitution[0] for substitution in substitutions if not substitution[0] in self.symbols]
-        constraint = Constraint(self.polynomial.subs(substitutions), self.relation, self.symbols)
+        # print("constraint: {0}".format(constraint))
         return constraint
-
-    def switch_variable_names(self, new_symbol_names):
-        """ Switches the names of the current variables by the names given,
-        where new_symbol_names needs to have the same length as the current list of variables. """
-        assert len(new_symbol_names) == len(self.symbols)
-        new_symbols = sympy.symbols(new_symbol_names)
-        switch_list = zip(self.symbols, new_symbols)
-        self.symbols = new_symbols
-        self.polynomial = Poly(self.polynomial.subs(switch_list, simultaneous=True), self.symbols)
-        return self
-
-
-    def __and__(self, other):
-        return ComplexConstraint([self, other], "and")
-
-    def __or__(self, other):
-        return ComplexConstraint([self, other], "or")
-
-
-class ComplexConstraint(object):
-    def __init__(self, constraints, operator):
-        self.constraints = constraints
-        self.operator = operator
-
-    def __and__(self, other):
-        if self.operator == "and":
-            return ComplexConstraint(self.constraints + [other], "and")
-        else:
-            return ComplexConstraint([self, other], "and")
-
-    def __or__(self, other):
-        if self.operator == "or":
-            return ComplexConstraint(self.constraints + [other], "or")
-        else:
-            return ComplexConstraint([self, other], "or")
-
-    def to_smt2_string(self):
-        import operator
-        to_str = operator.methodcaller('to_smt2_string')
-        return "(" + self.operator + " ".join(map(to_str, self.constraints)) + " )"
-    
-    def __str__(self):
-        return "( " + (" " + self.operator + " ").join(map(str, self.constraints)) + " )"
