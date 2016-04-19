@@ -186,6 +186,12 @@ class SampleDict(OrderedDict):
             copy_dict[k] = v
         return copy_dict
 
+    def samples(self):
+        """Returns Sample instances, as generator
+        """
+        for pt, val in self.items():
+            yield Sample(pt, val, self.variables)
+
 def split_samples(samples, threshold):
     """
     @see SampleDict.split
@@ -223,4 +229,5 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
 
     weight += offset
 
-    return Point(*[d*weight + pt for d, pt in zip(deltas, sample1.pt)])
+    #TODO: Cast tofloat, otherwise performance tanks. Need to figure out why
+    return Point(*[float(d*weight) + pt for d, pt in zip(deltas, sample1.pt)])

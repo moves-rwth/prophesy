@@ -1,6 +1,6 @@
 import math
 from prophesy.sampling.sample_generator import SampleGenerator
-from prophesy.data.samples import weighed_interpolation
+from prophesy.data.samples import weighed_interpolation, SamplePoints
 from prophesy.data.point import Point
 
 class LinearRefinement(SampleGenerator):
@@ -28,7 +28,7 @@ class LinearRefinement(SampleGenerator):
         sample point."""
         i = 0
         for sample_pt in self.samples.keys():
-            d = point.distance(Point(sample_pt))
+            d = point.distance(sample_pt)
             if d < 0.01:
                 return True
             elif d < 0.05:
@@ -51,7 +51,6 @@ class LinearRefinement(SampleGenerator):
         if len(self.samples) == 0:
             raise StopIteration()
 
-        print(self.samples)
         (safe_samples, bad_samples) = self.samples.split(self.threshold)
         delta = self._min_dist()
         new_points = []
@@ -63,18 +62,20 @@ class LinearRefinement(SampleGenerator):
         else:
             fudge = -0.01
 
-        for safe_sample in safe_samples.items():
-            for bad_sample in bad_samples.items():
-                dist = safe_sample.distance(bad_sample)
+        for safe_sample in safe_samples.samples():
+            for bad_sample in bad_samples.samples():
+                dist = safe_sample.pt.distance(bad_sample.pt)
                 if 0.06 < dist < delta:
                     point = weighed_interpolation(safe_sample, bad_sample, self.threshold, fudge)
-                    point = Point(point)
                     if point is not None and not self._is_too_close(point):
-                        new_points.append(list(point.coords)[0])
+                        new_points.append(point)
 
         if not new_points:
             raise StopIteration()
 
-        new_samples = self.sampler.perform_sampling(new_points)
+        sample_points = SamplePoints(new_points, self.variables)
+
+        new_samples = self.sampler.perform_sampling(sample_points)
+
         self.samples.update(new_samples)
         return new_samples
