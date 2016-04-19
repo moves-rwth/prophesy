@@ -4,7 +4,6 @@ class BoundType(Enum):
     open = 0
     closed = 1
 
-
 def string_to_interval(input, internal_parse_func):
     assert isinstance(input, str)
     input = input.strip()
@@ -100,6 +99,10 @@ class Interval:
 
     def __str__(self):
         return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
+
+    def __repr__(self):
+        return "Interval({!r}, {!r}, {!r}, {!r})".format(self._left_value,
+            self._left_bound_type, self._right_value, self._right_bound_type)
 
     def __eq__(self, other):
         assert isinstance(other, Interval)

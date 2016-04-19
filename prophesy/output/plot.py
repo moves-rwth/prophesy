@@ -5,7 +5,7 @@ from matplotlib import patches
 from matplotlib.colors import ColorConverter
 from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
-from data.hyperrectangle import  HyperRectangle
+from prophesy.data.hyperrectangle import  HyperRectangle
 
 import numpy as np
 
@@ -90,10 +90,10 @@ class Plot(object):
             ax1.scatter(x_coords, y_coords, marker='.', c='blue')
 
 
-            ax1.set_xlim([parameters[0][1].left_bound(), parameters[0][1].right_bound()])
-            ax1.set_ylim([parameters[1][1].left_bound(), parameters[1][1].right_bound()])
-            ax1.set_xlabel(str(parameters[0][0]))
-            ax1.set_ylabel(str(parameters[1][0]))
+            ax1.set_xlim([parameters[0].interval.left_bound(), parameters[0].interval.right_bound()])
+            ax1.set_ylim([parameters[1].interval.left_bound(), parameters[1].interval.right_bound()])
+            ax1.set_xlabel(str(parameters[0].variable))
+            ax1.set_ylabel(str(parameters[1].variable))
             if path_to_save is not None:
                 pyplot.savefig(path_to_save, format="PDF")
             if display:

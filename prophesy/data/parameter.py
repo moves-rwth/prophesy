@@ -38,3 +38,6 @@ class ParameterOrder(list):
         @return list of Interval
         """
         return [p.interval for p in self]
+
+    def __str__(self):
+        return "[{}]".format(", ".join(map(str, self)))
