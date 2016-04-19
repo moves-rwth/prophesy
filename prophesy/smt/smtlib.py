@@ -2,7 +2,8 @@ import subprocess
 import functools
 from config import TOOLNAME
 from smt.smt import SMTSolver, Answer, VariableDomain
-from pycarl.formula.formula import Formula
+from pycarl.formula.formula import Formula, FormulaType, Constraint
+from pycarl.core import Polynomial
 
 
 def _smtfile_header():
@@ -17,9 +18,12 @@ def _smtfile_header():
 
 def constraint_to_smt2(constraint):
     #TODO: Use carl built-in printer
-    return str(constraint)
+    #return str(constraint)
     #TODO: segfault
-    return str(Formula(constraint))
+    #assert isinstance(constraint, (Constraint, Formula))
+    if isinstance(constraint, Constraint):
+        constraint = constraint & Constraint(True)
+    return str(constraint)
 
 class SmtlibSolver(SMTSolver):
     def __init__(self, location, memout = 4000, timeout = 100):
