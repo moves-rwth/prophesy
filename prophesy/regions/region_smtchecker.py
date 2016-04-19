@@ -1,12 +1,12 @@
-from regions.region_checker import RegionChecker, RegionCheckResult
+from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from shapely.geometry.polygon import Polygon, orient, LinearRing
 from sympy.polys.polytools import Poly
 
 import smt.smt
 
-from data.hyperrectangle import HyperRectangle
-from data.interval import Interval, BoundType
-from data.constraint import Constraint, ComplexConstraint
+from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.interval import Interval, BoundType
+from prophesy.data.constraint import Constraint, ComplexConstraint
 
 import time
 
