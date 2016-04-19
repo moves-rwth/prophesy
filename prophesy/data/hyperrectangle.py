@@ -52,7 +52,7 @@ class HyperRectangle(object):
 
     def np_vertices(self):
         verts = self.vertices()
-        return np.array([np.array(v.coordinates) for v in verts])
+        return np.array([np.array(v) for v in verts])
 
     #def vertices_and_inward_dir(self):
 
@@ -79,12 +79,12 @@ class HyperRectangle(object):
             s = s * interv.width()
         return s
 
-    def is_inside(self, point):
+    def contains(self, point):
         """
         :param point: A Point
         :return: True if inside, False otherwise
         """
-        for p, interv  in zip(point.coordinates, self.intervals):
+        for p, interv in zip(point, self.intervals):
             if not interv.contains(p): return False
         return True
 

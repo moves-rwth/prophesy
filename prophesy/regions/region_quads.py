@@ -21,7 +21,7 @@ class ConstraintQuads(RegionGenerator):
         quadsamples = []
 
         for pt, v in samples.items():
-            if not quad.is_inside(pt):
+            if not quad.contains(pt):
                 continue
             safe = v >= self.threshold
             quadsamples.append((pt, safe))
@@ -67,7 +67,7 @@ class ConstraintQuads(RegionGenerator):
         for newquad in newelems:
             newsamples = []
             for pt, safe in samples:
-                if not newquad.is_inside(pt):
+                if not newquad.contains(pt):
                     continue
                 newsamples.append((pt, safe))
             self.check_quad(newquad, newsamples, depth + 1)
@@ -85,7 +85,7 @@ class ConstraintQuads(RegionGenerator):
         for newquad in newelems:
             newsamples = []
             for pt, safe in quadelem.samples:
-                if not newquad.is_inside(pt):
+                if not newquad.contains(pt):
                     continue
                 newsamples.append((pt, safe))
             self.quads.insert(0, QuadAndSamples(newquad, newsamples))
