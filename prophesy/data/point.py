@@ -24,7 +24,7 @@ class Point:
         @param args Numerical values to represent the point. Any numerical type,
             recommended pycarl.Rational
         """
-        self.coordinates = tuple(*args)
+        self.coordinates = tuple(args)
 
     def distance(self, other):
         res = 0.0
@@ -49,3 +49,12 @@ class Point:
 
     def __getitem__(self, key):
         return self.coordinates[key]
+
+    def __eq__(self, other):
+        return isinstance(other, Point) and self.coordinates == other.coordinates
+
+    def __hash__(self):
+        return hash(self.coordinates)
+
+    def __repr__(self):
+        return "Point({})".format(self.coordinates)

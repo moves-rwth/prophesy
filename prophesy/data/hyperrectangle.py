@@ -26,14 +26,6 @@ class HyperRectangle(object):
         """
         return cls.__init__([Interval(l,boundtype,r,boundtype) for l,r in zip(lowerpoint, upperpoint)])
 
-    def __str__(self):
-        return " x ".join([str(i) for i in self.intervals])
-
-    def __eq__(self, other):
-        for i, j in zip(self.intervals, other.intervals):
-            if not i == j: return False
-        return True
-
     def dimension(self):
         return len(self.intervals)
 
@@ -47,7 +39,7 @@ class HyperRectangle(object):
         for i in range(0,pow(2,self.dimension()), 1):
             num_bits = self.dimension()
             bits = [(i >> bit) & 1 for bit in range(num_bits - 1, -1, -1)]
-            result.append(Point([(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i,x in zip(range(0, self.dimension()), bits)]))
+            result.append(Point(*[(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i,x in zip(range(0, self.dimension()), bits)]))
         return result
 
     def np_vertices(self):
@@ -94,3 +86,26 @@ class HyperRectangle(object):
         :return:
         """
         return HyperRectangle([i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
+
+    def __str__(self):
+        return " x ".join([str(i) for i in self.intervals])
+
+    def __repr__(self):
+        return "HyperRectangle({})".format(", ".join(map(str,self.intervals)))
+
+    def __eq__(self, other):
+        for i, j in zip(self.intervals, other.intervals):
+            if not i == j: return False
+        return True
+
+    def __hash__(self):
+        return hash(self.intervals)
+
+    def __len__(self):
+        return len(self.intervals)
+
+    def __iter__(self):
+        return iter(self.intervals)
+
+    def __getitem__(self, key):
+        return self.intervals[key]
