@@ -7,6 +7,9 @@ from pycarl import Rational
 SAMPLE_ABOVE = Rational(2)
 SAMPLE_BELOW = Rational(-1)
 
+# If a sample is requested that is out of bounds, result is invalid
+SAMPLE_INVALID = None
+
 class SamplePoint(dict):
     """Simple dictionary mapping a pycarl.Variable to pycarl.Rational.
     """
