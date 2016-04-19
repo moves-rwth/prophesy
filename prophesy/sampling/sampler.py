@@ -1,8 +1,8 @@
 import itertools
 from numpy import linspace
-from data.interval import  Interval, BoundType
+from prophesy.data.interval import BoundType
 
-import config
+from prophesy import config
 
 class Sampler(object):
     """Base class for performing sampling of given set of points"""
@@ -12,10 +12,13 @@ class Sampler(object):
     def perform_uniform_sampling(self, intervals, samples_per_dimension):
         """Samples a uniform grid of points.
 
-           Given a list of intervals (i.e., the first and last point;
-           for each dimension, in order) and the number of samples per
-           dimension, a uniformly-spaced grid of points (the cartesian
-           product) is sampled."""
+        Given a list of intervals (i.e., the first and last point;
+        for each dimension, in order) and the number of samples per
+        dimension, a uniformly-spaced grid of points (the cartesian
+        product) is sampled.
+        @param iterable of Interval
+        @param samples_per_dimension int
+        """
         if samples_per_dimension < 1:
             raise RuntimeError("No. of samples per dimension must be >= 2")
 
@@ -31,4 +34,9 @@ class Sampler(object):
         return self.perform_sampling(all_points)
 
     def perform_sampling(self, samplepoints):
+        """Samples the given sample point and returns the result as a
+        SampleDict.
+        @param iterable of SamplePoint or SamplePoints
+        @return SampleDict
+        """
         raise NotImplementedError("Abstract sampling function called")

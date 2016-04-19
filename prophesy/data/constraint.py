@@ -3,7 +3,7 @@
 import sympy
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import fraction
-from smt.polynomial_to_smt2 import smt2strPoly
+from prophesy.smt.polynomial_to_smt2 import smt2strPoly
 from sympy.core.sympify import sympify
 
 ##################################################################################################

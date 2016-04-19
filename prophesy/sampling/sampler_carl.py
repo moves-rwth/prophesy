@@ -1,35 +1,22 @@
-from collections import OrderedDict
-from sampling.sampler import Sampler
-from config import configuration
-
-if not configuration.is_module_available("pycarl"):
-    raise ModuleError("Module pycarl is needed for sampling with CARL")
-else:
-    from pycarl.core import Parser
-    import pycarl
+from prophesy.sampling.sampler import Sampler
+from prophesy.data.samples import SampleDict
 
 class CarlSampling(Sampler):
     """Sample based on CARL library"""
-    def __init__(self, ratfunc, parameters):
+
+    def __init__(self, ratfunc, parameters=None):
+        """
+        @param ratfunc data.RationalFunction
+        """
         super().__init__()
-        self.parameters = parameters
         self.ratfunc = ratfunc
 
-        parser = Parser()
-        self.poly_vars = [pycarl.core.VariablePool.getFreshVariable(str(p), pycarl.core.VariableType.REAL) for p in self.parameters]
-        for v in self.poly_vars:
-            parser.addVariable(v)
-
-        ratfuncstr = str(self.ratfunc).replace("**", "^")
-        print(ratfuncstr)
-        self.poly = parser.rationalFunction(ratfuncstr)
-        print(str(self.poly))
-
     def perform_sampling(self, samplepoints):
-        samples = {}
+        """
+        @see Sampler.perform_sampling
+        """
+        samples = SampleDict()
         for pt in samplepoints:
-            evaldict = {x:pycarl.core.Rational(y) for x,y in zip(self.poly_vars, pt)}
-            value = float((self.poly.evaluate(evaldict)))
+            value = self.ratfunc.rational_func.evaluate(pt)
             samples[pt] = value
-        return OrderedDict(samples.items())
-
+        return samples

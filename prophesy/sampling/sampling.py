@@ -1,9 +1,5 @@
-from sampling.sampling_uniform import UniformSampleGenerator
-from sampling.sampling_delaunay import DelaunayRefinement
-from sampling.sampling_linear import LinearRefinement
-
-import config
-
+from prophesy.sampling.sampling_uniform import UniformSampleGenerator
+from prophesy.sampling.sampling_delaunay import DelaunayRefinement
 
 def uniform_samples(interface, intervals, samples_per_dim):
     """Generate a uniform grid of samples."""

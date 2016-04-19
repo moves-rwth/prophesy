@@ -185,6 +185,7 @@ DEPENDENCIES = "installed_deps"
 
 
 # CONSTANTS
+# Smallest discernable difference for intervals (used for strict bounds)
 INTERVAL_EPSILON = 0.01
 PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
 DISTANCE = float(configuration.get(SAMPLING, "distance"))

@@ -1,5 +1,5 @@
-from sampling.sampler import Sampler
-from data.samples import SampleDict
+from prophesy.sampling.sampler import Sampler
+from prophesy.data.samples import SampleDict
 
 class RatFuncSampling(Sampler):
     """Simple sampler based on pycarl rational function"""

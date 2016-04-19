@@ -1,7 +1,8 @@
 import math
-from sampling.sample_generator import SampleGenerator, weighed_interpolation
-from data.samples import filter_samples, split_samples
+from prophesy.sampling.sample_generator import SampleGenerator
 from shapely.geometry.point import Point
+from prophesy.data.samples import split_samples, weighed_interpolation
+from prophesy import config
 
 
 class LinearRefinement(SampleGenerator):
@@ -43,14 +44,15 @@ class LinearRefinement(SampleGenerator):
 
     def __next__(self):
         if not self.first:
-            self.samples = filter_samples(self.samples, self.threshold)
+            # TODO: what should the distance be?
+            self.samples = self.samples.filter(lambda value: abs(value - self.threshold) > 0.00125)
         else:
             self.first = False
 
         if len(self.samples) == 0:
             raise StopIteration()
 
-        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold)
+        (safe_samples, bad_samples) = self.samples.split(self.threshold)
         delta = self._min_dist()
         new_points = []
 
@@ -61,13 +63,12 @@ class LinearRefinement(SampleGenerator):
         else:
             fudge = -0.01
 
-        for safe_pt, safe_v in safe_samples.items():
-            safe_pt = Point(safe_pt)
-            for bad_pt, bad_v in bad_samples.items():
-                bad_pt = Point(bad_pt)
-                dist = safe_pt.distance(bad_pt)
+        for safe_sample in safe_samples.items():
+            for bad_sample in bad_samples.items():
+                dist = safe_sample.distance(bad_sample)
                 if 0.06 < dist < delta:
-                    point = weighed_interpolation(safe_pt, bad_pt, safe_v, bad_v, self.threshold, fudge)
+                    point = weighed_interpolation(safe_sample, bad_sample, self.threshold, fudge)
+                    point = Point(point)
                     if point is not None and not self._is_too_close(point):
                         new_points.append(list(point.coords)[0])
 

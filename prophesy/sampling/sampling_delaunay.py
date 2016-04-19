@@ -1,9 +1,11 @@
 import numpy
-from sampling.sample_generator import SampleGenerator, weighed_interpolation
-from sampling.voronoi import computeDelaunayTriangulation
+from prophesy.sampling.sample_generator import SampleGenerator
+from prophesy.sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.point import Point
 from shapely.geometry.linestring import LineString
-import config
+from prophesy import config
+from prophesy.data.samples import Sample, weighed_interpolation
+from pycarl import Rational
 
 class DelaunayRefinement(SampleGenerator):
     def __init__(self, sampler, intervals, samples, threshold, distance=config.DISTANCE):
@@ -97,7 +99,11 @@ class DelaunayRefinement(SampleGenerator):
                     continue
                 if p1.distance(p2) < 0.001:
                     continue
-                midpoint = weighed_interpolation(p1, p2, p1.z, p2.z, self.threshold, fudge)
+
+                sample1 = Sample((Rational(p1.x), Rational(p1.y)), Rational(p1.z))
+                sample2 = Sample((Rational(p2.x), Rational(p2.y)), Rational(p2.z))
+
+                midpoint = weighed_interpolation(sample1, sample2, self.threshold, fudge)
                 if midpoint is not None:
                     line.append(midpoint)
             # NOTE: A triangle can only have exactly two such points, or none
