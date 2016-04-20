@@ -837,6 +837,7 @@ def make_app(hostname):
         (r'/samples', Samples),
         (r'/generateSamples', GenerateSamples),
         (r'/regions', Constraints),
+        (r'/constraints', Constraints),
         (r'/generateConstraints', GenerateConstraints),
         (r'/websocket', CegarWebSocket),
         (r'/config/(.*)/(.*)$', Configuration),
