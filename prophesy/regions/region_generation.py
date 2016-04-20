@@ -10,7 +10,6 @@ from numpy import array
 import shapely.geometry
 
 from prophesy.data.hyperrectangle import HyperRectangle
-from prophesy.data.point import Point
 
 # needed for pdf merging for debugging
 from prophesy import config
@@ -50,6 +49,9 @@ class Direction(Enum):
                 return cls.SW
 
     def to_vector(self):
+        """Return vector indicating the direction
+        @return numpy.array, 2D
+        """
         vector = {Direction.NE: array([ 1,  1]),
                   Direction.SE: array([ 1, -1]),
                   Direction.NW: array([-1,  1]),
@@ -63,7 +65,7 @@ class Anchor:
     """
     def __init__(self, pos, direction, safe):
         """
-        @param pos Point
+        @param pos shapely Point
         @param direction Direction
         @param safe Boolean to indiavte if Anchor is considered in a safe area
         """
@@ -85,7 +87,6 @@ class Anchor:
 
     def __str__(self):
         return "({}, {}) {} (Safe: {})".format(self.pos.x, self.pos.y, self.dir, self.safe)
-
 
 class RegionGenerator:
     """A generator for regions. This class acts as an iterable that

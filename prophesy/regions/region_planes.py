@@ -1,13 +1,11 @@
-from prophesy.data.samples import split_samples, SamplePoint
+from prophesy.data.samples import SamplePoint
 from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
 from prophesy import config
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.polygon import Polygon
 import numpy
-from prophesy.data.point import Point
 import shapely.geometry.point
-from prophesy.data.constraint import is_point_fulfilling_constraint,\
-    region_from_polygon
+import prophesy.data.point
 
 #TODO: Effect of this?
 EPS = 0.00125
@@ -24,6 +22,7 @@ class ConstraintPlanes(RegionGenerator):
         self.y_min = parameters[1].interval.left_bound()
         self.y_max = parameters[1].interval.right_bound()
 
+        #TODO: safe/unsafe also stored in base class
         self.safe_planes = []
         self.unsafe_planes = []
 
@@ -31,18 +30,18 @@ class ConstraintPlanes(RegionGenerator):
 
         # Add anchors CCW
         for pt, direction in [
-                (Point(self.x_min, self.y_min), Direction.NE),
-                (Point(self.x_max, self.y_min), Direction.NW),
-                (Point(self.x_max, self.y_max), Direction.SW),
-                (Point(self.x_min, self.y_max), Direction.SE)]:
+                ((self.x_min, self.y_min), Direction.NE),
+                ((self.x_max, self.y_min), Direction.NW),
+                ((self.x_max, self.y_max), Direction.SW),
+                ((self.x_min, self.y_max), Direction.SE)]:
             # initialy safe flag for anchors properly
-            sp = SamplePoint.from_point(pt, self.parameters.get_variable_order())
+            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt), self.parameters.get_variable_order())
             value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True
             else:
                 pt_safe = False
-            self.anchor_points.append(Anchor(pt, direction, pt_safe))
+            self.anchor_points.append(Anchor(shapely.geometry.point.Point(pt), direction, pt_safe))
 
         self.best_orientation_vector = None
         self.best_dpt = 0
@@ -95,18 +94,20 @@ class ConstraintPlanes(RegionGenerator):
     def create_plane(self, anchor, orientation_vector):
         """computes the plane created by splitting along the bounding line
         with the anchor point in it
-        the bounding line is orthogonal to the orientation vector"""
+        the bounding line is orthogonal to the orientation vector
+        @param anchor shapely Point
+        @param orientation_vector 2D numpy.array
+        @return shapely Polygon
+        """
         bbox = box(self.x_min, self.y_min, self.x_max, self.y_max)
-
-        anchor = shapely.geometry.point.Point(*anchor)
 
         orthogonal_anchor = numpy.array(anchor) + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
 
         # Ensure start and end of bounding line are far enough outside of bbox to ensure intersection
         # compute_orthogonal_vector returns CW rotation
-        start = Point(*(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2))
-        end = Point(*(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2))
+        start = shapely.geometry.point.Point(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2)
+        end = shapely.geometry.point.Point(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2)
         bounding_line = LineString([start, end])
 
         intersections = bounding_line.intersection(bbox.boundary)
@@ -133,6 +134,7 @@ class ConstraintPlanes(RegionGenerator):
         and traversing the bounding box until end point is reached
         @param start shapely.geometry.point.Point
         @param end shapely.geometry.point.Point
+        @result shapely Polygon
         """
         result = [(start.x, start.y)]
         corner_current = self.get_next_corner(start)
@@ -149,7 +151,6 @@ class ConstraintPlanes(RegionGenerator):
         @param point shapely.geometry.point.Point
         @return shapely.geometry.point.Point
         """
-
         if point.x == self.x_min:
             if point.y == self.y_min:
                 return shapely.geometry.point.Point(self.x_max, self.y_min)
@@ -175,7 +176,10 @@ class ConstraintPlanes(RegionGenerator):
         return x / numpy.linalg.norm(x)
 
     def is_valid_orientation(self, anchor, direction):
-        """Tests if anchor and direction are valid as new anchor"""
+        """Tests if anchor and direction are valid as new anchor
+        @param anchor shapely Point
+        @param direction 2D numpy.array
+        """
         # Testing if point with small distance from anchor in direction is in unknown area
         offset_coords = numpy.array(anchor) + direction * EPS * 2
         point_test = shapely.geometry.point.Point(offset_coords)
@@ -200,7 +204,7 @@ class ConstraintPlanes(RegionGenerator):
         return polygon
 
     def plot_candidate(self):
-        orientation_line = LineString([self.best_anchor.pos, Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector * self.best_dpt)])
+        orientation_line = LineString([self.best_anchor.pos, shapely.geometry.point.Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector * self.best_dpt)])
         self.plot_results(anchor_points=self.anchor_points, poly_blue=[self.best_plane], additional_arrows=[orientation_line], display=True)
 
     def fail_constraint(self, constraint, safe):
@@ -233,15 +237,14 @@ class ConstraintPlanes(RegionGenerator):
         # Remove additional anchor points already in area
         anchors = self.anchor_points[:]
         for anchor in anchors:
-            pt = shapely.geometry.point.Point(*anchor.pos)
-            if self.is_inside_polygon(pt, constraint):
+            if self.is_inside_polygon(anchor.pos, constraint):
                 self.anchor_points.remove(anchor)
 
         for point in self.best_plane.boundary.coords:
             # Test all directions for anchor
             for direction in [Direction.NE, Direction.NW, Direction.SW, Direction.SE]:
                 if self.is_valid_orientation(point, direction.to_vector()):
-                    self.anchor_points.append(Anchor(Point(*point), direction, safe))
+                    self.anchor_points.append(Anchor(point, direction, safe))
         #self.plot_results(anchor_points=self.anchor_points, display=True)
 
     def next_constraint(self):
@@ -253,7 +256,7 @@ class ConstraintPlanes(RegionGenerator):
         self.best_plane = None
 
         # split samples into safe and bad
-        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold)
+        (safe_samples, bad_samples) = self.samples.split(self.threshold)
 
         for anchor in self.anchor_points:
             orientation = {

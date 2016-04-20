@@ -3,22 +3,37 @@ from prophesy.regions.region_generation import RegionGenerator, Anchor, Directio
 from shapely.geometry import box
 from shapely import affinity
 from prophesy import config
-from prophesy.data.point import Point
+import shapely.geometry.point
+import prophesy.data.point
+
+#TODO: This class needs to be rewritten to use HyperRectangles
 
 class ConstraintRectangles(RegionGenerator):
 
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
         RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
+        self.x_min = parameters[0].interval.left_bound()
+        self.x_max = parameters[0].interval.right_bound()
+        self.y_min = parameters[1].interval.left_bound()
+        self.y_max = parameters[1].interval.right_bound()
+
         self.anchor_points = []
-        for pt, direction in [(Point(0, 0), Direction.NE), (Point(1, 0), Direction.NW), (Point(1, 1), Direction.SW), (Point(0, 1), Direction.SE)]:
-            sp = SamplePoint.from_point(pt, self.parameters.get_variable_order())
+
+        # Add anchors CCW
+        for pt, direction in [
+                ((self.x_min, self.y_min), Direction.NE),
+                ((self.x_max, self.y_min), Direction.NW),
+                ((self.x_max, self.y_max), Direction.SW),
+                ((self.x_min, self.y_max), Direction.SE)]:
+            # initialy safe flag for anchors properly
+            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt), self.parameters.get_variable_order())
             value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True
             else:
                 pt_safe = False
-            self.anchor_points.append(Anchor(Point(pt), direction, pt_safe))
+            self.anchor_points.append(Anchor(shapely.geometry.point.Point(pt), direction, pt_safe))
 
         self.best_anchor = None
         self.best_rectangle = None
@@ -59,17 +74,17 @@ class ConstraintRectangles(RegionGenerator):
 
         (x1, y1, x2, y2) = self.best_rectangle.bounds
         pos_x, pos_y = self.best_anchor.dir.value
-        self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
+        self.best_other_point = shapely.geometry.point.Point(x2 if pos_x else x1, y2 if pos_y else y1)
 
         # remember discarded part of rectangle for future constaraints
-        anchor1_pt = Point(self.best_anchor.pos.x, self.best_other_point.y)
-        anchor2_pt = Point(self.best_other_point.x, self.best_anchor.pos.y)
-        anchor3_pt = Point(self.best_other_point)
+        anchor1_pt = shapely.geometry.point.Point(self.best_anchor.pos.x, self.best_other_point.y)
+        anchor2_pt = shapely.geometry.point.Point(self.best_other_point.x, self.best_anchor.pos.y)
+        anchor3_pt = shapely.geometry.point.Point(self.best_other_point)
         anchor1 = Anchor(anchor1_pt, self.best_anchor.dir, self.best_anchor.safe)
         anchor2 = Anchor(anchor2_pt, self.best_anchor.dir, self.best_anchor.safe)
         anchor3 = Anchor(anchor3_pt, self.best_anchor.dir, self.best_anchor.safe)
-        rectangle1 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=Point(self.best_anchor.pos.x, old_other_point.y))
-        rectangle2 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=Point(old_other_point.x, self.best_anchor.pos.y))
+        rectangle1 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=shapely.geometry.point.Point(self.best_anchor.pos.x, old_other_point.y))
+        rectangle2 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=shapely.geometry.point.Point(old_other_point.x, self.best_anchor.pos.y))
         rectangle3 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=old_other_point)
         self.next_rectangles += [(rectangle1, anchor1), (rectangle2, anchor2), (rectangle3, anchor3)]
 
@@ -86,7 +101,6 @@ class ConstraintRectangles(RegionGenerator):
             pass
         anchors = self.anchor_points[:]
         for anchor in anchors:
-            
             if anchor.pos.within(self.best_rectangle):
                 self.anchor_points.remove(anchor)
             if anchor.pos.touches(self.best_rectangle):
@@ -96,13 +110,13 @@ class ConstraintRectangles(RegionGenerator):
                 y = anchor.pos.y
                 x += config.PRECISION if anchor.dir.value[0] else -config.PRECISION
                 x += config.PRECISION if anchor.dir.value[1] else -config.PRECISION
-                if Point(x, y).within(self.best_rectangle):
+                if shapely.geometry.point.Point(x, y).within(self.best_rectangle):
                     self.anchor_points.remove(anchor)
 
         # update anchor points for direction
         # Points to place new anchors at (+self.best_other_point)
-        other_right = Point(self.best_other_point.x, self.best_anchor.pos.y)
-        other_left = Point(self.best_anchor.pos.x, self.best_other_point.y)
+        other_right = shapely.geometry.point.Point(self.best_other_point.x, self.best_anchor.pos.y)
+        other_left = shapely.geometry.point.Point(self.best_anchor.pos.x, self.best_other_point.y)
 
         #TODO: Include the 'outer' point?
         #self.anchor_points.append(Anchor(self.best_other_point, self.best_anchor.dir))
@@ -123,7 +137,7 @@ class ConstraintRectangles(RegionGenerator):
             self.best_anchor = anchor
             (x1, y1, x2, y2) = self.best_rectangle.bounds
             pos_x, pos_y = self.best_anchor.dir.value
-            self.best_other_point = Point(x2 if pos_x else x1, y2 if pos_y else y1)
+            self.best_other_point = shapely.geometry.point.Point(x2 if pos_x else x1, y2 if pos_y else y1)
             return  self.best_rectangle, self.best_anchor.safe
 
         # "normal" case where there is no rectangle in the queue
@@ -140,7 +154,6 @@ class ConstraintRectangles(RegionGenerator):
 
             pos_x, pos_y = anchor.dir.value
             for point, value in safe_samples.items() if anchor.safe else bad_samples.items():
-                point = Point(point)
                 # check if point lies in correct direction from anchor point
                 if not ((pos_x and point.x > anchor_pos.x) or (not pos_x and point.x < anchor_pos.x)):
                     continue
@@ -162,7 +175,7 @@ class ConstraintRectangles(RegionGenerator):
                     anchor.safe = safe_area
                     other_points = bad_samples.keys() if safe_area else safe_samples.keys()
                     for point2 in other_points:
-                        point2 = Point(point2)
+                        point2 = shapely.geometry.point.Point(point2)
                         if self.is_inside_polygon(point2, rectangle):
                             # wrong sample in covered area
                             break_attempt = True
@@ -178,3 +191,9 @@ class ConstraintRectangles(RegionGenerator):
             return self.best_rectangle, self.best_anchor.safe
         else:
             return None
+
+    def plot_results(self, *args, **kwargs):
+        if not self.plot:
+            return
+        kwargs['anchor_points'] = self.anchor_points
+        super().plot_results(*args, **kwargs)

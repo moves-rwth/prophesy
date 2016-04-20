@@ -1,4 +1,5 @@
 import math
+from pycarl import Rational
 
 def _sqrt_approx(i):
     """
@@ -24,6 +25,8 @@ class Point:
         @param args Numerical values to represent the point. Any numerical type,
             recommended pycarl.Rational
         """
+        assert len(args) > 1, "1D point, normally not needed"
+        args = [a if isinstance(a, Rational) else Rational(a) for a in args]
         self.coordinates = tuple(args)
         #TODO: backwards compatibility for Delaunay
         self.x = self.coordinates[0]
