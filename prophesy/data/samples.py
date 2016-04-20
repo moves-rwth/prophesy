@@ -32,8 +32,11 @@ class SamplePoint(dict):
         @param variables VariableOrder
         """
         sp = cls()
-        for (pt, var) in zip(pt, variables):
-            sp[var] = pt
+        # Force a point for a sample to consist of Rational only
+        pt = Point(*map(Rational, pt))
+        for (val, var) in zip(pt, variables):
+            sp[var] = val
+        return sp
 
 class SamplePoints(object):
     """Collection of SamplePoint. When iterated over, returns a SamplePoint,

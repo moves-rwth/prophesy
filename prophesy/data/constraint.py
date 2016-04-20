@@ -3,6 +3,7 @@ from pycarl.formula.formula import Relation, Constraint
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
 from pycarl import Polynomial, Rational
+from prophesy.data.samples import SamplePoint
 
 def parse_constraint(constraint_str):
     return pycarl.parse.parseExpr(constraint_str)
@@ -60,7 +61,7 @@ def region_from_polygon(polygon, variables):
             poly = Polynomial(-Rational(c))
             for variable, coefficient in zip(variables, dvec):
                 if coefficient != 0:
-                    poly = Polynomial(poly + variable * coefficient)
+                    poly = poly + variable * coefficient
 
             # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
             new_constraint = Constraint(poly, Relation.LEQ)
@@ -70,3 +71,12 @@ def region_from_polygon(polygon, variables):
                 constraint = constraint & new_constraint
 
         return constraint
+
+def is_point_fulfilling_constraint(pt, constraint):
+    """Check whether the given point is satisfied by the regions
+    (i.e. is contained by it)
+    @param pt SamplePoint
+    @param constraint pycarl.formula.Constraint or pycarl.formula.Formula
+    """
+    assert isinstance(pt, SamplePoint)
+    return constraint.satisfied_by(pt)

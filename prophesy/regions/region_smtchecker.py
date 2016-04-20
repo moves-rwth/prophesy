@@ -5,7 +5,8 @@ import time
 from prophesy.smt.smt import Answer
 from prophesy.data.samples import SamplePoint, Sample
 from pycarl import Rational
-from prophesy.data.constraint import region_from_hyperrectangle
+from prophesy.data.constraint import region_from_hyperrectangle,\
+    region_from_polygon
 
 class SmtRegionChecker(RegionChecker):
     def __init__(self, smt2interface, parameters, ratfunc):
@@ -51,7 +52,7 @@ class SmtRegionChecker(RegionChecker):
         if isinstance(polygon, HyperRectangle):
             constraint = region_from_hyperrectangle(polygon, variables)
         else:
-            constraint = self.region_from_polygon(polygon, variables)
+            constraint = region_from_polygon(polygon, variables)
 
         while not smt_successful:
             # check constraint with smt
@@ -97,13 +98,3 @@ class SmtRegionChecker(RegionChecker):
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None
-
-    @classmethod
-    def is_point_fulfilling_constraint(cls, pt, constraint):
-        """Check whether the given point is satisfied by the regions
-        (i.e. is contained by it)
-        @param pt SamplePoint
-        @param constraint pycarl.formula.Constraint or pycarl.formula.Formula
-        """
-        assert isinstance(pt, SamplePoint)
-        return constraint.satisfied_by(pt)

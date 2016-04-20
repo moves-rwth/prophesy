@@ -1,7 +1,5 @@
 from prophesy.regions.region_generation import RegionGenerator
-from prophesy.data.point import Point
 from prophesy.data.hyperrectangle import HyperRectangle
-
 
 class QuadAndSamples:
     def __init__(self, quad, samples):

@@ -31,7 +31,6 @@ class Plot(object):
         if poly.__class__ != LineString and 'hatch' in kwargs:
             kwargs['ec'] = 'none'
 
-        print(poly.coords)
         p = patches.Polygon(poly.coords, *args, **kwargs)
         subplot.add_patch(p)
 
