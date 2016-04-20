@@ -69,7 +69,7 @@ def read_pstorm_result(location):
     #print("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     #print("Building rational function...")
-    ratfunc = RationalFunction(pycarl.parse.parse(match))
+    ratfunc = RationalFunction(pycarl.parse.parseExpr(match))
 
     #print("Parsing complete")
     return ParametricResult(parameters, constraints, ratfunc)
@@ -113,6 +113,6 @@ def read_param_result(location):
 
     # Build rational function
     #print("Parsing rational function")
-    ratfunc = RationalFunction(pycarl.parse.parse(inputs[3]))
+    ratfunc = RationalFunction(pycarl.parse.parseExpr(inputs[3]))
 
     return ParametricResult(parameters, constraints, ratfunc)
