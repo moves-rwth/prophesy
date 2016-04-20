@@ -1,10 +1,8 @@
 import subprocess
 import functools
-from config import TOOLNAME
-from smt.smt import SMTSolver, Answer, VariableDomain
-from pycarl.formula.formula import Formula, FormulaType, Constraint
-from pycarl.core import Polynomial
-
+from prophesy.config import TOOLNAME
+from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
+from pycarl.formula.formula import Constraint
 
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"

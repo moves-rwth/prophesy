@@ -166,18 +166,13 @@ class RegionGenerator:
         if not self.plot:
             return
         # Extend arguments
-        poly_green = kwargs.get('poly_green')
-        if poly_green is None:
-            poly_green = []
+        poly_green = kwargs.get('poly_green', [])
         kwargs['poly_green'] = poly_green + self.safe_polys
-        poly_red = kwargs.get('poly_red')
-        if poly_red is None:
-            poly_red = []
+        poly_red = kwargs.get('poly_red', [])
         kwargs['poly_red'] = poly_red + self.bad_polys
 
         # Split samples appropriately
-        samples_green = [pt for pt, v in self.samples.items() if v >= self.threshold]
-        samples_red = [pt for pt, v in self.samples.items() if v < self.threshold]
+        samples_green, samples_red = self.samples.split(self.threshold)
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=config.PLOTS)
         Plot.plot_results(parameters=self.parameters,
@@ -220,7 +215,10 @@ class RegionGenerator:
     @abstractmethod
     def reject_constraint(self, constraint, safe, sample):
         """Called for a constraint that is rejected (sample found).
-        sample is tuple((x,y), value)"""
+        @param constraint Polygon or HyperRectangle
+        @param safe Boolean
+        @param sample Sample
+        """
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
@@ -283,7 +281,7 @@ class RegionGenerator:
             # remove unnecessary samples which are covered already by regions
             for pt in list(self.samples.keys()):
                 if isinstance(polygon, HyperRectangle):
-                    if polygon.is_inside(Point(pt)):
+                    if polygon.contains(pt):
                         del self.samples[pt]
                 else:
                     if shapely.geometry.Point(*pt).within(polygon):
@@ -294,9 +292,9 @@ class RegionGenerator:
             return checkresult, (polygon, safe)
         elif checkresult == RegionCheckResult.sat:
             # add new point as counter example to existing regions
-            self.samples[additional[0]] = additional[1]
-            self.reject_constraint(polygon, safe, (additional[0], additional[1]))
+            self.samples.add_sample(additional)
+            self.reject_constraint(polygon, safe, additional)
             return checkresult, (polygon, safe)
         else:
-           result_update = self.fail_constraint(polygon, safe)
-           return checkresult, result_update
+            result_update = self.fail_constraint(polygon, safe)
+            return checkresult, result_update

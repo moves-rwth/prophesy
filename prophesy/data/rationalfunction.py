@@ -12,7 +12,7 @@ class RationalFunction:
         """
         if not isinstance(rational_func, RatFun):
             # Cast Polynomial or lower class
-            rational_func = RatFun(rational_func, Polynomial(Rational(1)))
+            rational_func = RatFun(Polynomial(rational_func), Polynomial(Rational(1)))
         self.rational_func = rational_func
         self.nominator = rational_func.numerator
         self.denominator = rational_func.denominator
