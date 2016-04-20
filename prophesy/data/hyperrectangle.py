@@ -54,7 +54,6 @@ class HyperRectangle(object):
         :return: The 2^n many hyperrectangles obtained by the split
         """
         result = []
-        print(self.intervals)
         splitted_intervals =  [tuple(interv.split()) for interv in self.intervals]
         for i in range(0,pow(2,self.dimension()), 1):
             num_bits = self.dimension()

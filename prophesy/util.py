@@ -43,7 +43,6 @@ def run_tool(args, quiet=False):
             if output != "":
                 print("\t * " + output)
 
-
 def open_file(path):
     """Open file with system-default application.
 

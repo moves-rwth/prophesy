@@ -59,8 +59,6 @@ class ConstraintQuads(RegionGenerator):
             self.quads.append(QuadAndSamples(quad, samples))
             return
 
-        print("split quad {0}".format(quad))
-
         newelems = quad.split_in_every_dimension()
         if newelems is None:
             return None

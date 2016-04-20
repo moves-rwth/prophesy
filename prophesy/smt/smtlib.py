@@ -80,12 +80,10 @@ class SmtlibSolver(SMTSolver):
             if not line and self.process.poll() is not None:
                 break
             output = line.rstrip()
-            print("**\t " + output)
+            print("** check result:\t" + output)
             if output == "unsat":
-                print("returns unsat")
                 return Answer.unsat
             elif output == "sat":
-                print("returns sat")
                 return Answer.sat
             elif output == "unknown":
                 self.stop()
@@ -106,22 +104,11 @@ class SmtlibSolver(SMTSolver):
             else:
                 self.stop()
                 self.run()
-                print(self.string)
-                raise NotImplementedError("Unknown output {}".format(output))
+                raise NotImplementedError("Unknown output {}. Input:\n{}".format(output, self.string))
 
         self.stop()
         self.run()
-        # print("err")
-        # print(self.process.stderr)
-        # print("out")
-        # print(self.process.stdout.read().rstrip())
         return Answer.killed
-        # for line in iter(self.process.stdout.readline, ""):
-            # if not line and self.process.poll() != None:
-                # break
-            # output = line.decode(encoding='UTF-8').rstrip()
-            # if output != "":
-                # print( "\t * "+ output)
 
     def push(self):
         if self.process is None:
@@ -177,13 +164,11 @@ class SmtlibSolver(SMTSolver):
             output += line.rstrip()
             if output.count('(') == output.count(')'):
                 break
-        print("output::", output)
+        print("** model result:\t" + output)
         model = {}
         (cmd, model_cmds) = parse_smt_command(output)
         if cmd == "error":
-            print("Error occured in SMT evaluation, input:")
-            print(self.string)
-            raise RuntimeError("SMT Error")
+            raise RuntimeError("SMT Error in get_model(). Input:\n{}".format(self.string))
         for cmd in model_cmds:
             (_, args) = parse_smt_command(cmd)
             if args[2] == "Real":
@@ -202,7 +187,6 @@ class SmtlibSolver(SMTSolver):
     def print_calls(self):
         print(self.string)
 
-
 def parse_smt_expr(expr):
     """Calculates given SMT expression "(OP ARG ARG)" as ARG OP ARG.
     Expression may be of arbitrary arity"""
@@ -218,7 +202,6 @@ def parse_smt_expr(expr):
         return functools.reduce(lambda x, y: x/y, args)
     else:
         return float(cmd)
-
 
 def parse_smt_command(command):
     """Breaks the given SMT command "(CMD ARG ARG ARG)" into tuple (CMD, [ARG]),

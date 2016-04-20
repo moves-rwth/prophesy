@@ -234,7 +234,6 @@ class RegionGenerator:
             return pol.area
         if isinstance(pol, HyperRectangle):
             return pol.size()
-        print(type(pol))
         assert False
 
 
@@ -255,16 +254,13 @@ class RegionGenerator:
                     self.safe_polys.append(poly)
                 else:
                     self.bad_polys.append(poly)
-                print("added new polygon {0}.".format(poly))
             elif res_status == RegionCheckResult.sat:
                 pass
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
-            
-            print("max area {}".format(max_area * self.max_area_sum))
-            print("area sum {}".format(area_sum))
             if area_sum > max_area * self.max_area_sum:
                 break
+
             max_iter -= 1
             if max_iter == 0:
                 break

@@ -4,8 +4,8 @@ from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
 from pycarl.core import Rational, Variable
 from prophesy.data.constraint import parse_constraint
-import pycarl.parse.parse
 from pycarl.formula.formula import Constraint, Relation
+from pycarl.parse import parseExpr
 
 class ParametricResult(object):
     """Stores the data that may result from loading a parametric model, which
@@ -46,7 +46,6 @@ def read_pstorm_result(location):
                 bound = interval.Interval(0.0, interval.BoundType.open,
                     1.0, interval.BoundType.open)
             else:
-                print( name_and_info)
                 bound = interval.string_to_interval(name_and_info[1], Rational)
             parameters.append(Parameter(var, bound))
 
@@ -69,7 +68,7 @@ def read_pstorm_result(location):
     #print("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     #print("Building rational function...")
-    ratfunc = RationalFunction(pycarl.parse.parseExpr(match))
+    ratfunc = RationalFunction(parseExpr(match))
 
     #print("Parsing complete")
     return ParametricResult(parameters, constraints, ratfunc)
@@ -113,6 +112,6 @@ def read_param_result(location):
 
     # Build rational function
     #print("Parsing rational function")
-    ratfunc = RationalFunction(pycarl.parse.parseExpr(inputs[3]))
+    ratfunc = RationalFunction(parseExpr(inputs[3]))
 
     return ParametricResult(parameters, constraints, ratfunc)

@@ -69,5 +69,4 @@ def region_from_polygon(polygon, variables):
             else:
                 constraint = constraint & new_constraint
 
-        # print("constraint: {0}".format(constraint))
         return constraint

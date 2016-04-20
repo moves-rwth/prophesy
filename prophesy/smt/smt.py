@@ -37,7 +37,6 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     bad_relation = Relation.LESS
 
     safe_constraint = Constraint(rf1Var - thresholdVar * rf2Var, safe_relation)
-    print(safe_constraint)
     bad_constraint = Constraint(rf1Var - thresholdVar * rf2Var, bad_relation)
     #TODO: pycarl cannot deal with float everywhere, cast to rational
     threshold_constraint = Constraint(thresholdVar - threshold, Relation.EQ)
