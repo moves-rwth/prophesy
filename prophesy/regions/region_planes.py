@@ -242,6 +242,7 @@ class ConstraintPlanes(RegionGenerator):
 
         for point in self.best_plane.boundary.coords:
             # Test all directions for anchor
+            point = shapely.geometry.point.Point(point)
             for direction in [Direction.NE, Direction.NW, Direction.SW, Direction.SE]:
                 if self.is_valid_orientation(point, direction.to_vector()):
                     self.anchor_points.append(Anchor(point, direction, safe))
@@ -259,6 +260,9 @@ class ConstraintPlanes(RegionGenerator):
         (safe_samples, bad_samples) = self.samples.split(self.threshold)
 
         for anchor in self.anchor_points:
+            #TODO: use anchor.to_vector. Have steps start in negative direction
+            # (as direction lies halfway).
+            # Normalize the vector return by to_vector, either here or there
             orientation = {
                       Direction.NE: numpy.array([1, 0]),
                       Direction.NW: numpy.array([0, 1]),
@@ -306,3 +310,9 @@ class ConstraintPlanes(RegionGenerator):
             return None
 
         return self.best_plane, self.max_area_safe
+
+    def plot_results(self, *args, **kwargs):
+        if not self.plot:
+            return
+        kwargs['anchor_points'] = self.anchor_points
+        super().plot_results(*args, **kwargs)
