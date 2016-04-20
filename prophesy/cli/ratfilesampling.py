@@ -33,18 +33,14 @@ def parse_cli_args():
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
     parser.add_argument('--threshold', type=float, help='the threshold', required=True)
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--safe-above-threshold', action='store_true', dest="safe_above_threshold")
-    group.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold")
+    parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
 
     return parser.parse_args()
 
-
-
-
 def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
-    Plot.flip_green_red = True if not safe_above_threshold else False
+    if not safe_above_threshold:
+        Plot.flip_green_red = True
 
     _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=config.PLOTS)
 

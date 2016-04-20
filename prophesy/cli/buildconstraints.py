@@ -53,12 +53,9 @@ def parse_cli_args(solversConfig):
 
     parser.add_argument('--threshold-area', type=float, help='threshold for minimal size of new area', default=0.001)
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--safe-above-threshold', action='store_true', dest='safe_above_threshold')
-    group.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold')
+    parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
 
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     solvers = configuration.getAvailableSMTSolvers()
@@ -99,6 +96,7 @@ if __name__ == "__main__":
         raise RuntimeError("No supported SMT defined")
 
     smt2interface.run()
+
     setup_smt(smt2interface, result, threshold)
 
     print("Generating regions")
@@ -115,8 +113,8 @@ if __name__ == "__main__":
     elif cmdargs.poly:
         generator = ConstraintPolygon(*arguments)
         # For testing
-        generator.add_polygon(Polygon([(0, 0), (0.5, 0.5), (0.5, 0)]), True)
-        generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), True)
+        generator.add_polygon(Polygon([(0, 0), (0.5, 0.5), (0.5, 0)]), False)
+        generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), False)
     else:
         assert False
 

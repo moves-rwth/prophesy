@@ -2,7 +2,7 @@ import subprocess
 import functools
 from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
-from pycarl.formula.formula import Constraint
+from pycarl.formula.formula import Constraint, Formula
 
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"
@@ -15,12 +15,10 @@ def _smtfile_header():
     return formula
 
 def constraint_to_smt2(constraint):
-    #TODO: Use carl built-in printer
-    #return str(constraint)
-    #TODO: segfault
-    #assert isinstance(constraint, (Constraint, Formula))
+    #TODO: Uses carl built-in printer for Formula, is ok?
     if isinstance(constraint, Constraint):
-        constraint = constraint & Constraint(True)
+        constraint = Formula(constraint)
+    assert isinstance(constraint, Formula)
     return str(constraint)
 
 class SmtlibSolver(SMTSolver):

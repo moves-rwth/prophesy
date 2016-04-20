@@ -57,13 +57,12 @@ class SmtRegionChecker(RegionChecker):
         while not smt_successful:
             # check constraint with smt
             with self._smt2interface as smt_context:
-                #print("Checking constraint {}".format(constraint))
                 smt_context.assert_constraint(constraint)
 
-                #TODO: Why is this inverted?
+                # Invert the safe flag to try and find a counter example
                 smt_context.set_guard("safe", not safe)
                 smt_context.set_guard("bad", safe)
-                #print("Calling smt solver")
+
                 start = time.time()
                 checkresult = smt_context.check()
                 duration = time.time() - start
