@@ -22,7 +22,7 @@ def region_from_hyperrectangle(hyperrectangle, variables):
             constraint = lbound
         else:
             constraint = constraint & lbound
-        rbound_relation = Relation.LEQ if interval.right_bound() == BoundType.closed else Relation.LESS
+        rbound_relation = Relation.LEQ if interval.right_bound_type() == BoundType.closed else Relation.LESS
         rbound = Constraint(variable-interval.right_bound(), rbound_relation)
         constraint = constraint & rbound
     return constraint

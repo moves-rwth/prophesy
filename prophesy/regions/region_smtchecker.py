@@ -30,7 +30,7 @@ class SmtRegionChecker(RegionChecker):
             total_sec = total_sec + benchmark[1]
             if benchmark[0] == Answer.unsat:
                 total_area = total_area + benchmark[2]
-            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1], total_sec, benchmark[2], total_area))
+            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1], total_sec, float(benchmark[2]), float(total_area)))
             i = i + 1
 
     def analyse_region(self, polygon, safe):

@@ -77,7 +77,7 @@ if __name__ == "__main__":
         threshold = samples_threshold
 
     if threshold == None:
-        raise("No threshold specified via command line or samples file.")
+        raise RuntimeError("No threshold specified via command line or samples file.")
     print("Threshold: {}".format(threshold))
 
     if result.parameters.get_variable_order() != variables:
