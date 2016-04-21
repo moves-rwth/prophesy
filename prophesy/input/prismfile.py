@@ -27,14 +27,14 @@ class PrismFile:
     def make_temporary_copy(self):
         """Makes a temporary copy of itself, which will be deleted automatically.
            Does nothing if a temporary copy already exists."""
-        if self.is_temp:
+        if self._is_temp:
             return
         ensure_dir_exists(config.INTERMEDIATE_FILES)
         _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=config.INTERMEDIATE_FILES, text=True)
         try:
             shutil.copyfile(self.location, tmpfile)
             self.location = tmpfile
-            self.is_temp = True
+            self._is_temp = True
         except:
             os.unlink(tmpfile)
             raise
