@@ -5,7 +5,7 @@ from prophesy.data.parameter import ParameterOrder, Parameter
 from pycarl.core import Rational, Variable
 from prophesy.data.constraint import parse_constraint
 from pycarl.formula.formula import Constraint, Relation
-from pycarl.parse import parseExpr
+from pycarl.parse import parse, parseExpr
 
 class ParametricResult(object):
     """Stores the data that may result from loading a parametric model, which
@@ -37,7 +37,7 @@ def read_pstorm_result(location):
     # Build parameters
     #print("Reading parameters...")
     parameters = ParameterOrder()
-    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(",")
+    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
@@ -68,7 +68,7 @@ def read_pstorm_result(location):
     #print("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     #print("Building rational function...")
-    ratfunc = RationalFunction(parseExpr(match))
+    ratfunc = RationalFunction(parse(match))
 
     #print("Parsing complete")
     return ParametricResult(parameters, constraints, ratfunc)
@@ -76,8 +76,8 @@ def read_pstorm_result(location):
 
 def write_pstorm_result(location, result):
     with open(location, "w") as f:
-        f.write("!Parameters: {0}\n".format(", ".join([str(p) for p in vars])))
-        f.write("!Result: {0}\n".format(str(result.result_function)))
+        f.write("!Parameters: {0}\n".format("; ".join([str(p) for p in result.parameters])))
+        f.write("!Result: {0}\n".format(str(result.ratfunc).replace('^', '**')))
         f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
         #f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
 
