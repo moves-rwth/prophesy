@@ -1,13 +1,12 @@
-from tornado.testing import AsyncHTTPTestCase
-from tornado.httpclient import HTTPRequest
-import urllib
 from prophesy.webservice.webcegar import make_app
+
+from tornado.testing import AsyncHTTPTestCase
 import json
 import random
 
 class TestTornado(AsyncHTTPTestCase):
     """ Testing of the tornado web framework. """
-
+    
     def get_app(self):
         """ Override to return own application. """
         return make_app("localhost")
@@ -16,6 +15,10 @@ class TestTornado(AsyncHTTPTestCase):
         super().setUp()
         response = self.fetch('/results')
         self.cookies = response.headers["Set-Cookie"]
+        self.header_send = {"Host": "localhost:4242",
+            "Accept": "*/*",
+            "Cookie": self.cookies,
+        }
 
     def test_homepage(self):
         """ Test the prophesy homepage. """
@@ -24,6 +27,8 @@ class TestTornado(AsyncHTTPTestCase):
     
     def test_config(self):
         """ Test the configuration. """
+        
+        # Create random new test value
         new_value = str(random.random())
         response = self.fetch('/config/test/test_value')
         s = response.body.decode('UTF-8')
@@ -32,16 +37,12 @@ class TestTornado(AsyncHTTPTestCase):
             new_value = str(random.random())
  
         # Change value
-        headers_new = {"Host": "localhost:4242",
-            "Accept": "*/*",
-            "Content-Type": "application/json",
-            "Cookie": self.cookies,
-        }
-        response = self.fetch('/config/test/test_value?data=' + new_value, method='POST', headers = headers_new, body="")
+        body_send = "data=" + new_value
+        response = self.fetch('/config/test/test_value', method='POST', headers=self.header_send, body=body_send)
         self.assertEqual(response.code, 200)
         s = response.body.decode('UTF-8')
         
-        # Change new value
+        # Check new value
         response = self.fetch('/config/test/test_value')
         s = response.body.decode('UTF-8')
         value_after = json.loads(s)["data"]
