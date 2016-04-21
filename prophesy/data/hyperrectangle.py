@@ -44,7 +44,7 @@ class HyperRectangle(object):
 
     def np_vertices(self):
         verts = self.vertices()
-        return np.array([np.array(v) for v in verts])
+        return np.array([np.array(list(map(float,v))) for v in verts])
 
     #def vertices_and_inward_dir(self):
 
