@@ -89,8 +89,8 @@ class Plot(object):
             ax1.scatter(x_coords, y_coords, marker='.', c='blue')
 
 
-            ax1.set_xlim([parameters[0].interval.left_bound(), parameters[0].interval.right_bound()])
-            ax1.set_ylim([parameters[1].interval.left_bound(), parameters[1].interval.right_bound()])
+            ax1.set_xlim([float(parameters[0].interval.left_bound()), float(parameters[0].interval.right_bound())])
+            ax1.set_ylim([float(parameters[1].interval.left_bound()), float(parameters[1].interval.right_bound())])
             ax1.set_xlabel(str(parameters[0].variable))
             ax1.set_ylabel(str(parameters[1].variable))
             if path_to_save is not None:
