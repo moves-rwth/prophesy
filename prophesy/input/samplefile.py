@@ -50,7 +50,7 @@ def read_samples_file(path):
             else:
                 #TODO: falling back to Python float parser, but a good Rational parser is better
                 value = Rational(float(items[-1]))
-            coords = map(Rational, items[:-1])
+            coords = map(float, items[:-1])
             samples[Point(*coords)] = value
 
     return variables, threshold, samples
@@ -59,4 +59,4 @@ def write_samples_file(variables, samples_dict, path):
     with open(path, "w") as f:
         f.write(" ".join(map(str, variables)) + "\n")
         for k, v in samples_dict.items():
-            f.write("\t".join([("%.4f" % c) for c in k]) + "\t\t" + "%.4f" % v + "\n")
+            f.write("\t".join([("%.4f" % c) for c in k]) + "\t\t" + "%.20f" % v + "\n")
