@@ -5,6 +5,8 @@ import sys
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
+from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.data.hyperrectangle import HyperRectangle
 
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
@@ -67,6 +69,11 @@ def _jsonSamples(samples):
 def _jsonPoly(polygon):
     if isinstance(polygon, Polygon):
         return _jsonPoly(polygon.exterior)
+    if isinstance(polygon, HyperRectangle):
+        def to_list(v):
+            return [float(v.x), float(v.y)]
+        vs = polygon.vertices()
+        return list(map(to_list, [vs[0], vs[1], vs[3], vs[2], vs[0]]))
     return [[pt[0], pt[1]] for pt in polygon.coords]
 
 def getSat(satname):
@@ -588,15 +595,17 @@ class ConstraintHandler(CegarHandler):
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
         setup_smt(smt2interface, result, threshold)
+        
+        checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
 
         if type == 'planes':
-            generator = ConstraintPlanes(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintPlanes(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'rectangles':
-            generator = ConstraintRectangles(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintRectangles(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'quads':
-            generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'poly':
-            generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         else:
             return self._json_error("Bad generator")
         generator.plot = False
@@ -616,7 +625,7 @@ class ConstraintHandler(CegarHandler):
         for check_result in generator:
             (is_unsat, data) = check_result
             if is_unsat:
-                (constraint, poly, safe) = data
+                (poly, safe) = data
                 unsat.append((_jsonPoly(poly), bool(safe)))
                 if socket is not None:
                     socket.send_constraints([unsat[-1]])

@@ -62,7 +62,7 @@ class ConstraintRectangles(RegionGenerator):
         # scale rectangle by factor 0.5
         old_rectangle = self.best_rectangle
         old_other_point = self.best_other_point
-        self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=self.best_anchor.pos)
+        self.best_rectangle = affinity.scale(self.best_rectangle, xfact=0.5, yfact=0.5, origin=(self.best_anchor.pos.x, self.best_anchor.pos.y))
         if self.best_rectangle.area < self.threshold_area:
             # Discard rectangle and try other one by removing anchor
             # TODO better solution?
@@ -83,9 +83,9 @@ class ConstraintRectangles(RegionGenerator):
         anchor1 = Anchor(anchor1_pt, self.best_anchor.dir, self.best_anchor.safe)
         anchor2 = Anchor(anchor2_pt, self.best_anchor.dir, self.best_anchor.safe)
         anchor3 = Anchor(anchor3_pt, self.best_anchor.dir, self.best_anchor.safe)
-        rectangle1 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=shapely.geometry.point.Point(self.best_anchor.pos.x, old_other_point.y))
-        rectangle2 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=shapely.geometry.point.Point(old_other_point.x, self.best_anchor.pos.y))
-        rectangle3 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=old_other_point)
+        rectangle1 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=(self.best_anchor.pos.x, old_other_point.y))
+        rectangle2 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=(old_other_point.x, self.best_anchor.pos.y))
+        rectangle3 = affinity.scale(old_rectangle, xfact=0.5, yfact=0.5, origin=(old_other_point.x, old_other_point.y))
         self.next_rectangles += [(rectangle1, anchor1), (rectangle2, anchor2), (rectangle3, anchor3)]
 
         return self.best_rectangle, self.best_anchor.safe
