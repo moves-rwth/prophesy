@@ -150,8 +150,6 @@ class Configuration():
     def getAvailableSamplers(self):
         samplers = {}
         samplers['ratfunc'] = "Rational function"
-        samplers['ratfunc_float'] = "Rational function (float)"
-        samplers['carl'] = "Carl library"
 
         try:
             # TODO: Prism sampling not yet supported

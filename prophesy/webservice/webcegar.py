@@ -3,6 +3,8 @@
 import os
 import sys
 from prophesy.modelcheckers.prism import PrismModelChecker
+from prophesy.data.point import Point
+from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
 
 # import library. Using this instead of appends prevents naming clashes..
 this_file_path = os.path.dirname(os.path.realpath(__file__))
@@ -10,8 +12,8 @@ this_file_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(1, os.path.join(this_file_path, '..'))
 
 
-import config
-from config import configuration
+from prophesy import config
+from prophesy.config import configuration
 
 import tempfile
 import re
@@ -28,36 +30,36 @@ from tornado import gen
 from pycket.session import SessionMixin
 from shapely.geometry.polygon import Polygon
 
-from util import ensure_dir_exists, run_tool
-from input.resultfile import read_param_result, read_pstorm_result, \
+from prophesy.util import ensure_dir_exists
+from prophesy.input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
-from input.prismfile import PrismFile
-from input.pctlfile import PctlFile
-from modelcheckers.param import ParamParametricModelChecker
-from modelcheckers.storm import StormModelChecker
-from smt.smt import setup_smt
-from smt.isat import IsatSolver
-from smt.Z3cli_solver import Z3CliSolver
-from sampling.sampler_ratfunc import RatFuncSampling
+from prophesy.input.prismfile import PrismFile
+from prophesy.modelcheckers.param import ParamParametricModelChecker
+from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.smt.smt import setup_smt
+from prophesy.smt.isat import IsatSolver
+from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 
-from sampling.sampling_uniform import UniformSampleGenerator
-from sampling.sampling_linear import LinearRefinement
-from sampling.sampling_delaunay import DelaunayRefinement
-from regions.region_planes import ConstraintPlanes
-from regions.region_rectangles import ConstraintRectangles
-from regions.region_quads import ConstraintQuads
-from regions.region_polygon import ConstraintPolygon
+from prophesy.sampling.sampling_uniform import UniformSampleGenerator
+from prophesy.sampling.sampling_linear import LinearRefinement
+from prophesy.sampling.sampling_delaunay import DelaunayRefinement
+from prophesy.regions.region_planes import ConstraintPlanes
+from prophesy.regions.region_rectangles import ConstraintRectangles
+from prophesy.regions.region_quads import ConstraintQuads
+from prophesy.regions.region_polygon import ConstraintPolygon
 
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen
 
+from pycarl import Rational
 
 default_results = {}
 
 executor = ThreadPoolExecutor(max_workers=1)
 
 if configuration.is_module_available('stormpy'):
-    from modelcheckers.stormpy import StormpyModelChecker
+    from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
 def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
@@ -78,14 +80,7 @@ def getSat(satname):
 def getSampler(satname, result):
     if satname == 'ratfunc':
         # Do not use rationals for now
-        return RatFuncSampling(result.ratfunc, result.parameters, True)
-    elif satname == 'ratfunc_float':
-        return RatFuncSampling(result.ratfunc, result.parameters, False)
-    elif satname == 'carl':
-        print("import carl")
-        assert False
-        from sampling.sampler_carl import CarlSampling
-        return CarlSampling(result.ratfunc, result.parameters)
+        return RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
     elif satname == 'prism':
         mc = PrismModelChecker()
         mc.load_model_from_prismfile(result.prism_file)
@@ -96,9 +91,9 @@ def getSampler(satname, result):
 def getPMC(name):
     if name == 'storm':
         return StormModelChecker()
-    elif name == 'param':
-        return ParamParametricModelChecker()
-    elif name == 'stormpy':
+    #elif name == 'param':
+    #    return ParamParametricModelChecker()
+    elif name == 'stormpy' and configuration.is_module_available('stormpy'):
         return StormpyModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
@@ -144,6 +139,7 @@ class CegarHandler(RequestHandler, SessionMixin):
         if not name in result_files:
             return None
         try:
+            print(result_files[name])
             result = read_pstorm_result(result_files[name])
             return result
         except:
@@ -189,7 +185,7 @@ class InvalidateSession(CegarHandler):
                 os.unlink(fname)
             except:
                 pass
-        request.session.invalidate()
+        self.request.session.invalidate()
         return self._json_ok()
 
 class Threshold(CegarHandler):
@@ -275,6 +271,7 @@ class Results(CegarHandler):
             return self._json_error("Result data not found", 404)
 
         try:
+            print(result_files[name])
             result = read_pstorm_result(result_files[name])
         except:
             return self._json_error("Error reading result data")
@@ -473,7 +470,8 @@ class PingRedis(CegarHandler):
 
 class Samples(CegarHandler):
     def get(self):
-        flattenedsamples = _jsonSamples(self._get_session('samples', {}))
+        result = self._getResultData(self._get_session('current_result', None))
+        flattenedsamples = _jsonSamples(self._get_session('samples', SampleDict(result.parameters.get_variable_order())))
         return self._json_ok(flattenedsamples)
 
     def post(self):
@@ -487,8 +485,9 @@ class Samples(CegarHandler):
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
 
-        coordinates = [(float(x), float(y)) for x, y in coordinates]
-        new_samples = sampling_interface.perform_sampling(coordinates)
+        coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
+        sample_points = SamplePoints(coordinates, result.parameters.get_variable_order())
+        new_samples = sampling_interface.perform_sampling(sample_points)
         if socket is not None:
             socket.send_samples(new_samples)
 
@@ -500,8 +499,8 @@ class Samples(CegarHandler):
     def put(self):
         coordinate = json_decode(self.request.body)
         try:
-            x = coordinate[0]
-            y = coordinate[1]
+            x = Rational(coordinate[0])
+            y = Rational(coordinate[1])
         except:
             return self._json_error('Unable to parse coordinate', 400)
 
@@ -509,11 +508,12 @@ class Samples(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
+        variables = result.parameters.get_variable_order()
         sampler = getSampler(self._get_session('sampler'), result)
-        new_samples = sampler.perform_sampling([(x, y)])
+        new_samples = sampler.perform_sampling([SamplePoint({variables[0]:x, variables[1]:y})])
         samples = self._get_session('samples', {})
         samples.update(new_samples)
-        return _json_ok()
+        return self._json_ok()
         # return _json_ok(_jsonSamples(samples))
         # TODO: redirect?
 
@@ -546,16 +546,17 @@ class GenerateSamples(CegarHandler):
 
         socket = self._get_socket()
 
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
         new_samples = {}
         sampling_interface = getSampler(self._get_session('sampler'), result)
+        variables = result.parameters.get_variable_order()
         if generator_type == 'uniform':
-            intervals = [(0.01, 0.99)] * len(result.parameters)
-            samples_generator = UniformSampleGenerator(sampling_interface, intervals, iterations)
+            intervals = result.parameters.get_variable_bounds()
+            samples_generator = UniformSampleGenerator(sampling_interface, variables, samples, intervals, iterations)
         elif generator_type == "linear":
-            samples_generator = LinearRefinement(sampling_interface, samples, threshold)
+            samples_generator = LinearRefinement(sampling_interface, variables, samples, threshold)
         elif generator_type == "delaunay":
-            samples_generator = DelaunayRefinement(sampling_interface, samples, threshold)
+            samples_generator = DelaunayRefinement(sampling_interface, variables, samples, threshold)
         else:
             assert False, "Bad generator"
 
@@ -581,7 +582,7 @@ class ConstraintHandler(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
         threshold = self._get_session('threshold', 0.5)
 
         smt2interface = getSat(self._get_session('sat'))
@@ -663,7 +664,10 @@ class Constraints(ConstraintHandler):
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
 
-        samples = self._get_session('samples', {})
+        result = self._getResultData(self._get_session('current_result', None))
+        if result is None:
+            return self._json_error("Unable to load result data", 500)
+        samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
         constraints = self._get_session('regions', [])
 
         samples.update(new_samples)
