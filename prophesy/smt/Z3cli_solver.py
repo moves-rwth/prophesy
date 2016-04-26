@@ -1,6 +1,6 @@
-import config
-from config import configuration
-from smt.smtlib import SmtlibSolver
+from prophesy import config
+from prophesy.config import configuration
+from prophesy.smt.smtlib import SmtlibSolver
 
 class Z3CliSolver(SmtlibSolver):
     def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "z3"), memout=4000, timeout=10):

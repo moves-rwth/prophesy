@@ -1,8 +1,9 @@
-from modelcheckers.ppmc  import ParametricProbabilisticModelChecker
-from modelcheckers.pmc import BisimulationType
-from config import configuration
-from exceptions.module_error import ModuleError
+from prophesy.modelcheckers.ppmc  import ParametricProbabilisticModelChecker
+from prophesy.modelcheckers.pmc import BisimulationType
+from prophesy.config import configuration
+from prophesy.exceptions.module_error import ModuleError
 from prophesy.sampling.sampler import Sampler
+from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 if not configuration.is_module_available("stormpy"):
     raise ModuleError("Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 else:

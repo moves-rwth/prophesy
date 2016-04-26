@@ -1,15 +1,15 @@
 import os
-from config import configuration
-import config
+from prophesy.config import configuration
+from prophesy import config
 import tempfile
 import subprocess
-from modelcheckers.ppmc import ParametricProbabilisticModelChecker
-from modelcheckers.pmc import BisimulationType
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists
-from input.resultfile import read_pstorm_result
-from input.prismfile import PrismFile
+from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from prophesy.modelcheckers.pmc import BisimulationType
+from prophesy.util import run_tool, ensure_dir_exists
+from prophesy.input.resultfile import read_pstorm_result
 from prophesy.sampling.sampler import Sampler
 from pycarl.core import Rational
+from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 
 class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):

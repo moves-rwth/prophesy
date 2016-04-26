@@ -1,5 +1,3 @@
-from distutils.spawn import find_executable
-
 import configparser
 import prophesy.util as util
 import os
@@ -42,7 +40,7 @@ class Configuration():
         result = {}
         sections = self._config.sections()
         for section in sections:
-             result[section] = dict(self._config.items(section))
+            result[section] = dict(self._config.items(section))
         return result
 
     def set(self, section, key, value):
