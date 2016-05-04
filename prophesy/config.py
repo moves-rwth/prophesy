@@ -26,6 +26,12 @@ class Configuration():
         assert key in self._config[section]
         return self._config[section][key]
 
+    def getSection(self, section):
+        if self._importedFrom == "":
+            self._importFromFile()
+        assert section in self._config
+        return self._config[section]
+
     def is_module_available(self, module):
         if self._importedFrom == "":
             self._importFromFile()
@@ -37,8 +43,6 @@ class Configuration():
     def getAll(self):
         if self._importedFrom == "":
             self._importFromFile()
-        # Convert configuration into dict of dicts
-        # where each section has its own dictionary with (key,value)
         result = {}
         sections = self._config.sections()
         for section in sections:
