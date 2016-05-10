@@ -78,11 +78,24 @@ class TestTornado(AsyncHTTPTestCase):
     def test_upload_files(self):
         with open("../../benchmarkfiles/pdtmc/brp/brp_16_2.pm", 'r') as pfile:
             prismdata = pfile.read()
+        with open("../../benchmarkfiles/pdtmc/brp/property1.pctl", 'r') as pfile:
+            pctldata = pfile.read()
+        with open("../../benchmarkfiles/rat_files/result_w_bisim.res", 'r') as pfile:
+            result_data = pfile.read()
         prismfile = ('prism-file', 'brp_16_2.pm', prismdata)
+        pctlfile = ('pctl-file', 'property1.pctl', pctldata)
+        result_file = ('result-file', 'results_w_bisim.res', result_data)
         ct, data = self.encode_multipart_formdata([], [prismfile])
-        print(data)
         response = self._sendData('/uploadPrism', data=data, ct=ct)
         assert response.code == 200
+        ct, data = self.encode_multipart_formdata([], [pctlfile])
+        response = self._sendData('/uploadPctl', data=data, ct=ct)
+        assert response.code == 200
+        ### Result file needs different header
+        #ct, data = self.encode_multipart_formdata([], [result_file])
+        #response = self._sendData('/uploadResult', data=data, ct=ct)
+        #assert response.code == 200
+
 
 
     def _get_response_string(self, url):
