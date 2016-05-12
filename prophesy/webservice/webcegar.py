@@ -805,17 +805,6 @@ def make_app(hostname):
             },
         }
     }
-    #{
-    #    'pycket': {
-    #        'engine': 'memcached',
-    #        'storage': {
-    #            'servers': ('localhost:11211',)
-    #        },
-    #        'cookies': {
-    #            'expires_days': 120,
-    #        },
-    #    },
-    #}
 
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
