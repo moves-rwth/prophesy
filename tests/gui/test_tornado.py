@@ -1,6 +1,6 @@
 
 # Imported to start the webservice and check it's functionality
-from prophesy.webservice.webcegar import make_app
+from prophesy.webservice.webcegar import make_app, initEnv
 from tornado.testing import AsyncHTTPTestCase
 
 # For parsing json-strings in dicts
@@ -20,10 +20,14 @@ from prophesy.config import configuration
 
 class TestTornado(AsyncHTTPTestCase):
     """ Testing of the tornado web framework. """
+    app = None
 
     def get_app(self):
         """ Override to return own application. """
-        return make_app("localhost")
+        if self.app is None:
+            initEnv()
+            self.app = make_app("localhost")
+        return self.app
 
     # Sets the environment such that we can read the stored session data.
     def setUp(self):
@@ -80,7 +84,7 @@ class TestTornado(AsyncHTTPTestCase):
             prismdata = pfile.read()
         with open("../../benchmarkfiles/pdtmc/brp/property1.pctl", 'r') as pfile:
             pctldata = pfile.read()
-        with open("../../benchmarkfiles/rat_files/result_w_bisim.res", 'r') as pfile:
+        with open("../../benchmarkfiles/examples/brp/brp_16-2.rat", 'r') as pfile:
             result_data = pfile.read()
         prismfile = ('prism-file', 'brp_16_2.pm', prismdata)
         pctlfile = ('pctl-file', 'property1.pctl', pctldata)
@@ -91,22 +95,35 @@ class TestTornado(AsyncHTTPTestCase):
         ct, data = self.encode_multipart_formdata([], [pctlfile])
         response = self._sendData('/uploadPctl', data=data, ct=ct)
         assert response.code == 200
-        ### Result file needs different header
-        #ct, data = self.encode_multipart_formdata([], [result_file])
-        #response = self._sendData('/uploadResult', data=data, ct=ct)
-        #assert response.code == 200
+        ct, data = self.encode_multipart_formdata([("result-type","storm")], [result_file])
+        response = self._sendData('/uploadResult', data=data, ct=ct)
+        assert response.code == 200
 
+    def test_run_with_storm(self):
+        self.test_upload_files()
+        ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),("pctl_property", "P=? [F \"target\"]"),("mctool", "storm")], [])
+        response = self._sendData('/runPrism', data, ct)
+        assert response.code == 200
+
+    def test_sampling(self):
+        self.test_run_with_storm()
+        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        response = self._sendData('/environment', data, ct)
+        samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
+        response = self._sendData('/samples', samples, "application/json")
+        print(response.body.decode("UTF-8"))
+        assert response.code == 200
 
 
     def _get_response_string(self, url):
         """ Returns the value of the json data element as a string. """
-        response = self.fetch(url)
+        response = self.fetch(url, method='GET', headers=self.header_send)
         s = response.body.decode('UTF-8')
         return json.loads(s)['data']
 
     def _get_response_code(self, url):
         """ Returns the HTTP response code. """
-        response = self.fetch(url)
+        response = self.fetch(url, method='GET', headers=self.header_send)
         return response.code
 
     def _sendData(self, url, data, ct=None):
