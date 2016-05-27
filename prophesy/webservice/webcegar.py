@@ -437,13 +437,14 @@ class UploadResult(CegarHandler):
             res_f.write(upload.body)
 
         try:
-            if tool == 'pstorm':
+            if tool == 'storm':
                 result = read_pstorm_result(res_file)
             elif tool == 'param':
                 result = read_param_result(res_file)
             else:
                 raise RuntimeError("Bad tool")
-        except:
+        except Exception as e:
+            print(e)
             return self._json_error("Unable to parse result file")
         finally:
             os.unlink(res_file)
