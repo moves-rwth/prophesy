@@ -1,7 +1,4 @@
-
-# Imported to start the webservice and check it's functionality
-from prophesy.webservice.webcegar import make_app, initEnv
-from tornado.testing import AsyncHTTPTestCase
+from tornado_test_case import TornadoTestCase
 
 # For parsing json-strings in dicts
 import json
@@ -13,32 +10,14 @@ import random
 import os.path
 import shutil
 
-
 # Get the prophesy configuration data
 import prophesy.config as config
 from prophesy.config import configuration
 
-class TestTornado(AsyncHTTPTestCase):
+
+class TestTornado(TornadoTestCase):
     """ Testing of the tornado web framework. """
-    app = None
-
-    def get_app(self):
-        """ Override to return own application. """
-        if self.app is None:
-            initEnv()
-            self.app = make_app("localhost")
-        return self.app
-
-    # Sets the environment such that we can read the stored session data.
-    def setUp(self):
-        super().setUp()
-        response = self.fetch('/results')
-        self.cookies = response.headers["Set-Cookie"]
-        self.header_send = {"Host": "localhost:4242",
-            "Accept": "*/*",
-            "Cookie": self.cookies,
-        }
-
+    
     def test_homepage(self):
         """ Test if the prophesy homepage is available. """
         response = self.fetch('/')
@@ -78,88 +57,3 @@ class TestTornado(AsyncHTTPTestCase):
         for tool in section:
             if not section[tool] == '':
                 assert (os.path.isfile(section[tool]) == "True") or (shutil.which(section[tool]) is not None)
-
-    def test_upload_files(self):
-        with open("../../benchmarkfiles/pdtmc/brp/brp_16_2.pm", 'r') as pfile:
-            prismdata = pfile.read()
-        with open("../../benchmarkfiles/pdtmc/brp/property1.pctl", 'r') as pfile:
-            pctldata = pfile.read()
-        with open("../../benchmarkfiles/examples/brp/brp_16-2.rat", 'r') as pfile:
-            result_data = pfile.read()
-        prismfile = ('prism-file', 'brp_16_2.pm', prismdata)
-        pctlfile = ('pctl-file', 'property1.pctl', pctldata)
-        result_file = ('result-file', 'results_w_bisim.res', result_data)
-        ct, data = self.encode_multipart_formdata([], [prismfile])
-        response = self._sendData('/uploadPrism', data=data, ct=ct)
-        assert response.code == 200
-        ct, data = self.encode_multipart_formdata([], [pctlfile])
-        response = self._sendData('/uploadPctl', data=data, ct=ct)
-        assert response.code == 200
-        ct, data = self.encode_multipart_formdata([("result-type","storm")], [result_file])
-        response = self._sendData('/uploadResult', data=data, ct=ct)
-        assert response.code == 200
-
-    def test_run_with_storm(self):
-        self.test_upload_files()
-        ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),("pctl_property", "P=? [F \"target\"]"),("mctool", "storm")], [])
-        response = self._sendData('/runPrism', data, ct)
-        assert response.code == 200
-
-    def test_sampling(self):
-        self.test_run_with_storm()
-        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
-        response = self._sendData('/environment', data, ct)
-        samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
-        response = self._sendData('/samples', samples, "application/json")
-        print(response.body.decode("UTF-8"))
-        assert response.code == 200
-
-
-    def _get_response_string(self, url):
-        """ Returns the value of the json data element as a string. """
-        response = self.fetch(url, method='GET', headers=self.header_send)
-        s = response.body.decode('UTF-8')
-        return json.loads(s)['data']
-
-    def _get_response_code(self, url):
-        """ Returns the HTTP response code. """
-        response = self.fetch(url, method='GET', headers=self.header_send)
-        return response.code
-
-    def _sendData(self, url, data, ct=None):
-        headers = dict(self.header_send)
-        if ct is not None:
-            headers['Content-Type'] = ct
-        return self.fetch(url, method='POST', headers=headers, body=data)
-
-    def encode_multipart_formdata(self, fields, files):
-        """
-        fields is a sequence of (name, value) elements for regular form fields.
-        files is a sequence of (name, filename, value) elements for data to be
-        uploaded as files.
-        Return (content_type, body) ready for httplib.HTTP instance
-        """
-        BOUNDARY = '----------ThIs_Is_tHe_bouNdaRY_$'
-        CRLF = '\r\n'
-        L = []
-        for (key, value) in fields:
-            L.append('--' + BOUNDARY)
-            L.append('Content-Disposition: form-data; name="{}"'.format(key))
-            L.append('')
-            L.append(value)
-        for (key, filename, value) in files:
-            L.append('--' + BOUNDARY)
-            L.append(
-                'Content-Disposition: form-data; name="{}"; filename="{}"'.
-                    format(
-                        key, filename
-                    )
-            )
-            L.append('Content-Type: text/plain')
-            L.append('')
-            L.append(value)
-        L.append('--' + BOUNDARY + '--')
-        L.append('')
-        body = CRLF.join(L)
-        content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
-        return content_type, body
