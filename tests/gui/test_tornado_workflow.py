@@ -16,6 +16,7 @@ import random
 import os.path
 import shutil
 
+from helpers.helper import get_example_path
 
 # Get the prophesy configuration data
 import prophesy.config as config
@@ -26,11 +27,11 @@ class TestTornado(TornadoTestCase):
     """ Testing of the workflow in Prophesy. """
 
     def test_0_upload_files(self):
-        with open("../../benchmarkfiles/pdtmc/brp/brp_16_2.pm", 'r') as pfile:
+        with open(get_example_path("pdtmc", "brp", "brp_16_2.pm"), 'r') as pfile:
             prismdata = pfile.read()
-        with open("../../benchmarkfiles/pdtmc/brp/property1.pctl", 'r') as pfile:
+        with open(get_example_path("pdtmc", "brp", "property1.pctl"), 'r') as pfile:
             pctldata = pfile.read()
-        with open("../../benchmarkfiles/examples/brp/brp_16-2.rat", 'r') as pfile:
+        with open(get_example_path("examples", "brp", "brp_16-2.rat"), 'r') as pfile:
             result_data = pfile.read()
         prismfile = ('prism-file', 'brp_16_2.pm', prismdata)
         pctlfile = ('pctl-file', 'property1.pctl', pctldata)
@@ -53,6 +54,7 @@ class TestTornado(TornadoTestCase):
         assert response.code == 200
 
     def test_2_sampling(self):
+        self.test_1_run_with_storm()
         ct, data = self._encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
         response = self._sendData('/environment', data, ct)
         samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
