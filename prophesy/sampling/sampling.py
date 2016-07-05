@@ -1,32 +1,37 @@
-from sampling.sampling_uniform import UniformSampleGenerator
+"""
+Helper module for ratfilesampling.py
+TODO: Should be removed at some point, or moved away
+"""
+from prophesy.sampling.sampling_uniform import UniformSampleGenerator
+from prophesy.sampling.sampling_delaunay import DelaunayRefinement
+from prophesy.data.samples import SampleDict
+from prophesy.sampling.sampling_linear import LinearRefinement
 
-import config
-
-
-def uniform_samples(interface, dimensions, samples_per_dim):
+def uniform_samples(interface, parameters, samples_per_dim):
     """Generate a uniform grid of samples."""
-    samples = {}
-    intervals = [(0.01, 0.99)] * dimensions
-    uniform_generator = UniformSampleGenerator(interface, intervals, samples_per_dim)
+    samples = SampleDict()
+    uniform_generator = UniformSampleGenerator(interface,
+        parameters.get_variable_order(), samples,
+        parameters.get_variable_bounds(), samples_per_dim)
 
     for new_samples in uniform_generator:
         samples.update(new_samples)
 
-
     return samples
 
 
+def refine_samples(interface, parameters, samples, iterations, threshold):
+    """Refine samples over several iterations."""
+    refinement_generator = LinearRefinement(interface, parameters.get_variable_order(), samples, threshold)
+    #refinement_generator = DelaunayRefinement(interface, parameters.get_variable_order(), samples, threshold)
 
-def split_samples(samples, threshold):
-    """returns (>=, <)"""
-    above_threshold = dict([(k, v) for k, v in samples.items() if v >= threshold])
-    below_threshold = dict([(k, v) for k, v in samples.items() if v < threshold])
-    return above_threshold, below_threshold
+    # Using range to limit the number of iterations
+    for (i, new_samples) in zip(range(0, iterations), refinement_generator):
 
-def filter_samples(samples, threshold, distance=config.DISTANCE):
-    """Returns samples which are less than (or equal) `distance` away
-       from the threshold"""
-    return {pt: val for pt, val in samples.items() if abs(threshold - val) <= distance}
+        # uncomment to see intermediate plot before each iteration
+        #open_file(plot_samples(samples, result.parameters, True, threshold))
 
+        print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
+        samples.update(new_samples)
 
-
+    return samples

@@ -1,59 +1,41 @@
-from sympy.polys import Poly
-from sympy import Rational, Integer, Float
+from pycarl import Rational, Variable, Monomial, Term, Polynomial, \
+    FactorizedPolynomial, RationalFunction, FactorizedRationalFunction
+from pycarl.formula import Formula
 
-
-def print_term(term, variables):
-    """Prints ((v1=2,v2=3),c1) as (* c v1 v1  v2 v2 v2)"""
-    assert term[1] != 0
-    factors = []
-    if term[1] != 1 or sum(term[0]) == 0:
-        factors.append(strNum(term[1]))
-
-    for var, power in zip(variables, term[0]):
-        # repeat var power times
-        factors += [str(var)] * power
-
-    poly_str = " ".join(factors)
-    if len(factors) > 1:
-        poly_str = "(* " + poly_str + ")"
-    return poly_str
-
-
-def print_terms(terms, variables):
-    """Prints [t, t, t] as (+ t t t)"""
-    poly_str = " ".join([print_term(term, variables) for term in terms])
-    if len(terms) > 1:
-        poly_str = "(+ " + poly_str + ")"
-    else:
-        pass
-    return poly_str
-
-
-def smt2strPoly(p, variables):
-    """Returns a string representation of the Poly p in prefix notation."""
-    assert isinstance(p, Poly)
-    poly_str = print_terms(p.terms(), variables)
-    return poly_str
-
-
-def strNum(n):
-    assert isinstance(n, Rational) or isinstance(n, Integer) or isinstance(n, Float)
-    if isinstance(n, Float):
-        n = Rational(n)
-    num_str = ""
-    if n.is_integer:
-        if n >= 0:
-            num_str = str(n)
+def ratfunc_to_smtlib(func):
+    """Walks throughthe argument and returns it as SMTLib constraint
+    @param func pycarl function object
+    """
+    if isinstance(func, (RationalFunction, FactorizedRationalFunction)):
+        return "(/ {} {})".format(ratfunc_to_smtlib(func.nominator),
+            ratfunc_to_smtlib(func.denominator))
+    elif isinstance(func, (Polynomial, FactorizedPolynomial)):
+        return "(+ {})".format(
+            " ".join([ratfunc_to_smtlib(term) for term in func]))
+    elif isinstance(func, Term):
+        return "(* {} {})".format(ratfunc_to_smtlib(func.coeff),
+            ratfunc_to_smtlib(func.monomial))
+    elif isinstance(func, Monomial):
+        result = ""
+        for var, exp in func:
+            result += " ".join([ratfunc_to_smtlib(var)] * exp)
+        return "(* {})".format(" ".join(result))
+    elif isinstance(func, Variable):
+        return func.name
+    elif isinstance(func, Rational):
+        if func.nominator < 0:
+            result = "(- {})".format(func.nominator)
         else:
-            num_str = "(- " + str(abs(n)) + ")"
+            result = str(func.nominator)
+        if func.denominator != 1:
+            result = "(/ {} {})".format(result, func.denominator)
+        return result
     else:
-        (nom, den) = n.as_numer_denom()
-        # Convert to Integer first, to avoid printing float representation
-        assert den > 0
-        if n >= 0:
-            num_str = str(nom)
-        else:
-            num_str = "(- " + str(abs(nom)) + ") "
-        if den != 1:
-            num_str = "(/ " + num_str + " " + str(abs(den)) + ")"
-    return num_str
+        assert False, "Unknown type to convert to SMTLib: " + repr(func)
+
+def smt2strPoly(func):
+    """Returns a string representation of the Poly func in SMTLib notation.
+    @param func pycarl function object
+    """
+    return str(Formula(func))
+    #return ratfunc_to_smtlib(func)

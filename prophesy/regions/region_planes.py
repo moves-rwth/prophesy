@@ -1,29 +1,47 @@
-from sampling.sampling import split_samples
-from regions.region_generation import ConstraintGeneration, Anchor, Direction
-import config
+from prophesy.data.samples import SamplePoint
+from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
+from prophesy import config
 from shapely.geometry import LineString, MultiPoint, box
-from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
 import numpy
+import shapely.geometry.point
+import prophesy.data.point
 
+#TODO: Effect of this?
+EPS = 0.00125
 
-class ConstraintPlanes(ConstraintGeneration):
+class ConstraintPlanes(RegionGenerator):
 
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc, _steps=3):
-        ConstraintGeneration.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
+        assert len(parameters) == 2, "Planes can be constructed in 2 dim only"
+        RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
         self.steps = numpy.linspace(0, -(1 / 2 * numpy.pi), _steps, endpoint=False)
 
+        self.x_min = parameters[0].interval.left_bound()
+        self.x_max = parameters[0].interval.right_bound()
+        self.y_min = parameters[1].interval.left_bound()
+        self.y_max = parameters[1].interval.right_bound()
+
+        #TODO: safe/unsafe also stored in base class
         self.safe_planes = []
         self.unsafe_planes = []
 
         self.anchor_points = []
-        for pt, dir in [((0, 0), Direction.NE), ((1, 0), Direction.NW), ((1, 1), Direction.SW), ((0, 1), Direction.SE)]:
-            value = self.ratfunc.eval({x: y for x, y in zip(self.parameters, pt)}).evalf()
+
+        # Add anchors CCW
+        for pt, direction in [
+                ((self.x_min, self.y_min), Direction.NE),
+                ((self.x_max, self.y_min), Direction.NW),
+                ((self.x_max, self.y_max), Direction.SW),
+                ((self.x_min, self.y_max), Direction.SE)]:
+            # initialy safe flag for anchors properly
+            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt), self.parameters.get_variable_order())
+            value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True
             else:
                 pt_safe = False
-            self.anchor_points.append(Anchor(Point(pt), dir, pt_safe))
+            self.anchor_points.append(Anchor(shapely.geometry.point.Point(pt), direction, pt_safe))
 
         self.best_orientation_vector = None
         self.best_dpt = 0
@@ -35,7 +53,8 @@ class ConstraintPlanes(ConstraintGeneration):
         # returns distance between point and line with anchor and orientation_vector
         # see https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Vector_formulation
         difference = numpy.array(anchor) - numpy.array(point)
-        tmp = difference - difference.dot(orientation_vector) * orientation_vector
+        # Operator order matters asnumpy is involed i.c.w. pycarl
+        tmp = difference - orientation_vector * difference.dot(orientation_vector)
         distance = numpy.array([numpy.float64(tmp.item(0)), numpy.float64(tmp.item(1))])
         return numpy.linalg.norm(distance)
 
@@ -75,16 +94,20 @@ class ConstraintPlanes(ConstraintGeneration):
     def create_plane(self, anchor, orientation_vector):
         """computes the plane created by splitting along the bounding line
         with the anchor point in it
-        the bounding line is orthogonal to the orientation vector"""
-        bbox = box(0, 0, 1, 1)
+        the bounding line is orthogonal to the orientation vector
+        @param anchor shapely Point
+        @param orientation_vector 2D numpy.array
+        @return shapely Polygon
+        """
+        bbox = box(self.x_min, self.y_min, self.x_max, self.y_max)
 
         orthogonal_anchor = numpy.array(anchor) + orientation_vector
         orthogonal_vec = self.compute_orthogonal_vector(orientation_vector)
 
         # Ensure start and end of bounding line are far enough outside of bbox to ensure intersection
         # compute_orthogonal_vector returns CW rotation
-        start = Point(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2)
-        end = Point(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2)
+        start = shapely.geometry.point.Point(orthogonal_anchor + self.normalize_vector(orthogonal_vec)*2)
+        end = shapely.geometry.point.Point(orthogonal_anchor - self.normalize_vector(orthogonal_vec)*2)
         bounding_line = LineString([start, end])
 
         intersections = bounding_line.intersection(bbox.boundary)
@@ -108,7 +131,11 @@ class ConstraintPlanes(ConstraintGeneration):
 
     def get_halfspace_polygon(self, start, end):
         """compute a halfspace polygon starting at poin start
-        and traversing the bounding box until end point is reached"""
+        and traversing the bounding box until end point is reached
+        @param start shapely.geometry.point.Point
+        @param end shapely.geometry.point.Point
+        @result shapely Polygon
+        """
         result = [(start.x, start.y)]
         corner_current = self.get_next_corner(start)
         corner_end = self.get_next_corner(end)
@@ -119,22 +146,26 @@ class ConstraintPlanes(ConstraintGeneration):
         return Polygon(result)
 
     def get_next_corner(self, point):
-        """return the next corner point (CCW) for a point lying on the bounding box"""
-        if point.x == 0:
-            if point.y == 0:
-                return Point(1, 0)
+        """Return the next corner point (CCW) for a point lying on the bounding
+        box. The result is a shapely Point
+        @param point shapely.geometry.point.Point
+        @return shapely.geometry.point.Point
+        """
+        if point.x == self.x_min:
+            if point.y == self.y_min:
+                return shapely.geometry.point.Point(self.x_max, self.y_min)
             else:
-                return Point(0, 0)
-        elif point.x == 1:
-            if point.y == 1:
-                return Point(0, 1)
+                return shapely.geometry.point.Point(self.x_min, self.y_min)
+        elif point.x == self.x_max:
+            if point.y == self.y_max:
+                return shapely.geometry.point.Point(self.x_min, self.y_max)
             else:
-                return Point(1, 1)
-        elif point.y == 0:
-            return Point(1, 0)
+                return shapely.geometry.point.Point(self.x_max, self.y_max)
+        elif point.y == self.y_min:
+            return shapely.geometry.point.Point(self.x_max, self.y_min)
         else:
-            assert(point.y == 1)
-            return Point(0, 1)
+            assert(point.y == self.y_max)
+            return shapely.geometry.point.Point(self.x_min, self.y_max)
 
     def rotate_vector(self, x, rad):
         R = numpy.matrix([[numpy.cos(rad), -numpy.sin(rad)], [numpy.sin(rad), numpy.cos(rad)]])
@@ -145,17 +176,26 @@ class ConstraintPlanes(ConstraintGeneration):
         return x / numpy.linalg.norm(x)
 
     def is_valid_orientation(self, anchor, direction):
-        """Tests if anchor and direction are valid as new anchor"""
+        """Tests if anchor and direction are valid as new anchor
+        @param anchor shapely Point
+        @param direction 2D numpy.array
+        """
         # Testing if point with small distance from anchor in direction is in unknown area
-        point_test = Point(numpy.array(anchor) + direction * EPS * 2)
-        if point_test.x < 0 or 1 < point_test.x or point_test.y < 0 or 1 < point_test.y:
+        offset_coords = numpy.array(anchor) + direction * EPS * 2
+        point_test = shapely.geometry.point.Point(offset_coords)
+
+        if point_test.x < self.x_min or point_test.x > self.x_max or \
+                point_test.y < self.y_min or point_test.y> self.y_max:
             return False
+
         for plane in self.safe_planes + self.unsafe_planes:
             if self.is_inside_polygon(point_test, plane):
                 return False
         return True
 
     def refine_with_intersections(self, polygon):
+        """Given the plane as argument, cut away known areas.
+        """
         # check for intersection with existing planes
         # TODO make more efficient
         for plane2 in self.safe_planes + self.unsafe_planes:
@@ -164,7 +204,7 @@ class ConstraintPlanes(ConstraintGeneration):
         return polygon
 
     def plot_candidate(self):
-        orientation_line = LineString([self.best_anchor.pos, Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector * self.best_dpt)])
+        orientation_line = LineString([self.best_anchor.pos, shapely.geometry.point.Point(numpy.array(self.best_anchor.pos) + self.best_orientation_vector * self.best_dpt)])
         self.plot_results(anchor_points=self.anchor_points, poly_blue=[self.best_plane], additional_arrows=[orientation_line], display=True)
 
     def fail_constraint(self, constraint, safe):
@@ -182,7 +222,7 @@ class ConstraintPlanes(ConstraintGeneration):
             return None
 
         self.best_plane = plane
-        return self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe
+        return self.best_plane, self.max_area_safe
 
     def reject_constraint(self, constraint, safe, sample):
         pass
@@ -197,12 +237,12 @@ class ConstraintPlanes(ConstraintGeneration):
         # Remove additional anchor points already in area
         anchors = self.anchor_points[:]
         for anchor in anchors:
-            if self.is_point_fulfilling_constraint(list(anchor.pos.coords)[0], constraint):
+            if self.is_inside_polygon(anchor.pos, constraint):
                 self.anchor_points.remove(anchor)
 
-        for pt in self.best_plane.boundary.coords:
-            point = Point(pt)
+        for point in self.best_plane.boundary.coords:
             # Test all directions for anchor
+            point = shapely.geometry.point.Point(point)
             for direction in [Direction.NE, Direction.NW, Direction.SW, Direction.SE]:
                 if self.is_valid_orientation(point, direction.to_vector()):
                     self.anchor_points.append(Anchor(point, direction, safe))
@@ -217,9 +257,12 @@ class ConstraintPlanes(ConstraintGeneration):
         self.best_plane = None
 
         # split samples into safe and bad
-        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold)
+        (safe_samples, bad_samples) = self.samples.split(self.threshold)
 
         for anchor in self.anchor_points:
+            #TODO: use anchor.to_vector. Have steps start in negative direction
+            # (as direction lies halfway).
+            # Normalize the vector return by to_vector, either here or there
             orientation = {
                       Direction.NE: numpy.array([1, 0]),
                       Direction.NW: numpy.array([0, 1]),
@@ -250,7 +293,7 @@ class ConstraintPlanes(ConstraintGeneration):
                     other_points = bad_samples.keys() if area_safe else safe_samples.keys()
                     break_attempt = False
                     for point2 in other_points:
-                        point2 = Point(point2)
+                        point2 = shapely.geometry.point.Point(point2)
                         if self.is_inside_polygon(point2, plane):
                             # wrong sample in covered area
                             break_attempt = True
@@ -266,4 +309,10 @@ class ConstraintPlanes(ConstraintGeneration):
         if self.best_plane is None:
             return None
 
-        return self.compute_constraint(self.best_plane), self.best_plane, self.max_area_safe
+        return self.best_plane, self.max_area_safe
+
+    def plot_results(self, *args, **kwargs):
+        if not self.plot:
+            return
+        kwargs['anchor_points'] = self.anchor_points
+        super().plot_results(*args, **kwargs)

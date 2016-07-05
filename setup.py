@@ -23,11 +23,10 @@ def do_setup():
         version="1.1",
         description="Prophesy - Parametric Probabilistic Model Checking",
         packages=["prophesy", "prophesy.smt",
-                   "prophesy.sampling", "prophesy.output", "prophesy.input", "prophesy.modelcheckers", "prophesy.data", "prophesy.constraints", "prophesy.exceptions"],
-        install_requires=['tornado', 'pycket', 'redis', 'sympy', 'shapely', 'numpy', 'matplotlib'],
+                   "prophesy.sampling", "prophesy.output", "prophesy.input", "prophesy.modelcheckers", "prophesy.data", "prophesy.regions", "prophesy.exceptions"],
+        install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely', 'numpy', 'matplotlib'],
         tests_require=['pytest'],
         extras_require = {
-            'carl': ["pycarl"],
             'stormpy' : ["stormpy"],
             'pdf': ["PyPDF2"],
         },

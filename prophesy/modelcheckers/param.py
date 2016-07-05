@@ -3,7 +3,7 @@
 # import config
 # import subprocess
 # import os
-from modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 # from util import check_filepath_for_reading, run_tool, ensure_dir_exists
 # from input.resultfile import read_param_result
 

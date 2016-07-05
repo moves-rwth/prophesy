@@ -3,8 +3,6 @@ import errno
 import platform
 import subprocess
 import tempfile
-from prophesy.exceptions.IOError import IOError
-
 
 def ensure_dir_exists(path):
     """Checks whether the directory exists and creates it if not."""
@@ -14,7 +12,7 @@ def ensure_dir_exists(path):
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise IOError("Cannot create directory: " + path)
-    except BaseException as expecption:
+    except BaseException:
         raise IOError("Path " + path + " seems not valid")
 
 
@@ -42,7 +40,6 @@ def run_tool(args, quiet=False):
             output = line.decode(encoding='UTF-8').rstrip()
             if output != "":
                 print("\t * " + output)
-
 
 def open_file(path):
     """Open file with system-default application.
@@ -77,6 +74,9 @@ def which(program):
     :param program: String with name of the program
     :return:
     """
+    from prophesy import config
+    from prophesy.config import configuration
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 

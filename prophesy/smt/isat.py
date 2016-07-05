@@ -1,9 +1,9 @@
 import os
-from config import configuration
-import config
+from prophesy.config import configuration
+from prophesy import config
 import tempfile
-from smt.smt import SMTSolver, VariableDomain
-from util import run_tool, ensure_dir_exists
+from prophesy.smt.smt import SMTSolver, VariableDomain
+from prophesy.util import run_tool, ensure_dir_exists
 
 
 def _constraint_to_isat(constraint):

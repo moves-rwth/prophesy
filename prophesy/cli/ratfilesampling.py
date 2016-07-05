@@ -14,14 +14,13 @@ from argparse import ArgumentParser
 # from sampling.sampler_carl import CarlSampling # needs fix
 # from sampling.sampling_linear import LinearRefinement # unused
 
-from output.plot import Plot
-from input.resultfile import read_pstorm_result
-import config
-from input.samplefile import write_samples_file
-from sampling.sampling import uniform_samples
-from sampling.sampler_ratfunc import RatFuncSampling
-from sampling.sampling_delaunay import DelaunayRefinement
-from util import open_file
+from prophesy.output.plot import Plot
+from prophesy.input.resultfile import read_pstorm_result
+from prophesy import config
+from prophesy.input.samplefile import write_samples_file
+from prophesy.sampling.sampling import uniform_samples,refine_samples
+from prophesy.sampling.sampler_ratfunc import RatFuncSampling
+from prophesy.util import open_file
 
 
 def parse_cli_args():
@@ -34,35 +33,14 @@ def parse_cli_args():
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
     parser.add_argument('--threshold', type=float, help='the threshold', required=True)
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--safe-above-threshold', action='store_true', dest="safe_above_threshold")
-    group.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold")
+    parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
 
     return parser.parse_args()
 
-
-
-
-def refine_samples(interface, samples, iterations, threshold):
-    """Refine samples over several iterations."""
-    # refinement_generator = LinearRefinement(interface, samples, threshold)
-    refinement_generator = DelaunayRefinement(interface, samples, threshold)
-
-    # Using range to limit the number of iterations
-    for (new_samples, i) in zip(refinement_generator, range(0, iterations)):
-
-        # uncomment to see intermediate plot before each iteration
-        #open_file(plot_samples(samples, result.parameters, True, threshold))
-
-        print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
-        samples.update(new_samples)
-
-    return samples
-
-
 def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
-    Plot.flip_green_red = True if not safe_above_threshold else False
+    if not safe_above_threshold:
+        Plot.flip_green_red = True
 
     _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=config.PLOTS)
 
@@ -83,15 +61,15 @@ if __name__ == "__main__":
     result = read_pstorm_result(cmdargs.rat_file)
     print("Parameters:", result.parameters)
 
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters, False)
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
     # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
-    initial_samples = uniform_samples(sampling_interface, [x[1] for x in result.parameters], cmdargs.samplingnr)
+    initial_samples = uniform_samples(sampling_interface, result.parameters, cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
-    refined_samples = refine_samples(sampling_interface, initial_samples, cmdargs.iterations, cmdargs.threshold)
-
-    write_samples_file([p[0].name for p in result.parameters], refined_samples, cmdargs.samples_file)
+    refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations, cmdargs.threshold)
+    #refined_samples = initial_samples
+    write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
     open_file(plot_path)

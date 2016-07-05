@@ -1,16 +1,17 @@
 import numpy
-from sampling.sample_generator import SampleGenerator, weighed_interpolation
-from sampling.voronoi import computeDelaunayTriangulation
-from shapely.geometry.point import Point
+from prophesy.sampling.sample_generator import SampleGenerator
+from prophesy.sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.linestring import LineString
-import config
+from prophesy.data.samples import Sample, weighed_interpolation, SamplePoints
+from pycarl import Rational
+from prophesy.data.point import Point
 
 class DelaunayRefinement(SampleGenerator):
-    def __init__(self, sampler, samples, threshold, distance=config.DISTANCE):
-        super().__init__(sampler)
-        self.points = self._make_points(samples)
+    def __init__(self, sampler, variables, samples, threshold):
+        super().__init__(sampler, variables, samples)
+        assert len(variables) == 2, "DelaunayRefinement only works for the 2D case"
+        self.points = [Point(x, y, val) for (x, y), val in samples.items()]
         self.threshold = threshold
-        self.distance = distance
 
     def _make_points(self, samples):
         return [Point(x, y, v) for (x,y), v in samples.items()]
@@ -24,24 +25,25 @@ class DelaunayRefinement(SampleGenerator):
         (self.points, triangles) = self._calc_triangles()
         if len(triangles) == 0:
             raise StopIteration()
-        
+
         # Determine line points
         lines = self._calc_lines(triangles)
 
         points = []
         for p1, p2 in lines:
-            points.append(p1.coords[0])
+            points.append(p1)
             line = LineString([p1, p2])
             for d in numpy.arange(0, line.length, self.distance):
-                pt = line.interpolate(d)
-                points.append(pt.coords[0])
-            if p2.distance(Point(points[-1])) > 0.01 and not p2.coords[0] in points:
+                shapely_pt = line.interpolate(d)
+                pt = Point(Rational(shapely_pt.x), Rational(shapely_pt.y))
+                points.append(pt)
+            if p2.distance(points[-1]) > 0.01 and not p2 in points:
                 # Add final point if not too close to intermediate point
-                points.append(p2.coords[0])
-        new_samples = self.sampler.perform_sampling(points)
+                points.append(p2)
+        new_samples = self.sampler.perform_sampling(SamplePoints(points, self.variables))
         new_points = self._make_points(new_samples)
         self.points += new_points
-        
+
         filter_points = []
         for i1 in range(0, len(self.points)):
             for i2 in range(i1 + 1, len(self.points)):
@@ -97,7 +99,11 @@ class DelaunayRefinement(SampleGenerator):
                     continue
                 if p1.distance(p2) < 0.001:
                     continue
-                midpoint = weighed_interpolation(p1, p2, p1.z, p2.z, self.threshold, fudge)
+
+                sample1 = Sample(Point(Rational(p1.x), Rational(p1.y)), Rational(p1.z))
+                sample2 = Sample(Point(Rational(p2.x), Rational(p2.y)), Rational(p2.z))
+
+                midpoint = weighed_interpolation(sample1, sample2, self.threshold, fudge)
                 if midpoint is not None:
                     line.append(midpoint)
             # NOTE: A triangle can only have exactly two such points, or none

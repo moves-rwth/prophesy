@@ -1,20 +1,19 @@
 import math
-from sampling.sample_generator import SampleGenerator, weighed_interpolation
-from sampling.sampling import filter_samples, split_samples
-from shapely.geometry.point import Point
-
+from prophesy.sampling.sample_generator import SampleGenerator
+from prophesy.data.samples import weighed_interpolation, SamplePoints
 
 class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means
     of linear interpolation to approximate the threshold"""
-    def __init__(self, sampler, samples, threshold):
-        super().__init__(sampler)
-        self.samples = samples.copy()
+    def __init__(self, sampler, variables, samples, threshold):
+        super().__init__(sampler, variables, samples)
         self.threshold = threshold
+
         self.first = True
 
     def _min_dist(self):
         """Max. distance between two points to be considered"""
+        #TODO: What is going on here, hrmmm
         samplenr = math.sqrt(len(self.samples))
         if samplenr <= 1:
             return 0
@@ -28,7 +27,7 @@ class LinearRefinement(SampleGenerator):
         sample point."""
         i = 0
         for sample_pt in self.samples.keys():
-            d = point.distance(Point(sample_pt))
+            d = point.distance(sample_pt)
             if d < 0.01:
                 return True
             elif d < 0.05:
@@ -43,14 +42,15 @@ class LinearRefinement(SampleGenerator):
 
     def __next__(self):
         if not self.first:
-            self.samples = filter_samples(self.samples, self.threshold)
+            # TODO: what should the distance be?
+            self.samples = self.samples.filter(lambda value: abs(value - self.threshold) > 0.00125)
         else:
             self.first = False
 
         if len(self.samples) == 0:
             raise StopIteration()
 
-        (safe_samples, bad_samples) = split_samples(self.samples, self.threshold)
+        (safe_samples, bad_samples) = self.samples.split(self.threshold)
         delta = self._min_dist()
         new_points = []
 
@@ -61,19 +61,20 @@ class LinearRefinement(SampleGenerator):
         else:
             fudge = -0.01
 
-        for safe_pt, safe_v in safe_samples.items():
-            safe_pt = Point(safe_pt)
-            for bad_pt, bad_v in bad_samples.items():
-                bad_pt = Point(bad_pt)
-                dist = safe_pt.distance(bad_pt)
+        for safe_sample in safe_samples.samples():
+            for bad_sample in bad_samples.samples():
+                dist = safe_sample.pt.distance(bad_sample.pt)
                 if 0.06 < dist < delta:
-                    point = weighed_interpolation(safe_pt, bad_pt, safe_v, bad_v, self.threshold, fudge)
+                    point = weighed_interpolation(safe_sample, bad_sample, self.threshold, fudge)
                     if point is not None and not self._is_too_close(point):
-                        new_points.append(list(point.coords)[0])
+                        new_points.append(point)
 
         if not new_points:
             raise StopIteration()
 
-        new_samples = self.sampler.perform_sampling(new_points)
+        sample_points = SamplePoints(new_points, self.variables)
+
+        new_samples = self.sampler.perform_sampling(sample_points)
+
         self.samples.update(new_samples)
         return new_samples
