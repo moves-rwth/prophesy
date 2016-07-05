@@ -1,40 +1,27 @@
-from distutils.core import setup, Command
-
+from distutils.core import setup
 from setuptools.command.test import test as TestCommand
-from distutils.command.build import build as orig_build
 import os
 import sys
 
-
 class Tox(TestCommand):
+    """Custom command to execute the tests using tox
+    """
+
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
+
     def run_tests(self):
         #import here, cause outside the eggs aren't loaded
         import tox
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
 
-class build(orig_build):
-    def run(self):
-        self.run_command("build_config")
-        orig_build.run(self)
-
-class build_config(Command):
-    description = "run initial configuration"
-    user_options = []
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        os.system('python write_config.py')
-
 def do_setup():
+    # Write config before executing setup, so cfg files are found
+    os.system('python write_config.py')
+
     setup(
         name="Prophesy",
         version="1.1",
@@ -53,11 +40,9 @@ def do_setup():
         },
         package_data={
             'prophesy': ['prophesy.cfg'],
-            'prophesy_web': ['prophesy_web.cfg', 'static']
+            'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
         },
         cmdclass={
-          'build': build,
-          'build_config': build_config,
           'test': Tox
         }
     )
