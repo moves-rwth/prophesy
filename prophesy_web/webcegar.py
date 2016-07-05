@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.data.hyperrectangle import HyperRectangle
 
-# import library. Using this instead of appends prevents naming clashes..
-this_file_path = os.path.dirname(os.path.realpath(__file__))
-# insert at position 1; leave path[0] (directory at invocation) intact
-sys.path.insert(1, os.path.join(this_file_path, '..'))
-
-
-from prophesy import config
+from prophesy_web import config
+from prophesy_web.config import configuration as web_configuration
 from prophesy.config import configuration
 
 import tempfile
@@ -785,7 +779,7 @@ def initEnv():
 
     # Preload some result files for easy startup
     print("Loading default result files...")
-    rat_path = configuration.get(config.DIRECTORIES, 'web_examples')
+    rat_path = web_configuration.get(config.DIRECTORIES, 'web_examples')
     try:
         ratfiles = os.listdir(rat_path)
         for rfile in ratfiles:
@@ -803,7 +797,7 @@ def initEnv():
 
 def make_app(hostname):
     settings = {
-        'static_path': config.configuration.get(config.DIRECTORIES, "web_interface"),
+        'static_path': web_configuration.get(config.DIRECTORIES, "web_interface"),
         'static_url_prefix' : '/ui/',
         'cookie_secret' : "sldfjwlekfjLKJLEAQEWjrdjvsl3807(*&SAd",
         'pycket': {
@@ -874,13 +868,13 @@ def parse_cli_args():
 if __name__ == "__main__":
     cmdargs = parse_cli_args()
 
-    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_sessions"))
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
     ensure_dir_exists(config.WEB_RESULTS)
-    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_examples"))
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
 
     session_opts = {
         'session.type': 'file',
-        'session.data_dir': config.configuration.get(config.DIRECTORIES, "web_sessions"),
+        'session.data_dir': web_configuration.get(config.DIRECTORIES, "web_sessions"),
         'session.auto': True,
         'session.invalidate_corrupt':False
     }
