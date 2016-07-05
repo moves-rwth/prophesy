@@ -57,9 +57,10 @@ class Configuration():
 
 configuration = Configuration()
 
+# Sections
+DIRECTORIES = "directories"
 
 # directories
-DIRECTORIES = "directories"
 WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
 
 TOOLNAME = "prophesy_web"

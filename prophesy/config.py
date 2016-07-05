@@ -164,20 +164,16 @@ class Configuration():
 
 configuration = Configuration()
 
-
-# directories
-DIRECTORIES = "directories"
-INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
-PLOTS = configuration.get(DIRECTORIES, "plots")
-WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
-
-
 # section names
+DIRECTORIES = "directories"
 EXTERNAL_TOOLS = "external_tools"
 SAMPLING = "sampling"
 CONSTRAINTS = "constraints"
 DEPENDENCIES = "installed_deps"
 
+# directories
+INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
+PLOTS = configuration.get(DIRECTORIES, "plots")
 
 # CONSTANTS
 # Smallest discernable difference for intervals (used for strict bounds)
