@@ -6,17 +6,14 @@ from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.data.hyperrectangle import HyperRectangle
 
 from prophesy_web import config
-from prophesy_web.config import configuration as web_configuration
 from prophesy.config import configuration
 
 import tempfile
 import re
-from argparse import ArgumentParser
 import shutil
 import uuid
 import subprocess
 
-from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
@@ -24,7 +21,6 @@ from tornado import gen
 from pycket.session import SessionMixin
 from shapely.geometry.polygon import Polygon
 
-from prophesy.util import ensure_dir_exists
 from prophesy.input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from prophesy.input.prismfile import PrismFile
@@ -42,6 +38,10 @@ from prophesy.regions.region_planes import ConstraintPlanes
 from prophesy.regions.region_rectangles import ConstraintRectangles
 from prophesy.regions.region_quads import ConstraintQuads
 from prophesy.regions.region_polygon import ConstraintPolygon
+
+from prophesy.util import ensure_dir_exists
+
+from prophesy_web.config import configuration as web_configuration
 
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen
@@ -773,6 +773,35 @@ class Configuration(CegarHandler):
                 configuration.updateConfigurationFile()
                 return self._json_ok()
         return self._json_error()
+
+def initEnv():
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
+    ensure_dir_exists(config.WEB_RESULTS)
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
+
+    # Check available model checkers, solvers and various other regions
+    # and adjust capabilities based on that
+    global satSolvers, samplers, ppmcs
+    satSolvers = configuration.getAvailableSMTSolvers()
+    samplers = configuration.getAvailableSamplers()
+    ppmcs = configuration.getAvailableParametricMCs()
+
+    # Preload some result files for easy startup
+    print("Loading default result files...")
+    rat_path = web_configuration.get(config.DIRECTORIES, 'web_examples')
+    try:
+        ratfiles = os.listdir(rat_path)
+        for rfile in ratfiles:
+            fullpath = os.path.join(rat_path, rfile)
+            try:
+                read_pstorm_result(fullpath)
+                default_results[rfile] = fullpath
+            except:
+                pass
+    except:
+        pass
+
+    print("Done checking environment")
 
 def make_app(hostname):
     web_package_path = os.path.dirname(os.path.realpath(__file__))
