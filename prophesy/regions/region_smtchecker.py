@@ -60,8 +60,8 @@ class SmtRegionChecker(RegionChecker):
                 smt_context.assert_constraint(constraint)
 
                 # Invert the safe flag to try and find a counter example
-                smt_context.set_guard("safe", not safe)
-                smt_context.set_guard("bad", safe)
+                smt_context.set_guard("__safe", not safe)
+                smt_context.set_guard("__bad", safe)
 
                 start = time.time()
                 checkresult = smt_context.check()

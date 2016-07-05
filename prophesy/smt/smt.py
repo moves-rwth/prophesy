@@ -15,8 +15,8 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     rat_vars = result.parameters.get_variable_order()
     vars = rat_vars
 
-    safeVar = Variable("safe", VariableType.BOOL)
-    badVar = Variable("bad", VariableType.BOOL)
+    safeVar = Variable("__safe", VariableType.BOOL)
+    badVar = Variable("__bad", VariableType.BOOL)
     thresholdVar = Variable("T")
     rf1Var = Variable("rf1")
     rf2Var = Variable("rf2")
@@ -45,8 +45,8 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     smt2interface.assert_constraint(threshold_constraint)
     smt2interface.assert_constraint(rf1_constraint)
     smt2interface.assert_constraint(rf2_constraint)
-    smt2interface.assert_guarded_constraint("safe", safe_constraint)
-    smt2interface.assert_guarded_constraint("bad", bad_constraint)
+    smt2interface.assert_guarded_constraint("__safe", safe_constraint)
+    smt2interface.assert_guarded_constraint("__bad", bad_constraint)
 
     #TODO why do we only do this if the denominator is 1
     if result.ratfunc.denominator == Polynomial(Rational(1)):
