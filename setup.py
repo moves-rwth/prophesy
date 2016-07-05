@@ -1,8 +1,10 @@
-from setuptools import setup, find_packages
+from distutils.core import setup, Command
+
 from setuptools.command.test import test as TestCommand
-from prophesy.write_config import write_initial_config
+from distutils.command.build import build as orig_build
 import os
 import sys
+
 
 class Tox(TestCommand):
     def finalize_options(self):
@@ -15,10 +17,25 @@ class Tox(TestCommand):
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
 
+class build(orig_build):
+    def run(self):
+        self.run_command("build_config")
+        orig_build.run(self)
+
+class build_config(Command):
+    description = "run initial configuration"
+    user_options = []
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        os.system('python write_config.py')
 
 def do_setup():
     setup(
-        cmdclass = {'test': Tox},
         name="Prophesy",
         version="1.1",
         description="Prophesy - Parametric Probabilistic Model Checking",
@@ -34,11 +51,16 @@ def do_setup():
             'stormpy' : ["stormpy"],
             'pdf': ["PyPDF2"],
         },
-        package_data={'prophesy': ['prophesy.cfg']}
+        package_data={
+            'prophesy': ['prophesy.cfg'],
+            'prophesy_web': ['prophesy_web.cfg', 'static']
+        },
+        cmdclass={
+          'build': build,
+          'build_config': build_config,
+          'test': Tox
+        }
     )
-
-    write_initial_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy/prophesy.cfg"))
-
 
 if __name__ == "__main__":
     do_setup()
