@@ -52,8 +52,6 @@ from pycarl import Rational
 
 default_results = {}
 
-executor = ThreadPoolExecutor(max_workers=1)
-
 if configuration.is_module_available('stormpy'):
     from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
@@ -523,6 +521,9 @@ class Samples(CegarHandler):
         return self._json_ok()
 
 class GenerateSamples(CegarHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
@@ -571,7 +572,7 @@ class GenerateSamples(CegarHandler):
 
             return new_samples
 
-        new_samples = yield executor.submit(generate_samples, samples_generator, iterations)
+        new_samples = yield self.executor.submit(generate_samples, samples_generator, iterations)
 
         samples.update(new_samples)
         self._set_session('samples', samples)
@@ -641,6 +642,9 @@ class ConstraintHandler(CegarHandler):
         return (new_samples, unsat)
 
 class Constraints(ConstraintHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     def get(self):
         constraints = self._get_session('regions', [])
         return self._json_ok(constraints)
@@ -662,7 +666,7 @@ class Constraints(ConstraintHandler):
 
         smt2interface, generator = self.make_gen("poly")
         generator.add_polygon(Polygon(coordinates), safe)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator)
+        new_samples, unsat = yield self.executor.submit(self.analyze, smt2interface, generator)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
@@ -687,6 +691,9 @@ class Constraints(ConstraintHandler):
         return self._json_ok()
 
 class GenerateConstraints(ConstraintHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
@@ -699,7 +706,7 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("Unable to load result data", 500)
 
         smt2interface, generator = self.make_gen(generator_type)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator, iterations)
+        new_samples, unsat = yield self.executor.submit(self.analyze, smt2interface, generator, iterations)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
@@ -826,6 +833,9 @@ def make_app(hostname):
     #    },
     #}
 
+    # thread pool to run long-0running tasks is the background
+    executor = ThreadPoolExecutor(max_workers=1)
+
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
         (r"/files", RedirectHandler, dict(url="ui/filemanager.html")),
@@ -844,9 +854,9 @@ def make_app(hostname):
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),
         (r'/samples', Samples),
-        (r'/generateSamples', GenerateSamples),
-        (r'/regions', Constraints),
-        (r'/generateConstraints', GenerateConstraints),
+        (r'/generateSamples', GenerateSamples, dict(executor=executor)),
+        (r'/regions', Constraints, dict(executor=executor)),
+        (r'/generateConstraints', GenerateConstraints, dict(executor=executor)),
         (r'/websocket', CegarWebSocket),
         (r'/config/(.*)/(.*)$', Configuration),
         (r'/config', Configuration),
