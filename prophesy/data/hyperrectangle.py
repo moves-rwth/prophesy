@@ -24,7 +24,7 @@ class HyperRectangle(object):
             HyperRectangle
         :return HyperRectangle
         """
-        return cls.__init__([Interval(l,boundtype,r,boundtype) for l,r in zip(lowerpoint, upperpoint)])
+        return cls.__init__(*[Interval(l,boundtype,r,boundtype) for l,r in zip(lowerpoint, upperpoint)])
 
     def dimension(self):
         return len(self.intervals)

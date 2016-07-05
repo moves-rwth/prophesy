@@ -56,8 +56,9 @@ class Interval:
         return self._right_bound_type
 
     def empty(self):
-        if self._left_value > self._right_value: return False
-        if self._left_value == self._right_value and (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open): return False
+        if self._left_value == self._right_value:
+            return (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open)
+        return self._left_value > self._right_value
 
     def contains(self, pt):
         if self._left_value < pt < self._right_value: return True
@@ -68,8 +69,8 @@ class Interval:
     def width(self):
         return self._right_value - self._left_value
 
-    def split(self):
-        mid = self._left_value + self.width()/2
+    def split(self, bias = 0.5):
+        mid = self._left_value + self.width() * bias
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 
     def close(self):
@@ -85,7 +86,7 @@ class Interval:
             newLB = other._left_bound_type
         else:
             newleft = self._left_value
-            newLB = self._left_bound_type if self.left_bound_type == BoundType.open else other._left_bound_type
+            newLB = self._left_bound_type if self._left_bound_type == BoundType.open else other._left_bound_type
         if self._right_value < other._right_value:
             newright = self._right_value
             newRB = self._right_bound_type
@@ -94,7 +95,7 @@ class Interval:
             newRB = other._right_bound_type
         else:
             newright = self._right_value
-            newLB = self._right_bound_type if self.right_bound_type == BoundType.open else other._right_bound_type
+            newLB = self._right_bound_type if self._right_bound_type == BoundType.open else other._right_bound_type
         return Interval(newleft, newLB, newright, newRB)
 
     def __str__(self):
