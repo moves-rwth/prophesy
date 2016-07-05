@@ -42,6 +42,11 @@ def do_setup():
             'prophesy': ['prophesy.cfg'],
             'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
         },
+        scripts=['scripts/buildconstraints',
+                 'scripts/prismfilesampling',
+                 'scripts/prismfiletoratfunc',
+                 'scripts/ratfilesampling',
+                 'scripts/webcegar'],
         cmdclass={
           'test': Tox
         }
