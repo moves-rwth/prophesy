@@ -775,8 +775,10 @@ class Configuration(CegarHandler):
         return self._json_error()
 
 def make_app(hostname):
+    web_package_path = os.path.dirname(os.path.realpath(__file__))
+    static_path = os.path.join(web_package_path, "static")
     settings = {
-        'static_path': web_configuration.get(config.DIRECTORIES, "web_interface"),
+        'static_path': static_path,
         'static_url_prefix' : '/ui/',
         'cookie_secret' : "sldfjwlekfjLKJLEAQEWjrdjvsl3807(*&SAd",
         'pycket': {

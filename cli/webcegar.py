@@ -13,6 +13,10 @@ from argparse import ArgumentParser
 from tornado.ioloop import IOLoop
 
 def initEnv():
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
+    ensure_dir_exists(config.WEB_RESULTS)
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
+
     # Check available model checkers, solvers and various other regions
     # and adjust capabilities based on that
     global satSolvers, samplers, ppmcs
@@ -48,10 +52,6 @@ def parse_cli_args():
 
 if __name__ == "__main__":
     cmdargs = parse_cli_args()
-
-    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
-    ensure_dir_exists(config.WEB_RESULTS)
-    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
 
     initEnv()
 
