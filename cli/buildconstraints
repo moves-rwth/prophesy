@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-from prophesy import config
-
-# import library. Using this instead of appends prevents naming clashes..
-this_file_path = os.path.dirname(os.path.realpath(__file__))
-# insert at position 1; leave path[0] (directory at invocation) intact
-sys.path.insert(1, os.path.join(this_file_path, '..'))
-
 from argparse import ArgumentParser
 
 from shapely.geometry.polygon import Polygon
@@ -27,6 +18,7 @@ from prophesy.smt.smt import setup_smt
 from prophesy.smt.smtlib import SmtlibSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 
+from prophesy import config
 from prophesy.config import configuration
 
 def parse_cli_args(solversConfig):
