@@ -5,6 +5,7 @@ from shapely import affinity
 from prophesy import config
 import shapely.geometry.point
 import prophesy.data.point
+from pycarl import Rational
 
 #TODO: This class needs to be rewritten to use HyperRectangles
 
@@ -27,13 +28,22 @@ class ConstraintRectangles(RegionGenerator):
                 ((self.x_max, self.y_max), Direction.SW),
                 ((self.x_min, self.y_max), Direction.SE)]:
             # initialy safe flag for anchors properly
-            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt), self.parameters.get_variable_order())
+            pt2 = list(pt)
+            if pt2[0] == 0:
+                pt2[0] = Rational(1)/Rational(1e6)
+            if pt2[0] == 1:
+                pt2[0] = Rational(999999)/Rational(1e6)
+            if pt2[1] == 0:
+                pt2[1] = Rational(1)/Rational(1e6)
+            if pt2[1] == 1:
+                pt2[1] = Rational(999999)/Rational(1e6)
+            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt2), self.parameters.get_variable_order())
             value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True
             else:
                 pt_safe = False
-            self.anchor_points.append(Anchor(shapely.geometry.point.Point(pt), direction, pt_safe))
+            self.anchor_points.append(Anchor(shapely.geometry.point.Point(pt2), direction, pt_safe))
 
         self.best_anchor = None
         self.best_rectangle = None
