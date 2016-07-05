@@ -1,40 +1,56 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
 from setuptools.command.test import test as TestCommand
-from prophesy.write_config import write_initial_config
 import os
 import sys
 
 class Tox(TestCommand):
+    """Custom command to execute the tests using tox
+    """
+
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
+
     def run_tests(self):
         #import here, cause outside the eggs aren't loaded
         import tox
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
 
-
 def do_setup():
+    # Write config before executing setup, so cfg files are found
+    os.system('python write_config.py')
+
     setup(
-        cmdclass = {'test': Tox},
         name="Prophesy",
         version="1.1",
         description="Prophesy - Parametric Probabilistic Model Checking",
         packages=["prophesy", "prophesy.smt",
-                   "prophesy.sampling", "prophesy.output", "prophesy.input", "prophesy.modelcheckers", "prophesy.data", "prophesy.regions", "prophesy.exceptions"],
-        install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely', 'numpy', 'matplotlib'],
+                  "prophesy.sampling", "prophesy.output", "prophesy.input",
+                  "prophesy.modelcheckers", "prophesy.data",
+                  "prophesy.regions", "prophesy.exceptions",
+                  "prophesy_web"],
+        install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely',
+                          'numpy', 'matplotlib'],
         tests_require=['pytest'],
         extras_require = {
             'stormpy' : ["stormpy"],
             'pdf': ["PyPDF2"],
         },
-        package_data={'prophesy': ['prophesy.cfg']}
+        package_data={
+            'prophesy': ['prophesy.cfg'],
+            'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
+        },
+        scripts=['scripts/buildconstraints',
+                 'scripts/prismfilesampling',
+                 'scripts/prismfiletoratfunc',
+                 'scripts/ratfilesampling',
+                 'scripts/webcegar'],
+        cmdclass={
+          'test': Tox
+        }
     )
 
-    write_initial_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy/prophesy.cfg"))
-
-
 if __name__ == "__main__":
-      do_setup()
+    do_setup()

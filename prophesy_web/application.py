@@ -1,30 +1,19 @@
-#!/usr/bin/env python3
-
 import os
-import sys
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.data.hyperrectangle import HyperRectangle
 
-# import library. Using this instead of appends prevents naming clashes..
-this_file_path = os.path.dirname(os.path.realpath(__file__))
-# insert at position 1; leave path[0] (directory at invocation) intact
-sys.path.insert(1, os.path.join(this_file_path, '..'))
-
-
-from prophesy import config
+from prophesy_web import config
 from prophesy.config import configuration
 
 import tempfile
 import re
-from argparse import ArgumentParser
 import shutil
 import uuid
 import subprocess
 
-from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
@@ -32,7 +21,6 @@ from tornado import gen
 from pycket.session import SessionMixin
 from shapely.geometry.polygon import Polygon
 
-from prophesy.util import ensure_dir_exists
 from prophesy.input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from prophesy.input.prismfile import PrismFile
@@ -51,14 +39,16 @@ from prophesy.regions.region_rectangles import ConstraintRectangles
 from prophesy.regions.region_quads import ConstraintQuads
 from prophesy.regions.region_polygon import ConstraintPolygon
 
+from prophesy.util import ensure_dir_exists
+
+from prophesy_web.config import configuration as web_configuration
+
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen
 
 from pycarl import Rational
 
 default_results = {}
-
-executor = ThreadPoolExecutor(max_workers=1)
 
 if configuration.is_module_available('stormpy'):
     from prophesy.modelcheckers.stormpy import StormpyModelChecker
@@ -529,6 +519,9 @@ class Samples(CegarHandler):
         return self._json_ok()
 
 class GenerateSamples(CegarHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
@@ -577,7 +570,7 @@ class GenerateSamples(CegarHandler):
 
             return new_samples
 
-        new_samples = yield executor.submit(generate_samples, samples_generator, iterations)
+        new_samples = yield self.executor.submit(generate_samples, samples_generator, iterations)
 
         samples.update(new_samples)
         self._set_session('samples', samples)
@@ -647,6 +640,9 @@ class ConstraintHandler(CegarHandler):
         return (new_samples, unsat)
 
 class Constraints(ConstraintHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     def get(self):
         constraints = self._get_session('regions', [])
         return self._json_ok(constraints)
@@ -668,7 +664,7 @@ class Constraints(ConstraintHandler):
 
         smt2interface, generator = self.make_gen("poly")
         generator.add_polygon(Polygon(coordinates), safe)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator)
+        new_samples, unsat = yield self.executor.submit(self.analyze, smt2interface, generator)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
@@ -693,6 +689,9 @@ class Constraints(ConstraintHandler):
         return self._json_ok()
 
 class GenerateConstraints(ConstraintHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
@@ -705,7 +704,7 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("Unable to load result data", 500)
 
         smt2interface, generator = self.make_gen(generator_type)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator, iterations)
+        new_samples, unsat = yield self.executor.submit(self.analyze, smt2interface, generator, iterations)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
@@ -776,6 +775,10 @@ class Configuration(CegarHandler):
         return self._json_error()
 
 def initEnv():
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
+    ensure_dir_exists(config.WEB_RESULTS)
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
+
     # Check available model checkers, solvers and various other regions
     # and adjust capabilities based on that
     global satSolvers, samplers, ppmcs
@@ -785,7 +788,7 @@ def initEnv():
 
     # Preload some result files for easy startup
     print("Loading default result files...")
-    rat_path = configuration.get(config.DIRECTORIES, 'web_examples')
+    rat_path = web_configuration.get(config.DIRECTORIES, 'web_examples')
     try:
         ratfiles = os.listdir(rat_path)
         for rfile in ratfiles:
@@ -800,10 +803,11 @@ def initEnv():
 
     print("Done checking environment")
 
-
 def make_app(hostname):
+    web_package_path = os.path.dirname(os.path.realpath(__file__))
+    static_path = os.path.join(web_package_path, "static")
     settings = {
-        'static_path': config.configuration.get(config.DIRECTORIES, "web_interface"),
+        'static_path': static_path,
         'static_url_prefix' : '/ui/',
         'cookie_secret' : "sldfjwlekfjLKJLEAQEWjrdjvsl3807(*&SAd",
         'pycket': {
@@ -832,6 +836,16 @@ def make_app(hostname):
     #    },
     #}
 
+    # thread pool to run long-0running tasks is the background
+    executor = ThreadPoolExecutor(max_workers=1)
+
+    # session_opts = {
+    #     'session.type': 'file',
+    #     'session.data_dir': web_configuration.get(config.DIRECTORIES, "web_sessions"),
+    #     'session.auto': True,
+    #     'session.invalidate_corrupt':False
+    # }
+
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
         (r"/files", RedirectHandler, dict(url="ui/filemanager.html")),
@@ -850,9 +864,9 @@ def make_app(hostname):
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),
         (r'/samples', Samples),
-        (r'/generateSamples', GenerateSamples),
-        (r'/regions', Constraints),
-        (r'/generateConstraints', GenerateConstraints),
+        (r'/generateSamples', GenerateSamples, dict(executor=executor)),
+        (r'/regions', Constraints, dict(executor=executor)),
+        (r'/generateConstraints', GenerateConstraints, dict(executor=executor)),
         (r'/websocket', CegarWebSocket),
         (r'/config/(.*)/(.*)$', Configuration),
         (r'/config', Configuration),
@@ -860,37 +874,3 @@ def make_app(hostname):
     ], **settings)
 
     return application
-
-
-def parse_cli_args():
-    parser = ArgumentParser(description='Start a webservice for ' + config.TOOLNAME)
-    parser.add_argument('--server-port', type=int, help='the port the server listens on', default=4242)
-    parser.add_argument('--server-host', help="server host name", default="localhost")
-    parser.add_argument('--server-debug', type=bool, help='run the server in debug mode', default=True)
-    parser.add_argument('--server-quiet', type=bool, help='run the server in quiet mode', default=False)
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    cmdargs = parse_cli_args()
-
-    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_sessions"))
-    ensure_dir_exists(config.WEB_RESULTS)
-    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_examples"))
-
-    session_opts = {
-        'session.type': 'file',
-        'session.data_dir': config.configuration.get(config.DIRECTORIES, "web_sessions"),
-        'session.auto': True,
-        'session.invalidate_corrupt':False
-    }
-
-    initEnv()
-
-    app = make_app(cmdargs.server_host)
-
-    if(not cmdargs.server_quiet):
-        print("Starting webservice...")
-
-    app.listen(cmdargs.server_port)
-    IOLoop.current().start()

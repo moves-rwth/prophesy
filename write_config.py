@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
+
 import configparser
 import os
 import importlib
 from distutils.spawn import find_executable
 
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
-home = os.path.expanduser("~")
 
 def find_tool(name, path=None):
     """
@@ -26,21 +27,29 @@ def check_python_api(name):
     spec = importlib.util.find_spec(name)
     return spec is not None
 
-
-def write_initial_config(path):
-    print("Writing config to " + path)
-    config = configparser.ConfigParser()
+def get_initial_web_config(config):
     config_dirs = {}
-    config_dirs["tmp"] =  os.path.join(thisfilepath, "../tmp/")
-    config_dirs["intermediate_files"] = os.path.join(config_dirs["tmp"], "intermediate")
+    config_dirs["server_tmp"] = os.path.join(
+        thisfilepath, "/", "tmp", "prophesy_web")
+    config_dirs["web_sessions"] = os.path.join(
+        config_dirs["server_tmp"], "sessions")
+    config_dirs["web_results"] = os.path.join(
+        config_dirs["server_tmp"], "results")
+    config_dirs["web_examples"] = os.path.join(
+        config_dirs["server_tmp"], "examples")
+    config["directories"] = config_dirs
+
+def get_initial_config(config):
+    # Setup paths
+    config_dirs = {}
+    config_dirs["tmp"] = os.path.join(thisfilepath, "/", "tmp", "prophesy")
+    config_dirs["intermediate_files"] = os.path.join(
+        config_dirs["tmp"], "intermediate")
     config_dirs["plots"] = os.path.join(config_dirs["tmp"], "plots")
-    config_dirs["server_tmp"] = os.path.join(thisfilepath, "../tmp/web")
-    config_dirs["web_sessions"] = os.path.join(config_dirs["server_tmp"], "sessions")
-    config_dirs["web_results"] = os.path.join(config_dirs["server_tmp"], "results")
-    config_dirs["web_interface"] = os.path.join(thisfilepath, "../webinterface")
-    config_dirs["web_examples"] = os.path.join(config_dirs["server_tmp"], "examples")
     config_dirs["custom_path"] = ""
     config["directories"] = config_dirs
+
+    # Setup tool paths
     config_tools = {}
     config_tools["z3"] = find_tool("z3")
     config_tools["isat"] = find_tool("isat")
@@ -48,24 +57,36 @@ def write_initial_config(path):
     config_tools["storm"] = find_tool("storm")
     config_tools["prism"] = find_tool("prism")
     config["external_tools"] = config_tools
+
+    # Setup optional dependencies
     config_deps = {}
     config_deps["stormpy"] = check_python_api("stormpy")
     config_deps["pypdf2"] = check_python_api("PyPDF2")
     config["installed_deps"] = config_deps
 
-
-    #
+    # Setup sampling constants
     config_sampling = {}
     config_sampling["distance"] = str(0.2)
     config_sampling["sampling_threshold_new"] = str(50)
     config["sampling"] = config_sampling
 
+    # Setup constraint constants
     config_constraints = {}
     config_constraints["precision"] = str(0.0001)
     config["constraints"] = config_constraints
 
+def write_initial_config(path, config):
+    print("Writing config to " + path)
     with open(path, 'w') as configfile:
         config.write(configfile)
 
 if __name__ == "__main__":
-    write_initial_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy.cfg"))
+    config = configparser.ConfigParser()
+    get_initial_config(config)
+    write_initial_config(
+        os.path.join(thisfilepath, "prophesy", "prophesy.cfg"), config)
+
+    config = configparser.ConfigParser()
+    get_initial_web_config(config)
+    write_initial_config(
+        os.path.join(thisfilepath, "prophesy_web", "prophesy_web.cfg"), config)
