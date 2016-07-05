@@ -6,7 +6,7 @@ from prophesy.input.resultfile import read_pstorm_result
 
 from prophesy_web.config import configuration as web_configuration
 from prophesy_web import config
-from prophesy_web.webcegar import make_app, default_results
+from prophesy_web.application import make_app, default_results
 
 import os
 from argparse import ArgumentParser
