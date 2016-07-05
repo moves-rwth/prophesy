@@ -836,6 +836,13 @@ def make_app(hostname):
     # thread pool to run long-0running tasks is the background
     executor = ThreadPoolExecutor(max_workers=1)
 
+    # session_opts = {
+    #     'session.type': 'file',
+    #     'session.data_dir': web_configuration.get(config.DIRECTORIES, "web_sessions"),
+    #     'session.auto': True,
+    #     'session.invalidate_corrupt':False
+    # }
+
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
         (r"/files", RedirectHandler, dict(url="ui/filemanager.html")),
@@ -881,13 +888,6 @@ if __name__ == "__main__":
     ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
     ensure_dir_exists(config.WEB_RESULTS)
     ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
-
-    session_opts = {
-        'session.type': 'file',
-        'session.data_dir': web_configuration.get(config.DIRECTORIES, "web_sessions"),
-        'session.auto': True,
-        'session.invalidate_corrupt':False
-    }
 
     initEnv()
 
