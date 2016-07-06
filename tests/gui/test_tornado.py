@@ -114,6 +114,40 @@ class TestTornado(AsyncHTTPTestCase):
         print(response.body.decode("UTF-8"))
         assert response.code == 200
 
+    def test_auto_sample(self):
+        self.test_run_with_storm()
+        # Set Sampler
+        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        response = self._sendData('/environment', data, ct)
+
+        # Set auto generator
+        ct, data = self.encode_multipart_formdata([("iterations", "2"), ("generator", "uniform")], [])
+        response = self._sendData("/generateSamples", data, ct)
+
+        assert response.code == 200
+
+        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
+        response = self._sendData("/generateSamples", data, ct)
+
+        assert response.code == 200
+
+        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
+        response = self._sendData("/generateSamples", data, ct)
+
+        assert response.code == 200
+
+    def test_auto_constraint(self):
+        pass
+
+    def test_constraints(self):
+        self.test_run_with_storm()
+        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        response = self._sendData('/environment', data, ct)
+        constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
+        ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)],[])
+        response = self._sendData('/constraints', data, ct)
+        assert response.code == 200
+        pass
 
     def _get_response_string(self, url):
         """ Returns the value of the json data element as a string. """

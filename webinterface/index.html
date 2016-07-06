@@ -549,9 +549,9 @@ $(document).ready(function() {
             if (!websocketActive) {
                 readSamples(result.data.sat, false);
                 readConstraints(result.data.unsat, false);
+                plotSamples();
             }
             newConstraint = [];
-            plotSamples();
         });
     });
 
