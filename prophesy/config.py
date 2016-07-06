@@ -1,5 +1,3 @@
-from distutils.spawn import find_executable
-
 import configparser
 import prophesy.util as util
 import os
@@ -46,7 +44,7 @@ class Configuration():
         result = {}
         sections = self._config.sections()
         for section in sections:
-             result[section] = dict(self._config.items(section))
+            result[section] = dict(self._config.items(section))
         return result
 
     def set(self, section, key, value):
@@ -154,9 +152,6 @@ class Configuration():
     def getAvailableSamplers(self):
         samplers = {}
         samplers['ratfunc'] = "Rational function"
-        samplers['ratfunc_float'] = "Rational function (float)"
-        if self.is_module_available("pycarl"):
-            samplers['carl'] = "Carl library"
 
         try:
             # TODO: Prism sampling not yet supported
@@ -173,23 +168,22 @@ class Configuration():
 
 configuration = Configuration()
 
-
-# directories
-DIRECTORIES = "directories"
-INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
-PLOTS = configuration.get(DIRECTORIES, "plots")
-WEB_RESULTS = configuration.get(DIRECTORIES, "web_results")
-
-
 # section names
+DIRECTORIES = "directories"
 EXTERNAL_TOOLS = "external_tools"
 SAMPLING = "sampling"
 CONSTRAINTS = "constraints"
 DEPENDENCIES = "installed_deps"
 
+# directories
+INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
+PLOTS = configuration.get(DIRECTORIES, "plots")
 
 # CONSTANTS
+# Smallest discernable difference for intervals (used for strict bounds)
+INTERVAL_EPSILON = 0.01
 PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
+# Minimum distance between points to allow further sampling
 DISTANCE = float(configuration.get(SAMPLING, "distance"))
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]

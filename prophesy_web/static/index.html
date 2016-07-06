@@ -13,7 +13,6 @@
     <script language="javascript" type="text/javascript" src="flot/jquery.flot.crosshair.js"></script>
     <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
     <script language="javascript" type="text/javascript" src="webcegar.js"></script>
-    <script language="javascript" type="text/javascript" src="plot.js"></script>
     <script language="javascript">
 var heatmap = false;
 var heatmap_thrs = [0.0,0.2,0.4,0.6,0.8,1.0];
@@ -288,7 +287,7 @@ function openSocket() {
                     readSamples(data.data, false);
                     plotSamples();
                     break;
-                case "constraints":
+                case "regions":
                     readConstraints(data.data, false);
                     plotSamples();
                     break;

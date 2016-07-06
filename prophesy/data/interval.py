@@ -4,7 +4,6 @@ class BoundType(Enum):
     open = 0
     closed = 1
 
-
 def string_to_interval(input, internal_parse_func):
     assert isinstance(input, str)
     input = input.strip()
@@ -44,18 +43,6 @@ class Interval:
         self._right_bound_type = right_bt
         self._right_value = right_value
 
-    def __str__(self):
-        return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
-
-    def __eq__(self, other):
-        assert isinstance(other, Interval)
-        if self.empty() and other.empty(): return True
-        if not self._left_bound_type == other._left_bound_type: return False
-        if not self._left_value == other._left_value: return False
-        if not self._right_bound_type == other._right_bound_type: return False
-        if not self._right_value == other._right_value: return False
-        return True
-
     def left_bound(self):
         return self._left_value
 
@@ -69,8 +56,9 @@ class Interval:
         return self._right_bound_type
 
     def empty(self):
-        if self._left_value > self._right_value: return False
-        if self._left_value == self._right_value and (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open): return False
+        if self._left_value == self._right_value:
+            return (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open)
+        return self._left_value > self._right_value
 
     def contains(self, pt):
         if self._left_value < pt < self._right_value: return True
@@ -81,8 +69,8 @@ class Interval:
     def width(self):
         return self._right_value - self._left_value
 
-    def split(self):
-        mid = self._left_value + self.width()/2
+    def split(self, bias = 0.5):
+        mid = self._left_value + self.width() * bias
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 
     def close(self):
@@ -98,7 +86,7 @@ class Interval:
             newLB = other._left_bound_type
         else:
             newleft = self._left_value
-            newLB = self._left_bound_type if self.left_bound_type == BoundType.open else other._left_bound_type
+            newLB = self._left_bound_type if self._left_bound_type == BoundType.open else other._left_bound_type
         if self._right_value < other._right_value:
             newright = self._right_value
             newRB = self._right_bound_type
@@ -107,5 +95,24 @@ class Interval:
             newRB = other._right_bound_type
         else:
             newright = self._right_value
-            newLB = self._right_bound_type if self.right_bound_type == BoundType.open else other._right_bound_type
+            newLB = self._right_bound_type if self._right_bound_type == BoundType.open else other._right_bound_type
         return Interval(newleft, newLB, newright, newRB)
+
+    def __str__(self):
+        return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
+
+    def __repr__(self):
+        return "Interval({!r}, {!r}, {!r}, {!r})".format(self._left_value,
+            self._left_bound_type, self._right_value, self._right_bound_type)
+
+    def __eq__(self, other):
+        assert isinstance(other, Interval)
+        if self.empty() and other.empty(): return True
+        if not self._left_bound_type == other._left_bound_type: return False
+        if not self._left_value == other._left_value: return False
+        if not self._right_bound_type == other._right_bound_type: return False
+        if not self._right_value == other._right_value: return False
+        return True
+
+    def __hash__(self):
+        return hash([self._left_value, self._right_value, self._left_bound_type, self._right_bound_type])

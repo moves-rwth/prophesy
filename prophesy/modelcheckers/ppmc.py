@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-from modelcheckers.pmc import ProbabilisticModelChecker
+from prophesy.modelcheckers.pmc import ProbabilisticModelChecker
 
 
 class ParametricProbabilisticModelChecker(ProbabilisticModelChecker):

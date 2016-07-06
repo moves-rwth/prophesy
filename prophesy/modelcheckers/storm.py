@@ -1,16 +1,18 @@
 import os
-from config import configuration
-import config
+from prophesy.config import configuration
+from prophesy import config
 import tempfile
 import subprocess
-from modelcheckers.ppmc import ParametricProbabilisticModelChecker
-from modelcheckers.pmc import BisimulationType
-from util import check_filepath_for_reading, run_tool, ensure_dir_exists
-from input.resultfile import read_pstorm_result
-from input.prismfile import PrismFile
+from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from prophesy.modelcheckers.pmc import BisimulationType
+from prophesy.util import run_tool, ensure_dir_exists
+from prophesy.input.resultfile import read_pstorm_result
+from prophesy.sampling.sampler import Sampler
+from pycarl.core import Rational
+from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 
-class StormModelChecker(ParametricProbabilisticModelChecker):
+class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "storm")):
         self.location = location
         self.bisimulation = BisimulationType.strong
@@ -62,15 +64,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         os.unlink(resultfile)
         return param_result
 
-    def uniform_sample(self, ranges):
-        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
-        if self.prismfile == None: raise NotEnoughInformationError("model missing")
-
-
-        raise NotImplementedError("The Storm interface does not support sampling")
-
-
-    def sample(self, samplepoints):
+    def perform_sampling(self, samplepoints):
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
 
@@ -78,13 +72,13 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         ensure_dir_exists(config.INTERMEDIATE_FILES)
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
 
-
         raise NotImplementedError("The Storm interface does not support sampling")
 
+        assert False, "See the assertions needed from Prism tool"
 
         samples = {}
-        for pt in samplepoints:
-            const_values_string = ",".join(["{0}={1}".format(p, v) for (p, v) in zip(self.prismfile.parameters, pt)])
+        for sample_point in samplepoints:
+            const_values_string = ",".join(["{0}={1}".format(var, val) for var, val in sample_point.items()])
             args = [self.location,
                     '--symbolic', self.prismfile.location,
                     '--prop', self.pctlformula,
@@ -96,7 +90,9 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             run_tool(args)
             with open(resultfile) as f:
                 f.readline()
-                sample_value = float(f.readline())
-            samples[pt] = sample_value
-        os.unlink(resultpath)
+                sample_value = Rational(f.readline())
 
+            pt = sample_point.get_point(self.prismfile.parameters)
+            samples[pt] = sample_value
+
+        os.unlink(resultfile)

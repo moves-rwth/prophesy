@@ -1,25 +1,19 @@
-#!/usr/bin/env python3
-
 import os
-import sys
+from prophesy.modelcheckers.prism import PrismModelChecker
+from prophesy.data.point import Point
+from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
+from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.data.hyperrectangle import HyperRectangle
 
-# import library. Using this instead of appends prevents naming clashes..
-this_file_path = os.path.dirname(os.path.realpath(__file__))
-# insert at position 1; leave path[0] (directory at invocation) intact
-sys.path.insert(1, os.path.join(this_file_path, '..'))
-
-
-import config
-from config import configuration
+from prophesy_web import config
+from prophesy.config import configuration
 
 import tempfile
 import re
-from argparse import ArgumentParser
 import shutil
 import uuid
 import subprocess
 
-from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.websocket import WebSocketHandler
 from tornado.escape import json_decode
@@ -27,37 +21,37 @@ from tornado import gen
 from pycket.session import SessionMixin
 from shapely.geometry.polygon import Polygon
 
-from util import ensure_dir_exists, run_tool
-from input.resultfile import read_param_result, read_pstorm_result, \
+from prophesy.input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
-from input.prismfile import PrismFile
-from input.pctlfile import PctlFile
-from modelcheckers.param import ParamParametricModelChecker
-from modelcheckers.storm import StormModelChecker
-from smt.smt import setup_smt
-from smt.isat import IsatSolver
-from smt.Z3cli_solver import Z3CliSolver
-from sampling.sampler_ratfunc import RatFuncSampling
+from prophesy.input.prismfile import PrismFile
+from prophesy.modelcheckers.param import ParamParametricModelChecker
+from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.smt.smt import setup_smt
+from prophesy.smt.isat import IsatSolver
+from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 
-from sampling.sampler_prism import McSampling
-from sampling.sampling_uniform import UniformSampleGenerator
-from sampling.sampling_linear import LinearRefinement
-from sampling.sampling_delaunay import DelaunayRefinement
-from regions.region_planes import ConstraintPlanes
-from regions.region_rectangles import ConstraintRectangles
-from regions.region_quads import ConstraintQuads
-from regions.region_polygon import ConstraintPolygon
+from prophesy.sampling.sampling_uniform import UniformSampleGenerator
+from prophesy.sampling.sampling_linear import LinearRefinement
+from prophesy.sampling.sampling_delaunay import DelaunayRefinement
+from prophesy.regions.region_planes import ConstraintPlanes
+from prophesy.regions.region_rectangles import ConstraintRectangles
+from prophesy.regions.region_quads import ConstraintQuads
+from prophesy.regions.region_polygon import ConstraintPolygon
+
+from prophesy.util import ensure_dir_exists
+
+from prophesy_web.config import configuration as web_configuration
 
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen
 
+from pycarl import Rational
 
 default_results = {}
 
-executor = ThreadPoolExecutor(max_workers=1)
-
 if configuration.is_module_available('stormpy'):
-    from modelcheckers.stormpy import StormpyModelChecker
+    from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
 def _jsonSamples(samples):
     return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
@@ -65,6 +59,11 @@ def _jsonSamples(samples):
 def _jsonPoly(polygon):
     if isinstance(polygon, Polygon):
         return _jsonPoly(polygon.exterior)
+    if isinstance(polygon, HyperRectangle):
+        def to_list(v):
+            return [float(v.x), float(v.y)]
+        vs = polygon.vertices()
+        return list(map(to_list, [vs[0], vs[1], vs[3], vs[2], vs[0]]))
     return [[pt[0], pt[1]] for pt in polygon.coords]
 
 def getSat(satname):
@@ -78,25 +77,20 @@ def getSat(satname):
 def getSampler(satname, result):
     if satname == 'ratfunc':
         # Do not use rationals for now
-        return RatFuncSampling(result.ratfunc, result.parameters, True)
-    elif satname == 'ratfunc_float':
-        return RatFuncSampling(result.ratfunc, result.parameters, False)
-    elif satname == 'carl':
-        print("import carl")
-        assert False
-        from sampling.sampler_carl import CarlSampling
-        return CarlSampling(result.ratfunc, result.parameters)
+        return RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
     elif satname == 'prism':
-        return McSampling(result.prism_file, result.pctl_file)
+        mc = PrismModelChecker()
+        mc.load_model_from_prismfile(result.prism_file)
+        return mc
     else:
         raise RuntimeError("Unknown sampler requested")
 
 def getPMC(name):
     if name == 'storm':
         return StormModelChecker()
-    elif name == 'param':
-        return ParamParametricModelChecker()
-    elif name == 'stormpy':
+    #elif name == 'param':
+    #    return ParamParametricModelChecker()
+    elif name == 'stormpy' and configuration.is_module_available('stormpy'):
         return StormpyModelChecker()
     else:
         raise RuntimeError("Unknown PMC requested")
@@ -142,6 +136,7 @@ class CegarHandler(RequestHandler, SessionMixin):
         if not name in result_files:
             return None
         try:
+            print(result_files[name])
             result = read_pstorm_result(result_files[name])
             return result
         except:
@@ -187,7 +182,7 @@ class InvalidateSession(CegarHandler):
                 os.unlink(fname)
             except:
                 pass
-        request.session.invalidate()
+        self.request.session.invalidate()
         return self._json_ok()
 
 class Threshold(CegarHandler):
@@ -273,6 +268,7 @@ class Results(CegarHandler):
             return self._json_error("Result data not found", 404)
 
         try:
+            print(result_files[name])
             result = read_pstorm_result(result_files[name])
         except:
             return self._json_error("Error reading result data")
@@ -472,7 +468,8 @@ class PingRedis(CegarHandler):
 
 class Samples(CegarHandler):
     def get(self):
-        flattenedsamples = _jsonSamples(self._get_session('samples', {}))
+        result = self._getResultData(self._get_session('current_result', None))
+        flattenedsamples = _jsonSamples(self._get_session('samples', SampleDict(result.parameters.get_variable_order())))
         return self._json_ok(flattenedsamples)
 
     def post(self):
@@ -486,8 +483,9 @@ class Samples(CegarHandler):
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
 
-        coordinates = [(float(x), float(y)) for x, y in coordinates]
-        new_samples = sampling_interface.perform_sampling(coordinates)
+        coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
+        sample_points = SamplePoints(coordinates, result.parameters.get_variable_order())
+        new_samples = sampling_interface.perform_sampling(sample_points)
         if socket is not None:
             socket.send_samples(new_samples)
 
@@ -499,8 +497,8 @@ class Samples(CegarHandler):
     def put(self):
         coordinate = json_decode(self.request.body)
         try:
-            x = coordinate[0]
-            y = coordinate[1]
+            x = Rational(coordinate[0])
+            y = Rational(coordinate[1])
         except:
             return self._json_error('Unable to parse coordinate', 400)
 
@@ -508,11 +506,12 @@ class Samples(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
+        variables = result.parameters.get_variable_order()
         sampler = getSampler(self._get_session('sampler'), result)
-        new_samples = sampler.perform_sampling([(x, y)])
+        new_samples = sampler.perform_sampling([SamplePoint({variables[0]:x, variables[1]:y})])
         samples = self._get_session('samples', {})
         samples.update(new_samples)
-        return _json_ok()
+        return self._json_ok()
         # return _json_ok(_jsonSamples(samples))
         # TODO: redirect?
 
@@ -521,6 +520,9 @@ class Samples(CegarHandler):
         return self._json_ok()
 
 class GenerateSamples(CegarHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
@@ -545,16 +547,17 @@ class GenerateSamples(CegarHandler):
 
         socket = self._get_socket()
 
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
         new_samples = {}
         sampling_interface = getSampler(self._get_session('sampler'), result)
+        variables = result.parameters.get_variable_order()
         if generator_type == 'uniform':
-            intervals = [(0.01, 0.99)] * len(result.parameters)
-            samples_generator = UniformSampleGenerator(sampling_interface, intervals, iterations)
+            intervals = result.parameters.get_variable_bounds()
+            samples_generator = UniformSampleGenerator(sampling_interface, variables, samples, intervals, iterations)
         elif generator_type == "linear":
-            samples_generator = LinearRefinement(sampling_interface, samples, threshold)
+            samples_generator = LinearRefinement(sampling_interface, variables, samples, threshold)
         elif generator_type == "delaunay":
-            samples_generator = DelaunayRefinement(sampling_interface, samples, threshold)
+            samples_generator = DelaunayRefinement(sampling_interface, variables, samples, threshold)
         else:
             assert False, "Bad generator"
 
@@ -568,7 +571,7 @@ class GenerateSamples(CegarHandler):
 
             return new_samples
 
-        new_samples = yield executor.submit(generate_samples, samples_generator, iterations)
+        new_samples = yield self.executor.submit(generate_samples, samples_generator, iterations)
 
         samples.update(new_samples)
         self._set_session('samples', samples)
@@ -580,21 +583,23 @@ class ConstraintHandler(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
         threshold = self._get_session('threshold', 0.5)
 
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
         setup_smt(smt2interface, result, threshold)
+        
+        checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
 
         if type == 'planes':
-            generator = ConstraintPlanes(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintPlanes(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'rectangles':
-            generator = ConstraintRectangles(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintRectangles(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'quads':
-            generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'poly':
-            generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, smt2interface, result.ratfunc)
+            generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         else:
             return self._json_error("Bad generator")
         generator.plot = False
@@ -614,7 +619,7 @@ class ConstraintHandler(CegarHandler):
         for check_result in generator:
             (is_unsat, data) = check_result
             if is_unsat:
-                (constraint, poly, safe) = data
+                (poly, safe) = data
                 unsat.append((_jsonPoly(poly), bool(safe)))
                 if socket is not None:
                     socket.send_constraints([unsat[-1]])
@@ -636,6 +641,9 @@ class ConstraintHandler(CegarHandler):
         return (new_samples, unsat)
 
 class Constraints(ConstraintHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     def get(self):
         constraints = self._get_session('regions', [])
         return self._json_ok(constraints)
@@ -657,12 +665,15 @@ class Constraints(ConstraintHandler):
 
         smt2interface, generator = self.make_gen("poly")
         generator.add_polygon(Polygon(coordinates), safe)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator)
+        new_samples, unsat = yield self.executor.submit(self.analyze, smt2interface, generator)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
 
-        samples = self._get_session('samples', {})
+        result = self._getResultData(self._get_session('current_result', None))
+        if result is None:
+            return self._json_error("Unable to load result data", 500)
+        samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
         constraints = self._get_session('regions', [])
 
         samples.update(new_samples)
@@ -679,6 +690,9 @@ class Constraints(ConstraintHandler):
         return self._json_ok()
 
 class GenerateConstraints(ConstraintHandler):
+    def initialize(self, executor):
+        self.executor = executor
+
     @gen.coroutine
     def post(self):
         iterations = int(self.get_argument('iterations'))
@@ -691,7 +705,7 @@ class GenerateConstraints(ConstraintHandler):
             return self._json_error("Unable to load result data", 500)
 
         smt2interface, generator = self.make_gen(generator_type)
-        new_samples, unsat = yield executor.submit(self.analyze, smt2interface, generator, iterations)
+        new_samples, unsat = yield self.executor.submit(self.analyze, smt2interface, generator, iterations)
 
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
@@ -762,6 +776,10 @@ class Configuration(CegarHandler):
         return self._json_error()
 
 def initEnv():
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
+    ensure_dir_exists(config.WEB_RESULTS)
+    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
+
     # Check available model checkers, solvers and various other regions
     # and adjust capabilities based on that
     global satSolvers, samplers, ppmcs
@@ -771,7 +789,7 @@ def initEnv():
 
     # Preload some result files for easy startup
     print("Loading default result files...")
-    rat_path = configuration.get(config.DIRECTORIES, 'web_examples')
+    rat_path = web_configuration.get(config.DIRECTORIES, 'web_examples')
     try:
         ratfiles = os.listdir(rat_path)
         for rfile in ratfiles:
@@ -786,10 +804,11 @@ def initEnv():
 
     print("Done checking environment")
 
-
 def make_app(hostname):
+    web_package_path = os.path.dirname(os.path.realpath(__file__))
+    static_path = os.path.join(web_package_path, "static")
     settings = {
-        'static_path': config.configuration.get(config.DIRECTORIES, "web_interface"),
+        'static_path': static_path,
         'static_url_prefix' : '/ui/',
         'cookie_secret' : "sldfjwlekfjLKJLEAQEWjrdjvsl3807(*&SAd",
         'pycket': {
@@ -806,6 +825,16 @@ def make_app(hostname):
             },
         }
     }
+
+    # thread pool to run long-0running tasks is the background
+    executor = ThreadPoolExecutor(max_workers=1)
+
+    # session_opts = {
+    #     'session.type': 'file',
+    #     'session.data_dir': web_configuration.get(config.DIRECTORIES, "web_sessions"),
+    #     'session.auto': True,
+    #     'session.invalidate_corrupt':False
+    # }
 
     application = Application([
         (r"/", RedirectHandler, dict(url="ui/index.html")),
@@ -825,10 +854,9 @@ def make_app(hostname):
         #TODO: ought to be part of result
         (r'/uploadResult', UploadResult),
         (r'/samples', Samples),
-        (r'/generateSamples', GenerateSamples),
-        (r'/regions', Constraints),
-        (r'/constraints', Constraints),
-        (r'/generateConstraints', GenerateConstraints),
+        (r'/generateSamples', GenerateSamples, dict(executor=executor)),
+        (r'/regions', Constraints, dict(executor=executor)),
+        (r'/generateConstraints', GenerateConstraints, dict(executor=executor)),
         (r'/websocket', CegarWebSocket),
         (r'/config/(.*)/(.*)$', Configuration),
         (r'/config', Configuration),
@@ -836,37 +864,3 @@ def make_app(hostname):
     ], **settings)
 
     return application
-
-
-def parse_cli_args():
-    parser = ArgumentParser(description='Start a webservice for ' + config.TOOLNAME)
-    parser.add_argument('--server-port', type=int, help='the port the server listens on', default=4242)
-    parser.add_argument('--server-host', help="server host name", default="localhost")
-    parser.add_argument('--server-debug', type=bool, help='run the server in debug mode', default=True)
-    parser.add_argument('--server-quiet', type=bool, help='run the server in quiet mode', default=False)
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    cmdargs = parse_cli_args()
-
-    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_sessions"))
-    ensure_dir_exists(config.WEB_RESULTS)
-    ensure_dir_exists(configuration.get(config.DIRECTORIES, "web_examples"))
-
-    session_opts = {
-        'session.type': 'file',
-        'session.data_dir': config.configuration.get(config.DIRECTORIES, "web_sessions"),
-        'session.auto': True,
-        'session.invalidate_corrupt':False
-    }
-
-    initEnv()
-
-    app = make_app(cmdargs.server_host)
-
-    if(not cmdargs.server_quiet):
-        print("Starting webservice...")
-
-    app.listen(cmdargs.server_port)
-    IOLoop.current().start()
