@@ -1,7 +1,4 @@
-
-# Imported to start the webservice and check it's functionality
-from prophesy.webservice.webcegar import make_app, initEnv
-from tornado.testing import AsyncHTTPTestCase
+from tornado_test_case import TornadoTestCase
 
 # For parsing json-strings in dicts
 import json
@@ -13,32 +10,14 @@ import random
 import os.path
 import shutil
 
-
 # Get the prophesy configuration data
 import prophesy.config as config
 from prophesy.config import configuration
 
-class TestTornado(AsyncHTTPTestCase):
+
+class TestTornado(TornadoTestCase):
     """ Testing of the tornado web framework. """
-    app = None
-
-    def get_app(self):
-        """ Override to return own application. """
-        if self.app is None:
-            initEnv()
-            self.app = make_app("localhost")
-        return self.app
-
-    # Sets the environment such that we can read the stored session data.
-    def setUp(self):
-        super().setUp()
-        response = self.fetch('/results')
-        self.cookies = response.headers["Set-Cookie"]
-        self.header_send = {"Host": "localhost:4242",
-            "Accept": "*/*",
-            "Cookie": self.cookies,
-        }
-
+    
     def test_homepage(self):
         """ Test if the prophesy homepage is available. """
         response = self.fetch('/')
