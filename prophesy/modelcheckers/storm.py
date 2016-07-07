@@ -56,7 +56,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
                 '--parametric:resultfile', resultfile]
         if self.bisimulation == BisimulationType.strong:
             args.append('--bisimulation')
-        args.append('--sparseelim:order')
+        args.append('--elimination:order')
         args.append("fwrev")
 
         run_tool(args, False)

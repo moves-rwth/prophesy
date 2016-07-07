@@ -124,7 +124,7 @@ class TestTornado(TornadoTestCase):
         response = self._sendData('/environment', data, ct)
         constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
         ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)],[])
-        response = self._sendData('/constraints', data, ct)
+        response = self._sendData('/regions', data, ct)
         assert response.code == 200
         pass
 

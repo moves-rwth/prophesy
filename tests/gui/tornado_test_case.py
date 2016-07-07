@@ -1,7 +1,7 @@
 import pytest
 
 # Imported to start the webservice and check it's functionality
-from prophesy.webservice.webcegar import make_app, initEnv
+from prophesy_web.application import make_app, initEnv
 from tornado.testing import AsyncHTTPTestCase
 
 # For parsing json-strings in dicts
