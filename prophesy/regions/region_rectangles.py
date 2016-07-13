@@ -2,7 +2,7 @@ from prophesy.data.samples import split_samples, SamplePoint
 from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
 from shapely.geometry import box
 from shapely import affinity
-from prophesy import config
+from prophesy.config import configuration
 import shapely.geometry.point
 import prophesy.data.point
 from pycarl import Rational
@@ -118,8 +118,8 @@ class ConstraintRectangles(RegionGenerator):
                 # Little inaccuracy is OK, it just means extra work if it fails
                 x = anchor.pos.x
                 y = anchor.pos.y
-                x += config.PRECISION if anchor.dir.value[0] else -config.PRECISION
-                x += config.PRECISION if anchor.dir.value[1] else -config.PRECISION
+                x += configuration.get_regions_precision() if anchor.dir.value[0] else -configuration.get_regions_precision()
+                x += configuration.get_regions_precision() if anchor.dir.value[1] else -configuration.get_regions_precision()
                 if shapely.geometry.point.Point(x, y).within(self.best_rectangle):
                     self.anchor_points.remove(anchor)
 

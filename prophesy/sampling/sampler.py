@@ -2,7 +2,7 @@ import itertools
 from numpy import linspace
 from prophesy.data.interval import BoundType
 
-from prophesy import config
+from prophesy.config import configuration
 from prophesy.data.samples import SamplePoints
 from prophesy.data.point import Point
 from pycarl import Rational
@@ -31,8 +31,8 @@ class Sampler(object):
         # points evenly spaced over the interval, for each dimension
         ranges = []
         for i in intervals:
-            minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + config.INTERVAL_EPSILON
-            maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - config.INTERVAL_EPSILON
+            minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + configuration.get_sampling_epsilon()
+            maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - configuration.get_sampling_epsilon()
             ranges.append(map(Rational, linspace(float(minNum), float(maxNum), samples_per_dimension)))
         # turned into grid via cartesian product
         all_points = itertools.product(*ranges)

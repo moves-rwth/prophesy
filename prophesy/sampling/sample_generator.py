@@ -1,4 +1,4 @@
-from prophesy import config
+from prophesy.config import configuration
 from prophesy.data.samples import SampleDict
 
 class SampleGenerator(object):
@@ -16,4 +16,4 @@ class SampleGenerator(object):
         self.sampler = sampler
         self.variables = variables
         self.samples = samples.copy() if samples else SampleDict(self.variables)
-        self.distance = config.DISTANCE
+        self.distance = configuration.get_sampling_min_distance()

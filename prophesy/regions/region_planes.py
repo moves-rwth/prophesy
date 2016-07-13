@@ -1,6 +1,6 @@
 from prophesy.data.samples import SamplePoint
 from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
-from prophesy import config
+from prophesy.config import configuration
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.polygon import Polygon
 import numpy
@@ -85,11 +85,11 @@ class ConstraintPlanes(RegionGenerator):
             return True, 0
         elif abs(min_safe_dist) < abs(min_bad_dist):
             # safe area
-            return True, min_bad_dist - config.PRECISION
+            return True, min_bad_dist - configuration.get_regions_precision()
         else:
             # unsafe area
             assert(abs(min_safe_dist) > abs(min_bad_dist))
-            return False, min_safe_dist - config.PRECISION
+            return False, min_safe_dist - configuration.get_regions_precision()
 
     def create_plane(self, anchor, orientation_vector):
         """computes the plane created by splitting along the bounding line

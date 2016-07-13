@@ -125,14 +125,20 @@ class ProphesyConfig(Configuration):
     def get_plots_dir(self):
         return self.get(ProphesyConfig.DIRECTORIES, "plots")
 
-configuration = ProphesyConfig()
+    def get_sampling_min_distance(self):
+        # Minimum distance between points to allow further sampling
+        return float(self.get(ProphesyConfig.SAMPLING, "distance"))
 
-# CONSTANTS
-# Smallest discernable difference for intervals (used for strict bounds)
-INTERVAL_EPSILON = 0.01
-PRECISION = float(configuration.get(ProphesyConfig.CONSTRAINTS, "precision"))
-# Minimum distance between points to allow further sampling
-DISTANCE = float(configuration.get(ProphesyConfig.SAMPLING, "distance"))
+    def get_sampling_epsilon(self):
+        # Smallest discernable difference for intervals (used for strict bounds)
+        return 0.0125
+        return float(self.get(ProphesyConfig.SAMPLING, "epsilon"))
+
+    def get_regions_precision(self):
+        # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
+        return float(self.get(ProphesyConfig.CONSTRAINTS, "precision"))
+
+configuration = ProphesyConfig()
 
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
