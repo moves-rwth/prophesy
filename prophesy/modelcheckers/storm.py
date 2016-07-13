@@ -1,6 +1,5 @@
 import os
 from prophesy.config import configuration
-from prophesy import config
 import tempfile
 import subprocess
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
@@ -13,7 +12,7 @@ from prophesy.exceptions.not_enough_information_error import NotEnoughInformatio
 
 
 class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
-    def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "storm")):
+    def __init__(self, location=configuration.get_storm()):
         self.location = location
         self.bisimulation = BisimulationType.strong
         self.pctlformula = ""
@@ -46,8 +45,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(config.INTERMEDIATE_FILES)
-        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
         args = [self.location,
                 '--symbolic', self.prismfile.location,
@@ -69,8 +68,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(config.INTERMEDIATE_FILES)
-        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
         raise NotImplementedError("The Storm interface does not support sampling")
 

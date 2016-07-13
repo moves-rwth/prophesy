@@ -1,6 +1,5 @@
 import os
 from prophesy.config import configuration
-from prophesy import config
 import tempfile
 from prophesy.smt.smt import SMTSolver, VariableDomain
 from prophesy.util import run_tool, ensure_dir_exists
@@ -12,7 +11,7 @@ def _constraint_to_isat(constraint):
 
 
 class IsatSolver(SMTSolver):
-    def __init__(self, location = configuration.get(config.EXTERNAL_TOOLS, "isat")):
+    def __init__(self, location = configuration.get_isat()):
         self.location = location
         self.declstack = [list()]
         self.constraintstack = [list()]
@@ -30,8 +29,8 @@ class IsatSolver(SMTSolver):
         return "unknown"
 
     def check(self):
-        ensure_dir_exists(config.INTERMEDIATE_FILES)
-        (_, resultfile) = tempfile.mkstemp(suffix=".hys", dir=config.INTERMEDIATE_FILES, text=True)
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        (_, resultfile) = tempfile.mkstemp(suffix=".hys", dir=configuration.get_intermediate_dir(), text=True)
 
         with open(resultfile, "w") as f:
             f.write("DECL\n")

@@ -1,190 +1,139 @@
-import configparser
 import prophesy.util as util
 import os
-
+from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
 
-class Configuration():
+class ProphesyConfig(Configuration):
+    # section names
+    DIRECTORIES = "directories"
+    EXTERNAL_TOOLS = "external_tools"
+    SAMPLING = "sampling"
+    CONSTRAINTS = "constraints"
+    DEPENDENCIES = "installed_deps"
+
     def __init__(self):
-        self._config = configparser.ConfigParser()
-        self._importedFrom = ""
-        self.modified = False
-
-    def _importFromFile(self):
-        location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy.cfg")
-        util.check_filepath_for_reading(location, "configuration file")
-        self._config.read(location)
-        self._importedFrom = location
-
-
-    def get(self, section, key):
-        if self._importedFrom == "":
-            self._importFromFile()
-        assert section in self._config
-        assert key in self._config[section]
-        return self._config[section][key]
-
-    def getSection(self, section):
-        if self._importedFrom == "":
-            self._importFromFile()
-        assert section in self._config
-        return self._config[section]
+        super().__init__(os.path.join(os.path.dirname(
+                os.path.realpath(__file__)), "prophesy.cfg"))
+        self._init_tools()
 
     def is_module_available(self, module):
-        if self._importedFrom == "":
-            self._importFromFile()
-        assert DEPENDENCIES in self._config
-        assert module in self._config[DEPENDENCIES]
-        return self._config.getboolean(DEPENDENCIES, module)
-
-    # TODO: REPAIR THIS
-    def getAll(self):
-        if self._importedFrom == "":
-            self._importFromFile()
-        result = {}
-        sections = self._config.sections()
-        for section in sections:
-            result[section] = dict(self._config.items(section))
-        return result
-
-    def set(self, section, key, value):
-        if(self._importedFrom == ""):
-            self._importFromFile()
-        assert section in self._config
-        assert key in self._config[section]
-        self._config.set(section, key, value)
-        self.modified = True
-
-    def updateConfigurationFile(self):
-        with open(self._importedFrom, 'w') as f:
-            self._config.write(f)
+        try:
+            return self.getboolean(ProphesyConfig.DEPENDENCIES, module)
+        except ConfigurationError:
+            return False
 
     def getAvailableSMTSolvers(self):
-        smtsolvers = set()
-
-        # finding executables is a job for write_config.
-        z3Loc = configuration.get(EXTERNAL_TOOLS, "z3")
-        if z3Loc != "":
-            try:
-                util.run_tool([z3Loc], True)
-                smtsolvers.add('z3')
-                #TODO check whether this is really z3
-            except:
-                raise ConfigurationError("Z3 is not found at " + z3Loc)
-
-        isatLoc = configuration.get(EXTERNAL_TOOLS, "isat")
-        if isatLoc != "":
-            try:
-                util.run_tool([isatLoc], True)
-                smtsolvers.add('isat')
-                #TODO check whether this is really isat
-            except:
-                raise ConfigurationError("Isat is not found at " + isatLoc)
-
-        if len(smtsolvers) == 0:
+        if len(self.smtsolvers) == 0:
             raise RuntimeError("No SMT solvers in environment")
-        return smtsolvers
+        return self.smtsolvers
 
     def getAvailableProbMCs(self):
-        pmcs = set()
-        stormLoc = configuration.get(EXTERNAL_TOOLS, "storm")
-        if stormLoc != "":
-            try:
-                util.run_tool([stormLoc], True)
-                pmcs.add('storm')
-                #TODO check whether this is really storm
-            except:
-                raise ConfigurationError("Storm is not found at " + stormLoc)
-
-        prismLoc = configuration.get(EXTERNAL_TOOLS, "prism")
-        if prismLoc != "":
-            try:
-                util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
-                pmcs.add('prism')
-            except:
-                raise ConfigurationError("Prism is not found at " + prismLoc)
-
-        if configuration.is_module_available("stormpy"):
-            pmcs.add('stormpy')
-
-        if len(pmcs) == 0:
+        if len(self.pmcs) == 0:
             raise RuntimeError("No model checkers in environment")
-        return pmcs
+        return self.pmcs
 
     def getAvailableParametricMCs(self):
         """
         :return: A set with strings describing the available parametric pmcs.
         """
-        ppmcs = set()
-        paramLoc = configuration.get(EXTERNAL_TOOLS, "param")
-        if paramLoc != "":
-            try:
-                util.run_tool([paramLoc], True)
-                ppmcs.add('param')
-                #TODO check whether this is really param
-            except:
-                raise ConfigurationError("Param not found at " + paramLoc)
-
-        stormLoc = configuration.get(EXTERNAL_TOOLS, "storm")
-        if stormLoc != "":
-            try:
-                util.run_tool([stormLoc], True)
-                ppmcs.add('storm')
-                #TODO check whether this is really storm
-            except:
-                raise ConfigurationError("Storm is not found at " + stormLoc)
-
-        prismLoc = configuration.get(EXTERNAL_TOOLS, "prism")
-        if prismLoc != "":
-            try:
-                util.run_tool([configuration.get(EXTERNAL_TOOLS, "prism")], True)
-                ppmcs.add('prism')
-            except:
-                raise ConfigurationError("Prism is not found at " + prismLoc)
-
-        if configuration.is_module_available("stormpy"):
-            ppmcs.add('stormpy')
-
-        if len(ppmcs) == 0:
+        if len(self.ppmcs) == 0:
             raise RuntimeError("No model checkers in environment")
-        return ppmcs
+        return self.ppmcs
 
     def getAvailableSamplers(self):
-        samplers = {}
-        samplers['ratfunc'] = "Rational function"
+        return self.samplers
 
-        try:
-            # TODO: Prism sampling not yet supported
-            # util.run_tool([PRISM_COMMAND], True)
-            # samplers['prism'] = "PRISM"
-            # print("Found prism")
-            pass
-        except:
-            pass
+    def _init_tools(self):
+        self.smtsolvers = set()
+        self.pmcs = set()
+        self.ppmcs = set()
+        self.samplers = dict()
 
-        if len(samplers) == 0:
-            raise RuntimeError("No samplers in environment")
-        return samplers
+        storm_loc = self.get_storm()
+        if storm_loc:
+            try:
+                util.run_tool([storm_loc], True)
+                self.ppmcs.add('storm')
+                self.pmcs.add('storm')
+                #TODO check whether this is really storm
+            except:
+                raise ConfigurationError("Storm is not found at " + storm_loc)
 
-configuration = Configuration()
+        prism_loc = self.get_prism()
+        if prism_loc:
+            try:
+                util.run_tool([prism_loc], True)
+                self.ppmcs.add('prism')
+                self.pmcs.add('prism')
+                #self.samplers.add('prism')
+            except:
+                raise ConfigurationError("Prism is not found at " + prism_loc)
 
-# section names
-DIRECTORIES = "directories"
-EXTERNAL_TOOLS = "external_tools"
-SAMPLING = "sampling"
-CONSTRAINTS = "constraints"
-DEPENDENCIES = "installed_deps"
+        param_loc = self.get_param()
+        if param_loc:
+            try:
+                util.run_tool([param_loc], True)
+                self.ppmcs.add('param')
+            except:
+                raise ConfigurationError("Param is not found at " + param_loc)
 
-# directories
-INTERMEDIATE_FILES = configuration.get(DIRECTORIES, "intermediate_files")
-PLOTS = configuration.get(DIRECTORIES, "plots")
+        z3_loc = self.get_z3()
+        if z3_loc:
+            try:
+                util.run_tool([z3_loc], True)
+                self.smtsolvers.add('z3')
+            except:
+                raise ConfigurationError("Z3 is not found at " + z3_loc)
+
+        isat_loc = self.get_isat()
+        if isat_loc:
+            try:
+                util.run_tool([isat_loc], True)
+                self.smtsolvers.add('isat')
+            except:
+                raise ConfigurationError("ISat is not found at " + isat_loc)
+
+        if self.is_module_available("stormpy"):
+            self.pmcs.add('stormpy')
+            self.ppmcs.add('stormpy')
+
+        self.samplers['ratfunc'] = "Rational function"
+
+    def get_storm(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "storm")
+        return tool_loc if tool_loc else None
+
+    def get_prism(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "prism")
+        return tool_loc if tool_loc else None
+
+    def get_param(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "param")
+        return tool_loc if tool_loc else None
+
+    def get_z3(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "z3")
+        return tool_loc if tool_loc else None
+
+    def get_isat(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "isat")
+        return tool_loc if tool_loc else None
+
+    def get_intermediate_dir(self):
+        return self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
+
+    def get_plots_dir(self):
+        return self.get(ProphesyConfig.DIRECTORIES, "plots")
+
+configuration = ProphesyConfig()
 
 # CONSTANTS
 # Smallest discernable difference for intervals (used for strict bounds)
 INTERVAL_EPSILON = 0.01
-PRECISION = float(configuration.get(CONSTRAINTS, "precision"))
+PRECISION = float(configuration.get(ProphesyConfig.CONSTRAINTS, "precision"))
 # Minimum distance between points to allow further sampling
-DISTANCE = float(configuration.get(SAMPLING, "distance"))
+DISTANCE = float(configuration.get(ProphesyConfig.SAMPLING, "distance"))
+
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]

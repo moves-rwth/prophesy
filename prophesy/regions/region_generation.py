@@ -11,9 +11,6 @@ import shapely.geometry
 
 from prophesy.data.hyperrectangle import HyperRectangle
 
-# needed for pdf merging for debugging
-from prophesy import config
-
 from prophesy.output.plot import Plot
 from prophesy.util import ensure_dir_exists
 from prophesy.config import configuration
@@ -116,8 +113,8 @@ class RegionGenerator:
 
         self.plot = True
         self.first_pdf = True
-        ensure_dir_exists(config.PLOTS)
-        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=config.PLOTS)
+        ensure_dir_exists(configuration.get_plots_dir())
+        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=configuration.get_plots_dir())
 
     def __iter__(self):
         # Prime the generator
@@ -175,7 +172,7 @@ class RegionGenerator:
         # Split samples appropriately
         samples_green, samples_red = self.samples.split(self.threshold)
 
-        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=config.PLOTS)
+        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
                           samples_green=samples_green,
                           samples_red=samples_red,

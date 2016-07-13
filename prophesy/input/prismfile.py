@@ -2,7 +2,7 @@ import os
 import re
 import shutil
 import tempfile
-from prophesy import config
+from prophesy.config import configuration
 from prophesy.util import ensure_dir_exists, check_filepath_for_reading
 
 class PrismFile:
@@ -29,8 +29,8 @@ class PrismFile:
            Does nothing if a temporary copy already exists."""
         if self._is_temp:
             return
-        ensure_dir_exists(config.INTERMEDIATE_FILES)
-        _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=config.INTERMEDIATE_FILES, text=True)
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=configuration.get_intermediate_dir(), text=True)
         try:
             shutil.copyfile(self.location, tmpfile)
             self.location = tmpfile

@@ -3,6 +3,56 @@ import errno
 import platform
 import subprocess
 import tempfile
+import configparser
+
+from prophesy.exceptions.configuration_error import ConfigurationError
+
+class Configuration():
+    def __init__(self, config_file):
+        self._config = configparser.ConfigParser()
+        self._importFromFile(config_file)
+        self.modified = False
+
+    def _importFromFile(self, config_file):
+        parsed_files = self._config.read(config_file)
+        if len(parsed_files) == 0:
+            raise ConfigurationError(
+                "Unable to read configuration file '{}'".format(config_file))
+        self._importedFrom = config_file
+
+    def get(self, section, key):
+        if section not in self._config:
+            raise ConfigurationError("Cannot find section {}".format(section))
+
+        if key not in self._config[section]:
+            raise ConfigurationError(
+                "Cannot find key {} in section {}".format(key, section))
+        return self._config[section][key]
+
+    def getboolean(self, section, key):
+        if section not in self._config:
+            raise ConfigurationError("Cannot find section {}".format(section))
+
+        if key not in self._config[section]:
+            raise ConfigurationError(
+                "Cannot find key {} in section {}".format(key, section))
+        return self._config.getboolean(section, key)
+
+    def getAll(self):
+        result = {}
+        for section in self._config.sections():
+            result[section] = dict(self._config.items(section))
+        return result
+
+    def set(self, section, key, value):
+        self._config.set(section, key, value)
+        self.modified = True
+
+    def updateConfigurationFile(self):
+        with open(self._importedFrom, 'w') as f:
+            self._config.write(f)
+        self.modified = False
+
 
 def ensure_dir_exists(path):
     """Checks whether the directory exists and creates it if not."""

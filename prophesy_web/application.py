@@ -5,9 +5,6 @@ from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.data.hyperrectangle import HyperRectangle
 
-from prophesy_web import config
-from prophesy.config import configuration
-
 import tempfile
 import re
 import shutil
@@ -41,6 +38,7 @@ from prophesy.regions.region_polygon import ConstraintPolygon
 
 from prophesy.util import ensure_dir_exists
 
+from prophesy.config import configuration
 from prophesy_web.config import configuration as web_configuration
 
 from concurrent.futures import ThreadPoolExecutor
@@ -148,7 +146,7 @@ class CegarHandler(RequestHandler, SessionMixin):
             # Copy over default results
             results = {}
             for name, path in default_results.items():
-                (res_fd, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTS)
+                (res_fd, res_file) = tempfile.mkstemp(".result", dir = web_configuration.get_results_dir())
                 os.close(res_fd)
                 results[name] = res_file
                 shutil.copyfile(path, res_file)
@@ -291,7 +289,7 @@ class UploadPrism(CegarHandler):
         if upload_prism is None:
             return self._json_error("Missing PRISM file")
 
-        (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = config.WEB_RESULTS)
+        (prism_fd, prism_path) = tempfile.mkstemp(".prism", dir = web_configuration.get_results_dir())
         with os.fdopen(prism_fd, "wb") as prism_f:
             prism_f.write(upload_prism.body)
         prism_files = self._get_session("prism-files", {})
@@ -400,7 +398,7 @@ class RunPrism(CegarHandler):
             return self._json_error("Error while computing rational function: {}".format(e))
 
         # Save the result temporarily
-        (res_fd, res_file) = tempfile.mkstemp(".result", "param", config.WEB_RESULTS)
+        (res_fd, res_file) = tempfile.mkstemp(".result", "param", web_configuration.get_results_dir())
         os.close(res_fd)
         write_pstorm_result(res_file, result)
 
@@ -428,7 +426,7 @@ class UploadResult(CegarHandler):
 
         result_files = self._get_session('result_files', {})
 
-        (res_fd, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTS)
+        (res_fd, res_file) = tempfile.mkstemp(".result", dir = web_configuration.get_results_dir())
         with os.fdopen(res_fd, "wb") as res_f:
             res_f.write(upload.body)
 
@@ -446,7 +444,7 @@ class UploadResult(CegarHandler):
             os.unlink(res_file)
 
         # Write pstorm result as canonical
-        (res_fd, res_file) = tempfile.mkstemp(".result", dir = config.WEB_RESULTS)
+        (res_fd, res_file) = tempfile.mkstemp(".result", dir = web_configuration.get_results_dir())
         os.close(res_fd)
         write_pstorm_result(res_file, result)
 
@@ -776,9 +774,9 @@ class Configuration(CegarHandler):
         return self._json_error()
 
 def initEnv():
-    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_sessions"))
-    ensure_dir_exists(config.WEB_RESULTS)
-    ensure_dir_exists(web_configuration.get(config.DIRECTORIES, "web_examples"))
+    ensure_dir_exists(web_configuration.get_sessions_dir())
+    ensure_dir_exists(web_configuration.get_results_dir())
+    ensure_dir_exists(web_configuration.get_examples_dir())
 
     # Check available model checkers, solvers and various other regions
     # and adjust capabilities based on that
@@ -789,7 +787,7 @@ def initEnv():
 
     # Preload some result files for easy startup
     print("Loading default result files...")
-    rat_path = web_configuration.get(config.DIRECTORIES, 'web_examples')
+    rat_path = web_configuration.get_examples_dir()
     try:
         ratfiles = os.listdir(rat_path)
         for rfile in ratfiles:

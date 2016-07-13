@@ -3,7 +3,6 @@ import subprocess
 import tempfile
 
 from prophesy.config import configuration
-from prophesy import config
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
@@ -13,7 +12,7 @@ from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
-    def __init__(self, location=configuration.get(config.EXTERNAL_TOOLS, "prism")):
+    def __init__(self, location=configuration.get_prism()):
         self.location = location
         self.pctlformula = None
         self.prismfile = None
@@ -47,8 +46,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
         const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(self.prismfile.parameters, range_strings)])
 
-        ensure_dir_exists(config.INTERMEDIATE_FILES)
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
         pctlpath = write_string_to_tmpfile(self.pctlformula)
 
         args = [self.location, self.prismfile.location, pctlpath,
@@ -67,8 +66,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
 
-        ensure_dir_exists(config.INTERMEDIATE_FILES)
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=config.INTERMEDIATE_FILES, text=True)
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
         pctlpath = write_string_to_tmpfile(self.pctlformula)
 
         samples = SampleDict(self.prismfile.parameters)
