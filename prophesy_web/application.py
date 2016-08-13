@@ -546,7 +546,7 @@ class GenerateSamples(CegarHandler):
         socket = self._get_socket()
 
         samples = self._get_session('samples', SampleDict(result.parameters.get_variable_order()))
-        new_samples = {}
+        new_samples = SampleDict()
         sampling_interface = getSampler(self._get_session('sampler'), result)
         variables = result.parameters.get_variable_order()
         if generator_type == 'uniform':
@@ -708,7 +708,7 @@ class GenerateConstraints(ConstraintHandler):
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
 
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict())
         # Clear all regions, resumption not supported (yet)
         constraints = [] #self._get_session('regions', [])
 
