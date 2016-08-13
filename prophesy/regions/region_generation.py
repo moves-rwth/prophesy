@@ -292,7 +292,7 @@ class RegionGenerator:
             # add new point as counter example to existing regions
             self.samples.add_sample(additional)
             self.reject_constraint(polygon, safe, additional)
-            return checkresult, (polygon, safe)
+            return checkresult, (additional, safe)
         else:
             result_update = self.fail_constraint(polygon, safe)
             return checkresult, result_update

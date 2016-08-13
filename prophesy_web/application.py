@@ -3,6 +3,7 @@ from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import SamplePoint, SamplePoints, SampleDict
 from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 
 import tempfile
@@ -614,18 +615,23 @@ class ConstraintHandler(CegarHandler):
 
         unsat = []
         new_samples = {}
-        for check_result in generator:
-            (is_unsat, data) = check_result
-            if is_unsat:
+        for result in generator:
+            (check_result, data) = result
+            if check_result is RegionCheckResult.unsat:
                 (poly, safe) = data
                 unsat.append((_jsonPoly(poly), bool(safe)))
                 if socket is not None:
                     socket.send_constraints([unsat[-1]])
-            else:
-                (point, value) = data
-                new_samples[point] = value
+            elif check_result is RegionCheckResult.sat:
+                (sample, safe) = data
+                new_samples[sample.pt] = sample.val
                 if socket is not None:
-                    socket.send_samples({point:value})
+                    socket.send_samples({sample.pt:sample.val})
+            else:
+                assert check_result is RegionCheckResult.unknown
+                print("Check result 'unknown' not considered.")
+                #TODO refine
+                pass
 
             if self._check_canceled():
                 break
