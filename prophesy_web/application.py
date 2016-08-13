@@ -478,7 +478,7 @@ class Samples(CegarHandler):
         result = self._getResultData(self._get_session('current_result', None))
         if result is None:
             return self._json_error("Unable to load result data", 500)
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict())
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
 
@@ -508,14 +508,14 @@ class Samples(CegarHandler):
         variables = result.parameters.get_variable_order()
         sampler = getSampler(self._get_session('sampler'), result)
         new_samples = sampler.perform_sampling([SamplePoint({variables[0]:x, variables[1]:y})])
-        samples = self._get_session('samples', {})
+        samples = self._get_session('samples', SampleDict())
         samples.update(new_samples)
         return self._json_ok()
         # return _json_ok(_jsonSamples(samples))
         # TODO: redirect?
 
     def delete(self):
-        self._set_session("samples", {})
+        self._set_session("samples", SampleDict())
         return self._json_ok()
 
 class GenerateSamples(CegarHandler):
