@@ -199,7 +199,7 @@ function clearSamples() {
 }
 
 function getConstraints() {
-    doJSON("../constraints", function(result) {
+    doJSON("../regions", function(result) {
         readConstraints(result.data);
         plotSamples();
     });
@@ -207,7 +207,7 @@ function getConstraints() {
 
 function clearConstraints() {
     doAjax({
-        url: '../constraints',
+        url: '../regions',
         type: 'DELETE',
     }, function(result) {
         safe_constraints = [];
