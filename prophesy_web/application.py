@@ -356,7 +356,7 @@ class UploadPctl(CegarHandler):
 
 class RunPrism(CegarHandler):
     def post(self):
-        # Run the uploaded prism file with the coosen mctool
+        # Run the uploaded prism file with the chosen mctool
         print("Prism CALL")
 
         # Get the current prism file and save it temporarily

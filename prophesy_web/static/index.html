@@ -537,7 +537,7 @@ $(document).ready(function() {
         var formData = new FormData($(this)[0]);
         formData.append('coordinates', JSON.stringify(newConstraint));
         doAjax({
-            url: '../constraints',
+            url: '../regions',
             type: 'POST',
             // Form data
             data: formData,
