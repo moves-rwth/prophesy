@@ -138,6 +138,9 @@ class ProphesyConfig(Configuration):
         # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
         return float(self.get(ProphesyConfig.CONSTRAINTS, "precision"))
 
+    def getSection(self, sec):
+        return self.getAll()[sec]
+
 configuration = ProphesyConfig()
 
 TOOLNAME = "prophesy"

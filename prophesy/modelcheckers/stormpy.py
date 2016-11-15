@@ -17,7 +17,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         self.pctl_formula = None
         self.prism_file = None
         self.program = None
-        stormpy.core.set_up("")
+       # stormpy.core.set_up("")
 
     def name(self):
         return "stormpy"

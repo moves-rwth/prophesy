@@ -12,8 +12,8 @@ import shutil
 from helpers.helper import get_example_path
 
 # Get the prophesy configuration data
-import prophesy.config as config
-from prophesy.config import configuration
+import prophesy.config as config # This imports the Class data file
+from prophesy.config import configuration # This imports the instanciated Object of 'ProphesyConfig'
 
 
 class TestTornado(TornadoTestCase):
@@ -29,18 +29,18 @@ class TestTornado(TornadoTestCase):
 
         # Create random new test value
         new_value = str(random.random())
-        value_before = self._get_response_string('/config/test/test_value')
+        value_before = self._get_response_string('/config/directories/plots')
         while new_value == value_before:
             new_value = str(random.random())
 
         # Change value
         body_send = "data=" + new_value
-        response = self._sendData('/config/test/test_value', body_send)
+        response = self._sendData('/config/directories/plots', body_send)
         self.assertEqual(response.code, 200)
         s = response.body.decode('UTF-8')
 
         # Check new value
-        response = self.fetch('/config/test/test_value')
+        response = self.fetch('/config/directories/plots')
         s = response.body.decode('UTF-8')
         value_after = json.loads(s)["data"]
         self.assertNotEqual(value_before, value_after)
@@ -48,13 +48,13 @@ class TestTornado(TornadoTestCase):
 
     def test_directories(self):
         """ Checks if the directories of the config file exist. """
-        section = configuration.getSection(config.DIRECTORIES)
+        section = configuration.getSection(configuration.DIRECTORIES)
         for directory in section:
             os.path.isdir(directory)
 
     def test_executables(self):
         """ Checks if the executables exist"""
-        section = configuration.getSection(config.EXTERNAL_TOOLS)
+        section = configuration.getSection(configuration.EXTERNAL_TOOLS)
         for tool in section:
             if not section[tool] == '':
                 assert (os.path.isfile(section[tool]) == "True") or (shutil.which(section[tool]) is not None)
