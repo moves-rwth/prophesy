@@ -44,8 +44,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def load_model_from_prismfile(self, path_to_prismfile):
         """ Load a model encrypted in prism file format."""
-        self.prism_file = PrismFile(path_to_prismfile)
-        self.program = stormpy.core.parse_prism_program(self.prism_file.location)
+        #self.prism_file = PrismFile(path_to_prismfile)
+        self.program = stormpy.core.parse_prism_program(str(path_to_prismfile))
 
     def set_bisimulation(self, type):
         """Sets the bisimulation type for Strom. Raises a ConfigurationError, if the type is not valid."""
