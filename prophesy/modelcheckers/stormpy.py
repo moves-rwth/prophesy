@@ -5,6 +5,7 @@ from prophesy.exceptions.module_error import ModuleError
 from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.sampling.sampler import Sampler
 from prophesy.input.prismfile import PrismFile
+from prophesy.input.resultfile import ParametricResult
 
 import pycarl
 import pycarl.formula
@@ -44,8 +45,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def load_model_from_prismfile(self, path_to_prismfile):
         """ Load a model encrypted in prism file format."""
-        #self.prism_file = PrismFile(path_to_prismfile)
-        self.program = stormpy.core.parse_prism_program(str(path_to_prismfile))
+        self.prism_file = PrismFile(path_to_prismfile)
+        self.program = stormpy.core.parse_prism_program(path_to_prismfile)
 
     def set_bisimulation(self, type):
         """Sets the bisimulation type for Strom. Raises a ConfigurationError, if the type is not valid."""
@@ -68,6 +69,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         result = stormpy.model_checking(model, self.pctl_formula[0])
 
         # Hier Fehler im return value?!
-        func = result.result_function()
+        # func = result.result_function
 
-        return func
+        return ParametricResult(self.prism_file.parameters,
+                                list(result.constraints_graph_preserving) + list(result.constraints_well_formed),
+                                result.result_function)

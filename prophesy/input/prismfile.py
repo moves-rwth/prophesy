@@ -18,6 +18,7 @@ class PrismFile:
     def __del__(self):
         if self._is_temp:
             os.unlink(self.location)
+            self._is_temp = False
 
     def _get_parameters(self):
         with open(self.location, 'r') as f:
