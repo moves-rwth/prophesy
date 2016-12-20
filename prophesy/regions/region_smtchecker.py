@@ -92,7 +92,7 @@ class SmtRegionChecker(RegionChecker):
                 value = smt_model[var.name]
                 rational = Rational(value)
                 sample[var] = rational
-            value = self._ratfunc.eval(sample)
+            value = self._ratfunc.evaluate(sample)
             return RegionCheckResult.sat, Sample.from_sample_point(sample, variables, value)
         else:
             # SMT failed completely

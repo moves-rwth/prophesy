@@ -68,7 +68,10 @@ def read_pstorm_result(location):
     #print("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     #print("Building rational function...")
-    ratfunc = RationalFunction(parse(match))
+    l = match.split('/')
+    num = parse(l[0])
+    denom = parse(l[1])
+    ratfunc = num/denom
 
     #print("Parsing complete")
     return ParametricResult(parameters, constraints, ratfunc)
