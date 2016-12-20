@@ -78,12 +78,13 @@ def get_initial_config(config):
 def write_initial_config():
     config = configparser.ConfigParser()
     get_initial_config(config)
-    
     path = os.path.join(thisfilepath, "prophesy", "prophesy.cfg")
     print("Writing config to " + path)
     with open(path, 'w') as configfile:
         config.write(configfile)
 
+    config = configparser.ConfigParser()
+    get_initial_web_config(config)
     path = os.path.join(thisfilepath, "prophesy_web", "prophesy_web.cfg")
     print("Writing config to " + path)
     with open(path, 'w') as configfile:
