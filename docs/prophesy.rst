@@ -19,13 +19,6 @@ Subpackages
 Submodules
 ----------
 
-prophesy.config module
-----------------------
-
-.. automodule:: prophesy.config
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 prophesy.util module
 --------------------
@@ -35,13 +28,6 @@ prophesy.util module
     :undoc-members:
     :show-inheritance:
 
-prophesy.write_config module
-----------------------------
-
-.. automodule:: prophesy.write_config
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 
 Module contents

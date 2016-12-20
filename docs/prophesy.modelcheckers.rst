@@ -28,13 +28,7 @@ prophesy.modelcheckers.ppmc module
     :undoc-members:
     :show-inheritance:
 
-prophesy.modelcheckers.prism module
------------------------------------
 
-.. automodule:: prophesy.modelcheckers.prism
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 prophesy.modelcheckers.storm module
 -----------------------------------

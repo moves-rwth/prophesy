@@ -12,13 +12,6 @@ prophesy.input.pctlfile module
     :undoc-members:
     :show-inheritance:
 
-prophesy.input.prismfile module
--------------------------------
-
-.. automodule:: prophesy.input.prismfile
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 prophesy.input.resultfile module
 --------------------------------
