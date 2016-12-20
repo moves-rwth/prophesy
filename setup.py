@@ -5,6 +5,9 @@ import write_config
 import os
 import sys
 
+if sys.version_info[0] == 2:
+    sys.exit("Sorry, Python 2 is not supported.")
+
 class Tox(TestCommand):
     """Custom command to execute the tests using tox
     """
