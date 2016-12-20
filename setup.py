@@ -1,5 +1,7 @@
 from distutils.core import setup
+from distutils.command.build import build
 from setuptools.command.test import test as TestCommand
+import write_config
 import os
 import sys
 
@@ -18,39 +20,45 @@ class Tox(TestCommand):
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
 
-def do_setup():
-    # Write config before executing setup, so cfg files are found
-    os.system('python write_config.py')
+class ConfigBuild(build):
 
-    setup(
-        name="Prophesy",
-        version="1.1",
-        description="Prophesy - Parametric Probabilistic Model Checking",
-        packages=["prophesy", "prophesy.smt",
-                  "prophesy.sampling", "prophesy.output", "prophesy.input",
-                  "prophesy.modelcheckers", "prophesy.data",
-                  "prophesy.regions", "prophesy.exceptions",
-                  "prophesy_web"],
-        install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely',
-                          'numpy', 'matplotlib'],
-        tests_require=['pytest'],
-        extras_require = {
-            'stormpy' : ["stormpy"],
-            'pdf': ["PyPDF2"],
-        },
-        package_data={
-            'prophesy': ['prophesy.cfg'],
-            'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
-        },
-        scripts=['scripts/buildconstraints',
-                 'scripts/prismfilesampling',
-                 'scripts/prismfiletoratfunc',
-                 'scripts/ratfilesampling',
-                 'scripts/webcegar'],
-        cmdclass={
-          'test': Tox
-        }
-    )
+    def run(self):
+        # Write config before executing setup, so cfg files are found
+        write_config.write_initial_config()
+        build.run(self) 
 
-if __name__ == "__main__":
-    do_setup()
+setup(
+    name="Prophesy",
+    version="1.1",
+    author="S. Junges, H. Bruintjes, M. Volk",
+    author_email="sebastian.junges@cs.rwth-aachen.de",
+    maintainer="S. Junges",
+    maintainer_email="sebastian.junges@cs.rwth-aachen.de",
+    url="http://moves.rwth-aachen.de",
+    description="Prophesy - Parametric Probabilistic Model Checking",
+    packages=["prophesy", "prophesy.smt",
+              "prophesy.sampling", "prophesy.output", "prophesy.input",
+              "prophesy.modelcheckers", "prophesy.data",
+              "prophesy.regions", "prophesy.exceptions",
+              "prophesy_web"],
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely',
+                      'numpy', 'matplotlib'],
+    tests_require=['pytest'],
+    extras_require = {
+        'stormpy' : ["stormpy"],
+        'pdf': ["PyPDF2"],
+    },
+    package_data={
+        'prophesy': ['prophesy.cfg'],
+        'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
+    },
+    scripts=['scripts/buildconstraints',
+             'scripts/prismfilesampling',
+             'scripts/prismfiletoratfunc',
+             'scripts/ratfilesampling',
+             'scripts/webcegar'],
+    cmdclass={
+        'build': ConfigBuild,
+        'test': Tox
+    }
+)
