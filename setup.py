@@ -3,6 +3,9 @@ from setuptools.command.test import test as TestCommand
 import os
 import sys
 
+if sys.version_info[0] == 2:
+    sys.exit("Sorry, Python 2 is not supported.")
+
 class Tox(TestCommand):
     """Custom command to execute the tests using tox
     """
