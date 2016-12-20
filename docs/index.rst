@@ -12,6 +12,8 @@ Contents:
    :maxdepth: 4
 
    prophesy
+   prophesy_web
+   write_config
 
 
 Indices and tables

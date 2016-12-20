@@ -5,8 +5,7 @@ import time
 from prophesy.smt.smt import Answer
 from prophesy.data.samples import SamplePoint, Sample
 from pycarl import Rational
-from prophesy.data.constraint import region_from_hyperrectangle,\
-    region_from_polygon
+from prophesy.data.constraint import region_from_hyperrectangle, region_from_polygon
 
 class SmtRegionChecker(RegionChecker):
     def __init__(self, smt2interface, parameters, ratfunc):
@@ -42,8 +41,7 @@ class SmtRegionChecker(RegionChecker):
         if constraint is valid the tuple  is (True, polygon added)
         if constraint is invalid the tuple is (False, point as counterexample)
         @param polygon, either HyperRectangle or shapely Polygon
-        @param safe Boolean to indicate if the region should be considered as
-            safe or unsafe
+        @param safe Boolean to indicate if the region should be considered as safe or unsafe
         """
         smt_successful = False
         smt_model = None

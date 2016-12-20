@@ -4,18 +4,18 @@ prophesy.sampling package
 Submodules
 ----------
 
-prophesy.sampling.sampler_carl module
+prophesy.sampling.sample_generator module
 -------------------------------------
 
-.. automodule:: prophesy.sampling.sampler_carl
+.. automodule:: prophesy.sampling.sample_generator
     :members:
     :undoc-members:
     :show-inheritance:
 
-prophesy.sampling.sampler_prism module
+prophesy.sampling.sampler module
 --------------------------------------
 
-.. automodule:: prophesy.sampling.sampler_prism
+.. automodule:: prophesy.sampling.sampler
     :members:
     :undoc-members:
     :show-inheritance:

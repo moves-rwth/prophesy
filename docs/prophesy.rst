@@ -6,13 +6,12 @@ Subpackages
 
 .. toctree::
 
-    prophesy.cli
-    prophesy.constraints
     prophesy.data
     prophesy.exceptions
     prophesy.input
     prophesy.modelcheckers
     prophesy.output
+    prophesy.regions
     prophesy.sampling
     prophesy.smt
 
