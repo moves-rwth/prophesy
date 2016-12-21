@@ -18,7 +18,16 @@ from prophesy.config import configuration # This imports the instanciated Object
 
 class TestTornado(TornadoTestCase):
     """ Testing of the tornado web framework. """
-    
+
+    storm_avail = False
+
+    def test_storm_available(self):
+        if configuration.get_storm() is not None:
+                self.storm_avail = True
+        else:
+            print("WARINING: Not all tests are correct. Storm was not found!!!")
+            assert 0
+
     def test_homepage(self):
         """ Test if the prophesy homepage is available. """
         response = self.fetch('/')
@@ -37,7 +46,6 @@ class TestTornado(TornadoTestCase):
         body_send = "data=" + new_value
         response = self._sendData('/config/directories/plots', body_send)
         self.assertEqual(response.code, 200)
-        s = response.body.decode('UTF-8')
 
         # Check new value
         response = self.fetch('/config/directories/plots')
@@ -75,59 +83,77 @@ class TestTornado(TornadoTestCase):
         ct, data = self.encode_multipart_formdata([], [pctlfile])
         response = self._sendData('/uploadPctl', data=data, ct=ct)
         assert response.code == 200
-        ct, data = self.encode_multipart_formdata([("result-type","storm")], [result_file])
+        ct, data = self.encode_multipart_formdata([("result-type", "storm")], [result_file])
         response = self._sendData('/uploadResult', data=data, ct=ct)
         assert response.code == 200
 
     def test_run_with_storm(self):
-        self.test_upload_files()
-        ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),("pctl_property", "P=? [F \"target\"]"),("mctool", "storm")], [])
-        response = self._sendData('/runPrism', data, ct)
-        assert response.code == 200
+        if self.storm_avail:
+            self.test_upload_files()
+            ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),
+                                                       ("pctl_property", "P=? [F \"target\"]"),
+                                                       ("mctool", "storm")], [])
+            response = self._sendData('/runPrism', data, ct)
+            assert response.code == 200
+        else:
+            print("Skipped - test_run_with_storm #### REASON: Storm not available")
+            pass
 
     def test_sampling(self):
-        self.test_run_with_storm()
-        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
-        response = self._sendData('/environment', data, ct)
-        samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
-        response = self._sendData('/samples', samples, "application/json")
-        print(response.body.decode("UTF-8"))
-        assert response.code == 200
+        # REFACTOR ME - Should try sampling without creating the rational function with storm!
+        if self.storm_avail :
+            self.test_run_with_storm()
+            ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+            response = self._sendData('/environment', data, ct)
+            samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
+            response = self._sendData('/samples', samples, "application/json")
+            print(response.body.decode("UTF-8"))
+            assert response.code == 200
+        else:
+            print("Skipped - test_sampling #### REASON: Storm not available")
 
     def test_auto_sample(self):
-        self.test_run_with_storm()
-        # Set Sampler
-        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
-        response = self._sendData('/environment', data, ct)
 
-        # Set auto generator
-        ct, data = self.encode_multipart_formdata([("iterations", "2"), ("generator", "uniform")], [])
-        response = self._sendData("/generateSamples", data, ct)
+        # REFACTOR ME - Should try sampling without creating the rational function with storm!
+        if self.storm_avail:
+            self.test_run_with_storm()
+            # Set Sampler
+            ct, data = self.encode_multipart_formdata([("pmc", "storm"), ("sampler", "ratfunc"), ("sat", "z3")], [])
+            response = self._sendData('/environment', data, ct)
 
-        assert response.code == 200
+            # Set auto generator
+            ct, data = self.encode_multipart_formdata([("iterations", "2"), ("generator", "uniform")], [])
+            response = self._sendData("/generateSamples", data, ct)
 
-        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
-        response = self._sendData("/generateSamples", data, ct)
+            assert response.code == 200
 
-        assert response.code == 200
+            ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
+            response = self._sendData("/generateSamples", data, ct)
 
-        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
-        response = self._sendData("/generateSamples", data, ct)
+            assert response.code == 200
 
-        assert response.code == 200
+            ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
+            response = self._sendData("/generateSamples", data, ct)
+
+            assert response.code == 200
+        else:
+            print("Skipped - test_auto_sample #### REASON: Storm not available")
 
     def test_auto_constraint(self):
+        print("TEST NOT IMPLEMENTED YET!")
         pass
 
     def test_constraints(self):
-        self.test_run_with_storm()
-        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
-        response = self._sendData('/environment', data, ct)
-        constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
-        ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)],[])
-        response = self._sendData('/regions', data, ct)
-        assert response.code == 200
-        pass
+        if self.storm_avail:
+            self.test_run_with_storm()
+            ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+            response = self._sendData('/environment', data, ct)
+            constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
+            ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)], [])
+            response = self._sendData('/regions', data, ct)
+            assert response.code == 200
+        else:
+            print("Skipped - test_constraints  #### REASON: Storm not available")
 
     def _get_response_string(self, url):
         """ Returns the value of the json data element as a string. """
@@ -155,25 +181,20 @@ class TestTornado(TornadoTestCase):
         """
         BOUNDARY = '----------ThIs_Is_tHe_bouNdaRY_$'
         CRLF = '\r\n'
-        L = []
+        l = []
         for (key, value) in fields:
-            L.append('--' + BOUNDARY)
-            L.append('Content-Disposition: form-data; name="{}"'.format(key))
-            L.append('')
-            L.append(value)
+            l.append('--' + BOUNDARY)
+            l.append('Content-Disposition: form-data; name="{}"'.format(key))
+            l.append('')
+            l.append(value)
         for (key, filename, value) in files:
-            L.append('--' + BOUNDARY)
-            L.append(
-                'Content-Disposition: form-data; name="{}"; filename="{}"'.
-                    format(
-                        key, filename
-                    )
-            )
-            L.append('Content-Type: text/plain')
-            L.append('')
-            L.append(value)
-        L.append('--' + BOUNDARY + '--')
-        L.append('')
-        body = CRLF.join(L)
+            l.append('--' + BOUNDARY)
+            l.append('Content-Disposition: form-data; name="{}"; filename="{}"'.format(key, filename))
+            l.append('Content-Type: text/plain')
+            l.append('')
+            l.append(value)
+        l.append('--' + BOUNDARY + '--')
+        l.append('')
+        body = CRLF.join(l)
         content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
         return content_type, body
