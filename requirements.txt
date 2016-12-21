@@ -6,3 +6,5 @@ tornado
 # install package
 # NOTE: -e . for editable mode
 -e . 
+git+git://github.com/moves-rwth/pycarl@master#egg=pycarl
+git+git://github.com/moves-rwth/stormpy@master#egg=stormpy

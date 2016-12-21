@@ -75,18 +75,20 @@ def get_initial_config(config):
     config_constraints["precision"] = str(0.0001)
     config["constraints"] = config_constraints
 
-def write_initial_config(path, config):
+def write_initial_config():
+    config = configparser.ConfigParser()
+    get_initial_config(config)
+    path = os.path.join(thisfilepath, "prophesy", "prophesy.cfg")
+    print("Writing config to " + path)
+    with open(path, 'w') as configfile:
+        config.write(configfile)
+
+    config = configparser.ConfigParser()
+    get_initial_web_config(config)
+    path = os.path.join(thisfilepath, "prophesy_web", "prophesy_web.cfg")
     print("Writing config to " + path)
     with open(path, 'w') as configfile:
         config.write(configfile)
 
 if __name__ == "__main__":
-    config = configparser.ConfigParser()
-    get_initial_config(config)
-    write_initial_config(
-        os.path.join(thisfilepath, "prophesy", "prophesy.cfg"), config)
-
-    config = configparser.ConfigParser()
-    get_initial_web_config(config)
-    write_initial_config(
-        os.path.join(thisfilepath, "prophesy_web", "prophesy_web.cfg"), config)
+    write_initial_config()

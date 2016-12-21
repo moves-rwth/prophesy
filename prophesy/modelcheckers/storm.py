@@ -49,7 +49,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
         args = [self.location,
-                '--symbolic', self.prismfile.location,
+                '--prism', self.prismfile.location,
                 '--prop', self.pctlformula,
                 '--parametric',
                 '--parametric:resultfile', resultfile]

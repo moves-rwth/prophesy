@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 
 from prophesy.output.plot import Plot
 from prophesy.input.resultfile import read_pstorm_result
-from prophesy import config
+from prophesy.config import configuration
 from prophesy.input.samplefile import write_samples_file
 from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
@@ -34,7 +34,7 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     if not safe_above_threshold:
         Plot.flip_green_red = True
 
-    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=config.PLOTS)
+    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
 
     samples_green = [pt for pt, v in samples.items() if v >= threshold]
     samples_red = [pt for pt, v in samples.items() if v < threshold]

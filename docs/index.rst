@@ -3,19 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to prophesy's documentation!
+Prophesy
 ====================================
 
-Contents:
-
+User Guide:
+------------------------------------
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
-   prophesy
+   installation
+   gettingstarted
+   api
+
 
 
 Indices and tables
-==================
+-------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

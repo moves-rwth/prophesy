@@ -22,5 +22,5 @@ class RatFuncSampling(Sampler):
         samples = SampleDict(self.variables)
         for sample_point in samplepoints:
             pt = sample_point.get_point(self.variables)
-            samples[pt] = self.ratfunc.eval(sample_point)
+            samples[pt] = self.ratfunc.evaluate(sample_point)
         return samples
