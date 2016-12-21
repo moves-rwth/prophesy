@@ -35,7 +35,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def version(self):
         """ Returns the current storm version."""
-        return stormpy.info.Version.short()
+        return str(stormpy.info.Version.short)
 
     def set_pctl_formula(self, formula):
         """Sets the pctl-formular to modelcheck the current model with that formula. The formula is directly parsed."""
@@ -43,10 +43,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         #    raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
         self.pctl_formula = stormpy.core.parse_formulas(formula)
 
-    def load_model_from_prismfile(self, path_to_prismfile):
+    def load_model_from_prismfile(self, p_file):
         """ Load a model encrypted in prism file format."""
-        self.prism_file = PrismFile(path_to_prismfile)
-        self.program = stormpy.core.parse_prism_program(path_to_prismfile)
+        self.prism_file = p_file
+        self.program = stormpy.core.parse_prism_program(self.prism_file.location)
 
     def set_bisimulation(self, type):
         """Sets the bisimulation type for Strom. Raises a ConfigurationError, if the type is not valid."""

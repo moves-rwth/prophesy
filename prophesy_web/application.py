@@ -382,7 +382,7 @@ class RunPrism(CegarHandler):
 
         # Try to load the model
         try:
-            tool.load_model_from_prismfile(prism_file.location)
+            tool.load_model_from_prismfile(prism_file)
         except Exception as e:
             return self._json_error("Error while loading model: {}".format(e))
 
