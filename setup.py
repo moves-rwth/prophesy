@@ -44,7 +44,7 @@ setup(
               "prophesy.modelcheckers", "prophesy.data",
               "prophesy.regions", "prophesy.exceptions",
               "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'shapely',
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'stormpy', 'shapely',
                       'numpy', 'matplotlib'],
     tests_require=['pytest'],
     extras_require = {
