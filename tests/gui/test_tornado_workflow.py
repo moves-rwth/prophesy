@@ -26,7 +26,13 @@ from prophesy.config import configuration
 class TestTornado(TornadoTestCase):
     """ Testing of the workflow in Prophesy. """
 
-    def test_0_upload_files(self):
+
+    def test_0_storm_available(self):
+        if configuration.get_storm() is None:
+            print("WARINING: Not all tests are correct. Storm was not found!!!")
+            assert 0
+
+    def test_1_upload_files(self):
         with open(get_example_path("pdtmc", "brp", "brp_16_2.pm"), 'r') as pfile:
             prismdata = pfile.read()
         with open(get_example_path("pdtmc", "brp", "property1.pctl"), 'r') as pfile:
@@ -46,14 +52,14 @@ class TestTornado(TornadoTestCase):
         response = self._sendData('/uploadResult', data=data, ct=ct)
         assert response.code == 200
 
-    def test_1_run_with_storm(self):
+    def test_2_run_with_storm(self):
         self.test_0_upload_files()
         ct, data = self._encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),("pctl_property", "P=? [F \"target\"]"),("mctool", "storm")], [])
         response = self._sendData('/runPrism', data, ct)
         print(response)
         assert response.code == 200
 
-    def test_2_sampling(self):
+    def test_3_sampling(self):
         self.test_1_run_with_storm()
         ct, data = self._encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
         response = self._sendData('/environment', data, ct)

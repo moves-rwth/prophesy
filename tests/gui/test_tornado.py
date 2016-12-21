@@ -1,3 +1,4 @@
+import pytest
 from tornado_test_case import TornadoTestCase
 
 # For parsing json-strings in dicts
@@ -15,18 +16,8 @@ from helpers.helper import get_example_path
 import prophesy.config as config # This imports the Class data file
 from prophesy.config import configuration # This imports the instanciated Object of 'ProphesyConfig'
 
-
 class TestTornado(TornadoTestCase):
     """ Testing of the tornado web framework. """
-
-    storm_avail = False
-
-    def test_storm_available(self):
-        if configuration.get_storm() is not None:
-                self.storm_avail = True
-        else:
-            print("WARINING: Not all tests are correct. Storm was not found!!!")
-            assert 0
 
     def test_homepage(self):
         """ Test if the prophesy homepage is available. """
@@ -87,73 +78,63 @@ class TestTornado(TornadoTestCase):
         response = self._sendData('/uploadResult', data=data, ct=ct)
         assert response.code == 200
 
-    def test_run_with_storm(self):
-        if self.storm_avail:
-            self.test_upload_files()
-            ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),
-                                                       ("pctl_property", "P=? [F \"target\"]"),
-                                                       ("mctool", "storm")], [])
-            response = self._sendData('/runPrism', data, ct)
-            assert response.code == 200
-        else:
-            print("Skipped - test_run_with_storm #### REASON: Storm not available")
-            pass
+    @pytest.mark.incremental
+    def test_0_storm_available(self):
+        if configuration.get_storm() is None:
+            print("WARNING: Not all tests are correct. Storm was not found!!!")
+            assert 0
 
-    def test_sampling(self):
+    @pytest.mark.incremental
+    def test_1_run_with_storm(self):
+        self.test_upload_files()
+        ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),
+                                                   ("pctl_property", "P=? [F \"target\"]"),
+                                                   ("mctool", "storm")], [])
+        response = self._sendData('/runPrism', data, ct)
+        assert response.code == 200
+
+    @pytest.mark.incremental
+    def test_2_sampling(self):
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
-        if self.storm_avail :
-            self.test_run_with_storm()
-            ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
-            response = self._sendData('/environment', data, ct)
-            samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
-            response = self._sendData('/samples', samples, "application/json")
-            print(response.body.decode("UTF-8"))
-            assert response.code == 200
-        else:
-            print("Skipped - test_sampling #### REASON: Storm not available")
+        self.test_1_run_with_storm()
+        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        response = self._sendData('/environment', data, ct)
+        samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
+        response = self._sendData('/samples', samples, "application/json")
+        print(response.body.decode("UTF-8"))
+        assert response.code == 200
 
-    def test_auto_sample(self):
-
+    @pytest.mark.incremental
+    def test_3_auto_sample(self):
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
-        if self.storm_avail:
-            self.test_run_with_storm()
-            # Set Sampler
-            ct, data = self.encode_multipart_formdata([("pmc", "storm"), ("sampler", "ratfunc"), ("sat", "z3")], [])
-            response = self._sendData('/environment', data, ct)
+        self.test_1_run_with_storm()
+        # Set Sampler
+        ct, data = self.encode_multipart_formdata([("pmc", "storm"), ("sampler", "ratfunc"), ("sat", "z3")], [])
+        response = self._sendData('/environment', data, ct)
+        # Set auto generator
+        ct, data = self.encode_multipart_formdata([("iterations", "2"), ("generator", "uniform")], [])
+        response = self._sendData("/generateSamples", data, ct)
+        assert response.code == 200
+        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
+        response = self._sendData("/generateSamples", data, ct)
+        assert response.code == 200
+        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
+        response = self._sendData("/generateSamples", data, ct)
+        assert response.code == 200
 
-            # Set auto generator
-            ct, data = self.encode_multipart_formdata([("iterations", "2"), ("generator", "uniform")], [])
-            response = self._sendData("/generateSamples", data, ct)
-
-            assert response.code == 200
-
-            ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
-            response = self._sendData("/generateSamples", data, ct)
-
-            assert response.code == 200
-
-            ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
-            response = self._sendData("/generateSamples", data, ct)
-
-            assert response.code == 200
-        else:
-            print("Skipped - test_auto_sample #### REASON: Storm not available")
 
     def test_auto_constraint(self):
         print("TEST NOT IMPLEMENTED YET!")
-        pass
 
-    def test_constraints(self):
-        if self.storm_avail:
-            self.test_run_with_storm()
-            ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
-            response = self._sendData('/environment', data, ct)
-            constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
-            ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)], [])
-            response = self._sendData('/regions', data, ct)
-            assert response.code == 200
-        else:
-            print("Skipped - test_constraints  #### REASON: Storm not available")
+    @pytest.mark.incremental
+    def test_4_constraints(self):
+        self.test_1_run_with_storm()
+        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        response = self._sendData('/environment', data, ct)
+        constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
+        ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)], [])
+        response = self._sendData('/regions', data, ct)
+        assert response.code == 200
 
     def _get_response_string(self, url):
         """ Returns the value of the json data element as a string. """
