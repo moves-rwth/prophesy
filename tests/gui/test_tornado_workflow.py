@@ -53,14 +53,14 @@ class TestTornado(TornadoTestCase):
         assert response.code == 200
 
     def test_2_run_with_storm(self):
-        self.test_0_upload_files()
+        self.test_1_upload_files()
         ct, data = self._encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),("pctl_property", "P=? [F \"target\"]"),("mctool", "storm")], [])
         response = self._sendData('/runPrism', data, ct)
         print(response)
         assert response.code == 200
 
     def test_3_sampling(self):
-        self.test_1_run_with_storm()
+        self.test_2_run_with_storm()
         ct, data = self._encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
         response = self._sendData('/environment', data, ct)
         samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
