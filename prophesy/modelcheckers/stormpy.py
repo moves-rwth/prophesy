@@ -41,12 +41,16 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         """Sets the pctl-formular to modelcheck the current model with that formula. The formula is directly parsed."""
         # if self.program == None:
         #    raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
-        self.pctl_formula = stormpy.core.parse_formulas(formula)
+        self.pctl_formula = formula
+        if self.program is not None:
+            self.pctl_formula = stormpy.parse_properties_for_prism_program(formula, self.program)
+        else:
+            self.pctl_formula = stormpy.parse_properties(formula)
 
     def load_model_from_prismfile(self, p_file):
         """ Load a model encrypted in prism file format."""
         self.prism_file = p_file
-        self.program = stormpy.core.parse_prism_program(self.prism_file.location)
+        self.program = stormpy.parse_prism_program(self.prism_file.location)
 
     def set_bisimulation(self, type):
         """Sets the bisimulation type for Strom. Raises a ConfigurationError, if the type is not valid."""
@@ -62,9 +66,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         """This method returns the rational function as the result from the model checking task."""
         model = None
         if self.prism_file.nr_parameters() == 0:
-            model = stormpy.core.build_model_from_prism_program(self.program, self.pctl_formula)
+            model = stormpy.build_model(self.program)
         else:
-            model = stormpy.core.build_parametric_model_from_prism_program(self.program, self.pctl_formula)
+            model = stormpy.build_parametric_model(self.program)
+            print(model.labels)
 
         result = stormpy.model_checking(model, self.pctl_formula[0])
 
