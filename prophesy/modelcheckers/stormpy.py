@@ -28,6 +28,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         self.pctl_formula = None
         self.prism_file = None
         self.program = None
+        self.last_result = None
 
     def name(self):
         """Returns a string representation of the models name."""
@@ -41,12 +42,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         """Sets the pctl-formular to modelcheck the current model with that formula. The formula is directly parsed."""
         # if self.program == None:
         #    raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
-        self.pctl_formula = formula
+        # self.pctl_formula = formula
         if self.program is not None:
             self.pctl_formula = stormpy.parse_properties_for_prism_program(formula, self.program)
         else:
             self.pctl_formula = stormpy.parse_properties(formula)
-
     def load_model_from_prismfile(self, p_file):
         """ Load a model encrypted in prism file format."""
         self.prism_file = p_file
@@ -68,13 +68,9 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         if self.prism_file.nr_parameters() == 0:
             model = stormpy.build_model(self.program)
         else:
-            model = stormpy.build_parametric_model(self.program)
+            model = stormpy.build_parametric_model(self.program, self.pctl_formula)
             print(model.labels)
-
         result = stormpy.model_checking(model, self.pctl_formula[0])
-
-        # Hier Fehler im return value?!
-        # func = result.result_function
 
         return ParametricResult(self.prism_file.parameters,
                                 list(result.constraints_graph_preserving) + list(result.constraints_well_formed),
