@@ -120,10 +120,14 @@ class ProphesyConfig(Configuration):
         return tool_loc if tool_loc else None
 
     def get_intermediate_dir(self):
-        return self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
+        dir = self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
+        util.ensure_dir_exists(dir)
+        return dir
 
     def get_plots_dir(self):
-        return self.get(ProphesyConfig.DIRECTORIES, "plots")
+        dir = self.get(ProphesyConfig.DIRECTORIES, "plots")
+        util.ensure_dir_exists(dir)
+        return dir
 
     def get_sampling_min_distance(self):
         # Minimum distance between points to allow further sampling
