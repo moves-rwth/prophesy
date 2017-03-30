@@ -27,7 +27,7 @@ class ConstraintQuads(RegionGenerator):
         self._sort_quads_by_size()
 
     def _sort_quads_by_size(self, reverse=True):
-        self.quads.sort(key=lambda x: x.quad.size(), reverse=True)
+        self.quads.sort(key=lambda x: x.quad.size(), reverse=reverse)
 
     def plot_candidate(self):
         boxes = []

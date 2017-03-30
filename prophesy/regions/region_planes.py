@@ -1,5 +1,6 @@
 from prophesy.data.samples import SamplePoint
-from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
+from prophesy.regions.region_generation import RegionGenerator
+from prophesy.regions.region_rectangles import Anchor, Direction
 from prophesy.config import configuration
 from shapely.geometry import LineString, MultiPoint, box
 from shapely.geometry.polygon import Polygon

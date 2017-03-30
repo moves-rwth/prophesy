@@ -1,5 +1,5 @@
 from prophesy.data.samples import split_samples, SamplePoint
-from prophesy.regions.region_generation import RegionGenerator, Anchor, Direction
+from prophesy.regions.region_generation import RegionGenerator
 from shapely.geometry import box
 from shapely import affinity
 from prophesy.config import configuration
@@ -7,7 +7,81 @@ import shapely.geometry.point
 import prophesy.data.point
 from pycarl import Rational
 
+
+from enum import Enum
+from numpy import array
+
 #TODO: This class needs to be rewritten to use HyperRectangles
+
+
+class Direction(Enum):
+    """The four intercardinal directions ('North-East' etc.) as boolean
+    2-tuples.
+
+    The first entry corresponds to the West-East axis (`True` being
+    East), the second to North-South (`true` being North)."""
+    NE = (True, True)
+    SE = (True, False)
+    NW = (False, True)
+    SW = (False, False)
+
+    @classmethod
+    def from_bool(cls, pos_x, pos_y):
+        """
+        @param pos_x Boolean indicating of x axis should be positive or negative
+        @param pos_y Boolean indicating of y axis should be positive or negative
+        @return Direction
+        """
+        if pos_x:
+            if pos_y:
+                return cls.NE
+            else:
+                return cls.SE
+        else:
+            if pos_y:
+                return cls.NW
+            else:
+                return cls.SW
+
+    def to_vector(self):
+        """Return vector indicating the direction
+        @return numpy.array, 2D
+        """
+        vector = {Direction.NE: array([ 1,  1]),
+                  Direction.SE: array([ 1, -1]),
+                  Direction.NW: array([-1,  1]),
+                  Direction.SW: array([-1, -1])}
+        return vector[self]
+
+
+class Anchor:
+    """Represents an 'Anchor' point, used to define certain locations useful,
+    for instance to iniate growing rectangles from
+    """
+    def __init__(self, pos, direction, safe):
+        """
+        @param pos shapely Point
+        @param direction Direction
+        @param safe Boolean to indiavte if Anchor is considered in a safe area
+        """
+        self.pos = pos
+        self.dir = direction
+        self.safe = safe
+
+    def __hash__(self, *args, **kwargs):
+        return hash(self.pos) ^ hash(self.dir)
+
+    def __eq__(self, other):
+        if not isinstance(other, Anchor):
+            return False
+        if self.pos == other.pos and self.dir == other.dir:
+            assert(self.safe == other.safe)
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return "({}, {}) {} (Safe: {})".format(self.pos.x, self.pos.y, self.dir, self.safe)
 
 class ConstraintRectangles(RegionGenerator):
 
