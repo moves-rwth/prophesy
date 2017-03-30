@@ -11,7 +11,7 @@ from prophesy.config import configuration
 from prophesy.input.samplefile import write_samples_file
 from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
-from prophesy.util import open_file
+from prophesy.util import open_file, ensure_dir_exists
 
 
 def parse_cli_args(args):
