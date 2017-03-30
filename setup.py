@@ -55,10 +55,10 @@ setup(
         'prophesy': ['prophesy.cfg'],
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
-    scripts=['scripts/buildconstraints',
-             'scripts/prismfilesampling',
-             'scripts/prismfiletoratfunc',
-             'scripts/ratfilesampling',
+    scripts=['scripts/buildconstraints.py',
+             'scripts/prismfilesampling.py.py',
+             'scripts/prismfiletoratfunc.py',
+             'scripts/ratfilesampling.py',
              'scripts/webcegar'],
     cmdclass={
         'build': ConfigBuild,

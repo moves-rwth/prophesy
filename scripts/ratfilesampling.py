@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import tempfile
+import sys
 from argparse import ArgumentParser
 
-# from sampling.sampler_carl import CarlSampling # needs fix
-# from sampling.sampling_linear import LinearRefinement # unused
 
 from prophesy.output.plot import Plot
 from prophesy.input.resultfile import read_pstorm_result
@@ -15,7 +14,7 @@ from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.util import open_file
 
 
-def parse_cli_args():
+def parse_cli_args(args):
     """Parse and return command-line arguments."""
     parser = ArgumentParser(description='Perform sampling based on a rational function.')
 
@@ -27,7 +26,8 @@ def parse_cli_args():
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
 
-    return parser.parse_args()
+    return parser.parse_args(args)
+
 
 def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
@@ -46,22 +46,26 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     return plot_path
 
 
-if __name__ == "__main__":
-    cmdargs = parse_cli_args()
+def run(args=sys.argv, interactive=True):
+    cmdargs = parse_cli_args(args)
 
     # Read previously generated result
     result = read_pstorm_result(cmdargs.rat_file)
     print("Parameters:", result.parameters)
 
     sampling_interface = RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
-    # sampling_interface = CarlSampling(result.ratfunc, result.parameters)
 
     initial_samples = uniform_samples(sampling_interface, result.parameters, cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
-    refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations, cmdargs.threshold)
-    #refined_samples = initial_samples
+    refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations,
+                                     cmdargs.threshold)
     write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
-    open_file(plot_path)
+    if interactive:
+        open_file(plot_path)
+
+
+if __name__ == "__main__":
+    run()
