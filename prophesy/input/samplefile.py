@@ -1,7 +1,6 @@
 from prophesy.data.samples import SampleDict, SAMPLE_ABOVE, SAMPLE_BELOW
 from pycarl import Rational, Variable
 from prophesy.data.point import Point
-from prophesy.data.variable import VariableOrder
 
 def read_samples_file(path):
     """
@@ -23,13 +22,13 @@ def read_samples_file(path):
             raise RuntimeError("Samples file is empty or malformed")
 
         # read first line with variable names
-        variable_names = lines[0].split()
-        if variable_names[-1] == "Result":
-            variable_names = variable_names[:-1]
+        parameter_names = lines[0].split()
+        if parameter_names[-1] == "Result":
+            parameter_names = parameter_names[:-1]
         start = 1
 
         # Variable is by default constructed as REAL, which is good here
-        variables = VariableOrder(map(Variable, variable_names))
+        parameters = list(map(Variable, parameter_names))
 
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
@@ -41,7 +40,7 @@ def read_samples_file(path):
         samples = SampleDict(variables)
         for i, line in enumerate(lines[start:]):
             items = line.split()
-            if len(items) - 1 != len(variable_names):
+            if len(items) - 1 != len(parameter_names):
                 raise RuntimeError("Invalid input on line " + str(i + start))
             if items[-1] == "below":
                 value = SAMPLE_BELOW
@@ -53,7 +52,8 @@ def read_samples_file(path):
             coords = map(float, items[:-1])
             samples[Point(*coords)] = value
 
-    return variables, threshold, samples
+    return parameters, threshold, samples
+
 
 def write_samples_file(variables, samples_dict, path):
     with open(path, "w") as f:
