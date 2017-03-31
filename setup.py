@@ -56,7 +56,7 @@ setup(
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
     scripts=['scripts/buildconstraints.py',
-             'scripts/prismfilesampling.py',
+             'scripts/modelsampling.py',
              'scripts/prismfiletoratfunc.py',
              'scripts/ratfilesampling.py',
              'scripts/webcegar'],
