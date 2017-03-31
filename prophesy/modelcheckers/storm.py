@@ -73,20 +73,18 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
         raise NotImplementedError("The Storm interface does not support sampling")
 
-        assert False, "See the assertions needed from Prism tool"
-
+        #TODO finish
         samples = {}
         for sample_point in samplepoints:
             const_values_string = ",".join(["{0}={1}".format(var, val) for var, val in sample_point.items()])
             args = [self.location,
-                    '--symbolic', self.prismfile.location,
+                    '--prism', self.prismfile.location,
                     '--prop', self.pctlformula,
-                    "-const", const_values_string,
-                    "--exportresults", resultfile]
+                    "-const", const_values_string]
             if self.bisimulation == BisimulationType.strong:
                 args.append('--bisimulation')
 
-            run_tool(args)
+            output = run_tool(args, quiet=True)
             with open(resultfile) as f:
                 f.readline()
                 sample_value = Rational(f.readline())
