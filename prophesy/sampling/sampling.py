@@ -1,18 +1,14 @@
 """
-Helper module for ratfilesampling.py
-TODO: Should be removed at some point, or moved away
+Helper module for simplified sampling access.
 """
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
-from prophesy.sampling.sampling_delaunay import DelaunayRefinement
 from prophesy.data.samples import SampleDict
 from prophesy.sampling.sampling_linear import LinearRefinement
 
 def uniform_samples(interface, parameters, samples_per_dim):
     """Generate a uniform grid of samples."""
     samples = SampleDict()
-    uniform_generator = UniformSampleGenerator(interface,
-        parameters.get_variable_order(), samples,
-        parameters.get_variable_bounds(), samples_per_dim)
+    uniform_generator = UniformSampleGenerator(interface, [parameters.get_variable_order(),parameters.get_variable_bounds()], samples, samples_per_dim)
 
     for new_samples in uniform_generator:
         samples.update(new_samples)

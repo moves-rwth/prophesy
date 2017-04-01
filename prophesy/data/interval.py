@@ -48,7 +48,7 @@ def create_embedded_closed_interval(interval, epsilon):
         if interval.right_bound_type() == BoundType.open:
             if interval.width() <= 2*epsilon:
                 raise ValueError("Interval is not large enough.")
-            return Interval(interval.left_bound + epsilon, BoundType.closed, interval.right_bound() - epsilon, BoundType.closed)
+            return Interval(interval.left_bound() + epsilon, BoundType.closed, interval.right_bound() - epsilon, BoundType.closed)
 
     if interval.width() <=  epsilon:
         raise ValueError("Interval is not large enough.")

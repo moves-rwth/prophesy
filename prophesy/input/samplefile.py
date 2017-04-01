@@ -37,7 +37,7 @@ def read_samples_file(path):
             threshold = Rational(lines[1].split()[1])
             start += 1
 
-        samples = SampleDict(variables)
+        samples = SampleDict(parameters)
         for i, line in enumerate(lines[start:]):
             items = line.split()
             if len(items) - 1 != len(parameter_names):

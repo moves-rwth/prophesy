@@ -17,10 +17,7 @@ class ProphesyConfig(Configuration):
         self._init_tools()
 
     def is_module_available(self, module):
-        try:
-            return self.getboolean(ProphesyConfig.DEPENDENCIES, module)
-        except ConfigurationError:
-            return False
+        return self.getboolean(ProphesyConfig.DEPENDENCIES, module)
 
     def getAvailableSMTSolvers(self):
         if len(self.smtsolvers) == 0:

@@ -112,7 +112,7 @@ class ConstraintRectangles(RegionGenerator):
             if pt2[1] == 1:
                 pt2[1] = Rational(999999)/Rational(1e6)
             sp = SamplePoint.from_point(prophesy.data.point.Point(*pt2), self.parameters.get_variable_order())
-            value = self.ratfunc.eval(sp)
+            value = self.ratfunc.evaluate(sp)
             if value >= self.threshold:
                 pt_safe = True
             else:
