@@ -21,12 +21,14 @@ class TestTornado(TornadoTestCase):
 
     def test_homepage(self):
         """ Test if the prophesy homepage is available. """
+        print("Check if Homepage is Available...")
         response = self.fetch('/')
         self.assertEqual(response.code, 200)
+        print("DONE")
 
     def test_config(self):
         """ Test if the configuration webinterface can change the values of the config-file. """
-
+        print("Check if Configuration is ready to use...")
         # Create random new test value
         new_value = str(random.random())
         value_before = self._get_response_string('/config/directories/plots')
@@ -44,21 +46,27 @@ class TestTornado(TornadoTestCase):
         value_after = json.loads(s)["data"]
         self.assertNotEqual(value_before, value_after)
         self.assertEqual(value_after, new_value)
+        print("DONE")
 
     def test_directories(self):
         """ Checks if the directories of the config file exist. """
+        print("Check if Configuration directories exist...")
         section = configuration.getSection(configuration.DIRECTORIES)
         for directory in section:
             os.path.isdir(directory)
+        print("DONE")
 
     def test_executables(self):
         """ Checks if the executables exist"""
+        print("Check Executables exist...")
         section = configuration.getSection(configuration.EXTERNAL_TOOLS)
         for tool in section:
             if not section[tool] == '':
                 assert (os.path.isfile(section[tool]) == "True") or (shutil.which(section[tool]) is not None)
+        print("DONE")
 
     def test_upload_files(self):
+        print("Check if uploading files to the server works correctly...")
         with open(get_example_path("pdtmc", "brp", "brp_16_2.pm"), 'r') as pfile:
             prismdata = pfile.read()
         with open(get_example_path("pdtmc", "brp", "property1.pctl"), 'r') as pfile:
@@ -77,24 +85,30 @@ class TestTornado(TornadoTestCase):
         ct, data = self.encode_multipart_formdata([("result-type", "storm")], [result_file])
         response = self._sendData('/uploadResult', data=data, ct=ct)
         assert response.code == 200
+        print("DONE")
 
     @pytest.mark.incremental
     def test_0_storm_available(self):
+        print("Check if StoRM is available...")
         if configuration.get_storm() is None:
             print("WARNING: Not all tests are correct. Storm was not found!!!")
             assert 0
+        print("DONE")
 
     @pytest.mark.incremental
     def test_1_run_with_storm(self):
+        print("Check if StoRM runs on uploaded file...")
         self.test_upload_files()
         ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),
                                                    ("pctl_property", "P=? [F \"target\"]"),
                                                    ("mctool", "storm")], [])
         response = self._sendData('/runPrism', data, ct)
         assert response.code == 200
+        print("DONE")
 
     @pytest.mark.incremental
     def test_2_sampling(self):
+        print("Check if sampling works on a StoRM generated result file...")
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
         self.test_1_run_with_storm()
         ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
@@ -103,9 +117,12 @@ class TestTornado(TornadoTestCase):
         response = self._sendData('/samples', samples, "application/json")
         print(response.body.decode("UTF-8"))
         assert response.code == 200
+        print("DONE")
 
     @pytest.mark.incremental
     def test_3_auto_sample(self):
+
+        print("Check if autosampling works fine...")
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
         self.test_1_run_with_storm()
         # Set Sampler
@@ -121,6 +138,7 @@ class TestTornado(TornadoTestCase):
         ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
         response = self._sendData("/generateSamples", data, ct)
         assert response.code == 200
+        print("DONE")
 
 
     def test_auto_constraint(self):
@@ -128,6 +146,7 @@ class TestTornado(TornadoTestCase):
 
     @pytest.mark.incremental
     def test_4_constraints(self):
+        print("Check if user defined constraints work as expected...")
         self.test_1_run_with_storm()
         ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
         response = self._sendData('/environment', data, ct)
@@ -135,6 +154,7 @@ class TestTornado(TornadoTestCase):
         ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)], [])
         response = self._sendData('/regions', data, ct)
         assert response.code == 200
+        print("DONE")
 
     def _get_response_string(self, url):
         """ Returns the value of the json data element as a string. """
