@@ -40,13 +40,13 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def set_pctl_formula(self, formula):
         """Sets the pctl-formular to modelcheck the current model with that formula. The formula is directly parsed."""
-        # if self.program == None:
-        #    raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
-        # self.pctl_formula = formula
+        if self.program == None:
+            # Otherwise we cannot parse all kind of formulae.
+            raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
+
         if self.program is not None:
             self.pctl_formula = stormpy.parse_properties_for_prism_program(formula, self.program)
-        else:
-            self.pctl_formula = stormpy.parse_properties(formula)
+
     def load_model_from_prismfile(self, p_file):
         """ Load a model encrypted in prism file format."""
         self.prism_file = p_file
@@ -64,7 +64,6 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def get_rational_function(self):
         """This method returns the rational function as the result from the model checking task."""
-        model = None
         if self.prism_file.nr_parameters() == 0:
             model = stormpy.build_model(self.program)
         else:

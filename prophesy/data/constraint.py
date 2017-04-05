@@ -1,5 +1,5 @@
 import pycarl.parse
-from pycarl.formula.formula import Relation, Constraint
+from pycarl.formula import Relation, Constraint
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
 from pycarl import Polynomial, Rational

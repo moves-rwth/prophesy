@@ -3,7 +3,7 @@ Created on 19 Apr 2016
 
 @author: hbruintjes
 '''
-from prophesy.data.variable import VariableOrder
+
 class Parameter(object):
     """Class representing a parameter, which is a variable with an associated
     interval of allowable values.
@@ -31,13 +31,13 @@ class ParameterOrder(list):
         """Returns a VariableOrder corresponding to this ParameterOrder
         @return VariableOrder
         """
-        return VariableOrder([p.variable for p in self])
+        return list([p.variable for p in self])
 
     def get_variable_bounds(self):
         """Returns a list of bounds ordered according to this ParameterOrder
         @return list of Interval
         """
-        return [p.interval for p in self]
+        return list([p.interval for p in self])
 
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))

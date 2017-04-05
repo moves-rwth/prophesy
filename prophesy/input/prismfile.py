@@ -4,6 +4,9 @@ import shutil
 import tempfile
 from prophesy.config import configuration
 from prophesy.util import ensure_dir_exists, check_filepath_for_reading
+from prophesy.data.parameter import ParameterOrder, Parameter
+from prophesy.data import interval
+from pycarl.core import Rational, Variable
 
 class PrismFile:
     """Wrapper for Prism file; extracts parameter names."""
@@ -12,7 +15,7 @@ class PrismFile:
         check_filepath_for_reading(location)
         self._is_temp = False
         self.location = location
-        self.parameters = []
+        self.parameters = ParameterOrder()
         self._get_parameters()
 
     def __del__(self):
@@ -23,7 +26,11 @@ class PrismFile:
     def _get_parameters(self):
         with open(self.location, 'r') as f:
             inputstring = f.read()
-            self.parameters = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
+            parameter_names = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
+            for par_name in parameter_names:
+                bound = interval.Interval(0.0, interval.BoundType.open,
+                    1.0, interval.BoundType.open)
+                self.parameters.append(Parameter(Variable(par_name), bound))
 
     def make_temporary_copy(self):
         """Makes a temporary copy of itself, which will be deleted automatically.

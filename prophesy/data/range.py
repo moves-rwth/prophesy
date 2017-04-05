@@ -1,7 +1,6 @@
 from numpy import arange
 from itertools import product
     
-
 class Range:
     """
     A container similar to the Python native range construct, consisting of a lower bound, an upper bound
@@ -25,8 +24,10 @@ def create_range_from_interval(interval, nr_samples):
     steps in this interval
     """
     assert nr_samples > 1
-    assert interval[0] <= interval[1]
-    return Range(interval[0], interval[1], (interval[1] - interval[0]) / (nr_samples - 1))
+    assert not interval.empty()
+    assert interval.is_closed()
+    return Range(interval.left_bound(), interval.right_bound(), (interval.width() / (nr_samples - 1)))
+
 
 def create_cartisean_product(ranges):
     """

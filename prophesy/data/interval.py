@@ -33,6 +33,33 @@ def string_to_interval(input, internal_parse_func):
     return Interval(left_value, left_bt, right_value, right_bt)
 
 
+def create_embedded_closed_interval(interval, epsilon):
+    """
+    For an (half) open interval from l to r, create a closed interval [l+eps, r-eps]. 
+    :param interval: 
+    :param epsilon: 
+    :return: 
+    """
+
+    if interval.is_closed():
+        return interval
+
+    if interval.left_bound_type() == BoundType.open:
+        if interval.right_bound_type() == BoundType.open:
+            if interval.width() <= 2*epsilon:
+                raise ValueError("Interval is not large enough.")
+            return Interval(interval.left_bound + epsilon, BoundType.closed, interval.right_bound() - epsilon, BoundType.closed)
+
+    if interval.width() <=  epsilon:
+        raise ValueError("Interval is not large enough.")
+
+    if interval.left_bound_type == BoundType.open:
+        return Interval(interval.left_bound + epsilon, BoundType.closed, interval.right_bound(),
+                        BoundType.closed)
+    return Interval(interval.left_bound, BoundType.closed, interval.right_bound() - epsilon,
+                    BoundType.closed)
+
+
 class Interval:
     """
     Interval class for arbitrary types
@@ -65,6 +92,9 @@ class Interval:
         if pt == self._left_value and self._left_bound_type == BoundType.closed: return True
         if pt == self._right_value and self._right_bound_type == BoundType.closed: return True
         return False
+
+    def is_closed(self):
+        return self.right_bound_type() == BoundType.closed and self.left_bound_type() == BoundType.closed
 
     def width(self):
         return self._right_value - self._left_value
