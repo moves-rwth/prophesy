@@ -2,6 +2,8 @@
 
 from argparse import ArgumentParser
 
+import sys
+
 from shapely.geometry.polygon import Polygon
 
 from prophesy.regions.region_planes import ConstraintPlanes
@@ -21,7 +23,7 @@ from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy import config
 from prophesy.config import configuration
 
-def parse_cli_args(solversConfig):
+def parse_cli_args(args, solversConfig):
     parser = ArgumentParser(description='Build regions based on a sample file')
 
     parser.add_argument('--rat-file', help='file containing rational function', required=True)
@@ -43,15 +45,18 @@ def parse_cli_args(solversConfig):
     solvers_group.add_argument('--z3', dest='z3location', help='location of z3')
     solvers_group.add_argument('--isat', dest='isatlocation', help='location of isat')
 
+    parser.add_argument('--solver-timeout', help='timeout (s) for solver backend', default=50, type=int)
+    parser.add_argument('--solver-memout', help='memout (MB) for solver backend', default=4000, type=int)
+
     parser.add_argument('--threshold-area', type=float, help='threshold for minimal size of new area', default=0.001)
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
 
-    return parser.parse_args()
+    return parser.parse_args(args)
 
-if __name__ == "__main__":
+def run(args = sys.argv, interactive=True):
     solvers = configuration.getAvailableSMTSolvers()
-    cmdargs = parse_cli_args(solvers)
+    cmdargs = parse_cli_args(args, solvers)
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)
@@ -77,7 +82,7 @@ if __name__ == "__main__":
 
     print("Setup SMT interface")
     if cmdargs.z3location:
-        smt2interface = SmtlibSolver(cmdargs.z3location)
+        smt2interface = Z3CliSolver(cmdargs.z3location, timeout=cmdargs.solver_timeout, memout=cmdargs.solver_memout)
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     elif 'z3' in solvers:
@@ -92,7 +97,6 @@ if __name__ == "__main__":
     setup_smt(smt2interface, result, threshold)
 
     print("Generating regions")
-    generator = None
     checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
     arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
@@ -115,9 +119,14 @@ if __name__ == "__main__":
     else:
         generator.generate_constraints(max_area = cmdargs.area)
 
-    open_file(generator.result_file)
+    if interactive:
+        open_file(generator.result_file)
 
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
 
     smt2interface.stop()
+
+
+if __name__ == "__main__":
+    run()

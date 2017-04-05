@@ -44,7 +44,7 @@ setup(
               "prophesy.modelcheckers", "prophesy.data",
               "prophesy.regions", "prophesy.exceptions",
               "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl', 'stormpy', 'shapely',
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=1.2', 'stormpy', 'shapely',
                       'numpy', 'matplotlib'],
     tests_require=['pytest'],
     extras_require = {
@@ -55,10 +55,10 @@ setup(
         'prophesy': ['prophesy.cfg'],
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
-    scripts=['scripts/buildconstraints',
-             'scripts/prismfilesampling',
-             'scripts/prismfiletoratfunc',
-             'scripts/ratfilesampling',
+    scripts=['scripts/buildconstraints.py',
+             'scripts/modelsampling.py',
+             'scripts/prismfiletoratfunc.py',
+             'scripts/ratfilesampling.py',
              'scripts/webcegar'],
     cmdclass={
         'build': ConfigBuild,

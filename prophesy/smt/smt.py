@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+import pycarl
 from pycarl import Variable, VariableType, Rational, Polynomial
 from prophesy.data.interval import Interval, BoundType
 from pycarl.formula.formula import Constraint, Relation
@@ -40,8 +41,9 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     bad_constraint = Constraint(rf1Var - thresholdVar * rf2Var, bad_relation)
     #TODO: pycarl cannot deal with float everywhere, cast to rational
     threshold_constraint = Constraint(thresholdVar - threshold, Relation.EQ)
-    rf1_constraint = Constraint(rf1Var - result.ratfunc.nominator, Relation.EQ)
-    rf2_constraint = Constraint(rf2Var - result.ratfunc.denominator, Relation.EQ)
+
+    rf1_constraint = Constraint(rf1Var - pycarl.numerator(result.ratfunc), Relation.EQ)
+    rf2_constraint = Constraint(rf2Var - pycarl.denominator(result.ratfunc), Relation.EQ)
     smt2interface.assert_constraint(threshold_constraint)
     smt2interface.assert_constraint(rf1_constraint)
     smt2interface.assert_constraint(rf2_constraint)
@@ -49,7 +51,7 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     smt2interface.assert_guarded_constraint("__bad", bad_constraint)
 
     #TODO why do we only do this if the denominator is 1
-    if result.ratfunc.denominator == Polynomial(Rational(1)):
+    if pycarl.denominator(result.ratfunc) == Rational(1):
         if rat_func_bound.left_bound() != None:
             ineq_type = Relation.GEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.GREATER
             lbound = Constraint(Polynomial(rf1Var), ineq_type)
