@@ -71,7 +71,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
-        raise NotImplementedError("The Storm interface does not support sampling")
+        #raise NotImplementedError("The Storm interface does not support sampling")
 
         #TODO finish
         samples = {}
@@ -93,3 +93,4 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
             samples[pt] = sample_value
 
         os.unlink(resultfile)
+        return samples
