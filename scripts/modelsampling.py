@@ -59,14 +59,17 @@ def run(args = sys.argv, interactive=True):
     sampling_interface = tool
     cmdargs = parse_cli_args(args)
 
-    initial_samples = uniform_samples(sampling_interface, prism_file.parameters, cmdargs.samplingnr)
+    parameters = prism_file.parameters
+    parameters.make_intervals_closed(0.0001)
+
+    initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
-    refined_samples = refine_samples(sampling_interface, prism_file.parameters, initial_samples, cmdargs.iterations,
+    refined_samples = refine_samples(sampling_interface, parameters, initial_samples, cmdargs.iterations,
                                      cmdargs.threshold)
     write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
 
-    plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
+    plot_path = plot_samples(refined_samples, parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
 
 if __name__ == "__main__":
    run()
