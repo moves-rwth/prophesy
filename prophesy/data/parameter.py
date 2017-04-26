@@ -3,6 +3,7 @@ Created on 19 Apr 2016
 
 @author: hbruintjes
 '''
+import prophesy.data.interval
 
 class Parameter(object):
     """Class representing a parameter, which is a variable with an associated
@@ -37,7 +38,17 @@ class ParameterOrder(list):
         """Returns a list of bounds ordered according to this ParameterOrder
         @return list of Interval
         """
-        return list([p.interval for p in self])
+        return [p.interval for p in self]
+
+    def make_intervals_closed(self, epsilon):
+        """
+        For several applications, we want to have an embedded closed interval 
+        :param epsilon: How far from an open bound should the embedded interal-bound be away
+        """
+        for p in self:
+            p.interval = prophesy.data.interval.create_embedded_closed_interval(p.interval, epsilon)
 
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))
+
+

@@ -10,6 +10,7 @@ from prophesy.data.samples import SampleDict
 from pycarl import Rational
 from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
+import prophesy.data.range
 
 class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def __init__(self, location=configuration.get_prism()):
@@ -35,16 +36,15 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def get_rational_function(self):
         raise NotImplementedError("This is missing")
 
-    def perform_uniform_sampling(self, variables, intervals, samples_per_dimension):
+    def perform_uniform_sampling(self, variables_and_intervals, samples_per_dimension):
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
-        assert len(self.prismfile.parameters) == len(intervals), "Number of intervals does not match number of parameters"
+        assert len(self.prismfile.parameters) == len(variables_and_intervals[0]), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
-        assert False, "Need to map given variable order to prismfile variable order"
-        ranges = [range.create_range_from_interval(interval, samples_per_dimension) for interval in intervals]
+        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in variables_and_intervals[1]]
 
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
-        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(self.prismfile.parameters, range_strings)])
+        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(variables_and_intervals[0], range_strings)])
 
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
@@ -55,11 +55,26 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
                 "-exportresults", resultpath]
         run_tool(args)
         found_parameters, _, samples = read_samples_file(resultpath)
-        assert False, "compare found_parameters with variables, reorder as needed"
+        # compare found parameters with parameter order in prophesy, reorder as needed:
+        i = 0
+        remap = dict()
+        for pname in found_parameters:
+            j = 0
+            print(pname)
+            for var in variables_and_intervals[0]:
+                print(var.name)
+                if var.name == pname.name:
+                    print("match")
+                    remap[j] = i
+                j = j + 1
+            i = i + 1
+
+        assert len(remap) == len(variables_and_intervals[0])
+        for (x,y) in remap.items():
+            assert x == y, "Remapping not implemented"
+
         os.unlink(resultpath)
         os.unlink(pctlpath)
-        if found_parameters != self.prismfile.parameters:
-            raise RuntimeError("Prism returns parameters different from the parameters in the prism file")
         return samples
 
     def perform_sampling(self, samplepoints):
