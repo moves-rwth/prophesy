@@ -52,7 +52,7 @@ class ProphesyConfig(Configuration):
                 util.run_tool([storm_loc], True)
                 self.ppmcs.add('storm')
                 self.pmcs.add('storm')
-                #TODO check whether this is really storm
+                self.samplers['storm'] = storm_loc
             except:
                 raise ConfigurationError("Storm is not found at " + storm_loc)
 

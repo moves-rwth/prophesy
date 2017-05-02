@@ -73,13 +73,18 @@ def getSat(satname):
     else:
         raise RuntimeError("Unknown SAT solver requested")
 
-def getSampler(satname, result):
+def getSampler(satname, result = None, prism_file = None, pctl_formula = None):
     if satname == 'ratfunc':
         # Do not use rationals for now
         return RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
     elif satname == 'prism':
         mc = PrismModelChecker()
         mc.load_model_from_prismfile(result.prism_file)
+        return mc
+    elif satname == 'storm':
+        mc = StormModelChecker()
+        mc.load_model_from_prismfile(prism_file)
+        mc.set_pctl_formula(pctl_formula)
         return mc
     else:
         raise RuntimeError("Unknown sampler requested")
@@ -472,15 +477,38 @@ class Samples(CegarHandler):
         return self._json_ok(flattenedsamples)
 
     def post(self):
-        coordinates = json_decode(self.request.body)
+        print(self.request.body)
+        sampling_information = json_decode(self.request.body)
+        print(sampling_information)
+        coordinates = sampling_information["samples"]
+
+        # Get the current prism file and save it temporarily
+        prism_files = self._get_session("prism-files", {})
+        assert sampling_information["prism_file"] in prism_files
+        prism_file = PrismFile(prism_files[sampling_information["prism_file"]])
         if coordinates is None:
             return self._json_error("Unable to read coordinates", 400)
         result = self._getResultData(self._get_session('current_result', None))
         if result is None:
-            return self._json_error("Unable to load result data", 500)
+            samples = self._get_session('samples', SampleDict())
+            socket = self._get_socket()
+            sampling_interface = getSampler(self._get_session('sampler'), result, prism_file,
+                                            sampling_information["pctl_formula"])
+            coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
+            sample_points = SamplePoints(coordinates, None)
+            new_samples = sampling_interface.perform_sampling(sample_points)
+            if socket is not None:
+                socket.send_samples(new_samples)
+
+            samples.update(new_samples)
+            self._set_session('samples', samples)
+
+            return self._json_ok(_jsonSamples(new_samples))
+
         samples = self._get_session('samples', SampleDict())
         socket = self._get_socket()
-        sampling_interface = getSampler(self._get_session('sampler'), result)
+        sampling_interface = getSampler(self._get_session('sampler'), result, prism_file,
+                                        sampling_information["pctl_formula"])
 
         coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
         sample_points = SamplePoints(coordinates, result.parameters.get_variable_order())
