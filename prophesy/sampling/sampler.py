@@ -5,7 +5,7 @@ from prophesy.data.interval import BoundType
 from prophesy.config import configuration
 from prophesy.data.samples import SamplePoints
 from prophesy.data.point import Point
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 
 class Sampler(object):
     """Base class for performing sampling of given set of points"""

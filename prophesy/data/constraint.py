@@ -1,12 +1,12 @@
-import pycarl.parse
-from pycarl.formula import Relation, Constraint
+
+from prophesy.adapter.pycarl  import Relation, Constraint
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
-from pycarl import Polynomial, Rational
+from prophesy.adapter.pycarl  import Polynomial, Rational, parse
 from prophesy.data.samples import SamplePoint
 
 def parse_constraint(constraint_str):
-    return pycarl.parse.parseExpr(constraint_str)
+    return parse(constraint_str)
 
 def region_from_hyperrectangle(hyperrectangle, variables):
     """Given HyperRectangle and VariableOrder, compute constraints

@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-import pycarl
-from pycarl import Variable, VariableType, Rational, Polynomial
+
+from prophesy.adapter.pycarl import Variable, VariableType, Rational, Polynomial
 from prophesy.data.interval import Interval, BoundType
-from pycarl.formula.formula import Constraint, Relation
+from prophesy.adapter.pycarl import Constraint, Relation
 
 # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
 def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, BoundType.closed, None, BoundType.open)):

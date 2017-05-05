@@ -95,7 +95,6 @@ def open_file(path):
     """Open file with system-default application.
 
     Works for Mac OS (`open`) and Linux with `xdg-open`."""
-    # TODO: Windows
     platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
     os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
 

@@ -1,5 +1,5 @@
 from prophesy.data.samples import SampleDict, SAMPLE_ABOVE, SAMPLE_BELOW
-from pycarl import Rational, Variable
+from prophesy.adapter.pycarl import Rational, Variable
 from prophesy.data.point import Point
 
 def read_samples_file(path):

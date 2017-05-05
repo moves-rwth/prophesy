@@ -1,5 +1,5 @@
 import math
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 
 def _sqrt_approx(i):
     """
@@ -38,7 +38,8 @@ class Point:
     def distance(self, other):
         res = 0.0
         for i, j in zip(self.coordinates, other.coordinates):
-            res = res + pow(i-j,2)
+            tres = type(res)
+            res = res + tres(pow(i-j,2))
         return _sqrt_approx(res)
 
     def dimension(self):

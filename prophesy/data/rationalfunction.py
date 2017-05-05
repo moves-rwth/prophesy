@@ -1,4 +1,4 @@
-from pycarl import Rational, Polynomial, RationalFunction as RatFun
+from prophesy.adapter.pycarl import Rational, Polynomial, RationalFunction as RatFun
 
 #TODO: Technically this class is obsolete (carl can store RF directly), but
 # it makes checking for consistency easier

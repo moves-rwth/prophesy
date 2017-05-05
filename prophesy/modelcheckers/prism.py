@@ -7,7 +7,7 @@ from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
 from prophesy.data.samples import SampleDict
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 import prophesy.data.range
@@ -89,12 +89,14 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         for sample_point in samplepoints:
             const_values_string = ",".join(["{0}={1}".format(var, val) for var, val in sample_point.items()])
             args = [self.location, self.prismfile.location, pctlpath,
-                    "-const", const_values_string,
-                    "-exportresults", resultpath]
+                    "-const", const_values_string]
             run_tool(args)
             with open(resultpath) as f:
                 f.readline()
-                sample_value = Rational(f.readline())
+                tmp = f.readline()
+                assert tmp != None
+                assert tmp != ''
+                sample_value = Rational(tmp)
 
             pt = sample_point.get_point(self.prismfile.parameters)
             samples[pt] = sample_value

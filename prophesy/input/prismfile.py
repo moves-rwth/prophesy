@@ -6,7 +6,7 @@ from prophesy.config import configuration
 from prophesy.util import ensure_dir_exists, check_filepath_for_reading
 from prophesy.data.parameter import ParameterOrder, Parameter
 from prophesy.data import interval
-from pycarl.core import Rational, Variable
+from prophesy.adapter.pycarl  import Rational, Variable
 
 class PrismFile:
     """Wrapper for Prism file; extracts parameter names."""

@@ -9,7 +9,8 @@ from prophesy.input.pctlfile import PctlFile
 from prophesy.input.samplefile import write_samples_file
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy.sampling.sampling import uniform_samples,refine_samples
+from prophesy.sampling.sampling import uniform_samples, refine_samples
+from prophesy.adapter.pycarl import Rational
 
 
 from prophesy.config import configuration
@@ -66,7 +67,7 @@ def run(args = sys.argv, interactive=True):
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, parameters, initial_samples, cmdargs.iterations,
-                                     cmdargs.threshold)
+                                     Rational(cmdargs.threshold))
     write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, parameters, cmdargs.safe_above_threshold, cmdargs.threshold)

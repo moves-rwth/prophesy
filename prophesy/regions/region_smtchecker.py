@@ -4,7 +4,7 @@ from prophesy.data.hyperrectangle import HyperRectangle
 import time
 from prophesy.smt.smt import Answer
 from prophesy.data.samples import SamplePoint, Sample
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 from prophesy.data.constraint import region_from_hyperrectangle, region_from_polygon
 
 class SmtRegionChecker(RegionChecker):

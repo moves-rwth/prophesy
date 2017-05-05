@@ -45,7 +45,7 @@ from prophesy_web.config import configuration as web_configuration
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen
 
-from pycarl import Rational
+from prophesy.adapter.pycarl  import Rational
 
 default_results = {}
 

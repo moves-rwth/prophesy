@@ -3,7 +3,7 @@ from prophesy.sampling.sample_generator import SampleGenerator
 from prophesy.sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.linestring import LineString
 from prophesy.data.samples import Sample, weighed_interpolation, SamplePoints
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 from prophesy.data.point import Point
 
 class DelaunayRefinement(SampleGenerator):

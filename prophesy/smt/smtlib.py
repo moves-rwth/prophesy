@@ -2,7 +2,7 @@ import subprocess
 import functools
 from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
-from pycarl.formula.formula import Constraint, Formula
+from prophesy.adapter.pycarl import Constraint, Formula
 
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"

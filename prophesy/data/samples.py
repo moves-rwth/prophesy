@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from prophesy.data.point import Point
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 
 # Placeholder values for samples of which the exact value is not known,
 # but can be considered safe (above) or unsafe (below)
@@ -214,7 +214,7 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     """
     # If point values are too close, do not interpolate
     distance = abs(sample1.val - sample2.val)
-    if distance < 0.00001:
+    if 10000*distance < 1:
         return None
 
     weight = abs(threshold - sample1.val) / distance
@@ -228,7 +228,7 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     if (sample1.val > sample2.val) == (fudge > 0):
         offset *= -1
 
-    weight += offset
+    weight += Rational(offset)
 
     #TODO: Cast tofloat, otherwise performance tanks. Need to figure out why
-    return Point(*[float(d*weight) + pt for d, pt in zip(deltas, sample1.pt)])
+    return Point(*[(d*weight) + pt for d, pt in zip(deltas, sample1.pt)])

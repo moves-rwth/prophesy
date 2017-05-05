@@ -11,7 +11,8 @@ from prophesy.config import configuration
 from prophesy.input.samplefile import write_samples_file
 from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
-from prophesy.util import open_file, ensure_dir_exists
+from prophesy.util import open_file
+from prophesy.adapter.pycarl import Rational
 
 
 def parse_cli_args(args):
@@ -59,7 +60,7 @@ def run(args=sys.argv, interactive=True):
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations,
-                                     cmdargs.threshold)
+                                     Rational(cmdargs.threshold))
     write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
 
     plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)

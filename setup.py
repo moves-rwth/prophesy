@@ -32,7 +32,7 @@ class ConfigBuild(build):
 
 setup(
     name="Prophesy",
-    version="1.1",
+    version="1.2",
     author="S. Junges, H. Bruintjes, M. Volk",
     author_email="sebastian.junges@cs.rwth-aachen.de",
     maintainer="S. Junges",
@@ -44,7 +44,7 @@ setup(
               "prophesy.modelcheckers", "prophesy.data",
               "prophesy.regions", "prophesy.exceptions",
               "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=1.2', 'stormpy', 'shapely',
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0', 'stormpy', 'shapely',
                       'numpy', 'matplotlib'],
     tests_require=['pytest'],
     extras_require = {

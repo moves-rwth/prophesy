@@ -7,7 +7,7 @@ from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.resultfile import read_pstorm_result
 from prophesy.sampling.sampler import Sampler
-from pycarl.core import Rational
+from prophesy.adapter.pycarl import Rational
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 
@@ -46,7 +46,9 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
-        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        # Delete the file, storm requires that the file does not exist. By this code,
+        # we at least get nice and predictable file names.
 
         args = [self.location,
                 '--prism', self.prismfile.location,

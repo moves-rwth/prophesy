@@ -5,7 +5,7 @@ from shapely import affinity
 from prophesy.config import configuration
 import shapely.geometry.point
 import prophesy.data.point
-from pycarl import Rational
+from prophesy.adapter.pycarl import Rational
 
 
 from enum import Enum

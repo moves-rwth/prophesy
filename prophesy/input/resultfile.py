@@ -2,10 +2,9 @@ import re
 from prophesy.data.rationalfunction import RationalFunction
 from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
-from pycarl.core import Rational, Variable
+from prophesy.adapter.pycarl import Rational, Variable, parse
 from prophesy.data.constraint import parse_constraint
-from pycarl.formula.formula import Constraint, Relation
-from pycarl.parse import parse, parseExpr
+from prophesy.adapter.pycarl  import Constraint, Relation
 
 class ParametricResult(object):
     """Stores the data that may result from loading a parametric model, which
@@ -118,6 +117,6 @@ def read_param_result(location):
 
     # Build rational function
     #print("Parsing rational function")
-    ratfunc = RationalFunction(parseExpr(inputs[3]))
+    ratfunc = RationalFunction(parse(inputs[3]))
 
     return ParametricResult(parameters, constraints, ratfunc)
