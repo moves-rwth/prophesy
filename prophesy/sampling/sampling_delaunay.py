@@ -2,7 +2,7 @@ import numpy
 from prophesy.sampling.sample_generator import SampleGenerator
 from prophesy.sampling.voronoi import computeDelaunayTriangulation
 from shapely.geometry.linestring import LineString
-from prophesy.data.samples import Sample, weighed_interpolation, SamplePoints
+from prophesy.data.samples import InstantiationResult, weighed_interpolation, SamplePoints
 from prophesy.adapter.pycarl import Rational
 from prophesy.data.point import Point
 
@@ -100,8 +100,8 @@ class DelaunayRefinement(SampleGenerator):
                 if p1.distance(p2) < 0.001:
                     continue
 
-                sample1 = Sample(Point(Rational(p1.x), Rational(p1.y)), Rational(p1.z))
-                sample2 = Sample(Point(Rational(p2.x), Rational(p2.y)), Rational(p2.z))
+                sample1 = InstantiationResult(Point(Rational(p1.x), Rational(p1.y)), Rational(p1.z))
+                sample2 = InstantiationResult(Point(Rational(p2.x), Rational(p2.y)), Rational(p2.z))
 
                 midpoint = weighed_interpolation(sample1, sample2, self.threshold, fudge)
                 if midpoint is not None:

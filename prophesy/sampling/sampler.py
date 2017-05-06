@@ -3,7 +3,7 @@ from numpy import linspace
 from prophesy.data.interval import BoundType
 
 from prophesy.config import configuration
-from prophesy.data.samples import SamplePoints
+from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations
 from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
 
@@ -38,14 +38,9 @@ class Sampler(object):
         all_points = itertools.product(*ranges)
         all_points = [Point(*coords) for coords in all_points]
 
-        sample_points = SamplePoints(all_points, variables_and_intervals[0])
+        sample_points = ParameterInstantiations.from_points(all_points, variables_and_intervals[0])
 
         return self.perform_sampling(sample_points)
 
     def perform_sampling(self, samplepoints):
-        """Samples the given sample point and returns the result as a
-        SampleDict.
-        @param iterable of SamplePoint or SamplePoints
-        @return SampleDict
-        """
         raise NotImplementedError("Abstract sampling function called")

@@ -3,7 +3,7 @@ from prophesy.data.hyperrectangle import HyperRectangle
 
 import time
 from prophesy.smt.smt import Answer
-from prophesy.data.samples import SamplePoint, Sample
+from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 from prophesy.adapter.pycarl import Rational
 from prophesy.data.constraint import region_from_hyperrectangle, region_from_polygon
 
@@ -85,13 +85,13 @@ class SmtRegionChecker(RegionChecker):
             return RegionCheckResult.unsat, None
         elif checkresult == Answer.sat:
             # add new point as counter example to existing regions
-            sample = SamplePoint()
+            sample = ParameterInstantiation()
             for var in variables:
                 value = smt_model[var.name]
                 rational = Rational(value)
                 sample[var] = rational
             value = self._ratfunc.evaluate(sample)
-            return RegionCheckResult.sat, Sample.from_sample_point(sample, variables, value)
+            return RegionCheckResult.sat, InstantiationResult.from_sample_point(sample, variables, value)
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None

@@ -3,7 +3,7 @@ from prophesy.adapter.pycarl  import Relation, Constraint
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
 from prophesy.adapter.pycarl  import Polynomial, Rational, parse
-from prophesy.data.samples import SamplePoint
+from prophesy.data.samples import ParameterInstantiation
 
 def parse_constraint(constraint_str):
     return parse(constraint_str)
@@ -78,5 +78,5 @@ def is_point_fulfilling_constraint(pt, constraint):
     @param pt SamplePoint
     @param constraint pycarl.formula.Constraint or pycarl.formula.Formula
     """
-    assert isinstance(pt, SamplePoint)
+    assert isinstance(pt, ParameterInstantiation)
     return constraint.satisfied_by(pt)

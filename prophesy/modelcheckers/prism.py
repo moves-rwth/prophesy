@@ -6,11 +6,12 @@ from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
-from prophesy.data.samples import SampleDict
+from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 from prophesy.adapter.pycarl import Rational
 from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 import prophesy.data.range
+
 
 class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def __init__(self, location=configuration.get_prism()):
@@ -36,15 +37,15 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def get_rational_function(self):
         raise NotImplementedError("This is missing")
 
-    def perform_uniform_sampling(self, variables_and_intervals, samples_per_dimension):
+    def perform_uniform_sampling(self, parameters, samples_per_dimension):
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
-        assert len(self.prismfile.parameters) == len(variables_and_intervals[0]), "Number of intervals does not match number of parameters"
+        assert len(self.prismfile.parameters) == len(parameters.get_variables()), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
-        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in variables_and_intervals[1]]
+        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in parameters.get_variable_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
-        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(variables_and_intervals[0], range_strings)])
+        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(parameters.get_variables(), range_strings)])
 
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
@@ -54,24 +55,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
                 "-const", const_values_string,
                 "-exportresults", resultpath]
         run_tool(args)
-        found_parameters, _, samples = read_samples_file(resultpath)
-        # compare found parameters with parameter order in prophesy, reorder as needed:
-        i = 0
-        remap = dict()
-        for pname in found_parameters:
-            j = 0
-            print(pname)
-            for var in variables_and_intervals[0]:
-                print(var.name)
-                if var.name == pname.name:
-                    print("match")
-                    remap[j] = i
-                j = j + 1
-            i = i + 1
-
-        assert len(remap) == len(variables_and_intervals[0])
-        for (x,y) in remap.items():
-            assert x == y, "Remapping not implemented"
+        found_parameters, _, samples = read_samples_file(resultpath, parameters)
 
         os.unlink(resultpath)
         os.unlink(pctlpath)
@@ -85,21 +69,21 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
         pctlpath = write_string_to_tmpfile(self.pctlformula)
 
-        samples = SampleDict(self.prismfile.parameters)
+        samples = InstantiationResultDict(self.prismfile.parameters)
         for sample_point in samplepoints:
-            const_values_string = ",".join(["{0}={1}".format(var, val) for var, val in sample_point.items()])
+            const_values_string = ",".join(["{0}={1}".format(var, float(val)) for var, val in sample_point.items()])
             args = [self.location, self.prismfile.location, pctlpath,
-                    "-const", const_values_string]
+                    "-const", const_values_string,
+                    "-exportresults", resultpath]
             run_tool(args)
             with open(resultpath) as f:
                 f.readline()
                 tmp = f.readline()
                 assert tmp != None
-                assert tmp != ''
+                assert tmp != ""
                 sample_value = Rational(tmp)
 
-            pt = sample_point.get_point(self.prismfile.parameters)
-            samples[pt] = sample_value
+            samples.add_result(InstantiationResult(sample_point, sample_value))
         os.unlink(resultpath)
         os.unlink(pctlpath)
         return samples

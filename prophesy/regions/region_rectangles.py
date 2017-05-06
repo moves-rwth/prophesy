@@ -1,4 +1,4 @@
-from prophesy.data.samples import split_samples, SamplePoint
+from prophesy.data.samples import split_samples, ParameterInstantiation
 from prophesy.regions.region_generation import RegionGenerator
 from shapely.geometry import box
 from shapely import affinity
@@ -111,7 +111,7 @@ class ConstraintRectangles(RegionGenerator):
                 pt2[1] = Rational(1)/Rational(1e6)
             if pt2[1] == 1:
                 pt2[1] = Rational(999999)/Rational(1e6)
-            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt2), self.parameters.get_variable_order())
+            sp = ParameterInstantiation.from_point(prophesy.data.point.Point(*pt2), self.parameters.get_variable_order())
             value = self.ratfunc.evaluate(sp)
             if value >= self.threshold:
                 pt_safe = True

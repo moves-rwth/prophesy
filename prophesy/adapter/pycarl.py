@@ -5,6 +5,7 @@ import pycarl.gmp.parse
 
 Variable = pycarl.Variable
 VariableType = pycarl.VariableType
+Integer = pycarl.gmp.Integer
 Rational = pycarl.gmp.Rational
 Polynomial = pycarl.gmp.Polynomial
 RationalFunction = pycarl.gmp.RationalFunction

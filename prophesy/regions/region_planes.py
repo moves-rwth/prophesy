@@ -1,4 +1,4 @@
-from prophesy.data.samples import SamplePoint
+from prophesy.data.samples import ParameterInstantiation
 from prophesy.regions.region_generation import RegionGenerator
 from prophesy.regions.region_rectangles import Anchor, Direction
 from prophesy.config import configuration
@@ -36,7 +36,7 @@ class ConstraintPlanes(RegionGenerator):
                 ((self.x_max, self.y_max), Direction.SW),
                 ((self.x_min, self.y_max), Direction.SE)]:
             # initialy safe flag for anchors properly
-            sp = SamplePoint.from_point(prophesy.data.point.Point(*pt), self.parameters.get_variable_order())
+            sp = ParameterInstantiation.from_point(prophesy.data.point.Point(*pt), self.parameters.get_variable_order())
             value = self.ratfunc.eval(sp)
             if value >= self.threshold:
                 pt_safe = True

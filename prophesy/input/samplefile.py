@@ -1,8 +1,8 @@
-from prophesy.data.samples import SampleDict, SAMPLE_ABOVE, SAMPLE_BELOW
+from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation
 from prophesy.adapter.pycarl import Rational, Variable
 from prophesy.data.point import Point
 
-def read_samples_file(path):
+def read_samples_file(path, parameters):
     """
     Reads sample files.
 
@@ -27,8 +27,12 @@ def read_samples_file(path):
             parameter_names = parameter_names[:-1]
         start = 1
 
-        # Variable is by default constructed as REAL, which is good here
-        parameters = list(map(Variable, parameter_names))
+        if parameters is None:
+            # Variable is by default constructed as REAL, which is good here
+            parameters = list(map(Variable, parameter_names))
+        else:
+            parameters_in = parameters
+            parameters = [parameters_in.get_variable(name) for name in parameter_names]
 
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
@@ -37,26 +41,31 @@ def read_samples_file(path):
             threshold = Rational(lines[1].split()[1])
             start += 1
 
-        samples = SampleDict(parameters)
+        samples = InstantiationResultDict(parameters)
         for i, line in enumerate(lines[start:]):
             items = line.split()
             if len(items) - 1 != len(parameter_names):
                 raise RuntimeError("Invalid input on line " + str(i + start))
             if items[-1] == "below":
-                value = SAMPLE_BELOW
+                #TODO
+                raise NotImplementedError("Inexact sampling results are not yet supported in v2")
+                #value = SAMPLE_BELOW
             elif items[-1] == "above":
-                value = SAMPLE_ABOVE
+                #TODO
+                raise NotImplementedError("Inexact sampling results are not yet supported in v2")
             else:
                 #TODO: falling back to Python float parser, but a good Rational parser is better
                 value = Rational(float(items[-1]))
-            coords = map(float, items[:-1])
-            samples[Point(*coords)] = value
+            coords = map(Rational, items[:-1])
+            samples.add_result(InstantiationResult(ParameterInstantiation.from_point(Point(*coords), parameters), value))
 
     return parameters, threshold, samples
 
 
-def write_samples_file(variables, samples_dict, path):
+def write_samples_file(parameters, samples, path):
+    vars = parameters.get_variables()
     with open(path, "w") as f:
-        f.write(" ".join(map(str, variables)) + "\n")
-        for k, v in samples_dict.items():
-            f.write("\t".join([("%.4f" % c) for c in k]) + "\t\t" + "%.20f" % v + "\n")
+        f.write(";".join(map(str, vars)) + "\n")
+        for res in samples.instantiation_results():
+            f.write("\t".join(["{}".format(str(res.instantiation.get_point(vars)))]))
+            f.write("\t\t" + "%.20f" % res.result + "\n")

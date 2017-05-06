@@ -7,7 +7,28 @@ from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
 from prophesy.data.hyperrectangle import  HyperRectangle
 
+import tempfile
+from prophesy.config import configuration
+
 import numpy as np
+
+def plot_samples(samples, parameters, safe_above_threshold, threshold):
+    """Plot samples and return path to file."""
+    if not safe_above_threshold:
+        Plot.flip_green_red = True
+
+    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
+
+    samples_green = [res.instantiation.get_point(parameters.get_variables()) for res in samples.instantiation_results() if res.result >= threshold]
+    samples_red = [res.instantiation.get_point(parameters.get_variables()) for res in samples.instantiation_results()
+                     if res.result < threshold]
+
+    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
+                      path_to_save=plot_path, display=False)
+    print("Samples rendered to {}".format(plot_path))
+
+    return plot_path
+
 
 class Plot(object):
     flip_green_red = False

@@ -28,7 +28,15 @@ class ParameterOrder(list):
     """Class to represent on ordered list of parameters
     """
 
-    def get_variable_order(self):
+    def get_variable(self, name):
+        filter = [p.variable for p in self if p.variable.name == name]
+        if filter == []:
+            raise ValueError("Variable with name {} not found".format(name))
+        elif len(filter) > 2:
+            raise RuntimeError("Parameter list got several parameters with the same name")
+        return filter[0]
+
+    def get_variables(self):
         """Returns a VariableOrder corresponding to this ParameterOrder
         @return VariableOrder
         """
