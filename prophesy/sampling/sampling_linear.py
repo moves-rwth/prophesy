@@ -61,8 +61,11 @@ class LinearRefinement(SampleGenerator):
         else:
             fudge = -0.01
 
+
+
         for safe_sample in safe_samples.instantiation_results():
             for bad_sample in bad_samples.instantiation_results():
+
                 dist = safe_sample.instantiation.numerical_distance(bad_sample.instantiation)
                 if 0.06 < dist < delta:
                     point = weighed_interpolation(safe_sample, bad_sample, self.threshold, fudge)
@@ -73,6 +76,5 @@ class LinearRefinement(SampleGenerator):
             raise StopIteration()
 
         new_samples = self.sampler.perform_sampling(new_points)
-
         self.samples.update(new_samples)
         return new_samples

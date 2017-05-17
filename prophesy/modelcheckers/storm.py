@@ -47,8 +47,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
         file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
-        # Delete the file, storm requires that the file does not exist. By this code,
-        # we at least get nice and predictable file names.
 
         args = [self.location,
                 '--prism', self.prismfile.location,

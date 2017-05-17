@@ -7,7 +7,7 @@ from prophesy.sampling.sampling_linear import LinearRefinement
 
 def uniform_samples(interface, parameters, samples_per_dim):
     """Generate a uniform grid of samples."""
-    samples = InstantiationResultDict(parameters)
+    samples = InstantiationResultDict(parameters.get_variables())
     uniform_generator = UniformSampleGenerator(interface, parameters, samples, samples_per_dim)
 
     for new_samples in uniform_generator:

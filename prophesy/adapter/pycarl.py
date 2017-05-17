@@ -10,6 +10,7 @@ Rational = pycarl.gmp.Rational
 Polynomial = pycarl.gmp.Polynomial
 RationalFunction = pycarl.gmp.RationalFunction
 
+SimpleConstraint = pycarl.gmp.formula.SimpleConstraintRatFunc
 Constraint = pycarl.gmp.formula.Constraint
 Relation = pycarl.formula.Relation
 Formula = pycarl.gmp.formula.Formula

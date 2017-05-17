@@ -1,5 +1,6 @@
 import prophesy.util as util
 import os
+from prophesy.adapter.pycarl import Integer, Rational
 from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
 
@@ -132,8 +133,9 @@ class ProphesyConfig(Configuration):
 
     def get_sampling_epsilon(self):
         # Smallest discernable difference for intervals (used for strict bounds)
-        return 0.0125
-        return float(self.get(ProphesyConfig.SAMPLING, "epsilon"))
+        return Rational(Integer(1), Integer(800))
+        # TODO why is the following commented out.
+        # return float(self.get(ProphesyConfig.SAMPLING, "epsilon"))
 
     def get_regions_precision(self):
         # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)

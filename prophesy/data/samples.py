@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, Set
 from prophesy.data.point import Point
 from enum import Enum
 
@@ -105,16 +105,26 @@ class InstantiationResultDict():
     Maintains a set of instantiations with their results.
     """
 
-    def __init__(self, parameters):
+    def __init__(self, variables):
         """
-        @param parameters, VariableOrder
+        @param variables, VariableOrder
         """
         self._values = OrderedDict()
-        self.parameters = parameters
+        self.variables = variables
+        assert self._parameters_check()
 
     def has(self, instantiation):
         return instantiation in self._values
 
+    def _parameters_check(self):
+        """
+        
+        :return: True if all variables are indeed set variables
+        """
+        for p in self.variables:
+            if p.is_no_variable:
+                return False
+        return True
 
     def __iter__(self):
         return iter(self._values.items())
@@ -122,6 +132,7 @@ class InstantiationResultDict():
     def update(self, other):
         for k,v in other:
             assert isinstance(k, ParameterInstantiation)
+            assert k.get_parameters() == self.variables
             self._values[k] = v
 
     def __len__(self):
@@ -132,6 +143,7 @@ class InstantiationResultDict():
         @param sample Sample
         """
         assert isinstance(instantiation_result, InstantiationResult)
+        assert instantiation_result.instantiation.get_parameters() == self.variables
         self._values[instantiation_result.instantiation] = instantiation_result.result
 
     def split(self, threshold):
@@ -141,8 +153,8 @@ class InstantiationResultDict():
         @param threshold pycarl.Rational
         @return (SampleDict >=, SampleDict <)
         """
-        above_threshold = InstantiationResultDict(self.parameters)
-        below_threshold = InstantiationResultDict(self.parameters)
+        above_threshold = InstantiationResultDict(self.variables)
+        below_threshold = InstantiationResultDict(self.variables)
         for k, v in self._values.items():
             if v >= threshold:
                 above_threshold._values[k] = v
@@ -155,14 +167,14 @@ class InstantiationResultDict():
         @param samples SampleDict
         @param filter_func callable to filter values, return True to keep sample
         """
-        filtered = InstantiationResultDict(self.parameters)
+        filtered = InstantiationResultDict(self.variables)
         for k, v in self._values.items():
             if filter_func(v):
                 filtered._values[k] = v
         return filtered
 
     def copy(self):
-        copied = InstantiationResultDict(self.parameters)
+        copied = InstantiationResultDict(self.variables)
         for k, v in self._values.items():
             copied._values[k] = v
         return copied
@@ -171,6 +183,7 @@ class InstantiationResultDict():
         """Returns Sample instances, as generator
         """
         for pt, val in self._values.items():
+            assert pt.get_parameters() == self.variables
             yield InstantiationResult(pt, val)
 
     def instantiations(self):
@@ -182,6 +195,7 @@ class InstantiationResultDict():
         :return: True if instantiations map exactly the parameters to values
         """
         pass
+
 
 def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     """Interpolates between sample sample1 and sample2 to

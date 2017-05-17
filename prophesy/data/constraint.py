@@ -1,12 +1,29 @@
 
-from prophesy.adapter.pycarl  import Relation, Constraint
+from prophesy.adapter.pycarl  import Relation, Constraint, SimpleConstraint
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
 from prophesy.adapter.pycarl  import Polynomial, Rational, parse
 from prophesy.data.samples import ParameterInstantiation
 
 def parse_constraint(constraint_str):
-    return parse(constraint_str)
+    args = constraint_str.split(",")
+    if len(args) != 2:
+        raise ValueError("Constraint string should be of the form <rational function>,<relation>, but is {}".format(constraint_str))
+    res = parse(args[0])
+    rel = parse_relation(args[1])
+    print("{} -> {}".format(constraint_str, SimpleConstraint(res, rel)))
+    return res
+
+def parse_relation(relation_string):
+    if relation_string == ">=":
+        return Relation.GEQ
+    elif relation_string == "<=":
+        return Relation.LEQ
+    elif relation_string == "<":
+        return Relation.LESS
+    elif relation_string == ">":
+        return Relation.GREATER
+    raise ValueError("Cannot parse {} as a relation".format(relation_string))
 
 def region_from_hyperrectangle(hyperrectangle, variables):
     """Given HyperRectangle and VariableOrder, compute constraints

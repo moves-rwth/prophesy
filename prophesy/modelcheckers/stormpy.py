@@ -29,6 +29,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         self.prism_file = None
         self.program = None
         self.last_result = None
+        self.model = None
 
     def name(self):
         """Returns a string representation of the models name."""
@@ -59,16 +60,24 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         else:
             self.bisimulation = type
 
-    def sample(self, samplepoints):
-        raise NotImplementedError
+    def _build_model(self):
+        if self.prism_file.nr_parameters() == 0:
+            self.model = stormpy.build_model(self.program)
+        else:
+            self.model = stormpy.build_parametric_model(self.program, self.pctl_formula)
+
+    def perform_sampling(self, samplepoints):
+        if self.model is None:
+            self._build_model()
+        for sample in samplepoints:
+            pass
+        raise NotImplementedError("Implementation not yet done.")
 
     def get_rational_function(self):
         """This method returns the rational function as the result from the model checking task."""
-        if self.prism_file.nr_parameters() == 0:
-            model = stormpy.build_model(self.program)
-        else:
-            model = stormpy.build_parametric_model(self.program, self.pctl_formula)
-            print(model.labels)
+        if self.model is None:
+            self._build_model()
+
         result = stormpy.model_checking(model, self.pctl_formula[0])
 
         return ParametricResult(self.prism_file.parameters,

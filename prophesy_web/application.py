@@ -1,7 +1,7 @@
 import os
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
-from prophesy.data.samples import ParameterInstantiation, SamplePoints, InstantiationResultDict
+from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations, InstantiationResultDict
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
@@ -31,9 +31,6 @@ from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
 from prophesy.sampling.sampling_linear import LinearRefinement
-from prophesy.sampling.sampling_delaunay import DelaunayRefinement
-from prophesy.regions.region_planes import ConstraintPlanes
-from prophesy.regions.region_rectangles import ConstraintRectangles
 from prophesy.regions.region_quads import ConstraintQuads
 from prophesy.regions.region_polygon import ConstraintPolygon
 
@@ -53,7 +50,8 @@ if configuration.is_module_available('stormpy'):
     from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
 def _jsonSamples(samples):
-    return [{"coordinate" : [float(x), float(y)], "value" : float(v)} for (x, y), v in samples.items()]
+    print(samples.parameters)
+    return [{"coordinate" : res.instantiation.get_point(samples.parameters).to_float().coordinates, "value" : float(res.result)} for res in samples.instantiation_results()]
 
 def _jsonPoly(polygon):
     if isinstance(polygon, Polygon):
@@ -76,7 +74,7 @@ def getSat(satname):
 def getSampler(satname, result = None, prism_file = None, pctl_formula = None):
     if satname == 'ratfunc':
         # Do not use rationals for now
-        return RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
+        return RatFuncSampling(result.ratfunc, result.parameters.get_variables())
     elif satname == 'prism':
         mc = PrismModelChecker()
         mc.load_model_from_prismfile(result.prism_file)
@@ -131,6 +129,7 @@ class CegarHandler(RequestHandler, SessionMixin):
         return self.session.get(item, default)
 
     def _set_session(self, item, data):
+
         self.session.set(item, data)
         return data
 
@@ -196,7 +195,7 @@ class Threshold(CegarHandler):
     def put(self):
         threshold = json_decode(self.request.body)
         threshold = float(threshold)
-        self._set_session('threshold', threshold)
+        self._set_session('threshold', Rational(threshold))
 
         # Clear all regions, they are no longer valid
         self._set_session('regions', [])
@@ -206,7 +205,7 @@ class Threshold(CegarHandler):
     def post(self):
         threshold = self.get_argument('threshold', None)
         threshold = float(threshold)
-        self._set_session('threshold', threshold)
+        self._set_session('threshold', Rational(threshold))
 
         # Clear all regions, they are no longer valid
         self._set_session('regions', [])
@@ -477,41 +476,23 @@ class Samples(CegarHandler):
         return self._json_ok(flattenedsamples)
 
     def post(self):
-        print(self.request.body)
+        #print(self.request.body)
         sampling_information = json_decode(self.request.body)
-        print(sampling_information)
-        coordinates = sampling_information["samples"]
+        #print(sampling_information)
+        coordinates = sampling_information
 
         # Get the current prism file and save it temporarily
         prism_files = self._get_session("prism-files", {})
-        assert sampling_information["prism_file"] in prism_files
-        prism_file = PrismFile(prism_files[sampling_information["prism_file"]])
+        #assert sampling_information["prism_file"] in prism_files
+        #prism_file = PrismFile(prism_files[sampling_information["prism_file"]])
         if coordinates is None:
             return self._json_error("Unable to read coordinates", 400)
         result = self._getResultData(self._get_session('current_result', None))
-        if result is None:
-            samples = self._get_session('samples', InstantiationResultDict())
-            socket = self._get_socket()
-            sampling_interface = getSampler(self._get_session('sampler'), result, prism_file,
-                                            sampling_information["pctl_formula"])
-            coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
-            sample_points = SamplePoints(coordinates, None)
-            new_samples = sampling_interface.perform_sampling(sample_points)
-            if socket is not None:
-                socket.send_samples(new_samples)
-
-            samples.update(new_samples)
-            self._set_session('samples', samples)
-
-            return self._json_ok(_jsonSamples(new_samples))
-
-        samples = self._get_session('samples', InstantiationResultDict())
+        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variables()))
         socket = self._get_socket()
-        sampling_interface = getSampler(self._get_session('sampler'), result, prism_file,
-                                        sampling_information["pctl_formula"])
-
+        sampling_interface = getSampler(self._get_session('sampler'), result)
         coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
-        sample_points = SamplePoints(coordinates, result.parameters.get_variable_order())
+        sample_points = ParameterInstantiations.from_points(coordinates, result.parameters.get_variables())
         new_samples = sampling_interface.perform_sampling(sample_points)
         if socket is not None:
             socket.send_samples(new_samples)
@@ -521,7 +502,9 @@ class Samples(CegarHandler):
 
         return self._json_ok(_jsonSamples(new_samples))
 
+
     def put(self):
+        raise NotImplementedError("Unchecked code...")
         coordinate = json_decode(self.request.body)
         try:
             x = Rational(coordinate[0])
@@ -557,6 +540,8 @@ class GenerateSamples(CegarHandler):
         if iterations < 0:
             return self._json_error("Number of iterations must be >= 0", 400)
         threshold = self._get_session('threshold', 0.5)
+        threshold = Rational(threshold)
+        #TODO make sure threshold is a rational all the time.
         generator_type = self.get_argument('generator')
         if not generator_type in ['uniform', 'linear', 'delaunay']:
             return self._json_error("Invalid generator set " + generator_type, 400)
@@ -574,19 +559,22 @@ class GenerateSamples(CegarHandler):
 
         socket = self._get_socket()
 
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variable_order()))
-        new_samples = InstantiationResultDict()
+        variables = result.parameters.get_variables()
+
+
+        samples = self._get_session('samples', InstantiationResultDict(variables))
+        new_samples = InstantiationResultDict(variables)
         sampling_interface = getSampler(self._get_session('sampler'), result)
-        variables = result.parameters.get_variable_order()
         if generator_type == 'uniform':
             intervals = result.parameters.get_variable_bounds()
-            samples_generator = UniformSampleGenerator(sampling_interface, variables, samples, intervals, iterations)
+            samples_generator = UniformSampleGenerator(sampling_interface, result.parameters, samples, iterations)
         elif generator_type == "linear":
-            samples_generator = LinearRefinement(sampling_interface, variables, samples, threshold)
+            samples_generator = LinearRefinement(sampling_interface, result.parameters, samples, threshold)
         elif generator_type == "delaunay":
-            samples_generator = DelaunayRefinement(sampling_interface, variables, samples, threshold)
+            return self._json_error("Delaunay refinement was dropped in v2", 400)
         else:
             assert False, "Bad generator"
+
 
         def generate_samples(samples_generator, iterations):
             for (generated_samples,_) in zip(samples_generator, range(0, iterations)):
@@ -597,6 +585,8 @@ class GenerateSamples(CegarHandler):
                     break
 
             return new_samples
+
+
 
         new_samples = yield self.executor.submit(generate_samples, samples_generator, iterations)
 
@@ -610,7 +600,7 @@ class ConstraintHandler(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variable_order()))
+        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variables()))
         threshold = self._get_session('threshold', 0.5)
 
         smt2interface = getSat(self._get_session('sat'))
@@ -620,9 +610,9 @@ class ConstraintHandler(CegarHandler):
         checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
 
         if type == 'planes':
-            generator = ConstraintPlanes(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
+            return self._json_error("Planes generator was dropped in v2")
         elif type == 'rectangles':
-            generator = ConstraintRectangles(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
+            return self._json_error("Rectangles generator was temporarily dropped in v2")
         elif type == 'quads':
             generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'poly':

@@ -1,8 +1,7 @@
 import re
-from prophesy.data.rationalfunction import RationalFunction
 from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
-from prophesy.adapter.pycarl import Rational, Variable, parse
+from prophesy.adapter.pycarl import Rational, Variable, parse, RationalFunction
 from prophesy.data.constraint import parse_constraint
 from prophesy.adapter.pycarl  import Constraint, Relation
 
@@ -42,8 +41,8 @@ def read_pstorm_result(location):
             name_and_info = parameter_string.split()
             var = Variable(name_and_info[0].strip())
             if len(name_and_info) == 1:
-                bound = interval.Interval(0.0, interval.BoundType.open,
-                    1.0, interval.BoundType.open)
+                bound = interval.Interval(Rational(0), interval.BoundType.open,
+                    Rational(1), interval.BoundType.open)
             else:
                 bound = interval.string_to_interval(name_and_info[1], Rational)
             parameters.append(Parameter(var, bound))
@@ -62,6 +61,7 @@ def read_pstorm_result(location):
         constraints_string = []
     gpconstraints = [parse_constraint(cond) for cond in constraints_string[1:]]
     constraints += gpconstraints
+
 
     # Build rational function
     #print("Reading rational function...")

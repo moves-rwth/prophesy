@@ -6,10 +6,8 @@ import sys
 
 from shapely.geometry.polygon import Polygon
 
-from prophesy.regions.region_planes import ConstraintPlanes
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import ConstraintQuads
-from prophesy.regions.region_rectangles import ConstraintRectangles
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.input.resultfile import read_pstorm_result
 from prophesy.output.plot import Plot
@@ -36,7 +34,6 @@ def parse_cli_args(args, solversConfig):
     limit_group.add_argument('--area', dest='area', help='Area (in [0,1]) to try to complete', type=float)
 
     method_group = parser.add_mutually_exclusive_group(required=True)
-    method_group.add_argument('--planes', action='store_true', dest='planes')
     method_group.add_argument('--rectangles', action='store_true', dest='rectangles')
     method_group.add_argument('--quads', action='store_true', dest='quads')
     method_group.add_argument('--poly', action='store_true', dest='poly')
@@ -54,19 +51,21 @@ def parse_cli_args(args, solversConfig):
 
     return parser.parse_args(args)
 
-def run(args = sys.argv, interactive=True):
+def run(args = sys.argv[1:], interactive=True):
     solvers = configuration.getAvailableSMTSolvers()
     cmdargs = parse_cli_args(args, solvers)
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)
-    threshold = None
 
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
 
     print("Loading samples")
-    variables, samples_threshold, samples = read_samples_file(cmdargs.samples_file)
+    variables, samples_threshold, samples = read_samples_file(cmdargs.samples_file, result.parameters.get_variables())
+    if result.parameters.get_variables() != variables:
+        raise RuntimeError("Sampling and Result parameters are not equal")
+
     if cmdargs.threshold:
         threshold = cmdargs.threshold
     else:
@@ -77,8 +76,7 @@ def run(args = sys.argv, interactive=True):
         raise RuntimeError("No threshold specified via command line or samples file.")
     print("Threshold: {}".format(threshold))
 
-    if result.parameters.get_variable_order() != variables:
-        raise RuntimeError("Sampling and Result parameters are not equal")
+
 
     print("Setup SMT interface")
     if cmdargs.z3location:
@@ -100,10 +98,8 @@ def run(args = sys.argv, interactive=True):
     checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
     arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
-    if cmdargs.planes:
-        generator = ConstraintPlanes(*arguments)
-    elif cmdargs.rectangles:
-        generator = ConstraintRectangles(*arguments)
+    if cmdargs.rectangles:
+        raise NotImplementedError("Rectangles are currently not supported")
     elif cmdargs.quads:
         generator = ConstraintQuads(*arguments)
     elif cmdargs.poly:

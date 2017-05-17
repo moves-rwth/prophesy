@@ -15,9 +15,10 @@ target_file = "modelesampling_{}".format(current_time)
 
 
 benchmarks = [
-    ("brp", "brp_16_2", "property1", 0.9),
-    ("brp", "brp_16_2", "property1", 0.5),
-    ("brp", "brp_16_2", "property1", 0.98),
+    ("brp", "brp_16_2", "property1", 0.9, "stormpy"),
+    ("brp", "brp_16_2", "property1", 0.9, "prism"),
+    ("brp", "brp_16_2", "property1", 0.5, "prism"),
+    ("brp", "brp_16_2", "property1", 0.98, "prism"),
     #   ("brp", "brp_128-2", 0.9, True),
     #   ("brp", "brp_128-5", 0.9, True),
     #   ("brp", "brp_256-2", 0.9, True),
@@ -39,8 +40,8 @@ benchmarks = [
     #   ("nand-reward", "nand_20-5", 0.5, True),
 ]
 
-@pytest.mark.parametrize("name,file,property,threshold", benchmarks)
-def test_script(name, file, property, threshold):
+@pytest.mark.parametrize("name,file,property,threshold,tool", benchmarks)
+def test_script(name, file, property, threshold,tool):
     command = ["--file",
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                "--pctl-file",
@@ -51,7 +52,7 @@ def test_script(name, file, property, threshold):
                str(ITERATIONS),
                "--threshold",
                str(threshold),
-               "--prism",
+               "--{}".format(tool),
                '--samples-file',
                target_file
                ]

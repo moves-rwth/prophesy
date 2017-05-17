@@ -11,6 +11,7 @@ from prophesy.input.pctlfile import PctlFile
 from prophesy.input.samplefile import write_samples_file
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.modelcheckers.stormpy import StormpyModelChecker
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.adapter.pycarl import Rational
 
@@ -36,7 +37,7 @@ def parse_cli_args(args):
 
     return parser.parse_args(args)
 
-def run(args = sys.argv, interactive=True):
+def run(args = sys.argv[1:], interactive=True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
     threshold = Rational(cmdargs.threshold)

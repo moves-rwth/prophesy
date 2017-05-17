@@ -66,7 +66,7 @@ class TestTornado(TornadoTestCase):
         print("DONE")
 
     def test_upload_files(self):
-        print("Check if uploading files to the server works correctly...")
+        print("Check if uploading files to the server works correctly...", flush=True)
         with open(get_example_path("pdtmc", "brp", "brp_16_2.pm"), 'r') as pfile:
             prismdata = pfile.read()
         with open(get_example_path("pdtmc", "brp", "property1.pctl"), 'r') as pfile:
@@ -97,8 +97,8 @@ class TestTornado(TornadoTestCase):
 
     @pytest.mark.incremental
     def test_1_run_with_storm(self):
-        print("Check if StoRM runs on uploaded file...")
         self.test_upload_files()
+        print("Check if StoRM runs on uploaded file...")
         ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),
                                                    ("pctl_property", "P=? [F \"target\"]"),
                                                    ("mctool", "storm")], [])
@@ -108,9 +108,9 @@ class TestTornado(TornadoTestCase):
 
     @pytest.mark.incremental
     def test_2_sampling(self):
-        print("Check if sampling works on a StoRM generated result file...")
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
         self.test_1_run_with_storm()
+        print("Check if sampling works on a StoRM generated result file...")
         ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
         response = self._sendData('/environment', data, ct)
         samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
@@ -122,9 +122,9 @@ class TestTornado(TornadoTestCase):
     @pytest.mark.incremental
     def test_3_auto_sample(self):
 
-        print("Check if autosampling works fine...")
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
         self.test_1_run_with_storm()
+        print("Check if autosampling works fine...")
         # Set Sampler
         ct, data = self.encode_multipart_formdata([("pmc", "storm"), ("sampler", "ratfunc"), ("sat", "z3")], [])
         response = self._sendData('/environment', data, ct)
@@ -135,7 +135,7 @@ class TestTornado(TornadoTestCase):
         ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
         response = self._sendData("/generateSamples", data, ct)
         assert response.code == 200
-        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "delaunay")], [])
+        ct, data = self.encode_multipart_formdata([("iterations", "1"), ("generator", "linear")], [])
         response = self._sendData("/generateSamples", data, ct)
         assert response.code == 200
         print("DONE")

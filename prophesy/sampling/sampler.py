@@ -12,7 +12,7 @@ class Sampler(object):
     def __init__(self):
         pass
 
-    def perform_uniform_sampling(self, variables_and_intervals, samples_per_dimension):
+    def perform_uniform_sampling(self, parameters, samples_per_dimension):
         """Samples a uniform grid of points.
 
         Given a list of intervals (i.e., the first and last point;
@@ -30,7 +30,7 @@ class Sampler(object):
 
         # points evenly spaced over the interval, for each dimension
         ranges = []
-        for i in variables_and_intervals[1]:
+        for i in parameters.get_variable_bounds():
             minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + configuration.get_sampling_epsilon()
             maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - configuration.get_sampling_epsilon()
             ranges.append(map(Rational, linspace(float(minNum), float(maxNum), samples_per_dimension)))
@@ -38,7 +38,7 @@ class Sampler(object):
         all_points = itertools.product(*ranges)
         all_points = [Point(*coords) for coords in all_points]
 
-        sample_points = ParameterInstantiations.from_points(all_points, variables_and_intervals[0])
+        sample_points = ParameterInstantiations.from_points(all_points, parameters.get_variables())
 
         return self.perform_sampling(sample_points)
 

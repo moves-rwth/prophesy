@@ -11,6 +11,7 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
         smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
     for constr in result.parameter_constraints:
+        print(result.parameter_constraints)
         smt2interface.assert_constraint(constr)
 
     rat_vars = result.parameters.get_variable_order()
