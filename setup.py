@@ -28,7 +28,7 @@ class ConfigBuild(build):
     def run(self):
         # Write config before executing setup, so cfg files are found
         write_config.write_initial_config()
-        build.run(self) 
+        build.run(self)
 
 setup(
     name="Prophesy",
@@ -48,7 +48,6 @@ setup(
                       'numpy', 'matplotlib'],
     tests_require=['pytest'],
     extras_require = {
-        'stormpy' : ["stormpy"],
         'pdf': ["PyPDF2"],
     },
     package_data={

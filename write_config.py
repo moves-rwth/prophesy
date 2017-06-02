@@ -10,7 +10,7 @@ thisfilepath = os.path.dirname(os.path.realpath(__file__))
 def find_tool(name, path=None):
     """
     :param name: Searches for a tool with the given name
-    :param path: Optional PATH envirionment where to search
+    :param path: Optional PATH environment where to search
     :return: The location of the path, and an empty string otherwise
     """
     res = find_executable(name, path)
@@ -60,7 +60,6 @@ def get_initial_config(config):
 
     # Setup optional dependencies
     config_deps = {}
-    config_deps["stormpy"] = check_python_api("stormpy")
     config_deps["pypdf2"] = check_python_api("PyPDF2")
     config["installed_deps"] = config_deps
 
