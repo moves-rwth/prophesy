@@ -80,6 +80,7 @@ def run_tool(args, quiet=False):
     Executes a process,
     :returns: the `stdout`
     """
+    logger = logging.getLogger("External Tool")
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     if quiet:
@@ -90,7 +91,8 @@ def run_tool(args, quiet=False):
                 break
             output = line.decode(encoding='UTF-8').rstrip()
             if output != "":
-                logging.debug("\t * " + output)
+                logger.debug("\t * " + output)
+    return pipe.returncode
 
 def open_file(path):
     """Open file with system-default application.

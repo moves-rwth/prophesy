@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+import logging
 
 from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
@@ -12,6 +13,7 @@ from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 import prophesy.data.range
 
+logger = logging.getLogger(__name__)
 
 class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def __init__(self, location=configuration.get_prism()):
@@ -38,6 +40,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         raise NotImplementedError("This is missing")
 
     def perform_uniform_sampling(self, parameters, samples_per_dimension):
+        logger.info("Perform uniform sampling")
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")
         assert len(self.prismfile.parameters) == len(parameters.get_variables()), "Number of intervals does not match number of parameters"
@@ -54,7 +57,10 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         args = [self.location, self.prismfile.location, pctlpath,
                 "-const", const_values_string,
                 "-exportresults", resultpath]
-        run_tool(args)
+        logger.info("Call prism")
+        ret_code = run_tool(args)
+        if ret_code != 0:
+            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
         found_parameters, _, samples = read_samples_file(resultpath, parameters)
 
         os.unlink(resultpath)

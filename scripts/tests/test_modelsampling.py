@@ -11,7 +11,7 @@ SAMPLINGNR = 3
 ITERATIONS = 1
 
 current_time = time.strftime("%H_%M", time.localtime())
-target_file = "modelesampling_{}".format(current_time)
+target_file = "modelsampling_{}.samples".format(current_time)
 
 
 benchmarks = [

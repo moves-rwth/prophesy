@@ -2,11 +2,13 @@ from collections import OrderedDict, Set
 from prophesy.data.point import Point
 from enum import Enum
 
+
 class InexactRelation(Enum):
     LESS = 0
     LEQ = 1
     GEQ = 2
     GREATER = 3
+
 
 class InexactInstantiationResult():
     def __init__(self,rel, threshold):

@@ -1,8 +1,3 @@
-'''
-Created on 19 Apr 2016
-
-@author: hbruintjes
-'''
 import prophesy.data.interval
 
 class Parameter(object):

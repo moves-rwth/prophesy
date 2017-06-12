@@ -2,6 +2,7 @@ import math
 from prophesy.adapter.pycarl import Rational, Integer
 from prophesy.data.nice_approximation import FixedDenomFloatApproximation
 
+
 def _sqrt_approx(i):
     """
     :param i: a positive number
@@ -17,6 +18,7 @@ def _sqrt_approx(i):
     float_sqrt = math.sqrt(i)
     return orig_type(float_sqrt)
 
+
 class Point:
     """
     A n-dimensional point class.
@@ -25,14 +27,8 @@ class Point:
         """
         @param args Numerical values to represent the point. 
         """
-        assert len(args) > 1, "1D point, normally not needed"
         self.coordinates = tuple(args)
-        #TODO: backwards compatibility for Delaunay
-        self.x = self.coordinates[0]
-        if len(self.coordinates) > 1:
-            self.y = self.coordinates[1]
-        if len(self.coordinates) > 2:
-            self.z = self.coordinates[2]
+
 
     def to_float(self):
         return Point(*[float(c) for c in self.coordinates])
