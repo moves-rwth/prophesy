@@ -1,6 +1,9 @@
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation
 from prophesy.adapter.pycarl import Rational, Variable
 from prophesy.data.point import Point
+import logging
+
+logger = logging.getLogger(__name__)
 
 def read_samples_file(path, parameters):
     """
@@ -45,7 +48,8 @@ def read_samples_file(path, parameters):
         for i, line in enumerate(lines[start:]):
             items = line.split()
             if len(items) - 1 != len(parameter_names):
-                raise RuntimeError("Invalid input on line " + str(i + start))
+                logger.error("Invalid input in %s on line %s: '%s'", path, str(i + start), line)
+                continue
             if items[-1] == "below":
                 #TODO
                 raise NotImplementedError("Inexact sampling results are not yet supported in v2")

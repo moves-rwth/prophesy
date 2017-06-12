@@ -31,7 +31,7 @@ def parse_cli_args(args):
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
     parser.add_argument('--threshold', type=float, help='the threshold', required=True)
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
-
+   
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--storm', action='store_true', help='use storm via cli')
     solver_group.add_argument('--prism', action='store_true', help='use prism via cli')
@@ -69,9 +69,9 @@ def run(args = sys.argv[1:], interactive=True):
 
     parameters = prism_file.parameters
     parameters.make_intervals_closed(0.0001)
+    logging.info("Performing uniform sampling:")
 
     initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)
-    logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, parameters, initial_samples, cmdargs.iterations,
                                      threshold)

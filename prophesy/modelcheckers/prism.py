@@ -61,6 +61,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         ret_code = run_tool(args)
         if ret_code != 0:
             logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+        else:
+            logger.info("Prism call finished successfully")
         found_parameters, _, samples = read_samples_file(resultpath, parameters)
 
         os.unlink(resultpath)
@@ -81,7 +83,12 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
             args = [self.location, self.prismfile.location, pctlpath,
                     "-const", const_values_string,
                     "-exportresults", resultpath]
-            run_tool(args)
+            logger.info("Call prism...")
+            ret_code = run_tool(args)
+            if ret_code != 0:
+                logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+            else:
+                logger.info("Prism call finished successfully")
             with open(resultpath) as f:
                 f.readline()
                 tmp = f.readline()

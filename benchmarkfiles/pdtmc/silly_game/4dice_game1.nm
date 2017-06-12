@@ -13,7 +13,7 @@ const double q4=q1;
 module game
 	upgrades : [0..2] init 0;
 	throw : [0..4] init 1;
-	[reset] true -> (upgrades'=0);
+	[reset] true -> (upgrades'=0) & (throw'=0);
 	[sel1]  throw=0 -> 1: (throw'=1);
 	[sel2]  throw=0 -> 1: (throw'=2);
 	[sel3]  throw=0 -> 1: (throw'=3);
@@ -22,8 +22,8 @@ module game
 	[go2]   throw=2 -> 1: (throw'=0);
 	[go3]   throw=3 -> 1: (throw'=0);
 	[go4]   throw=4 -> 1: (throw'=0);
-    [upgrade] upgrades < 2 -> 1: (upgrades' = upgrades+1);
-    [upgrade] upgrades = 2 -> 1: (upgrades' = upgrades);
+    [upgrade] upgrades < 2 -> 1: (upgrades' = upgrades+1) & (throw'=0);
+    [upgrade] upgrades = 2 -> 1: (upgrades' = upgrades) & (throw'=0);
 endmodule
 
 module die1
@@ -83,4 +83,5 @@ label "d4_four"  =  s4=7&d4=4;
 label "d4_five"  =  s4=7&d4=5;
 label "d4_six"   =  s4=7&d4=6;
 
+label "halfway" = upgrades=1;
 label "end" = upgrades=2;
