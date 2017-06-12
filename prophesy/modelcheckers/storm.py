@@ -27,7 +27,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         # pipe.communicate()
         outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
         output = outputstr.split("\n")
-        return output[len(output) - 2]
+        return output[0]
 
     def set_bisimulation_type(self, t):
         assert(isinstance(t, BisimulationType))
