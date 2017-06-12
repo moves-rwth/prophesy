@@ -17,7 +17,7 @@ benchmarks = [
 ]
 
 @pytest.mark.parametrize("name,file,property,tool", benchmarks)
-def test_script(name, file, property, threshold,tool):
+def test_script(name, file, property, tool):
     command = ["--file",
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                "--pctl-file",

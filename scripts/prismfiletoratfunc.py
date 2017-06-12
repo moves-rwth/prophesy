@@ -26,21 +26,14 @@ def parse_cli_args(args):
     return parser.parse_args(args)
 
 
-def run(args = sys.argv[1:]):
+def run(args = sys.argv[1:], interactive = True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
 
     prism_file = PrismFile(cmdargs.file)
     pctl_file = PctlFile(cmdargs.pctl_file)
 
-    if cmdargs.param:
-        raise NotImplementedError("Param is currently not supported.")
-        if 'param' not in pmcs:
-            raise RuntimeError("Param location not configured.")
-        prism_file.make_temporary_copy()
-        prism_file.replace_parameter_keyword("param float")
-        tool = ParamParametricModelChecker()
-    elif cmdargs.storm:
+    if cmdargs.storm:
         if 'storm' not in pmcs:
             raise RuntimeError("Storm location not configured.")
         tool = StormModelChecker()
