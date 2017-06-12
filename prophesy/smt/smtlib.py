@@ -1,5 +1,6 @@
 import subprocess
 import functools
+import logging
 from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
 from prophesy.adapter.pycarl import Constraint, Formula
@@ -76,7 +77,7 @@ class SmtlibSolver(SMTSolver):
             if not line and self.process.poll() is not None:
                 break
             output = line.rstrip()
-            print("** check result:\t" + output)
+            logging.debug("** check result:\t" + output)
             if output == "unsat":
                 return Answer.unsat
             elif output == "sat":

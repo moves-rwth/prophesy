@@ -1,4 +1,6 @@
 import re
+import logging
+
 from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
 from prophesy.adapter.pycarl import Rational, Variable, parse, RationalFunction
@@ -33,7 +35,7 @@ def read_pstorm_result(location):
         inputstring = f.read()
 
     # Build parameters
-    #print("Reading parameters...")
+    logging.debug("Reading parameters...")
     parameters = ParameterOrder()
     parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
     for parameter_string in parameter_strings:
@@ -48,7 +50,7 @@ def read_pstorm_result(location):
             parameters.append(Parameter(var, bound))
 
     # Build well-defined constraints
-    #print("Reading constraints...")
+    logging.debug("Reading constraints...")
     constraints_string = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
     constraints = [parse_constraint(cond) for cond in constraints_string[1:]]
@@ -64,9 +66,9 @@ def read_pstorm_result(location):
 
 
     # Build rational function
-    #print("Reading rational function...")
+    logging.debug("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
-    #print("Building rational function...")
+    logging.debug("Building rational function...")
     l = match.split('/')
     num = parse(l[0])
     if len(l) > 1:
@@ -75,7 +77,7 @@ def read_pstorm_result(location):
     else:
         ratfunc = num
 
-    #print("Parsing complete")
+    logging.debug("Parsing complete.")
     return ParametricResult(parameters, constraints, ratfunc)
 
 
@@ -91,7 +93,7 @@ def read_param_result(location):
         inputs = [l.strip() for l in f.readlines()]
 
     # Build parameters
-    #print("Reading parameters")
+    logging.debug("Reading parameters")
     parameters = ParameterOrder()
     parameter_strings = inputs[1][1:-1].split(", ")
     for parameter_string in parameter_strings:
@@ -101,10 +103,9 @@ def read_param_result(location):
                 1.0, interval.BoundType.open)
             parameters.append(Parameter(var, bound))
 
-    #print("Reading constraints")
+    logging.debug("Reading constraints")
     ranges = re.split(r"(?<=]) (?=\[)", inputs[2][1:-1])
     ranges = [r[1:-1].split(", ") for r in ranges]
-    #print(ranges)
     if len(parameter_strings) != len(ranges):
         raise RuntimeError("Number of ranges does not match number of parameters")
     # Build well-defined constraints
@@ -113,10 +114,9 @@ def read_param_result(location):
         # ran = [lower .. upper]
         constraints.append(Constraint(p.variable - ran[0], Relation.GEQ))
         constraints.append(Constraint(p.variable - ran[1], Relation.LEQ))
-    #print(constraints)
 
     # Build rational function
-    #print("Parsing rational function")
+    logging.debug("Parsing rational function")
     ratfunc = RationalFunction(parse(inputs[3]))
 
     return ParametricResult(parameters, constraints, ratfunc)

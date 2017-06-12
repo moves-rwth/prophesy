@@ -4,6 +4,7 @@ import platform
 import subprocess
 import tempfile
 import configparser
+import logging
 
 from prophesy.exceptions.configuration_error import ConfigurationError
 
@@ -89,7 +90,7 @@ def run_tool(args, quiet=False):
                 break
             output = line.decode(encoding='UTF-8').rstrip()
             if output != "":
-                print("\t * " + output)
+                logging.debug("\t * " + output)
 
 def open_file(path):
     """Open file with system-default application.

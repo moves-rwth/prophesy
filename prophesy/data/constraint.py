@@ -11,7 +11,6 @@ def parse_constraint(constraint_str):
         raise ValueError("Constraint string should be of the form <rational function>,<relation>, but is {}".format(constraint_str))
     res = parse(args[0])
     rel = parse_relation(args[1])
-    print("{} -> {}".format(constraint_str, SimpleConstraint(res, rel)))
     return res
 
 def parse_relation(relation_string):

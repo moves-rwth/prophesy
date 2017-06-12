@@ -2,7 +2,9 @@
 
 
 import sys
+import logging
 from argparse import ArgumentParser
+
 
 
 from prophesy.output.plot import plot_samples
@@ -69,7 +71,7 @@ def run(args = sys.argv[1:], interactive=True):
     parameters.make_intervals_closed(0.0001)
 
     initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)
-    print("Performing uniform sampling: {} samples".format(len(initial_samples)))
+    logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, parameters, initial_samples, cmdargs.iterations,
                                      threshold)

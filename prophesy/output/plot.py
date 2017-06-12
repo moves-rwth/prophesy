@@ -1,13 +1,18 @@
+import logging
+
+import tempfile
+
 import matplotlib
 matplotlib.use('Agg') # use for plotting without X-server
 from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
+
+
 from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
-from prophesy.data.hyperrectangle import  HyperRectangle
 
-import tempfile
+from prophesy.data.hyperrectangle import  HyperRectangle
 from prophesy.config import configuration
 
 import numpy as np
@@ -25,7 +30,7 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
 
     Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
                       path_to_save=plot_path, display=False)
-    print("Samples rendered to {}".format(plot_path))
+    logging.info("Samples rendered to {}".format(plot_path))
 
     return plot_path
 

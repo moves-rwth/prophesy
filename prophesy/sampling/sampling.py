@@ -1,6 +1,8 @@
 """
 Helper module for simplified sampling access.
 """
+import logging
+
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.sampling.sampling_linear import LinearRefinement
@@ -26,7 +28,7 @@ def refine_samples(interface, parameters, samples, iterations, threshold):
         # uncomment to see intermediate plot before each iteration
         #open_file(plot_samples(samples, result.parameters, True, threshold))
 
-        print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
+        logging.debug("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
         samples.update(new_samples)
 
     return samples
