@@ -1,0 +1,86 @@
+// Knuth's model of a fair die using only parametric coins
+dtmc
+
+const double p1;
+const double q1;
+const double p2=p1;
+const double q2=q1;
+const double p3=p1;
+const double q3=q1;
+const double p4=p1;
+const double q4=q1;
+
+module game
+	upgrades : [0..2] init 0;
+	throw : [0..4] init 1;
+	[reset] true -> (upgrades'=0);
+	[sel1]  throw=0 -> 1: (throw'=1);
+	[sel2]  throw=0 -> 1: (throw'=2);
+	[sel3]  throw=0 -> 1: (throw'=3);
+	[sel4]  throw=0 -> 1: (throw'=4);
+	[go1]   throw=1 -> 1: (throw'=0);
+	[go2]   throw=2 -> 1: (throw'=0);
+	[go3]   throw=3 -> 1: (throw'=0);
+	[go4]   throw=4 -> 1: (throw'=0);
+    [upgrade] upgrades < 2 -> 1: (upgrades' = upgrades+1);
+    [upgrade] upgrades = 2 -> 1: (upgrades' = upgrades);
+endmodule
+
+module die1
+        // local state
+        s1 : [0..7] init 0;
+        // value of the dice
+        d1 : [0..6] init 0;
+
+        [go1] s1=0 -> p1 : (s1'=1)        + 1-p1 : (s1'=2);
+        [] s1=1 -> q1 : (s1'=3)           + 1-q1 : (s1'=4);
+        [] s1=2 -> q1 : (s1'=5)           + 1-q1 : (s1'=6);
+        [] s1=3 -> p1 : (s1'=1)           + 1-p1 : (s1'=7) & (d1'=1);
+        [] s1=4 -> p1 : (s1'=7) & (d1'=3) + 1-p1 : (s1'=7) & (d1'=2);
+        [] s1=5 -> p1 : (s1'=2)           + 1-p1 : (s1'=7) & (d1'=4);
+        [] s1=6 -> p1 : (s1'=7) & (d1'=6) + 1-p1 : (s1'=7) & (d1'=5);
+        [reset] d1 = 1 & s1=7 -> 1 : (s1'=0) & (d1'=0);
+        [sel1]  d1 = 2 & s1=7 -> 1 : (s1'=0) & (d1'=0);
+        [sel2]  d1 = 3 & s1=7 -> 1 : (s1'=0) & (d1'=0);
+        [sel3]  d1 = 4 & s1=7 -> 1 : (s1'=0) & (d1'=0);
+        [sel4]  d1 = 5 & s1=7 -> 1 : (s1'=0) & (d1'=0);
+        [upgrade] d1 = 6 & s1=7 -> 1 : (s1'=0)& (d1'=0);
+endmodule
+
+module die2 = die1[s1=s2, d1=d2, q1=q2, p1=p2, go1=go2] endmodule
+module die3 = die1[s1=s3, d1=d3, q1=q3, p1=p3, go1=go3] endmodule
+module die4 = die1[s1=s4, d1=d4, q1=q4, p1=p4, go1=go4] endmodule
+
+rewards "coin_flips"
+        [] s1<7 & s2<7 & s3<7 & s4<7 : 1;
+endrewards
+
+label "d1_one"   =  s1=7&d1=1;
+label "d1_two"   =  s1=7&d1=2;
+label "d1_three" =  s1=7&d1=3;
+label "d1_four"  =  s1=7&d1=4;
+label "d1_five"  =  s1=7&d1=5;
+label "d1_six"   =  s1=7&d1=6;
+
+label "d2_one"   =  s2=7&d2=1;
+label "d2_two"   =  s2=7&d2=2;
+label "d2_three" =  s2=7&d2=3;
+label "d2_four"  =  s2=7&d2=4;
+label "d2_five"  =  s2=7&d2=5;
+label "d2_six"   =  s2=7&d2=6;
+
+label "d3_one"   =  s3=7&d3=1;
+label "d3_two"   =  s3=7&d3=2;
+label "d3_three" =  s3=7&d3=3;
+label "d3_four"  =  s3=7&d3=4;
+label "d3_five"  =  s3=7&d3=5;
+label "d3_six"   =  s3=7&d3=6;
+
+label "d4_one"   =  s4=7&d4=1;
+label "d4_two"   =  s4=7&d4=2;
+label "d4_three" =  s4=7&d4=3;
+label "d4_four"  =  s4=7&d4=4;
+label "d4_five"  =  s4=7&d4=5;
+label "d4_six"   =  s4=7&d4=6;
+
+label "end" = upgrades=2;
