@@ -3,9 +3,10 @@
 
 import sys
 import logging
+import copy
 from argparse import ArgumentParser
 
-
+from prophesy.data.constant import parse_constants_string
 
 from prophesy.output.plot import plot_samples
 from prophesy.input.prismfile import PrismFile
@@ -31,7 +32,9 @@ def parse_cli_args(args):
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
     parser.add_argument('--threshold', type=float, help='the threshold', required=True)
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
-   
+    parser.add_argument('--constants', type=str, help='string with constants')
+
+
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--storm', action='store_true', help='use storm via cli')
     solver_group.add_argument('--prism', action='store_true', help='use prism via cli')
@@ -43,6 +46,7 @@ def run(args = sys.argv[1:], interactive=True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
     threshold = Rational(cmdargs.threshold)
+    constants = parse_constants_string(cmdargs.constants)
 
     prism_file = PrismFile(cmdargs.file)
     pctl_file = PctlFile(cmdargs.pctl_file)
@@ -62,13 +66,16 @@ def run(args = sys.argv[1:], interactive=True):
     else:
         raise RuntimeError("No supported model checker defined")
 
-    tool.load_model_from_prismfile(prism_file)
+    tool.load_model_from_prismfile(prism_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     sampling_interface = tool
     cmdargs = parse_cli_args(args)
 
-    parameters = prism_file.parameters
+    parameters = copy.deepcopy(prism_file.parameters)
     parameters.make_intervals_closed(0.0001)
+    for const_variable in constants.variables():
+        parameters.remove_variable(const_variable)
+    print(prism_file.parameters)
     logging.info("Performing uniform sampling:")
 
     initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)

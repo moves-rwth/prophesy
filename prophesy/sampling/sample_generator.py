@@ -14,6 +14,6 @@ class SampleGenerator(object):
             None is allowed
         """
         self.sampler = sampler
-        self.variables = parameters
+        self.parameters = parameters
         self.samples = samples.copy() if samples else InstantiationResultDict(parameters)
         self.distance = configuration.get_sampling_min_distance()

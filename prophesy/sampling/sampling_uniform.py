@@ -4,8 +4,7 @@ class UniformSampleGenerator(SampleGenerator):
     """Generates a uniform grid of samples"""
 
     def __init__(self, sampler, parameters, samples, samples_per_dimension):
-        super().__init__(sampler, parameters.get_variables(), samples)
-        self.parameters = parameters
+        super().__init__(sampler, parameters, samples)
         self.samples_per_dimension = samples_per_dimension
 
     def __iter__(self):

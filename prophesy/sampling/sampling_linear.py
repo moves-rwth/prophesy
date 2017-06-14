@@ -9,7 +9,7 @@ class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means
     of linear interpolation to approximate the threshold"""
     def __init__(self, sampler, parameters, samples, threshold):
-        super().__init__(sampler, parameters.get_variables(), samples)
+        super().__init__(sampler, parameters, samples)
         self.threshold = threshold
 
         self.first = True
@@ -72,6 +72,7 @@ class LinearRefinement(SampleGenerator):
     def _compute_points(self, safe_samples, bad_samples):
         delta = self._min_dist()
         new_points = ParameterInstantiations()
+        new_points.parameters = self.parameters
 
         # Offset the weight a little to balance the sample types
         if len(safe_samples) < len(bad_samples):

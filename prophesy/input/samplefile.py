@@ -33,9 +33,8 @@ def read_samples_file(path, parameters):
         if parameters is None:
             # Variable is by default constructed as REAL, which is good here
             parameters = list(map(Variable, parameter_names))
-        else:
-            parameters_in = parameters
-            parameters = [parameters_in.get_variable(name) for name in parameter_names]
+            assert False, "No longer supported"
+
 
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
@@ -71,5 +70,5 @@ def write_samples_file(parameters, samples, path):
     with open(path, "w") as f:
         f.write(";".join(map(str, vars)) + "\n")
         for res in samples.instantiation_results():
-            f.write("\t".join(["{}".format(str(res.instantiation.get_point(vars)))]))
+            f.write("\t".join(["{}".format(str(res.instantiation.get_point(parameters)))]))
             f.write("\t\t" + "%.20f" % res.result + "\n")

@@ -38,7 +38,7 @@ class Sampler(object):
         all_points = itertools.product(*ranges)
         all_points = [Point(*coords) for coords in all_points]
 
-        sample_points = ParameterInstantiations.from_points(all_points, parameters.get_variables())
+        sample_points = ParameterInstantiations.from_points(all_points, parameters)
 
         return self.perform_sampling(sample_points)
 
