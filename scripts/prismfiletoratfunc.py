@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import sys
 from argparse import ArgumentParser
+import logging
 
+
+from prophesy.data.constant import parse_constants_string
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.resultfile import write_pstorm_result
-from prophesy.modelcheckers.param import ParamParametricModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
 
@@ -18,6 +20,8 @@ def parse_cli_args(args):
     parser.add_argument('--pctl-file', help='a file with a pctl property', required=True)
     parser.add_argument('--pctl-index', help='the index for the pctl file', default=0)
     parser.add_argument('--result-file', help='resulting file', default="result.out")
+    parser.add_argument('--constants', type=str, help='string with constants')
+
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--storm', action='store_true', help='use storm via cli')
     solver_group.add_argument('--prism', action='store_true', help='use prism via cli')
@@ -29,6 +33,7 @@ def parse_cli_args(args):
 def run(args = sys.argv[1:], interactive = True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
+    constants = parse_constants_string(cmdargs.constants)
 
     prism_file = PrismFile(cmdargs.file)
     pctl_file = PctlFile(cmdargs.pctl_file)
@@ -49,8 +54,8 @@ def run(args = sys.argv[1:], interactive = True):
     else:
         raise RuntimeError("No supported model checker defined")
 
-    print("Compute the rational function using " + tool.version())
-    tool.load_model_from_prismfile(prism_file)
+    logging.info("Compute the rational function using " + tool.version())
+    tool.load_model_from_prismfile(prism_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
     write_pstorm_result(vars(cmdargs)["result_file"], result)

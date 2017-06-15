@@ -28,7 +28,7 @@ class Constants(object):
     def add(self, constant):
         self.constants[constant.variable] = constant
 
-    def to_key_value_string(self, to_float):
+    def to_key_value_string(self, to_float=False):
         key_value_list = [(k,v.value) for k, v in self.constants.items()]
         if to_float:
             for i in range(len(key_value_list)):

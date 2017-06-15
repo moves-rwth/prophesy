@@ -13,17 +13,27 @@ const double q4=q1;
 module game
 	upgrades : [0..2] init 0;
 	throw : [0..4] init 1;
-	[reset] true -> (upgrades'=0) & (throw'=0);
+	done : [0..1] init 0;
+	[reset1] true -> (upgrades'=0) & (throw'=1);
+	[reset2] true -> (upgrades'=0) & (throw'=2);
+	[reset3] true -> (upgrades'=0) & (throw'=3);
+	[reset4] true -> (upgrades'=0) & (throw'=4);
 	[sel1]  throw=0 -> 1: (throw'=1);
 	[sel2]  throw=0 -> 1: (throw'=2);
 	[sel3]  throw=0 -> 1: (throw'=3);
 	[sel4]  throw=0 -> 1: (throw'=4);
-	[go1]   throw=1 -> 1: (throw'=0);
-	[go2]   throw=2 -> 1: (throw'=0);
-	[go3]   throw=3 -> 1: (throw'=0);
-	[go4]   throw=4 -> 1: (throw'=0);
-    [upgrade] upgrades < 2 -> 1: (upgrades' = upgrades+1) & (throw'=0);
-    [upgrade] upgrades = 2 -> 1: (upgrades' = upgrades) & (throw'=0);
+	[go1]   done = 0 & throw=1 -> 1: (throw'=0);
+	[go2]   done = 0 & throw=2 -> 1: (throw'=0);
+	[go3]   done = 0 & throw=3 -> 1: (throw'=0);
+	[go4]   done = 0 & throw=4 -> 1: (throw'=0);
+    [upgrade1] upgrades < 2 -> 1: (upgrades' = upgrades+1) & (throw'=1);
+    [upgrade1] upgrades = 2 -> 1: (upgrades' = upgrades) & (done'=1)& (throw'=1);
+    [upgrade2] upgrades < 2 -> 1: (upgrades' = upgrades+1) & (throw'=2);
+    [upgrade2] upgrades = 2 -> 1: (upgrades' = upgrades) & (done'=1)& (throw'=2);
+    [upgrade3] upgrades < 2 -> 1: (upgrades' = upgrades+1) & (throw'=3);
+    [upgrade3] upgrades = 2 -> 1: (upgrades' = upgrades) & (done'=1)& (throw'=3);
+    [upgrade4] upgrades < 2 -> 1: (upgrades' = upgrades+1) & (throw'=4);
+    [upgrade4] upgrades = 2 -> 1: (upgrades' = upgrades) & (done'=1)& (throw'=4);
 endmodule
 
 module die1
@@ -32,6 +42,11 @@ module die1
         // value of the dice
         d1 : [0..6] init 0;
 
+        [sel1] s1 = 0 & throw=0 -> 1: (s1'=s1);
+        [sel2] s1 = 0 & throw=0 -> 1: (s1'=s1);
+        [sel3] s1 = 0 & throw=0 -> 1: (s1'=s1);
+        [sel4] s1 = 0 & throw=0 -> 1: (s1'=s1);
+
         [go1] s1=0 -> p1 : (s1'=1)        + 1-p1 : (s1'=2);
         [] s1=1 -> q1 : (s1'=3)           + 1-q1 : (s1'=4);
         [] s1=2 -> q1 : (s1'=5)           + 1-q1 : (s1'=6);
@@ -39,17 +54,17 @@ module die1
         [] s1=4 -> p1 : (s1'=7) & (d1'=3) + 1-p1 : (s1'=7) & (d1'=2);
         [] s1=5 -> p1 : (s1'=2)           + 1-p1 : (s1'=7) & (d1'=4);
         [] s1=6 -> p1 : (s1'=7) & (d1'=6) + 1-p1 : (s1'=7) & (d1'=5);
-        [reset] d1 = 1 & s1=7 -> 1 : (s1'=0) & (d1'=0);
+        [reset1] d1 = 1 & s1=7 -> 1 : (s1'=0) & (d1'=0);
         [sel1]  d1 = 2 & s1=7 -> 1 : (s1'=0) & (d1'=0);
         [sel2]  d1 = 3 & s1=7 -> 1 : (s1'=0) & (d1'=0);
         [sel3]  d1 = 4 & s1=7 -> 1 : (s1'=0) & (d1'=0);
         [sel4]  d1 = 5 & s1=7 -> 1 : (s1'=0) & (d1'=0);
-        [upgrade] d1 = 6 & s1=7 -> 1 : (s1'=0)& (d1'=0);
+        [upgrade1] d1 = 6 & s1=7 -> 1 : (s1'=0)& (d1'=0);
 endmodule
 
-module die2 = die1[s1=s2, d1=d2, q1=q2, p1=p2, go1=go2] endmodule
-module die3 = die1[s1=s3, d1=d3, q1=q3, p1=p3, go1=go3] endmodule
-module die4 = die1[s1=s4, d1=d4, q1=q4, p1=p4, go1=go4] endmodule
+module die2 = die1[s1=s2, d1=d2, q1=q2, p1=p2, go1=go2, upgrade1=upgrade2, reset1=reset2] endmodule
+module die3 = die1[s1=s3, d1=d3, q1=q3, p1=p3, go1=go3, upgrade1=upgrade3, reset1=reset3] endmodule
+module die4 = die1[s1=s4, d1=d4, q1=q4, p1=p4, go1=go4, upgrade1=upgrade4, reset1=reset4] endmodule
 
 rewards "coin_flips"
         [] s1<7 & s2<7 & s3<7 & s4<7 : 1;

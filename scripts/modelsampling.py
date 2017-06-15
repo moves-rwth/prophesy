@@ -7,7 +7,6 @@ import copy
 from argparse import ArgumentParser
 
 from prophesy.data.constant import parse_constants_string
-
 from prophesy.output.plot import plot_samples
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
@@ -72,9 +71,10 @@ def run(args = sys.argv[1:], interactive=True):
     cmdargs = parse_cli_args(args)
 
     parameters = copy.deepcopy(prism_file.parameters)
-    parameters.make_intervals_closed(0.0001)
     for const_variable in constants.variables():
         parameters.remove_variable(const_variable)
+    parameters.make_intervals_closed(0.0001)
+
     print(prism_file.parameters)
     logging.info("Performing uniform sampling:")
 

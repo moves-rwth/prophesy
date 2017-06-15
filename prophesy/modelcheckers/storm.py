@@ -59,12 +59,16 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
         self.constants = constants
 
     def get_rational_function(self):
-        if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
-        if self.prismfile == None: raise NotEnoughInformationError("model missing")
+        logger.info("Compute solution function")
+
+        if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile is None: raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
         file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+
+        constants_string = self.constants.to_key_value_string()
 
         args = [self.location,
                 '--prism', self.prismfile.location,
@@ -73,10 +77,19 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
                 '--parametric:resultfile', resultfile]
         if self.bisimulation == BisimulationType.strong:
             args.append('--bisimulation')
+        if constants_string != "":
+            args.append('-const')
+            args.append(constants_string)
         args.append('--elimination:order')
         args.append("fwrev")
 
-        run_tool(args, False)
+        logger.info("Call storm")
+        ret_code = run_tool(args, False)
+        if ret_code != 0:
+            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+        else:
+            logger.info("Storm call finished successfully")
+
         param_result = read_pstorm_result(resultfile)
         os.unlink(resultfile)
         return param_result
@@ -128,9 +141,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
                             break
             if result is None:
                 raise RuntimeError("Could not find result from storm in {}".format(resultfile))
-            print(result)
             result = Rational(result)
-            print(result)
 
             samples.add_result(InstantiationResult(sample_point, result))
             os.unlink(resultfile)
