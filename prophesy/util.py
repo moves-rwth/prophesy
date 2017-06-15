@@ -4,6 +4,7 @@ import platform
 import subprocess
 import tempfile
 import configparser
+import logging
 
 from prophesy.exceptions.configuration_error import ConfigurationError
 
@@ -74,22 +75,27 @@ def check_filepath_for_reading(filepath, filedescription_string="file"):
         raise IOError("No read access on " + filedescription_string + ". Location: '" + "'.")
 
 
-def run_tool(args, quiet=False):
+def run_tool(args, quiet=False, logfile=None):
     """
     Executes a process,
     :returns: the `stdout`
     """
+    logger = logging.getLogger("External Tool")
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    if quiet:
+    if quiet and logfile is None:
         return pipe.communicate()[0]
     else:
         for line in iter(pipe.stdout.readline, ""):
             if not line and pipe.poll() is not None:
                 break
             output = line.decode(encoding='UTF-8').rstrip()
-            if output != "":
-                print("\t * " + output)
+            if not quiet and output != "":
+                logger.debug("\t * " + output)
+            if logfile is not None:
+                write_string_to_file(logfile, output + "\n", append=True)
+
+    return pipe.returncode
 
 def open_file(path):
     """Open file with system-default application.
@@ -99,13 +105,14 @@ def open_file(path):
     os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
 
 
-def write_string_to_file(path, string):
+def write_string_to_file(path, string, append=False):
     """
     :param path: File where we want to put the string
     :param string: New content
+    :param append: If True, append to file, else overwrite
     :return:
     """
-    with open(path, 'w') as f:
+    with open(path, 'a' if append else 'w') as f:
         f.write(string)
 
 def write_string_to_tmpfile(string):

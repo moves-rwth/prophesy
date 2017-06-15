@@ -1,6 +1,9 @@
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation
 from prophesy.adapter.pycarl import Rational, Variable
 from prophesy.data.point import Point
+import logging
+
+logger = logging.getLogger(__name__)
 
 def read_samples_file(path, parameters):
     """
@@ -30,9 +33,8 @@ def read_samples_file(path, parameters):
         if parameters is None:
             # Variable is by default constructed as REAL, which is good here
             parameters = list(map(Variable, parameter_names))
-        else:
-            parameters_in = parameters
-            parameters = [parameters_in.get_variable(name) for name in parameter_names]
+            assert False, "No longer supported"
+
 
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
@@ -45,7 +47,8 @@ def read_samples_file(path, parameters):
         for i, line in enumerate(lines[start:]):
             items = line.split()
             if len(items) - 1 != len(parameter_names):
-                raise RuntimeError("Invalid input on line " + str(i + start))
+                logger.error("Invalid input in %s on line %s: '%s'", path, str(i + start), line)
+                continue
             if items[-1] == "below":
                 #TODO
                 raise NotImplementedError("Inexact sampling results are not yet supported in v2")
@@ -63,9 +66,10 @@ def read_samples_file(path, parameters):
 
 
 def write_samples_file(parameters, samples, path):
+    logger.info("Write samples to %s", path)
     vars = parameters.get_variables()
     with open(path, "w") as f:
         f.write(";".join(map(str, vars)) + "\n")
         for res in samples.instantiation_results():
-            f.write("\t".join(["{}".format(str(res.instantiation.get_point(vars)))]))
+            f.write("\t".join(["{}".format(str(res.instantiation.get_point(parameters)))]))
             f.write("\t\t" + "%.20f" % res.result + "\n")

@@ -1,32 +1,32 @@
 from enum import Enum
 
+
 class BoundType(Enum):
     open = 0
     closed = 1
 
-def string_to_interval(input, internal_parse_func):
-    assert isinstance(input, str)
-    input = input.strip()
-    left_bt = None
-    if input[0] == "(":
+
+def string_to_interval(input_string, internal_parse_func):
+    assert isinstance(input_string, str)
+    input_string = input_string.strip()
+    if input_string[0] == "(":
         left_bt = BoundType.open
-    elif input[0] == "[":
+    elif input_string[0] == "[":
         left_bt = BoundType.closed
     else:
-        raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected '(' or '[' at the start.")
+        raise RuntimeError("Cannot parse the interval given by: " + input_string + ". Expected '(' or '[' at the start.")
 
-    right_bt = None
-    if input[-1] == ")":
+    if input_string[-1] == ")":
         right_bt = BoundType.open
-    elif input[-1] == "]":
+    elif input_string[-1] == "]":
         right_bt = BoundType.closed
     else:
-        raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected ')' or ']' at the end.")
+        raise RuntimeError("Cannot parse the interval given by: " + input_string + ". Expected ')' or ']' at the end.")
 
-    inbetween = input[1:-1]
+    inbetween = input_string[1:-1]
     bounds = inbetween.split(",")
     if len(bounds) != 2:
-        raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected exactly one comma in the interval.")
+        raise RuntimeError("Cannot parse the interval given by: " + input_string + ". Expected exactly one comma in the interval.")
 
     left_value = internal_parse_func(bounds[0])
     right_value = internal_parse_func(bounds[1])
@@ -36,9 +36,9 @@ def string_to_interval(input, internal_parse_func):
 def create_embedded_closed_interval(interval, epsilon):
     """
     For an (half) open interval from l to r, create a closed interval [l+eps, r-eps]. 
-    :param interval: 
-    :param epsilon: 
-    :return: 
+    :param interval: The interval which goes into the method
+    :param epsilon: An epsilon offset used to close.
+    :return: A closed interval.
     """
 
     if interval.is_closed():
@@ -64,7 +64,7 @@ class Interval:
     """
     Interval class for arbitrary types
     """
-    def __init__(self, left_value, left_bt, right_value, right_bt ):
+    def __init__(self, left_value, left_bt, right_value, right_bt):
         self._left_bound_type = left_bt
         self._left_value = left_value
         self._right_bound_type = right_bt
@@ -104,9 +104,18 @@ class Interval:
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 
     def close(self):
+        """
+        Make all bounds closed
+        :return: 
+        """
         return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
 
     def intersect(self, other):
+        """
+        Compute intersection between to intervals
+        :param other: 
+        :return: 
+        """
         assert isinstance(other, Interval)
         if self._left_value > other._left_value:
             newleft = self._left_value

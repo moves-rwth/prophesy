@@ -31,7 +31,7 @@ class ProbabilisticModelChecker:
     def set_pctl_formula(self, formula): raise NotImplementedError
 
     @abstractmethod
-    def load_model_from_prismfile(self, prismfile): raise NotImplementedError
+    def load_model_from_prismfile(self, prismfile, constants): raise NotImplementedError
 
     @abstractmethod
     def set_bisimulation(self, BisimulationType): raise NotImplementedError

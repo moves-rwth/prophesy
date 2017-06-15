@@ -27,6 +27,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         self.bisimulation = BisimulationType.strong
         self.pctl_formula = None
         self.prism_file = None
+        self.constants = None
         self.program = None
         self.last_result = None
         self.model = None
@@ -48,9 +49,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         if self.program is not None:
             self.pctl_formula = stormpy.parse_properties_for_prism_program(formula, self.program)
 
-    def load_model_from_prismfile(self, p_file):
+    def load_model_from_prismfile(self, p_file, constants):
         """ Load a model encrypted in prism file format."""
         self.prism_file = p_file
+        self.constants = constants
+        #TODO use constants here.
         self.program = stormpy.parse_prism_program(self.prism_file.location)
 
     def set_bisimulation(self, type):

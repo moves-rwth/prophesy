@@ -50,7 +50,6 @@ if configuration.is_module_available('stormpy'):
     from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
 def _jsonSamples(samples):
-    print(samples.parameters)
     return [{"coordinate" : res.instantiation.get_point(samples.parameters).to_float().coordinates, "value" : float(res.result)} for res in samples.instantiation_results()]
 
 def _jsonPoly(polygon):

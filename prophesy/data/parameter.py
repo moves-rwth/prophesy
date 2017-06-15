@@ -1,8 +1,3 @@
-'''
-Created on 19 Apr 2016
-
-@author: hbruintjes
-'''
 import prophesy.data.interval
 
 class Parameter(object):
@@ -47,6 +42,12 @@ class ParameterOrder(list):
         @return list of Interval
         """
         return [p.interval for p in self]
+
+    def remove_variable(self, variable):
+        for p in self:
+            if p.variable == variable:
+                self.remove(p)
+                return
 
     def make_intervals_closed(self, epsilon):
         """

@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import logging
 from abc import ABCMeta, abstractmethod
 
 from prophesy.regions.region_checker import RegionCheckResult
@@ -16,9 +17,9 @@ from prophesy.exceptions.module_error import ModuleError
 
 
 class RegionGenerator:
-    """A generator for regions. This class acts as an iterable that
-    generates new regions (or counterexamples) until the search space is exhausted
-    (which possibly never happens)"""
+    """A generator for regions. 
+    This class acts as an iterable that generates new regions (or counterexamples),
+     until the search space is exhausted (which possibly never happens)"""
     __metaclass__ = ABCMeta
 
     def __init__(self, samples, parameters, threshold, threshold_area, checker, _ratfunc):
@@ -51,7 +52,6 @@ class RegionGenerator:
         return next(self)
 
     def __next__(self):
-        #with self.checker as checker:
             # get next constraint depending on algorithm
             result_constraint = self.next_constraint()
             while result_constraint is not None:
@@ -64,8 +64,6 @@ class RegionGenerator:
 
                 # get next constraint depending on algorithm
                 result_constraint = self.next_constraint()
-        # End of generator
-        #return
 
     def _add_pdf(self, name):
         """
@@ -79,7 +77,7 @@ class RegionGenerator:
         if self.first_pdf:
             self.first_pdf = False
             shutil.copyfile(name, self.result_file)
-            print("Plot file located at {0}".format(self.result_file))
+            logging.info("Plot file located at {0}".format(self.result_file))
         else:
             merger = PdfFileMerger()
             merger.append(PdfFileReader(self.result_file, 'rb'))
@@ -198,7 +196,7 @@ class RegionGenerator:
         # Plot the final outcome
         if self.plot:
             self.plot_results(display=False)
-            print("Generation complete, plot located at {0}".format(self.result_file))
+            logging.info("Generation complete, plot located at {0}".format(self.result_file))
         self.checker.print_info()
 
         return self.safe_polys, self.bad_polys, self.new_samples

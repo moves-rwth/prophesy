@@ -3,6 +3,7 @@ import os
 from prophesy.adapter.pycarl import Integer, Rational
 from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
+import logging
 
 class ProphesyConfig(Configuration):
     # section names
@@ -149,3 +150,9 @@ configuration = ProphesyConfig()
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
+
+logging.basicConfig(filename='prophesy.log',level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+logging.getLogger().addHandler(ch)

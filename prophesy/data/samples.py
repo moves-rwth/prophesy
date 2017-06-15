@@ -2,11 +2,13 @@ from collections import OrderedDict, Set
 from prophesy.data.point import Point
 from enum import Enum
 
+
 class InexactRelation(Enum):
     LESS = 0
     LEQ = 1
     GEQ = 2
     GREATER = 3
+
 
 class InexactInstantiationResult():
     def __init__(self,rel, threshold):
@@ -15,7 +17,7 @@ class InexactInstantiationResult():
 
 
 class ParameterInstantiation(OrderedDict):
-    """Simple dictionary mapping a pycarl.Variable to pycarl.Rational.
+    """Simple dictionary mapping from a Parameter to pycarl.Rational.
     """
 
     def __init__(self, *args, **kwargs):
@@ -51,13 +53,13 @@ class ParameterInstantiation(OrderedDict):
         return Point(*[self[var] for var in parameters])
 
     @classmethod
-    def from_point(cls, pt, variables):
-        """Construnct SamplePoint from Point and VariableOrder
+    def from_point(cls, pt, parameters):
+        """Construnct SamplePoint from Point and ParameterOrder
         @param pt Point of pycarl.Rational
-        @param variables VariableOrder
+        @param parameters ParameterOrder
         """
         sp = cls()
-        for (val, var) in zip(pt, variables):
+        for (val, var) in zip(pt, parameters):
             sp[var] = val
         return sp
 
@@ -70,10 +72,13 @@ class ParameterInstantiation(OrderedDict):
 class ParameterInstantiations(list):
     def __init__(self, *args):
         super().__init__(*args)
+        self.parameters = None
 
     @classmethod
-    def from_points(cls, pts, variables):
-        return cls([ParameterInstantiation.from_point(pt, variables) for pt in pts])
+    def from_points(cls, pts, parameters):
+        res = cls([ParameterInstantiation.from_point(pt, parameters) for pt in pts])
+        res.parameters = parameters
+        return res
 
 
 class InstantiationResult(object):
@@ -105,12 +110,12 @@ class InstantiationResultDict():
     Maintains a set of instantiations with their results.
     """
 
-    def __init__(self, variables):
+    def __init__(self, parameters):
         """
         @param variables, VariableOrder
         """
         self._values = OrderedDict()
-        self.variables = variables
+        self.parameters = parameters
         assert self._parameters_check()
 
     def has(self, instantiation):
@@ -121,8 +126,8 @@ class InstantiationResultDict():
         
         :return: True if all variables are indeed set variables
         """
-        for p in self.variables:
-            if p.is_no_variable:
+        for p in self.parameters:
+            if p.variable.is_no_variable:
                 return False
         return True
 
@@ -132,7 +137,7 @@ class InstantiationResultDict():
     def update(self, other):
         for k,v in other:
             assert isinstance(k, ParameterInstantiation)
-            assert k.get_parameters() == self.variables
+            assert k.get_parameters() == self.parameters
             self._values[k] = v
 
     def __len__(self):
@@ -143,7 +148,7 @@ class InstantiationResultDict():
         @param sample Sample
         """
         assert isinstance(instantiation_result, InstantiationResult)
-        assert instantiation_result.instantiation.get_parameters() == self.variables
+        assert instantiation_result.instantiation.get_parameters() == self.parameters
         self._values[instantiation_result.instantiation] = instantiation_result.result
 
     def split(self, threshold):
@@ -153,8 +158,8 @@ class InstantiationResultDict():
         @param threshold pycarl.Rational
         @return (SampleDict >=, SampleDict <)
         """
-        above_threshold = InstantiationResultDict(self.variables)
-        below_threshold = InstantiationResultDict(self.variables)
+        above_threshold = InstantiationResultDict(self.parameters)
+        below_threshold = InstantiationResultDict(self.parameters)
         for k, v in self._values.items():
             if v >= threshold:
                 above_threshold._values[k] = v
@@ -167,14 +172,14 @@ class InstantiationResultDict():
         @param samples SampleDict
         @param filter_func callable to filter values, return True to keep sample
         """
-        filtered = InstantiationResultDict(self.variables)
+        filtered = InstantiationResultDict(self.parameters)
         for k, v in self._values.items():
             if filter_func(v):
                 filtered._values[k] = v
         return filtered
 
     def copy(self):
-        copied = InstantiationResultDict(self.variables)
+        copied = InstantiationResultDict(self.parameters)
         for k, v in self._values.items():
             copied._values[k] = v
         return copied
@@ -183,7 +188,7 @@ class InstantiationResultDict():
         """Returns Sample instances, as generator
         """
         for pt, val in self._values.items():
-            assert pt.get_parameters() == self.variables
+            assert pt.get_parameters() == self.parameters
             yield InstantiationResult(pt, val)
 
     def instantiations(self):

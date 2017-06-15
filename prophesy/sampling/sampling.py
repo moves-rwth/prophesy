@@ -1,13 +1,15 @@
 """
 Helper module for simplified sampling access.
 """
+import logging
+
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.sampling.sampling_linear import LinearRefinement
 
 def uniform_samples(interface, parameters, samples_per_dim):
     """Generate a uniform grid of samples."""
-    samples = InstantiationResultDict(parameters.get_variables())
+    samples = InstantiationResultDict(parameters)
     uniform_generator = UniformSampleGenerator(interface, parameters, samples, samples_per_dim)
 
     for new_samples in uniform_generator:
@@ -26,7 +28,6 @@ def refine_samples(interface, parameters, samples, iterations, threshold):
         # uncomment to see intermediate plot before each iteration
         #open_file(plot_samples(samples, result.parameters, True, threshold))
 
-        print("Refining sampling ({}/{}): {} new samples".format(i + 1, iterations, len(new_samples)))
         samples.update(new_samples)
 
     return samples

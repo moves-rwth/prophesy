@@ -1,17 +1,19 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+import logging
 
 from prophesy.adapter.pycarl import Variable, VariableType, Rational, Polynomial
 from prophesy.data.interval import Interval, BoundType
 from prophesy.adapter.pycarl import Constraint, Relation
 
 # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
+# TODO this method has to change, if we also support direct encoding of the lin eq system.
 def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, BoundType.closed, None, BoundType.open)):
     for p in result.parameters:
         smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
     for constr in result.parameter_constraints:
-        print(result.parameter_constraints)
+        logging.debug(result.parameter_constraints)
         smt2interface.assert_constraint(constr)
 
     rat_vars = result.parameters.get_variable_order()

@@ -1,3 +1,5 @@
+import logging
+
 from prophesy.sampling.sampler import Sampler
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 
@@ -22,16 +24,11 @@ class RatFuncSampling(Sampler):
 
         samples = InstantiationResultDict(self.variables)
         for sample_point in samplepoints:
-            #print("  xx ")
-            #print("sp: {}".format(sample_point))
-            #print("eval {}".format(self.ratfunc))
-            #print(type(sample_point))
-            #print(type(self.ratfunc))
-            for var in self.ratfunc.gather_variables():
-            #    print(repr(var))
-                assert var in sample_point.get_parameters()
-            res = self.ratfunc.evaluate(dict(sample_point))
-            print("....")
-            print("={}".format(res))
+            # TODO wrap the following in a function.
+            #for var in self.ratfunc.gather_variables():
+            #    assert var in sample_point.get_parameters()
+            logging.debug("....")
+            res = self.ratfunc.evaluate(dict([(k.variable, v) for k,v in sample_point.items()]))
+            logging.debug("={}".format(res))
             samples.add_result(InstantiationResult(sample_point, res))
         return samples

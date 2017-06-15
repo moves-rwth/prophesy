@@ -2,7 +2,7 @@
 
 import sys
 from argparse import ArgumentParser
-
+import logging
 
 from prophesy.output.plot import plot_samples
 from prophesy.input.resultfile import read_pstorm_result
@@ -11,7 +11,6 @@ from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.util import open_file
 from prophesy.adapter.pycarl import Rational
-
 
 
 def parse_cli_args(args):
@@ -29,21 +28,18 @@ def parse_cli_args(args):
     return parser.parse_args(args)
 
 
-
-
-
-def run(args=sys.argv, interactive=True):
+def run(args=sys.argv[1:], interactive=True):
     cmdargs = parse_cli_args(args)
     threshold = Rational(cmdargs.threshold)
 
     # Read previously generated result
     result = read_pstorm_result(cmdargs.rat_file)
-    print("Parameters:", result.parameters)
+    logging.debug("Parameters: %s", str(result.parameters))
 
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters.get_variables())
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
 
     initial_samples = uniform_samples(sampling_interface, result.parameters, cmdargs.samplingnr)
-    print("Performing uniform sampling: {} samples".format(len(initial_samples)))
+    logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations,
                                      threshold)
