@@ -17,6 +17,9 @@ from prophesy.config import configuration
 
 import numpy as np
 
+
+logger = logging.getLogger(__name__)
+
 def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
     if not safe_above_threshold:
@@ -30,7 +33,7 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
 
     Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
                       path_to_save=plot_path, display=False)
-    logging.info("Samples rendered to {}".format(plot_path))
+    logger.info("Samples rendered to {}".format(plot_path))
 
     return plot_path
 
@@ -73,11 +76,15 @@ class Plot(object):
                      poly_green=[], poly_red=[], poly_blue=[],
                      anchor_points=[], additional_arrows=[],
                      path_to_save=None, display=False):
+        logger.info("Plot results")
+
+        if len(parameters) > 2:
+            raise ValueError("Cannot plot for more than 2 parameters.")
+
         if Plot.flip_green_red:
             samples_green, samples_red = samples_red, samples_green
             poly_green, poly_red = poly_red, poly_green
 
-        assert len(parameters) <= 2
         if len(parameters) == 1:
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)

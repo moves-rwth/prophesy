@@ -66,6 +66,7 @@ def read_samples_file(path, parameters):
 
 
 def write_samples_file(parameters, samples, path):
+    logger.info("Write samples to %s", path)
     vars = parameters.get_variables()
     with open(path, "w") as f:
         f.write(";".join(map(str, vars)) + "\n")

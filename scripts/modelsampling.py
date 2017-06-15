@@ -84,7 +84,10 @@ def run(args = sys.argv[1:], interactive=True):
                                      threshold)
     write_samples_file(parameters, refined_samples, cmdargs.samples_file)
 
-    plot_path = plot_samples(refined_samples, parameters, cmdargs.safe_above_threshold, threshold)
+    if len(parameters) <= 2:
+        plot_path = plot_samples(refined_samples, parameters, cmdargs.safe_above_threshold, threshold)
+    else:
+        logging.info("Cannot plot, as dimension is too high!")
 
 if __name__ == "__main__":
    run()
