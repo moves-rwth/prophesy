@@ -17,7 +17,7 @@ class InexactInstantiationResult():
 
 
 class ParameterInstantiation(OrderedDict):
-    """Simple dictionary mapping a pycarl.Variable to pycarl.Rational.
+    """Simple dictionary mapping from a Parameter to pycarl.Rational.
     """
 
     def __init__(self, *args, **kwargs):

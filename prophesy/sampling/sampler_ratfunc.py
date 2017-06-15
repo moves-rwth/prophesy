@@ -28,7 +28,7 @@ class RatFuncSampling(Sampler):
             #for var in self.ratfunc.gather_variables():
             #    assert var in sample_point.get_parameters()
             logging.debug("....")
-            res = self.ratfunc.evaluate(dict(sample_point))
+            res = self.ratfunc.evaluate(dict([(k.variable, v) for k,v in sample_point.items()]))
             logging.debug("={}".format(res))
             samples.add_result(InstantiationResult(sample_point, res))
         return samples
