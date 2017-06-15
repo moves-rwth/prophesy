@@ -54,7 +54,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
 
-    def load_model_from_prismfile(self, prismfile, constants):
+    def load_model_from_prismfile(self, prismfile, constants=None):
         self.prismfile = prismfile
         self.constants = constants
 
