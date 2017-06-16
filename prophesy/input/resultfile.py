@@ -38,7 +38,7 @@ def read_pstorm_result(location):
         inputstring = f.read()
 
     # Build parameters
-    logging.debug("Reading parameters...")
+    logger.debug("Reading parameters...")
     parameters = ParameterOrder()
     parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
     for parameter_string in parameter_strings:
@@ -51,6 +51,7 @@ def read_pstorm_result(location):
             else:
                 bound = interval.string_to_interval(name_and_info[1], Rational)
             parameters.append(Parameter(var, bound))
+    logger.debug("Parameters: %s", str(parameters))
 
     # Build well-defined constraints
     logging.debug("Reading constraints...")
@@ -73,9 +74,9 @@ def read_pstorm_result(location):
 
 
     # Build rational function
-    logging.debug("Reading rational function...")
+    logger.debug("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
-    logging.debug("Building rational function...")
+    logger.debug("Building rational function...")
     l = match.split('/')
     num = parse(l[0])
     if len(l) > 1:
@@ -84,7 +85,7 @@ def read_pstorm_result(location):
     else:
         ratfunc = num
 
-    logging.debug("Parsing complete.")
+    logger.debug("Parsing complete.")
     return ParametricResult(parameters, constraints, ratfunc)
 
 

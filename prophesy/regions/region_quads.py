@@ -18,11 +18,11 @@ class ConstraintQuads(RegionGenerator):
         quad = HyperRectangle(*self.parameters.get_variable_bounds())
         quadsamples = []
 
-        for pt, v in samples.items():
-            if not quad.contains(pt):
+        for instantiation, value in samples:
+            if not quad.contains(instantiation.get_point(parameters)):
                 continue
-            safe = v >= self.threshold
-            quadsamples.append((pt, safe))
+            safe = value >= self.threshold
+            quadsamples.append((instantiation.get_point(parameters), safe))
         self.check_quad(quad, quadsamples)
         self._sort_quads_by_size()
 

@@ -99,8 +99,8 @@ class Interval:
     def width(self):
         return self._right_value - self._left_value
 
-    def split(self, bias = 0.5):
-        mid = self._left_value + self.width() * bias
+    def split(self):
+        mid = self._left_value + self.width() / 2
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 
     def close(self):

@@ -54,6 +54,7 @@ def get_initial_config(config):
     config_tools = {}
     config_tools["z3"] = find_tool("z3")
     config_tools["isat"] = find_tool("isat")
+    config_tools["yices"] = find_tool("yices-smt2")
     config_tools["param"] = find_tool("param")
     config_tools["storm"] = find_tool("storm")
     config_tools["prism"] = find_tool("prism")
@@ -75,6 +76,11 @@ def get_initial_config(config):
     config_constraints = {}
     config_constraints["precision"] = str(0.0001)
     config["constraints"] = config_constraints
+
+    config_smt = {}
+    config_smt["timeout"] = str(10)
+    config["smt"] = config_smt
+
 
 def write_initial_config():
     config = configparser.ConfigParser()

@@ -12,6 +12,7 @@ class ProphesyConfig(Configuration):
     SAMPLING = "sampling"
     CONSTRAINTS = "constraints"
     DEPENDENCIES = "installed_deps"
+    SMT = "smt"
 
     def __init__(self):
         super().__init__(os.path.join(os.path.dirname(
@@ -141,6 +142,9 @@ class ProphesyConfig(Configuration):
     def get_regions_precision(self):
         # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
         return float(self.get(ProphesyConfig.CONSTRAINTS, "precision"))
+
+    def get_smt_timeout(self):
+        return float(self.get(ProphesyConfig.SMT, "timeout"))
 
     def getSection(self, sec):
         return self.getAll()[sec]

@@ -3,9 +3,9 @@
 from argparse import ArgumentParser
 
 import sys
+import logging
 
-from shapely.geometry.polygon import Polygon
-
+import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import ConstraintQuads
 from prophesy.regions.region_smtchecker import SmtRegionChecker
@@ -17,9 +17,10 @@ from prophesy.smt.isat import IsatSolver
 from prophesy.smt.smt import setup_smt
 from prophesy.smt.smtlib import SmtlibSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
-
 from prophesy import config
 from prophesy.config import configuration
+
+logger = logging.getLogger(__name__)
 
 def parse_cli_args(args, solversConfig):
     parser = ArgumentParser(description='Build regions based on a sample file')
@@ -61,32 +62,32 @@ def run(args = sys.argv[1:], interactive=True):
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
 
-    print("Loading samples")
-    variables, samples_threshold, samples = read_samples_file(cmdargs.samples_file, result.parameters.get_variables())
-    if result.parameters.get_variables() != variables:
+    logger.debug("Loading samples")
+    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, result.parameters)
+    if result.parameters != sample_parameters:
         raise RuntimeError("Sampling and Result parameters are not equal")
 
     if cmdargs.threshold:
-        threshold = cmdargs.threshold
+        threshold = pc.Rational(cmdargs.threshold)
     else:
-        print("Using threshold from samples file.")
+        logger.debug("Using threshold from samples file.")
         threshold = samples_threshold
 
-    if threshold == None:
+    if threshold is None:
         raise RuntimeError("No threshold specified via command line or samples file.")
-    print("Threshold: {}".format(threshold))
+    logger.debug("Threshold: {}".format(threshold))
 
 
 
-    print("Setup SMT interface")
+    logger.debug("Setup SMT interface")
     if cmdargs.z3location:
         smt2interface = Z3CliSolver(cmdargs.z3location, timeout=cmdargs.solver_timeout, memout=cmdargs.solver_memout)
     elif cmdargs.isatlocation:
         smt2interface = IsatSolver(cmdargs.isatlocation)
     elif 'z3' in solvers:
-        smt2interface = Z3CliSolver(configuration.get(config.EXTERNAL_TOOLS, "z3"))
+        smt2interface = Z3CliSolver()
     elif 'isat' in solvers:
-        smt2interface = IsatSolver(configuration.get(config.EXTERNAL_TOOLS, "isat"))
+        smt2interface = IsatSolver()
     else:
         raise RuntimeError("No supported SMT defined")
 
@@ -94,7 +95,7 @@ def run(args = sys.argv[1:], interactive=True):
 
     setup_smt(smt2interface, result, threshold)
 
-    print("Generating regions")
+    logger.info("Generating regions")
     checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
     arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
@@ -105,15 +106,13 @@ def run(args = sys.argv[1:], interactive=True):
     elif cmdargs.poly:
         generator = ConstraintPolygon(*arguments)
         # For testing
-        generator.add_polygon(Polygon([(0, 0), (0.5, 0.5), (0.5, 0)]), False)
-        generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), False)
     else:
         assert False
 
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter = cmdargs.iterations)
+        generator.generate_constraints(max_iter=cmdargs.iterations)
     else:
-        generator.generate_constraints(max_area = cmdargs.area)
+        generator.generate_constraints(max_area=cmdargs.area)
 
     if interactive:
         open_file(generator.result_file)

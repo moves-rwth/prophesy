@@ -58,10 +58,11 @@ def read_samples_file(path, parameters):
                 raise NotImplementedError("Inexact sampling results are not yet supported in v2")
             else:
                 #TODO: falling back to Python float parser, but a good Rational parser is better
-                value = Rational(float(items[-1]))
+                value = Rational(items[-1])
             coords = map(Rational, items[:-1])
             samples.add_result(InstantiationResult(ParameterInstantiation.from_point(Point(*coords), parameters), value))
 
+    logger.debug("Parameters: %s", str(parameters))
     return parameters, threshold, samples
 
 
@@ -69,7 +70,7 @@ def write_samples_file(parameters, samples, path):
     logger.info("Write samples to %s", path)
     vars = parameters.get_variables()
     with open(path, "w") as f:
-        f.write(";".join(map(str, vars)) + "\n")
+        f.write(" ".join(map(str, vars)) + "\n")
         for res in samples.instantiation_results():
-            f.write("\t".join(["{}".format(str(res.instantiation.get_point(parameters)))]))
-            f.write("\t\t" + "%.20f" % res.result + "\n")
+            f.write("\t".join([str(c) for c in  res.instantiation.get_point(parameters).coordinates]))
+            f.write("\t\t" + str(res.result) + "\n")

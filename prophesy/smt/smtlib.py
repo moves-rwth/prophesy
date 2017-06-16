@@ -5,6 +5,9 @@ from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
 from prophesy.adapter.pycarl import Constraint, Formula
 
+logger = logging.getLogger(__name__)
+
+
 def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"
     formula += "(set-info :source |\n"
@@ -16,7 +19,6 @@ def _smtfile_header():
     return formula
 
 def constraint_to_smt2(constraint):
-    #TODO: Uses carl built-in printer for Formula, is ok?
     if isinstance(constraint, Constraint):
         constraint = Formula(constraint)
     assert isinstance(constraint, Formula)
@@ -71,13 +73,14 @@ class SmtlibSolver(SMTSolver):
         assert self.process is not None
         s = "(check-sat)\n"
         self.string += s
+        logging.info("Call smt-solver..")
         self._write(s)
 
         for line in iter(self.process.stdout.readline, ""):
             if not line and self.process.poll() is not None:
                 break
             output = line.rstrip()
-            logging.debug("** check result:\t" + output)
+            logger.info("SMT result:\t" + output)
             if output == "unsat":
                 return Answer.unsat
             elif output == "sat":

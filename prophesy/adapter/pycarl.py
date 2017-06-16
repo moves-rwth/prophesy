@@ -15,5 +15,9 @@ Constraint = pycarl.gmp.formula.Constraint
 Relation = pycarl.formula.Relation
 Formula = pycarl.gmp.formula.Formula
 
+numerator = pycarl.gmp.numerator
+denominator = pycarl.gmp.denominator
+
+
 def parse(input):
     return pycarl.gmp.parse.parse(input);

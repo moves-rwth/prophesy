@@ -99,6 +99,8 @@ class RegionGenerator:
 
         # Split samples appropriately
         samples_green, samples_red = self.samples.split(self.threshold)
+        samples_green = [res.instantiation.get_point(self.parameters) for res in samples_green.instantiation_results()]
+        samples_red = [res.instantiation.get_point(self.parameters) for res in samples_red.instantiation_results()]
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
@@ -161,7 +163,7 @@ class RegionGenerator:
         assert False
 
 
-    def generate_constraints(self, max_iter=-1, max_area=1.0):
+    def generate_constraints(self, max_iter=-1, max_area=1):
         """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
         max_iter: Number of regions to generate/check at most (not counting SMT failures),
@@ -190,7 +192,7 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if len(self.all_polys) % 20 == 0:
+            if len(self.all_polys) % 4 == 0:
                 self.plot_results(display=False)
 
         # Plot the final outcome
