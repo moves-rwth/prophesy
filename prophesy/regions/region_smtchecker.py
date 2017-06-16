@@ -71,12 +71,8 @@ class SmtRegionChecker(RegionChecker):
                     self.benchmark_output.append((checkresult, duration, polygon.area))
                 #self.print_benchmark_output(self.benchmark_output)
                 if not checkresult in [Answer.sat, Answer.unsat]:
-                    # smt call not finished -> change constraint to make it better computable
-                    # TODO what to do in GUI?
-                    #print("{}: Change constraint for better computation".format(checkresult))
                     break
                 else:
-                    smt_successful = True
                     if checkresult == Answer.sat:
                         smt_model = smt_context.get_model()
                     break
@@ -86,12 +82,12 @@ class SmtRegionChecker(RegionChecker):
         elif checkresult == Answer.sat:
             # add new point as counter example to existing regions
             sample = ParameterInstantiation()
-            for var in variables:
-                value = smt_model[var.name]
+            for par in self.parameters:
+                value = smt_model[par.variable.name]
                 rational = Rational(value)
-                sample[var] = rational
-            value = self._ratfunc.evaluate(sample)
-            return RegionCheckResult.sat, InstantiationResult.from_sample_point(sample, variables, value)
+                sample[par] = rational
+            value = self._ratfunc.evaluate(dict([(k.variable, v) for k,v in sample.items()]))
+            return RegionCheckResult.sat, InstantiationResult(sample, value)
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None

@@ -36,34 +36,32 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     smt2interface.add_variable(safeVar, VariableDomain.Bool)
     smt2interface.add_variable(badVar, VariableDomain.Bool)
     smt2interface.add_variable(thresholdVar, VariableDomain.Real)
-    smt2interface.add_variable(rf1Var, VariableDomain.Real)
-    smt2interface.add_variable(rf2Var, VariableDomain.Real)
+
 
     safe_relation = pc.Relation.GEQ
     bad_relation = pc.Relation.LESS
 
-    safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
-    bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, bad_relation)
+    if pc.denominator(result.ratfunc) != 1:
+        smt2interface.add_variable(rf1Var, VariableDomain.Real)
+        smt2interface.add_variable(rf2Var, VariableDomain.Real)
+        safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
+        bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, bad_relation)
+        rf1_constraint = Constraint(rf1Var - pc.numerator(result.ratfunc), Relation.EQ)
+        rf2_constraint = Constraint(rf2Var - pc.denominator(result.ratfunc), Relation.EQ)
+        smt2interface.assert_constraint(rf1_constraint)
+        smt2interface.assert_constraint(rf2_constraint)
+    else:
+        safe_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, safe_relation)
+        bad_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, bad_relation)
+
+
     threshold_constraint = Constraint(pc.Polynomial(thresholdVar) - threshold, Relation.EQ)
 
-    rf1_constraint = Constraint(rf1Var - pc.numerator(result.ratfunc), Relation.EQ)
-    rf2_constraint = Constraint(rf2Var - pc.denominator(result.ratfunc), Relation.EQ)
     smt2interface.assert_constraint(threshold_constraint)
-    smt2interface.assert_constraint(rf1_constraint)
-    smt2interface.assert_constraint(rf2_constraint)
     smt2interface.assert_guarded_constraint("__safe", safe_constraint)
     smt2interface.assert_guarded_constraint("__bad", bad_constraint)
 
-    #TODO why do we only do this if the denominator is 1
-    if pc.denominator(result.ratfunc) == pc.Rational(1):
-        if rat_func_bound.left_bound() is not None:
-            ineq_type = Relation.GEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.GREATER
-            lbound = Constraint(pc.Polynomial(rf1Var), ineq_type)
-            smt2interface.assert_constraint(lbound)
-        if rat_func_bound.right_bound() is not None:
-            ineq_type = Relation.LEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.LESS
-            ubound = Constraint(pc.Polynomial(rf1Var) - 1, ineq_type)
-            smt2interface.assert_constraint(ubound)
+
 
 class Answer(Enum):
     sat = 0

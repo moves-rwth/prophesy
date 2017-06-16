@@ -102,6 +102,10 @@ class InstantiationResult(object):
     def get_parameters(self):
         return self.instantiation.get_parameters()
 
+    @classmethod
+    def from_point(cls, pt, res, parameters):
+        return cls(ParameterInstantiation.from_point(pt, parameters), res)
+
 
 
 
@@ -120,6 +124,9 @@ class InstantiationResultDict():
 
     def has(self, instantiation):
         return instantiation in self._values
+
+    def remove(self, instantiation):
+        del self._values[instantiation]
 
     def _parameters_check(self):
         """
@@ -167,7 +174,15 @@ class InstantiationResultDict():
                 below_threshold._values[k] = v
         return above_threshold, below_threshold
 
-    def filter(self, filter_func):
+
+    def filter_instantiation(self, filter_func):
+        filtered = InstantiationResultDict(self.parameters)
+        for k,v in self._values.items():
+            if filter_func(k):
+                filtered._values[k] = v
+        return filtered
+
+    def filter_value(self, filter_func):
         """Returns samples for which filter_func returns true.
         @param samples SampleDict
         @param filter_func callable to filter values, return True to keep sample

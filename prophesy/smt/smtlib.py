@@ -3,7 +3,7 @@ import functools
 import logging
 from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
-from prophesy.adapter.pycarl import Constraint, Formula
+from prophesy.adapter.pycarl import Constraint, Formula, Rational
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def constraint_to_smt2(constraint):
     return str(constraint)
 
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location, memout = 4000, timeout = 100):
+    def __init__(self, location, memout = 4000, timeout = 100, incremental=True):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
@@ -33,33 +33,57 @@ class SmtlibSolver(SMTSolver):
         self.memout = memout # Mem limit in Mbyte
         self.timeout = timeout#*1000 # Soft timeout in seconds
         self.status = [""]
+        self.exit_stored = True
+        self.incremental = incremental
+        self.nr_variables = 0
 
     def _write(self, data):
         # Function to write+flush stdin, which may close after issuing a command
         stdin = self.process.stdin
         if stdin is not None:
             try:
+                logger.debug("Write %s",data)
                 stdin.write(data)
                 stdin.flush()
             except:
                 # Ignore the error, process will die on its own
                 pass
 
+    def _additional_args(self):
+        return []
+
+    def _hard_timeout_option(self):
+        return ""
+
+    def _memout_option(self):
+        return [""]
+
     def run(self):
         if self.process is None:
-            args = [self.location, "-smt2", "-in", "-T:" + str(self.timeout), "-memory:" + str(self.memout)]
+            args = [self.location, self._hard_timeout_option()]
+            args += self._memout_option()
+            args += self._additional_args()
             self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                             stderr=subprocess.STDOUT, universal_newlines=True)
-            self._write("".join(self.status))
+            if self.incremental:
+                self._write(self.formula)
+                self._write("".join(self.status))
 
         else:
             raise RuntimeError("The solver can only be started once")
 
-    def stop(self):
+    def stop(self, store_exit=True):
+        logger.debug("Stop solver (definitive: %s)", store_exit)
         if self.process is not None:
-            self.string += "(exit)\n"
+            if store_exit:
+                self.string += "(exit)\n"
+            else:
+                self.exit_stored = False
             self._write("(exit)\n")
             self.process = None
+        elif self.exit_stored == False:
+            self.string += "(exit)\n"
+            self.exit_stored = True
 
     def name(self):
         return "smtlib-interface"
@@ -71,6 +95,9 @@ class SmtlibSolver(SMTSolver):
 
     def check(self):
         assert self.process is not None
+        if not self.incremental:
+            self._write(self.formula)
+            self._write("".join(self.status))
         s = "(check-sat)\n"
         self.string += s
         logging.info("Call %s..", self.name())
@@ -82,6 +109,9 @@ class SmtlibSolver(SMTSolver):
             output = line.rstrip()
             logger.info("SMT result:\t" + output)
             if output == "unsat":
+                if not self.incremental:
+                    self.stop()
+                    self.run()
                 return Answer.unsat
             elif output == "sat":
                 return Answer.sat
@@ -98,7 +128,7 @@ class SmtlibSolver(SMTSolver):
                 self.run()
                 return Answer.killed
             elif output == "timeout":
-                self.stop()
+                self.stop(False)
                 self.run()
                 return Answer.timeout
             else:
@@ -111,37 +141,44 @@ class SmtlibSolver(SMTSolver):
         return Answer.killed
 
     def push(self):
-        if self.process is None:
-            return
+        logger.debug("Push [%s]", len(self.status))
+
         s = "(push)\n"
         self.string += s
-        self._write(s)
-        self.status.append(s)
+        if self.incremental:
+            self._write(s)
+            self.status.append(s)
+        else:
+            self.status.append("")
 
     def pop(self):
-        if self.process is None:
-            return
+        logger.debug("Pop [%s]: %s", len(self.status),  self.status[-1],)
+        self.status.pop()
         s = "(pop)\n"
         self.string += s
-        self._write(s)
-        self.status.pop()
+        if self.incremental:
+            self._write(s)
 
     def add_variable(self, symbol, domain = VariableDomain.Real):
+        self.nr_variables += 1
         s = "(declare-fun " + str(symbol) + " () " + domain.name + ")\n"
         self.string += s
-        self._write(s)
+        if self.incremental:
+            self._write(s)
         self.status[-1] += s
 
     def assert_constraint(self, constraint):
         s = "(assert " + constraint_to_smt2(constraint) + " )\n"
         self.string += s
-        self._write(s)
+        if self.incremental:
+            self._write(s)
         self.status[-1] += s
 
     def assert_guarded_constraint(self, guard, constraint):
         s = "(assert (=> " + guard + " " + constraint_to_smt2(constraint) + " ))\n"
         self.string += s
-        self._write(s)
+        if self.incremental:
+            self._write(s)
         self.status[-1] += s
 
     def set_guard(self, guard, value):
@@ -150,13 +187,14 @@ class SmtlibSolver(SMTSolver):
         else:
             s = "(assert (not " + guard + " ))\n"
         self.string += s
-        self._write(s)
+        if self.incremental:
+            self._write(s)
         self.status[-1] += s
 
-    def get_model(self):
-        s = "(get-model)\n"
-        self.string += s
-        self._write(s)
+    def _build_model(self, output):
+        raise NotImplementedError("General case not implemented")
+
+    def _read_model(self):
         output = ""
         for line in iter(self.process.stdout.readline, ""):
             if self.process.poll() is not None:
@@ -164,17 +202,19 @@ class SmtlibSolver(SMTSolver):
             output += line.rstrip()
             if output.count('(') == output.count(')'):
                 break
-        print("** model result:\t" + output)
-        model = {}
-        (cmd, model_cmds) = parse_smt_command(output)
-        if cmd == "error":
-            raise RuntimeError("SMT Error in get_model(). Input:\n{}".format(self.string))
-        for cmd in model_cmds:
-            (_, args) = parse_smt_command(cmd)
-            if args[2] == "Real":
-                model[args[0]] = parse_smt_expr(args[3])
-        self.stop()
-        self.run()
+        return output
+
+    def get_model(self):
+        s = "(get-model)\n"
+        self.string += s
+        self._write(s)
+        output = self._read_model()
+        logger.debug("** model result:\t" + output)
+        model = self._build_model(output)
+        #TODO why?
+        if not self.incremental:
+            self.stop()
+            self.run()
         return model
 
     def from_file(self, path):
@@ -200,8 +240,12 @@ def parse_smt_expr(expr):
         return functools.reduce(lambda x, y: x*y, args, 1)
     elif cmd == "/":
         return functools.reduce(lambda x, y: x/y, args)
+    elif cmd == "true":
+        return True
+    elif cmd == "false":
+        return False
     else:
-        return float(cmd)
+        return Rational(cmd)
 
 def parse_smt_command(command):
     """Breaks the given SMT command "(CMD ARG ARG ARG)" into tuple (CMD, [ARG]),

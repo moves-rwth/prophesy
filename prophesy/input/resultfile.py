@@ -3,7 +3,7 @@ import logging
 
 from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
-from prophesy.adapter.pycarl import Rational, Variable, parse, RationalFunction
+import prophesy.adapter.pycarl as pc
 from prophesy.data.constraint import parse_constraint
 from prophesy.adapter.pycarl  import Constraint, Relation
 
@@ -44,12 +44,12 @@ def read_pstorm_result(location):
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
-            var = Variable(name_and_info[0].strip())
+            var = pc.Variable(name_and_info[0].strip())
             if len(name_and_info) == 1:
-                bound = interval.Interval(Rational(0), interval.BoundType.open,
-                    Rational(1), interval.BoundType.open)
+                bound = interval.Interval(pc.Rational(0), interval.BoundType.open,
+                    pc.Rational(1), interval.BoundType.open)
             else:
-                bound = interval.string_to_interval(name_and_info[1], Rational)
+                bound = interval.string_to_interval(name_and_info[1], pc.Rational)
             parameters.append(Parameter(var, bound))
     logger.debug("Parameters: %s", str(parameters))
 
@@ -78,12 +78,14 @@ def read_pstorm_result(location):
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
     logger.debug("Building rational function...")
     l = match.split('/')
-    num = parse(l[0])
+    num = pc.parse(l[0])
     if len(l) > 1:
-        denom = parse(l[1])
+        denom = pc.parse(l[1])
         ratfunc = num/denom
     else:
         ratfunc = num
+        if isinstance(ratfunc, pc.Monomial):
+            ratfunc = pc.Polynomial(ratfunc)
 
     logger.debug("Parsing complete.")
     return ParametricResult(parameters, constraints, ratfunc)
@@ -107,7 +109,7 @@ def read_param_result(location):
     parameter_strings = inputs[1][1:-1].split(", ")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
-            var = Variable(parameter_string.strip().strip())
+            var = pc.Variable(parameter_string.strip().strip())
             bound = interval.Interval(0.0, interval.BoundType.open,
                 1.0, interval.BoundType.open)
             parameters.append(Parameter(var, bound))
@@ -126,6 +128,6 @@ def read_param_result(location):
 
     # Build rational function
     logger.debug("Parsing rational function")
-    ratfunc = RationalFunction(parse(inputs[3]))
+    ratfunc = pc.RationalFunction(parse(inputs[3]))
 
     return ParametricResult(parameters, constraints, ratfunc)

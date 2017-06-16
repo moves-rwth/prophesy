@@ -3,10 +3,12 @@ import pycarl.gmp
 import pycarl.gmp.formula
 import pycarl.gmp.parse
 
+
 Variable = pycarl.Variable
 VariableType = pycarl.VariableType
 Integer = pycarl.gmp.Integer
 Rational = pycarl.gmp.Rational
+Monomial = pycarl.Monomial
 Polynomial = pycarl.gmp.Polynomial
 RationalFunction = pycarl.gmp.RationalFunction
 

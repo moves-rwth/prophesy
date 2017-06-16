@@ -55,6 +55,7 @@ def parse_cli_args(args, solversConfig):
     return parser.parse_args(args)
 
 def run(args = sys.argv[1:], interactive=True):
+    interactive = False #TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
     cmdargs = parse_cli_args(args, solvers)
 
@@ -123,10 +124,11 @@ def run(args = sys.argv[1:], interactive=True):
     if interactive:
         open_file(generator.result_file)
 
+    smt2interface.stop()
+
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
 
-    smt2interface.stop()
 
 
 if __name__ == "__main__":
