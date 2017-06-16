@@ -85,6 +85,14 @@ class ProphesyConfig(Configuration):
             except:
                 raise ConfigurationError("Z3 is not found at " + z3_loc)
 
+        yices_loc = self.get_yices()
+        if yices_loc:
+            try:
+                util.run_tool([yices_loc, '-h'], True)
+                self.smtsolvers.add('yices')
+            except:
+                raise ConfigurationError("Yices is not found at " + yices_loc)
+
         isat_loc = self.get_isat()
         if isat_loc:
             try:
@@ -113,6 +121,10 @@ class ProphesyConfig(Configuration):
 
     def get_z3(self):
         tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "z3")
+        return tool_loc if tool_loc else None
+
+    def get_yices(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "yices")
         return tool_loc if tool_loc else None
 
     def get_isat(self):

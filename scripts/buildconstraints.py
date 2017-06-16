@@ -17,6 +17,7 @@ from prophesy.smt.isat import IsatSolver
 from prophesy.smt.smt import setup_smt
 from prophesy.smt.smtlib import SmtlibSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy import config
 from prophesy.config import configuration
 
@@ -40,8 +41,9 @@ def parse_cli_args(args, solversConfig):
     method_group.add_argument('--poly', action='store_true', dest='poly')
 
     solvers_group = parser.add_mutually_exclusive_group(required=not solversConfig)
-    solvers_group.add_argument('--z3', dest='z3location', help='location of z3')
-    solvers_group.add_argument('--isat', dest='isatlocation', help='location of isat')
+    solvers_group.add_argument('--z3', action='store_true', help='location of z3')
+    solvers_group.add_argument('--isat', action='store_true', help='location of isat')
+    solvers_group.add_argument('--yices', action='store_true', help="location of yices")
 
     parser.add_argument('--solver-timeout', help='timeout (s) for solver backend', default=50, type=int)
     parser.add_argument('--solver-memout', help='memout (MB) for solver backend', default=4000, type=int)
@@ -80,16 +82,20 @@ def run(args = sys.argv[1:], interactive=True):
 
 
     logger.debug("Setup SMT interface")
-    if cmdargs.z3location:
-        smt2interface = Z3CliSolver(cmdargs.z3location, timeout=cmdargs.solver_timeout, memout=cmdargs.solver_memout)
-    elif cmdargs.isatlocation:
-        smt2interface = IsatSolver(cmdargs.isatlocation)
-    elif 'z3' in solvers:
+    if cmdargs.z3:
+        if 'z3' not in solvers:
+            raise RuntimeError("Z3 location not configured.")
         smt2interface = Z3CliSolver()
-    elif 'isat' in solvers:
+    elif cmdargs.yices:
+        if 'yices' not in solvers:
+            raise RuntimeError("Yices location not configured.")
+        smt2interface = YicesCLISolver()
+    elif cmdargs.isat:
+        if 'prism' not in pmcs:
+            raise RuntimeError("ISat location not configured.")
         smt2interface = IsatSolver()
     else:
-        raise RuntimeError("No supported SMT defined")
+        raise RuntimeError("No supported smt solver defined")
 
     smt2interface.run()
 

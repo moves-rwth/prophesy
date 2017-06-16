@@ -73,7 +73,7 @@ class SmtlibSolver(SMTSolver):
         assert self.process is not None
         s = "(check-sat)\n"
         self.string += s
-        logging.info("Call smt-solver..")
+        logging.info("Call %s..", self.name())
         self._write(s)
 
         for line in iter(self.process.stdout.readline, ""):
