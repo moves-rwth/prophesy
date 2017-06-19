@@ -12,6 +12,7 @@ class ProphesyConfig(Configuration):
     SAMPLING = "sampling"
     CONSTRAINTS = "constraints"
     DEPENDENCIES = "installed_deps"
+    SMT = "smt"
 
     def __init__(self):
         super().__init__(os.path.join(os.path.dirname(
@@ -84,6 +85,14 @@ class ProphesyConfig(Configuration):
             except:
                 raise ConfigurationError("Z3 is not found at " + z3_loc)
 
+        yices_loc = self.get_yices()
+        if yices_loc:
+            try:
+                util.run_tool([yices_loc, '-h'], True)
+                self.smtsolvers.add('yices')
+            except:
+                raise ConfigurationError("Yices is not found at " + yices_loc)
+
         isat_loc = self.get_isat()
         if isat_loc:
             try:
@@ -114,6 +123,10 @@ class ProphesyConfig(Configuration):
         tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "z3")
         return tool_loc if tool_loc else None
 
+    def get_yices(self):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "yices")
+        return tool_loc if tool_loc else None
+
     def get_isat(self):
         tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "isat")
         return tool_loc if tool_loc else None
@@ -141,6 +154,9 @@ class ProphesyConfig(Configuration):
     def get_regions_precision(self):
         # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
         return float(self.get(ProphesyConfig.CONSTRAINTS, "precision"))
+
+    def get_smt_timeout(self):
+        return float(self.get(ProphesyConfig.SMT, "timeout"))
 
     def getSection(self, sec):
         return self.getAll()[sec]

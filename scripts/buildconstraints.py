@@ -3,9 +3,9 @@
 from argparse import ArgumentParser
 
 import sys
+import logging
 
-from shapely.geometry.polygon import Polygon
-
+import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import ConstraintQuads
 from prophesy.regions.region_smtchecker import SmtRegionChecker
@@ -17,9 +17,11 @@ from prophesy.smt.isat import IsatSolver
 from prophesy.smt.smt import setup_smt
 from prophesy.smt.smtlib import SmtlibSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
-
+from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy import config
 from prophesy.config import configuration
+
+logger = logging.getLogger(__name__)
 
 def parse_cli_args(args, solversConfig):
     parser = ArgumentParser(description='Build regions based on a sample file')
@@ -39,8 +41,9 @@ def parse_cli_args(args, solversConfig):
     method_group.add_argument('--poly', action='store_true', dest='poly')
 
     solvers_group = parser.add_mutually_exclusive_group(required=not solversConfig)
-    solvers_group.add_argument('--z3', dest='z3location', help='location of z3')
-    solvers_group.add_argument('--isat', dest='isatlocation', help='location of isat')
+    solvers_group.add_argument('--z3', action='store_true', help='location of z3')
+    solvers_group.add_argument('--isat', action='store_true', help='location of isat')
+    solvers_group.add_argument('--yices', action='store_true', help="location of yices")
 
     parser.add_argument('--solver-timeout', help='timeout (s) for solver backend', default=50, type=int)
     parser.add_argument('--solver-memout', help='memout (MB) for solver backend', default=4000, type=int)
@@ -52,6 +55,7 @@ def parse_cli_args(args, solversConfig):
     return parser.parse_args(args)
 
 def run(args = sys.argv[1:], interactive=True):
+    interactive = False #TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
     cmdargs = parse_cli_args(args, solvers)
 
@@ -61,40 +65,44 @@ def run(args = sys.argv[1:], interactive=True):
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
 
-    print("Loading samples")
-    variables, samples_threshold, samples = read_samples_file(cmdargs.samples_file, result.parameters.get_variables())
-    if result.parameters.get_variables() != variables:
+    logger.debug("Loading samples")
+    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, result.parameters)
+    if result.parameters != sample_parameters:
         raise RuntimeError("Sampling and Result parameters are not equal")
 
     if cmdargs.threshold:
-        threshold = cmdargs.threshold
+        threshold = pc.Rational(cmdargs.threshold)
     else:
-        print("Using threshold from samples file.")
+        logger.debug("Using threshold from samples file.")
         threshold = samples_threshold
 
-    if threshold == None:
+    if threshold is None:
         raise RuntimeError("No threshold specified via command line or samples file.")
-    print("Threshold: {}".format(threshold))
+    logger.debug("Threshold: {}".format(threshold))
 
 
 
-    print("Setup SMT interface")
-    if cmdargs.z3location:
-        smt2interface = Z3CliSolver(cmdargs.z3location, timeout=cmdargs.solver_timeout, memout=cmdargs.solver_memout)
-    elif cmdargs.isatlocation:
-        smt2interface = IsatSolver(cmdargs.isatlocation)
-    elif 'z3' in solvers:
-        smt2interface = Z3CliSolver(configuration.get(config.EXTERNAL_TOOLS, "z3"))
-    elif 'isat' in solvers:
-        smt2interface = IsatSolver(configuration.get(config.EXTERNAL_TOOLS, "isat"))
+    logger.debug("Setup SMT interface")
+    if cmdargs.z3:
+        if 'z3' not in solvers:
+            raise RuntimeError("Z3 location not configured.")
+        smt2interface = Z3CliSolver()
+    elif cmdargs.yices:
+        if 'yices' not in solvers:
+            raise RuntimeError("Yices location not configured.")
+        smt2interface = YicesCLISolver()
+    elif cmdargs.isat:
+        if 'prism' not in pmcs:
+            raise RuntimeError("ISat location not configured.")
+        smt2interface = IsatSolver()
     else:
-        raise RuntimeError("No supported SMT defined")
+        raise RuntimeError("No supported smt solver defined")
 
     smt2interface.run()
 
     setup_smt(smt2interface, result, threshold)
 
-    print("Generating regions")
+    logger.info("Generating regions")
     checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
     arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
@@ -105,23 +113,22 @@ def run(args = sys.argv[1:], interactive=True):
     elif cmdargs.poly:
         generator = ConstraintPolygon(*arguments)
         # For testing
-        generator.add_polygon(Polygon([(0, 0), (0.5, 0.5), (0.5, 0)]), False)
-        generator.add_polygon(Polygon([(1, 0.25), (0.75, 0.5), (0.5, 0.25)]), False)
     else:
         assert False
 
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter = cmdargs.iterations)
+        generator.generate_constraints(max_iter=cmdargs.iterations)
     else:
-        generator.generate_constraints(max_area = cmdargs.area)
+        generator.generate_constraints(max_area=cmdargs.area)
 
     if interactive:
         open_file(generator.result_file)
 
+    smt2interface.stop()
+
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
 
-    smt2interface.stop()
 
 
 if __name__ == "__main__":

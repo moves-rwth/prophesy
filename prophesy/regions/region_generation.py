@@ -23,9 +23,6 @@ class RegionGenerator:
     __metaclass__ = ABCMeta
 
     def __init__(self, samples, parameters, threshold, threshold_area, checker, _ratfunc):
-        if len(parameters) != 2:
-            raise NotImplementedError
-
         self.samples = samples.copy()
         self.parameters = parameters
         self.threshold = threshold
@@ -42,7 +39,7 @@ class RegionGenerator:
         self.bad_polys = []
         self.new_samples = {}
 
-        self.plot = True
+        self.plot = len(self.parameters) <= 2
         self.first_pdf = True
         ensure_dir_exists(configuration.get_plots_dir())
         _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=configuration.get_plots_dir())
@@ -91,6 +88,7 @@ class RegionGenerator:
     def plot_results(self, *args, **kwargs):
         if not self.plot:
             return
+
         # Extend arguments
         poly_green = kwargs.get('poly_green', [])
         kwargs['poly_green'] = poly_green + self.safe_polys
@@ -99,6 +97,8 @@ class RegionGenerator:
 
         # Split samples appropriately
         samples_green, samples_red = self.samples.split(self.threshold)
+        samples_green = [res.instantiation.get_point(self.parameters) for res in samples_green.instantiation_results()]
+        samples_red = [res.instantiation.get_point(self.parameters) for res in samples_red.instantiation_results()]
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
@@ -161,7 +161,7 @@ class RegionGenerator:
         assert False
 
 
-    def generate_constraints(self, max_iter=-1, max_area=1.0):
+    def generate_constraints(self, max_iter=-1, max_area=1):
         """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
         max_iter: Number of regions to generate/check at most (not counting SMT failures),
@@ -190,7 +190,7 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if len(self.all_polys) % 20 == 0:
+            if len(self.all_polys) % 4 == 0:
                 self.plot_results(display=False)
 
         # Plot the final outcome
@@ -201,24 +201,24 @@ class RegionGenerator:
 
         return self.safe_polys, self.bad_polys, self.new_samples
 
+
     def _analyse_region(self, polygon, safe):
         checkresult, additional = self.checker.analyse_region(polygon, safe)
         if checkresult == RegionCheckResult.unsat:
             # remove unnecessary samples which are covered already by regions
-            for pt in list(self.samples.keys()):
-                if isinstance(polygon, HyperRectangle):
-                    if polygon.contains(pt):
-                        del self.samples[pt]
-                else:
-                    if shapely.geometry.Point(*pt).within(polygon):
-                        del self.samples[pt]
+            self.samples = self.samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
+
+            # TODO make the code above work with the polygons, as below.
+            #for instantiation, _ in self.samples:
+            #        if shapely.geometry.Point(*pt).within(polygon):
+            #            del self.samples[pt]
 
             # update everything in the algorithm according to correct new area
             self.accept_constraint(polygon, safe)
             return checkresult, (polygon, safe)
         elif checkresult == RegionCheckResult.sat:
             # add new point as counter example to existing regions
-            self.samples.add_sample(additional)
+            self.samples.add_result(additional)
             self.reject_constraint(polygon, safe, additional)
             return checkresult, (additional, safe)
         else:

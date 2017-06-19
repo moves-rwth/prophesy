@@ -2,9 +2,11 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 import logging
 
-from prophesy.adapter.pycarl import Variable, VariableType, Rational, Polynomial
+import prophesy.adapter.pycarl as pc
+import pycarl
 from prophesy.data.interval import Interval, BoundType
 from prophesy.adapter.pycarl import Constraint, Relation
+
 
 # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
 # TODO this method has to change, if we also support direct encoding of the lin eq system.
@@ -16,14 +18,14 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
         logging.debug(result.parameter_constraints)
         smt2interface.assert_constraint(constr)
 
-    rat_vars = result.parameters.get_variable_order()
+    rat_vars = result.parameters.get_variables()
     vars = rat_vars
 
-    safeVar = Variable("__safe", VariableType.BOOL)
-    badVar = Variable("__bad", VariableType.BOOL)
-    thresholdVar = Variable("T")
-    rf1Var = Variable("rf1")
-    rf2Var = Variable("rf2")
+    safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
+    badVar = pc.Variable("__bad", pc.VariableType.BOOL)
+    thresholdVar = pc.Variable("T")
+    rf1Var = pc.Variable("rf1")
+    rf2Var = pc.Variable("rf2")
 
     vars.append(safeVar)
     vars.append(badVar)
@@ -34,35 +36,32 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     smt2interface.add_variable(safeVar, VariableDomain.Bool)
     smt2interface.add_variable(badVar, VariableDomain.Bool)
     smt2interface.add_variable(thresholdVar, VariableDomain.Real)
-    smt2interface.add_variable(rf1Var, VariableDomain.Real)
-    smt2interface.add_variable(rf2Var, VariableDomain.Real)
 
-    safe_relation = Relation.GEQ
-    bad_relation = Relation.LESS
 
-    safe_constraint = Constraint(rf1Var - thresholdVar * rf2Var, safe_relation)
-    bad_constraint = Constraint(rf1Var - thresholdVar * rf2Var, bad_relation)
-    #TODO: pycarl cannot deal with float everywhere, cast to rational
-    threshold_constraint = Constraint(thresholdVar - threshold, Relation.EQ)
+    safe_relation = pc.Relation.GEQ
+    bad_relation = pc.Relation.LESS
 
-    rf1_constraint = Constraint(rf1Var - pycarl.numerator(result.ratfunc), Relation.EQ)
-    rf2_constraint = Constraint(rf2Var - pycarl.denominator(result.ratfunc), Relation.EQ)
+    if pc.denominator(result.ratfunc) != 1:
+        smt2interface.add_variable(rf1Var, VariableDomain.Real)
+        smt2interface.add_variable(rf2Var, VariableDomain.Real)
+        safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
+        bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, bad_relation)
+        rf1_constraint = Constraint(rf1Var - pc.numerator(result.ratfunc), Relation.EQ)
+        rf2_constraint = Constraint(rf2Var - pc.denominator(result.ratfunc), Relation.EQ)
+        smt2interface.assert_constraint(rf1_constraint)
+        smt2interface.assert_constraint(rf2_constraint)
+    else:
+        safe_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, safe_relation)
+        bad_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, bad_relation)
+
+
+    threshold_constraint = Constraint(pc.Polynomial(thresholdVar) - threshold, Relation.EQ)
+
     smt2interface.assert_constraint(threshold_constraint)
-    smt2interface.assert_constraint(rf1_constraint)
-    smt2interface.assert_constraint(rf2_constraint)
     smt2interface.assert_guarded_constraint("__safe", safe_constraint)
     smt2interface.assert_guarded_constraint("__bad", bad_constraint)
 
-    #TODO why do we only do this if the denominator is 1
-    if pycarl.denominator(result.ratfunc) == Rational(1):
-        if rat_func_bound.left_bound() != None:
-            ineq_type = Relation.GEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.GREATER
-            lbound = Constraint(Polynomial(rf1Var), ineq_type)
-            smt2interface.assert_constraint(lbound)
-        if rat_func_bound.right_bound() != None:
-            ineq_type = Relation.LEQ if rat_func_bound.left_bound_type() == BoundType.closed else Relation.LESS
-            ubound = Constraint(Polynomial(rf1Var) - 1, ineq_type)
-            smt2interface.assert_constraint(ubound)
+
 
 class Answer(Enum):
     sat = 0

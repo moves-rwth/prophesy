@@ -4,6 +4,9 @@ from shapely.geometry.polygon import orient
 
 class ConstraintPolygon(RegionGenerator):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
+        if len(parameters) != 2:
+            raise NotImplementedError
+
         RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
         self.safe_polygons = []

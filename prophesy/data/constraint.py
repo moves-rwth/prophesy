@@ -1,5 +1,5 @@
 
-from prophesy.adapter.pycarl  import Relation, Constraint, SimpleConstraint
+import prophesy.adapter.pycarl  as pc
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
 from prophesy.adapter.pycarl  import Polynomial, Rational, parse
@@ -15,13 +15,13 @@ def parse_constraint(constraint_str):
 
 def parse_relation(relation_string):
     if relation_string == ">=":
-        return Relation.GEQ
+        return pc.Relation.GEQ
     elif relation_string == "<=":
-        return Relation.LEQ
+        return pc.Relation.LEQ
     elif relation_string == "<":
-        return Relation.LESS
+        return pc.Relation.LESS
     elif relation_string == ">":
-        return Relation.GREATER
+        return pc.Relation.GREATER
     raise ValueError("Cannot parse {} as a relation".format(relation_string))
 
 def region_from_hyperrectangle(hyperrectangle, variables):
@@ -32,14 +32,14 @@ def region_from_hyperrectangle(hyperrectangle, variables):
     """
     constraint = None
     for variable, interval in zip(variables, hyperrectangle.intervals):
-        lbound_relation = Relation.GEQ if interval.left_bound_type() == BoundType.closed else Relation.GREATER
-        lbound = Constraint(variable-interval.left_bound(), lbound_relation)
+        lbound_relation = pc.Relation.GEQ if interval.left_bound_type() == BoundType.closed else pc.Relation.GREATER
+        lbound = pc.Constraint(pc.Polynomial(variable)-interval.left_bound(), lbound_relation)
         if constraint is None:
             constraint = lbound
         else:
             constraint = constraint & lbound
-        rbound_relation = Relation.LEQ if interval.right_bound_type() == BoundType.closed else Relation.LESS
-        rbound = Constraint(variable-interval.right_bound(), rbound_relation)
+        rbound_relation = pc.Relation.LEQ if interval.right_bound_type() == BoundType.closed else pc.Relation.LESS
+        rbound = pc.Constraint(pc.Polynomial(variable)-interval.right_bound(), rbound_relation)
         constraint = constraint & rbound
     return constraint
 
@@ -80,7 +80,7 @@ def region_from_polygon(polygon, variables):
                     poly = poly + variable * coefficient
 
             # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
-            new_constraint = Constraint(poly, Relation.LEQ)
+            new_constraint = pc.Constraint(poly, pc.Relation.LEQ)
             if constraint is None:
                 constraint = new_constraint
             else:
