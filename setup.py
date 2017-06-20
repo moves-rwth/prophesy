@@ -58,7 +58,7 @@ setup(
              'scripts/modelsampling.py',
              'scripts/prismfiletoratfunc.py',
              'scripts/ratfilesampling.py',
-             'scripts/webcegar'],
+             'scripts/webcegar.py'],
     cmdclass={
         'build': ConfigBuild,
         'test': Tox
