@@ -47,7 +47,6 @@ def test_script():
                         "--samples-file",
                         os.path.join(EXAMPLE_FOLDER, "{}{}.samples".format(name, benchmark)),
                         "--z3",
-                        "z3",
                         "--threshold",
                         str(threshold),
                         END_CRITERIA,
