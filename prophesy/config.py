@@ -107,29 +107,27 @@ class ProphesyConfig(Configuration):
 
         self.samplers['ratfunc'] = "Rational function"
 
+    def get_tool(self, toolname):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, toolname)
+        return os.path.expanduser(tool_loc) if tool_loc else None
+
     def get_storm(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "storm")
-        return tool_loc if tool_loc else None
+        return self.get_tool("storm")
 
     def get_prism(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "prism")
-        return tool_loc if tool_loc else None
+        return self.get_tool("prism")
 
     def get_param(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "param")
-        return tool_loc if tool_loc else None
+        return self.get_tool("param")
 
     def get_z3(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "z3")
-        return tool_loc if tool_loc else None
+        return self.get_tool("z3")
 
     def get_yices(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "yices")
-        return tool_loc if tool_loc else None
+        return self.get_tool("yices")
 
     def get_isat(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "isat")
-        return tool_loc if tool_loc else None
+        return self.get_tool("isat")
 
     def get_intermediate_dir(self):
         dir = self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
