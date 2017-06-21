@@ -1,5 +1,6 @@
 import prophesy.data.interval
 
+
 class Parameter(object):
     """Class representing a parameter, which is a variable with an associated
     interval of allowable values.
@@ -18,6 +19,7 @@ class Parameter(object):
 
     def __repr__(self):
         return "Parameter({!r}, {!r})".format(self.variable, self.interval)
+
 
 class ParameterOrder(list):
     """Class to represent on ordered list of parameters
@@ -52,12 +54,10 @@ class ParameterOrder(list):
     def make_intervals_closed(self, epsilon):
         """
         For several applications, we want to have an embedded closed interval 
-        :param epsilon: How far from an open bound should the embedded interal-bound be away
+        :param epsilon: How far from an open bound should the embedded interval-bound be away
         """
         for p in self:
             p.interval = prophesy.data.interval.create_embedded_closed_interval(p.interval, epsilon)
 
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))
-
-

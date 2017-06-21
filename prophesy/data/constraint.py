@@ -1,9 +1,9 @@
-
-import prophesy.adapter.pycarl  as pc
+import prophesy.adapter.pycarl as pc
+from prophesy.adapter.pycarl import Polynomial, Rational, parse
 from prophesy.data.interval import BoundType
 from shapely.geometry.polygon import LinearRing, Polygon, orient
-from prophesy.adapter.pycarl  import Polynomial, Rational, parse
 from prophesy.data.samples import ParameterInstantiation
+
 
 def parse_constraint(constraint_str):
     args = constraint_str.split(",")
@@ -12,6 +12,7 @@ def parse_constraint(constraint_str):
     res = parse(args[0])
     rel = parse_relation(args[1])
     return res
+
 
 def parse_relation(relation_string):
     if relation_string == ">=":
@@ -23,6 +24,7 @@ def parse_relation(relation_string):
     elif relation_string == ">":
         return pc.Relation.GREATER
     raise ValueError("Cannot parse {} as a relation".format(relation_string))
+
 
 def region_from_hyperrectangle(hyperrectangle, variables):
     """Given HyperRectangle and VariableOrder, compute constraints
@@ -42,6 +44,7 @@ def region_from_hyperrectangle(hyperrectangle, variables):
         rbound = pc.Constraint(pc.Polynomial(variable)-interval.right_bound(), rbound_relation)
         constraint = constraint & rbound
     return constraint
+
 
 def region_from_polygon(polygon, variables):
         """Compute regions from polygon (Polygon, LineString or LinearRing)
@@ -87,6 +90,7 @@ def region_from_polygon(polygon, variables):
                 constraint = constraint & new_constraint
 
         return constraint
+
 
 def is_point_fulfilling_constraint(pt, constraint):
     """Check whether the given point is satisfied by the regions

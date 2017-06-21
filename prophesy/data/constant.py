@@ -1,5 +1,6 @@
 import prophesy.adapter.pycarl as pc
 
+
 class Constant(object):
     """
     A variable and its constant value.

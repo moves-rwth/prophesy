@@ -1,9 +1,11 @@
-import prophesy.util as util
 import os
+import logging
+
+import prophesy.util as util
 from prophesy.adapter.pycarl import Integer, Rational
 from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
-import logging
+
 
 class ProphesyConfig(Configuration):
     # section names
@@ -20,7 +22,7 @@ class ProphesyConfig(Configuration):
         self._init_tools()
 
     def is_module_available(self, module):
-        return self.getboolean(ProphesyConfig.DEPENDENCIES, module)
+        return self.get_boolean(ProphesyConfig.DEPENDENCIES, module)
 
     def getAvailableSMTSolvers(self):
         if len(self.smtsolvers) == 0:
@@ -41,6 +43,8 @@ class ProphesyConfig(Configuration):
         return self.ppmcs
 
     def getAvailableSamplers(self):
+        if len(self.samplers) == 0:
+            raise RuntimeError("No sampler in environment")
         return self.samplers
 
     def _init_tools(self):
@@ -141,31 +145,32 @@ class ProphesyConfig(Configuration):
 
     def get_sampling_min_distance(self):
         # Minimum distance between points to allow further sampling
-        return float(self.get(ProphesyConfig.SAMPLING, "distance"))
+        return self.get_float(ProphesyConfig.SAMPLING, "distance")
 
     def get_sampling_epsilon(self):
         # Smallest discernable difference for intervals (used for strict bounds)
         return Rational(Integer(1), Integer(800))
         # TODO why is the following commented out.
-        # return float(self.get(ProphesyConfig.SAMPLING, "epsilon"))
+        # return self.get_float(ProphesyConfig.SAMPLING, "epsilon")
 
     def get_regions_precision(self):
         # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
-        return float(self.get(ProphesyConfig.CONSTRAINTS, "precision"))
+        return self.get_float(ProphesyConfig.CONSTRAINTS, "precision")
 
     def get_smt_timeout(self):
-        return float(self.get(ProphesyConfig.SMT, "timeout"))
+        return self.get_float(ProphesyConfig.SMT, "timeout")
 
     def getSection(self, sec):
         return self.getAll()[sec]
 
 configuration = ProphesyConfig()
 
+# TODO Put in config
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
 
-logging.basicConfig(filename='prophesy.log',level=logging.DEBUG)
+logging.basicConfig(filename='prophesy.log', level=logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)

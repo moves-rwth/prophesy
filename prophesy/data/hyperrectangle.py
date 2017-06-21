@@ -1,6 +1,7 @@
 from prophesy.data.interval import Interval
 from prophesy.data.point import Point
 
+# TOOD remove numpy?
 import numpy as np
 
 class HyperRectangle(object):

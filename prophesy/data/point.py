@@ -1,4 +1,5 @@
 import math
+
 from prophesy.adapter.pycarl import Rational, Integer
 from prophesy.data.nice_approximation import FixedDenomFloatApproximation
 
@@ -11,7 +12,7 @@ def _sqrt_approx(i):
     orig_type = type(i)
     if not isinstance(i, (int, float)):
         # if i is a rational number for which the sqrt might be not a
-        # ratonal number, then use some approx.
+        # rational number, then use some approx.
         i = float(i)
 
     #TODO this might be much closer than necessary here.
@@ -28,7 +29,6 @@ class Point:
         @param args Numerical values to represent the point. 
         """
         self.coordinates = tuple(args)
-
 
     def to_float(self):
         return Point(*[float(c) for c in self.coordinates])
