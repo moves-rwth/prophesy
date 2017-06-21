@@ -54,7 +54,5 @@ def run(args=sys.argv[1:], interactive=True):
         logging.info("Cannot plot, as dimension is too high!")
 
 
-
-
 if __name__ == "__main__":
     run()

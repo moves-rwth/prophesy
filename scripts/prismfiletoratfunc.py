@@ -3,15 +3,14 @@ import sys
 from argparse import ArgumentParser
 import logging
 
-
 from prophesy.data.constant import parse_constants_string
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.resultfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
-
 from prophesy.config import configuration
+
 
 def parse_cli_args(args):
     parser = ArgumentParser(description='Transform a prism file to a rational function.')
@@ -59,6 +58,7 @@ def run(args = sys.argv[1:], interactive = True):
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
     write_pstorm_result(vars(cmdargs)["result_file"], result)
+
 
 if __name__ == "__main__":
     run()

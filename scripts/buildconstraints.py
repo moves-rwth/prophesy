@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-
 import sys
 import logging
 
@@ -22,6 +21,7 @@ from prophesy import config
 from prophesy.config import configuration
 
 logger = logging.getLogger(__name__)
+
 
 def parse_cli_args(args, solversConfig):
     parser = ArgumentParser(description='Build regions based on a sample file')
@@ -54,6 +54,7 @@ def parse_cli_args(args, solversConfig):
 
     return parser.parse_args(args)
 
+
 def run(args = sys.argv[1:], interactive=True):
     interactive = False #TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
@@ -79,8 +80,6 @@ def run(args = sys.argv[1:], interactive=True):
     if threshold is None:
         raise RuntimeError("No threshold specified via command line or samples file.")
     logger.debug("Threshold: {}".format(threshold))
-
-
 
     logger.debug("Setup SMT interface")
     if cmdargs.z3:
@@ -128,7 +127,6 @@ def run(args = sys.argv[1:], interactive=True):
 
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
-
 
 
 if __name__ == "__main__":

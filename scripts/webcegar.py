@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+from argparse import ArgumentParser
+from tornado.ioloop import IOLoop
+
 from prophesy_web import config
 from prophesy_web.application import initEnv, make_app
 
-from argparse import ArgumentParser
-from tornado.ioloop import IOLoop
 
 def parse_cli_args():
     parser = ArgumentParser(description='Start a webservice for ' + config.TOOLNAME)
