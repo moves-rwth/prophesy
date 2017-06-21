@@ -1,4 +1,5 @@
-from prophesy.data.interval import Interval, string_to_interval, BoundType
+from prophesy.data.interval import string_to_interval, BoundType
+
 
 def test_interval_parsing():
     int1 = string_to_interval("(2,5)", int)
