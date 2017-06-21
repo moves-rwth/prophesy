@@ -36,7 +36,6 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def version(self):
         args = [self.location, '-version']
         pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
-        # pipe.communicate()
         return pipe.communicate()[0].decode(encoding='UTF-8')
 
     def get_rational_function(self):

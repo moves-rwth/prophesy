@@ -1,10 +1,10 @@
 import os
-from prophesy.config import configuration
 import tempfile
 import subprocess
 import logging
 import re
 
+from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.util import run_tool, ensure_dir_exists
@@ -36,12 +36,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def version(self):
         """
-        
         :return: Version information about the model checker
         """
         args = [self.location, '--version']
         pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
-        # pipe.communicate()
         outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
         output = outputstr.split("\n")
         return output[0]
@@ -49,7 +47,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def set_bisimulation_type(self, t):
         assert(isinstance(t, BisimulationType))
         self.bisimulation = t
-
 
     def set_pctl_formula(self, formula):
         self.pctlformula = formula

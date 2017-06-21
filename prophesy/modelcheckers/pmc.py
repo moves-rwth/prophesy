@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+
 class BisimulationType(Enum):
     none = 0
     strong = 1
