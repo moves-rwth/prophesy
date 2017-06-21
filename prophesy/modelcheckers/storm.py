@@ -86,8 +86,9 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
             output = run_tool(args, quiet=True)
             with open(resultfile) as f:
-                f.readline()
-                sample_value = Rational(f.readline())
+                tmp = f.readline()
+                tmp = f.readline()
+                sample_value = Rational(tmp)
 
             pt = sample_point.get_point(self.prismfile.parameters)
             samples[pt] = sample_value

@@ -32,10 +32,10 @@ def parse_cli_args(args):
 
     return parser.parse_args(args)
 
-def run(args = sys.argv, interactive=True):
+def run(args = sys.argv[1:], interactive=True):
+
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
-
     prism_file = PrismFile(cmdargs.file)
     pctl_file = PctlFile(cmdargs.pctl_file)
 
@@ -57,11 +57,11 @@ def run(args = sys.argv, interactive=True):
     tool.load_model_from_prismfile(prism_file)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     sampling_interface = tool
-    cmdargs = parse_cli_args(args)
 
     parameters = prism_file.parameters
     parameters.make_intervals_closed(0.0001)
 
+    print("TETST")
     initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)
     print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 

@@ -86,6 +86,14 @@ class HyperRectangle(object):
         """
         return HyperRectangle([i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
 
+    #  TODO SETMINUS OPERATOR
+    def setminus(self, other):
+        if len(other.intervals) != len(self.intervals):
+            print("Different Dimensions")
+        for i, j in zip(self.intervals, other.intervals):
+            for k in range(0,len(i)):
+                print(i[k].setminus(j[k]))
+
     def __str__(self):
         return " x ".join([str(i) for i in self.intervals])
 

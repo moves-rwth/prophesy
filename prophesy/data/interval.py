@@ -4,6 +4,12 @@ class BoundType(Enum):
     open = 0
     closed = 1
 
+    def negated(b):
+        return BoundType.closed if b == BoundType.open else BoundType.open
+
+# TODO constraint to interval
+
+
 def string_to_interval(input, internal_parse_func):
     assert isinstance(input, str)
     input = input.strip()
@@ -108,6 +114,8 @@ class Interval:
 
     def intersect(self, other):
         assert isinstance(other, Interval)
+
+        # create new left bound
         if self._left_value > other._left_value:
             newleft = self._left_value
             newLB = self._left_bound_type
@@ -117,6 +125,8 @@ class Interval:
         else:
             newleft = self._left_value
             newLB = self._left_bound_type if self._left_bound_type == BoundType.open else other._left_bound_type
+
+        # create new right bound
         if self._right_value < other._right_value:
             newright = self._right_value
             newRB = self._right_bound_type
@@ -125,7 +135,9 @@ class Interval:
             newRB = other._right_bound_type
         else:
             newright = self._right_value
-            newLB = self._right_bound_type if self._right_bound_type == BoundType.open else other._right_bound_type
+            newRB = self._right_bound_type if self._right_bound_type == BoundType.open else other._right_bound_type
+
+        # what if the intersection is empty?
         return Interval(newleft, newLB, newright, newRB)
 
     def __str__(self):
@@ -146,3 +158,56 @@ class Interval:
 
     def __hash__(self):
         return hash([self._left_value, self._right_value, self._left_bound_type, self._right_bound_type])
+
+    def setminus(self, other):
+        intersectionInterval = self.intersect(other)
+        if intersectionInterval.empty():
+            return [self]
+        elif intersectionInterval == self:
+            return []
+        else:
+            #print(intersectionInterval)
+            if self._left_value == intersectionInterval._left_value:
+                #print("Starten beide Links")
+                if self._left_value == intersectionInterval._right_value:
+                   # print("Only remove left bound if necessary")
+                    return [Interval(self._left_value, BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
+                                     self._right_bound_type)]
+                else:
+                   # print("Haben nur gleichen Start")
+                    if intersectionInterval._left_bound_type == BoundType.open \
+                            and self._left_bound_type == BoundType.closed:
+                        return [Interval(self._left_value, self._left_bound_type,
+                                         self._left_value, self._left_bound_type),
+                                Interval(intersectionInterval._right_value,
+                                         BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
+                                         self._right_bound_type)]
+                    else:
+                        return [Interval(intersectionInterval._right_value,
+                                 BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
+                                 self._right_bound_type)]
+            elif self._right_value == intersectionInterval._right_value:
+              #  print("Ende beide rechts")
+                if self._right_value == intersectionInterval._left_value:
+                   # print("Only remove right bound if necessary")
+                    return [Interval(self._left_value, self._left_bound_type, self._right_value,
+                                     BoundType.negated(intersectionInterval._right_bound_type))]
+                else:
+                    #print("Haben nur gleiches ende")
+                    if intersectionInterval._right_bound_type == BoundType.open and\
+                            self._right_bound_type == BoundType.closed:
+                        return [Interval(self._right_value, self._right_bound_type,
+                                         self._right_value, self._right_bound_type),
+                                Interval(self._left_value,
+                                         self._left_bound_type, intersectionInterval._left_value,
+                                         BoundType.negated(intersectionInterval._left_bound_type))]
+                    else:
+                        return [Interval(self._left_value,
+                                 self._left_bound_type, intersectionInterval._left_value,
+                                 BoundType.negated(intersectionInterval._left_bound_type))]
+            else:
+                #print("Intersection 'inside' the interval")
+                return [Interval(self._left_value, self._left_bound_type,
+                                 intersectionInterval._left_value, BoundType.negated(intersectionInterval._left_bound_type)),
+                        Interval(intersectionInterval._right_value, BoundType.negated(intersectionInterval._right_bound_type),
+                                 self._right_value, self._right_bound_type)]
