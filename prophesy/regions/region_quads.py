@@ -1,10 +1,12 @@
 from prophesy.regions.region_generation import RegionGenerator
 from prophesy.data.hyperrectangle import HyperRectangle
 
+
 class QuadAndSamples:
     def __init__(self, quad, samples):
         self.quad = quad
         self.samples = samples
+
 
 class ConstraintQuads(RegionGenerator):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
@@ -34,7 +36,6 @@ class ConstraintQuads(RegionGenerator):
         for q in self.quads:
             boxes.append(q.poly)
         self.plot_results(poly_blue=boxes, display=False)
-
 
     def check_quad(self, quad, samples, depth=0):
         """Check if given quad can be assumed safe or bad based on
@@ -67,9 +68,6 @@ class ConstraintQuads(RegionGenerator):
                     continue
                 newsamples.append((pt, safe))
             self.check_quad(newquad, newsamples, depth + 1)
-
-
-
 
     def fail_constraint(self, constraint, safe):
         # Split quad and try again

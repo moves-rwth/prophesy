@@ -1,6 +1,8 @@
-from prophesy.regions.region_generation import RegionGenerator
 from shapely.ops import triangulate
 from shapely.geometry.polygon import orient
+
+from prophesy.regions.region_generation import RegionGenerator
+
 
 class ConstraintPolygon(RegionGenerator):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):

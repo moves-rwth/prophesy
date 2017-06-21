@@ -2,14 +2,11 @@ import os
 import shutil
 import tempfile
 import logging
+import shapely.geometry
 from abc import ABCMeta, abstractmethod
 
 from prophesy.regions.region_checker import RegionCheckResult
-
-import shapely.geometry
-
 from prophesy.data.hyperrectangle import HyperRectangle
-
 from prophesy.output.plot import Plot
 from prophesy.util import ensure_dir_exists
 from prophesy.config import configuration
@@ -81,7 +78,6 @@ class RegionGenerator:
             merger.append(PdfFileReader(name, 'rb'))
             merger.write(self.result_file)
 
-
     def plot_candidate(self):
         pass
 
@@ -152,14 +148,12 @@ class RegionGenerator:
         """Called for a constraint that is accepted (i.e. unsat)"""
         raise NotImplementedError("Abstract parent method")
 
-
     def _area(self, pol):
         if isinstance(pol, shapely.geometry.Polygon):
             return pol.area
         if isinstance(pol, HyperRectangle):
             return pol.size()
         assert False
-
 
     def generate_constraints(self, max_iter=-1, max_area=1):
         """Iteratively generates new regions, heuristically, attempting to
@@ -200,7 +194,6 @@ class RegionGenerator:
         self.checker.print_info()
 
         return self.safe_polys, self.bad_polys, self.new_samples
-
 
     def _analyse_region(self, polygon, safe):
         checkresult, additional = self.checker.analyse_region(polygon, safe)

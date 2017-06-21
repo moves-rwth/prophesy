@@ -7,9 +7,6 @@ class RegionCheckResult(Enum):
     unknown = 2
 
 
-
 class RegionChecker():
     def __init__(self):
         pass
-
-
