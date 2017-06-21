@@ -1,6 +1,7 @@
 import os
-from prophesy.config import configuration
 import tempfile
+
+from prophesy.config import configuration
 from prophesy.smt.smt import SMTSolver, VariableDomain
 from prophesy.util import run_tool, ensure_dir_exists
 

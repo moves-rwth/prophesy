@@ -1,11 +1,12 @@
 import itertools
 from numpy import linspace
-from prophesy.data.interval import BoundType
 
+from prophesy.data.interval import BoundType
 from prophesy.config import configuration
 from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations
 from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
+
 
 class Sampler(object):
     """Base class for performing sampling of given set of points"""
@@ -25,8 +26,6 @@ class Sampler(object):
         """
         if samples_per_dimension < 1:
             raise RuntimeError("No. of samples per dimension must be >= 2")
-
-
 
         # points evenly spaced over the interval, for each dimension
         ranges = []

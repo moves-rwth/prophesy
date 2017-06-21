@@ -3,7 +3,6 @@ from enum import Enum
 import logging
 
 import prophesy.adapter.pycarl as pc
-import pycarl
 from prophesy.data.interval import Interval, BoundType
 from prophesy.adapter.pycarl import Constraint, Relation
 
@@ -60,7 +59,6 @@ def setup_smt(smt2interface, result, threshold, rat_func_bound = Interval(0, Bou
     smt2interface.assert_constraint(threshold_constraint)
     smt2interface.assert_guarded_constraint("__safe", safe_constraint)
     smt2interface.assert_guarded_constraint("__bad", bad_constraint)
-
 
 
 class Answer(Enum):

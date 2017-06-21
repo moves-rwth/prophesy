@@ -1,6 +1,7 @@
 import subprocess
 import functools
 import logging
+
 from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
 from prophesy.adapter.pycarl import Constraint, Formula, Rational
@@ -18,14 +19,16 @@ def _smtfile_header():
     formula += "(set-info :category \"industrial\")\n"
     return formula
 
+
 def constraint_to_smt2(constraint):
     if isinstance(constraint, Constraint):
         constraint = Formula(constraint)
     assert isinstance(constraint, Formula)
     return str(constraint)
 
+
 class SmtlibSolver(SMTSolver):
-    def __init__(self, location, memout = 4000, timeout = 100, incremental=True):
+    def __init__(self, location, memout=4000, timeout=100, incremental=True):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
@@ -159,7 +162,7 @@ class SmtlibSolver(SMTSolver):
         if self.incremental:
             self._write(s)
 
-    def add_variable(self, symbol, domain = VariableDomain.Real):
+    def add_variable(self, symbol, domain=VariableDomain.Real):
         self.nr_variables += 1
         s = "(declare-fun " + str(symbol) + " () " + domain.name + ")\n"
         self.string += s
@@ -227,6 +230,7 @@ class SmtlibSolver(SMTSolver):
     def print_calls(self):
         print(self.string)
 
+
 def parse_smt_expr(expr):
     """Calculates given SMT expression "(OP ARG ARG)" as ARG OP ARG.
     Expression may be of arbitrary arity"""
@@ -246,6 +250,7 @@ def parse_smt_expr(expr):
         return False
     else:
         return Rational(cmd)
+
 
 def parse_smt_command(command):
     """Breaks the given SMT command "(CMD ARG ARG ARG)" into tuple (CMD, [ARG]),

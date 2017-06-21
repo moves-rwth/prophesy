@@ -1,6 +1,7 @@
 from prophesy.config import configuration
 from prophesy.smt.smtlib import SmtlibSolver, parse_smt_command
 
+
 class Z3CliSolver(SmtlibSolver):
     """
     TODO: support the soft timeout kill.
@@ -30,4 +31,3 @@ class Z3CliSolver(SmtlibSolver):
             if args[2] == "Real":
                 model[args[0]] = parse_smt_expr(args[3])
         return model
-

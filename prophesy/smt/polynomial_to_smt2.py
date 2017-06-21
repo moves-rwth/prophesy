@@ -1,6 +1,6 @@
-from pycarl import Rational, Variable, Monomial, Term, Polynomial, \
-    FactorizedPolynomial, RationalFunction, FactorizedRationalFunction
-from pycarl.formula import Formula
+from prophesy.adapter.pycarl import Rational, Variable, Monomial, Term, Polynomial, \
+    FactorizedPolynomial, RationalFunction, FactorizedRationalFunction, Formula
+
 
 def ratfunc_to_smtlib(func):
     """Walks throughthe argument and returns it as SMTLib constraint
@@ -32,6 +32,7 @@ def ratfunc_to_smtlib(func):
         return result
     else:
         assert False, "Unknown type to convert to SMTLib: " + repr(func)
+
 
 def smt2strPoly(func):
     """Returns a string representation of the Poly func in SMTLib notation.
