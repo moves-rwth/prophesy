@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 
 import prophesy.util as util
 from prophesy.adapter.pycarl import Integer, Rational
@@ -55,61 +56,84 @@ class ProphesyConfig(Configuration):
 
         storm_loc = self.get_storm()
         if storm_loc:
-            try:
-                util.run_tool([storm_loc], True)
-                self.ppmcs.add('storm')
-                self.pmcs.add('storm')
-                self.samplers['storm'] = storm_loc
-            except:
-                raise ConfigurationError("Storm is not found at " + storm_loc)
+            self.ppmcs.add('storm')
+            self.pmcs.add('storm')
+            self.samplers['storm'] = storm_loc  # TODO Just store 'storm'?
 
-        prism_loc = self.get_prism()
-        if prism_loc:
-            try:
-                util.run_tool([prism_loc], True)
-                self.ppmcs.add('prism')
-                self.pmcs.add('prism')
-                #self.samplers.add('prism')
-            except:
-                raise ConfigurationError("Prism is not found at " + prism_loc)
+        if self.get_prism():
+            self.ppmcs.add('prism')
+            self.pmcs.add('prism')
+            #self.samplers.add('prism')
 
-        param_loc = self.get_param()
-        if param_loc:
-            try:
-                util.run_tool([param_loc], True)
-                self.ppmcs.add('param')
-            except:
-                raise ConfigurationError("Param is not found at " + param_loc)
+        if self.get_param():
+            self.ppmcs.add('param')
 
-        z3_loc = self.get_z3()
-        if z3_loc:
-            try:
-                util.run_tool([z3_loc], True)
-                self.smtsolvers.add('z3')
-            except:
-                raise ConfigurationError("Z3 is not found at " + z3_loc)
+        if self.get_z3():
+            self.smtsolvers.add('z3')
 
-        yices_loc = self.get_yices()
-        if yices_loc:
-            try:
-                util.run_tool([yices_loc, '-h'], True)
-                self.smtsolvers.add('yices')
-            except:
-                raise ConfigurationError("Yices is not found at " + yices_loc)
+        if self.get_yices():
+            self.smtsolvers.add('yices')
 
-        isat_loc = self.get_isat()
-        if isat_loc:
-            try:
-                util.run_tool([isat_loc], True)
-                self.smtsolvers.add('isat')
-            except:
-                raise ConfigurationError("ISat is not found at " + isat_loc)
+        if self.get_isat():
+            self.smtsolvers.add('isat')
 
         if self.is_module_available("stormpy"):
             self.pmcs.add('stormpy')
             self.ppmcs.add('stormpy')
 
         self.samplers['ratfunc'] = "Rational function"
+
+    def check_tools(self):
+        storm_loc = self.get_storm()
+        if storm_loc:
+            try:
+                output = util.run_tool([storm_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Storm is not found at " + storm_loc)
+            if not re.match(r"Storm ", output, re.MULTILINE):
+                raise ConfigurationError("Storm is not found at " + storm_loc)
+
+        prism_loc = self.get_prism()
+        if prism_loc:
+            try:
+                output = util.run_tool([prism_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Prism is not found at " + prism_loc)
+            if not re.match(r"PRISM", output, re.MULTILINE):
+                raise ConfigurationError("Prism is not found at " + prism_loc)
+
+        param_loc = self.get_param()
+        if param_loc:
+            # TODO check param similar to other tools
+            try:
+                util.run_tool([param_loc], True)
+            except:
+                raise ConfigurationError("Param is not found at " + param_loc)
+
+        z3_loc = self.get_z3()
+        if z3_loc:
+            try:
+                output = util.run_tool([z3_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Z3 is not found at " + z3_loc)
+            if not re.match(r"Z3", output, re.MULTILINE):
+                raise ConfigurationError("Z3 is not found at " + z3_loc)
+
+        yices_loc = self.get_yices()
+        if yices_loc:
+            # TODO check yices similar to other tools
+            try:
+                util.run_tool([yices_loc, '-h'], True)
+            except:
+                raise ConfigurationError("Yices is not found at " + yices_loc)
+
+        isat_loc = self.get_isat()
+        if isat_loc:
+            # TODO check isat similar to other tools
+            try:
+                util.run_tool([isat_loc], True)
+            except:
+                raise ConfigurationError("ISat is not found at " + isat_loc)
 
     def get_tool(self, toolname):
         tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, toolname)

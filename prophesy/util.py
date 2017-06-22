@@ -91,7 +91,7 @@ def run_tool(args, quiet=False, logfile=None):
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     if quiet and logfile is None:
-        return pipe.communicate()[0]
+        return pipe.communicate()[0].decode(encoding='UTF-8')
     else:
         for line in iter(pipe.stdout.readline, ""):
             if not line and pipe.poll() is not None:

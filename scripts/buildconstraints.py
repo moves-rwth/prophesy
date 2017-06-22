@@ -59,6 +59,7 @@ def run(args = sys.argv[1:], interactive=True):
     interactive = False #TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
     cmdargs = parse_cli_args(args, solvers)
+    configuration.check_tools()
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)

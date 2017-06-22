@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import sys
 from argparse import ArgumentParser
 import logging
@@ -29,9 +30,10 @@ def parse_cli_args(args):
     return parser.parse_args(args)
 
 
-def run(args = sys.argv[1:], interactive = True):
+def run(args=sys.argv[1:], interactive = True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
     constants = parse_constants_string(cmdargs.constants)
 
     prism_file = PrismFile(cmdargs.file)

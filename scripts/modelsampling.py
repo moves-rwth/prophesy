@@ -43,6 +43,7 @@ def parse_cli_args(args):
 def run(args = sys.argv[1:], interactive=True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
     threshold = Rational(cmdargs.threshold)
     constants = parse_constants_string(cmdargs.constants)
 

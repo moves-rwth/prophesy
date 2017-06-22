@@ -35,8 +35,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def version(self):
         args = [self.location, '-version']
-        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
-        return pipe.communicate()[0].decode(encoding='UTF-8')
+        return run_tool(args, True)
 
     def get_rational_function(self):
         raise NotImplementedError("This is missing")
