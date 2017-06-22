@@ -13,7 +13,9 @@ target_file = "buildratfunc_{}".format(current_time)
 
 
 benchmarks = [
-    ("brp", "brp_16_2", "property1", "storm")
+    ("brp", "brp_16_2", "property1", "storm"),
+    ("brp", "brp_16_2", "property1", "prism"),
+    ("brp", "brp_16_2", "property1", "stormpy"),
 ]
 
 @pytest.mark.parametrize("name,file,property,tool", benchmarks)
@@ -27,4 +29,4 @@ def test_script(name, file, property, tool):
                target_file
                ]
     prismfiletoratfunc.run(command, False)
-    os.unlink(target_file)
+    os.remove(target_file)
