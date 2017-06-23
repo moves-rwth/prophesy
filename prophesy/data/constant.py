@@ -1,5 +1,6 @@
 import prophesy.adapter.pycarl as pc
 
+
 class Constant(object):
     """
     A variable and its constant value.
@@ -16,19 +17,43 @@ class Constant(object):
 
 
 class Constants(object):
+    """
+    Container that holds constants for a model. 
+    """
     def __init__(self):
         self.constants = dict()
 
     def has_variable(self, var):
+        """
+        Does the container contain a constant encoded by the given variable
+        :param var: The variable which might be contained.
+        :return: 
+        """
         return var in self.constants
 
     def get_constant(self, var):
+        """
+        Get the constant associated with the given variable 
+        :param var: 
+        :return: 
+        """
         return self.constants[var]
 
     def add(self, constant):
+        """
+        Add a constant.
+        :param constant: 
+        :return: 
+        """
         self.constants[constant.variable] = constant
 
     def to_key_value_string(self, to_float=False):
+        """
+        Provides a key-value string from variable to constant value.
+        The key-value string format can be immediately used for storm or prism.
+        :param to_float: Should the constant value be casted into a float
+        :return: A string of the format var1=val1,...,varn=valn
+        """
         key_value_list = [(k,v.value) for k, v in self.constants.items()]
         if to_float:
             for i in range(len(key_value_list)):
@@ -38,6 +63,10 @@ class Constants(object):
         return ",".join(["{}={}".format(k,v) for k,v in key_value_list])
 
     def variables(self):
+        """
+        The set of variables which represent the constants contained.
+        :return: A iterable over the variables.
+        """
         return self.constants.keys()
 
     def __str__(self):
@@ -48,6 +77,11 @@ class Constants(object):
 
 
 def parse_constants_string(input_string):
+    """
+    Parses a key-value string 
+    :param input_string: 
+    :return: 
+    """
     result = Constants()
     if input_string is None:
         return result

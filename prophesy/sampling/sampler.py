@@ -19,7 +19,7 @@ class Sampler(object):
         for each dimension, in order) and the number of samples per
         dimension, a uniformly-spaced grid of points (the cartesian
         product) is sampled.
-        @param variables VariableOrder
+        @param parameters 
         @param iterable of Interval
         @param samples_per_dimension int
         """

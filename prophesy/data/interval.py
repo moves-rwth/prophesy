@@ -7,6 +7,12 @@ class BoundType(Enum):
 
 
 def string_to_interval(input_string, internal_parse_func):
+    """
+    Given a string which encodes an interval, constructs the interval
+    :param input_string: 
+    :param internal_parse_func: 
+    :return: 
+    """
     assert isinstance(input_string, str)
     input_string = input_string.strip()
     if input_string[0] == "(":
@@ -62,7 +68,9 @@ def create_embedded_closed_interval(interval, epsilon):
 
 class Interval:
     """
-    Interval class for arbitrary types
+    Interval class for arbitrary (constant) types.
+    Construction from string is possible via string_to_interval
+    TODO support half-bounded intervals (e.g some value for infty)
     """
     def __init__(self, left_value, left_bt, right_value, right_bt):
         self._left_bound_type = left_bt
@@ -83,23 +91,40 @@ class Interval:
         return self._right_bound_type
 
     def empty(self):
+        """
+        Does the interval contain any points.
+        :return: 
+        """
         if self._left_value == self._right_value:
             return (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open)
         return self._left_value > self._right_value
 
     def contains(self, pt):
+        """
+        Does the interval contain a specific point
+        :param pt: A value
+        :return: True if the value lies between the bounds.
+        """
         if self._left_value < pt < self._right_value: return True
         if pt == self._left_value and self._left_bound_type == BoundType.closed: return True
         if pt == self._right_value and self._right_bound_type == BoundType.closed: return True
         return False
 
     def is_closed(self):
+        """
+        Does the interval have closed bounds on both sides.
+        :return: 
+        """
         return self.right_bound_type() == BoundType.closed and self.left_bound_type() == BoundType.closed
 
     def width(self):
         return self._right_value - self._left_value
 
     def split(self):
+        """
+        Split the interval in two equally large halfs.
+        :return: 
+        """
         mid = self._left_value + self.width() / 2
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 

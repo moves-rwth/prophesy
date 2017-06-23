@@ -24,24 +24,7 @@ def parse_relation(relation_string):
         return pc.Relation.GREATER
     raise ValueError("Cannot parse {} as a relation".format(relation_string))
 
-def region_from_hyperrectangle(hyperrectangle, variables):
-    """Given HyperRectangle and VariableOrder, compute constraints
-    @param hyperrectangle HyperRectangle
-    @param variables VariableOrder
-    @return pycarl.Formula or pycarl.Constraint
-    """
-    constraint = None
-    for variable, interval in zip(variables, hyperrectangle.intervals):
-        lbound_relation = pc.Relation.GEQ if interval.left_bound_type() == BoundType.closed else pc.Relation.GREATER
-        lbound = pc.Constraint(pc.Polynomial(variable)-interval.left_bound(), lbound_relation)
-        if constraint is None:
-            constraint = lbound
-        else:
-            constraint = constraint & lbound
-        rbound_relation = pc.Relation.LEQ if interval.right_bound_type() == BoundType.closed else pc.Relation.LESS
-        rbound = pc.Constraint(pc.Polynomial(variable)-interval.right_bound(), rbound_relation)
-        constraint = constraint & rbound
-    return constraint
+
 
 def region_from_polygon(polygon, variables):
         """Compute regions from polygon (Polygon, LineString or LinearRing)
@@ -87,6 +70,7 @@ def region_from_polygon(polygon, variables):
                 constraint = constraint & new_constraint
 
         return constraint
+
 
 def is_point_fulfilling_constraint(pt, constraint):
     """Check whether the given point is satisfied by the regions

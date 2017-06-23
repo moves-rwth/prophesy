@@ -3,6 +3,7 @@ from prophesy.data.point import Point
 
 import numpy as np
 
+
 class HyperRectangle(object):
     """
     Defines a hyper-rectangle, that is the Cartisean product of intervals,
@@ -108,3 +109,22 @@ class HyperRectangle(object):
 
     def __getitem__(self, key):
         return self.intervals[key]
+
+    def to_formula(self, variables):
+        """Given HyperRectangle and VariableOrder, compute constraints
+        @param hyperrectangle HyperRectangle
+        @param variables VariableOrder
+        @return pycarl.Formula or pycarl.Constraint
+        """
+        constraint = None
+        for variable, interval in zip(variables, self.intervals):
+            lbound_relation = pc.Relation.GEQ if interval.left_bound_type() == BoundType.closed else pc.Relation.GREATER
+            lbound = pc.Constraint(pc.Polynomial(variable) - interval.left_bound(), lbound_relation)
+            if constraint is None:
+                constraint = lbound
+            else:
+                constraint = constraint & lbound
+            rbound_relation = pc.Relation.LEQ if interval.right_bound_type() == BoundType.closed else pc.Relation.LESS
+            rbound = pc.Constraint(pc.Polynomial(variable) - interval.right_bound(), rbound_relation)
+            constraint = constraint & rbound
+        return constraint
