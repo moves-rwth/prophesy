@@ -24,7 +24,7 @@ class LinearRefinement(SampleGenerator):
         logger.debug("Compute new points to sample.")
         if not self.first:
             # TODO: what should the distance be?
-            self.samples = self.samples.filter_values(lambda value: abs(value - self.threshold) * 800 > 1)
+            self.samples = self.samples.filter_value(lambda value: abs(value - self.threshold) * 800 > 1)
         else:
             self.first = False
 
