@@ -1,8 +1,6 @@
 prophesy.output package
 =======================
 
-Submodules
-----------
 
 prophesy.output.plot module
 ---------------------------
@@ -12,11 +10,3 @@ prophesy.output.plot module
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: prophesy.output
-    :members:
-    :undoc-members:
-    :show-inheritance:
