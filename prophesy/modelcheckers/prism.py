@@ -9,6 +9,7 @@ from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
+from prophesy.data.constant import Constants
 from prophesy.adapter.pycarl import Rational
 from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
@@ -39,7 +40,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
 
-    def load_model_from_prismfile(self, prismfile, constants=None):
+    def load_model_from_prismfile(self, prismfile, constants=Constants()):
         self.prismfile = prismfile
         self.constants = constants
 

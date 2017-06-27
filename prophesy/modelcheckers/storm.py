@@ -10,7 +10,8 @@ from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.resultfile import read_pstorm_result
 from prophesy.sampling.sampler import Sampler
 from prophesy.adapter.pycarl import Rational
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation
+from prophesy.data.samples import InstantiationResultDict, InstantiationResult
+from prophesy.data.constant import Constants
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
 
-    def load_model_from_prismfile(self, prismfile, constants=None):
+    def load_model_from_prismfile(self, prismfile, constants=Constants()):
         self.prismfile = prismfile
         self.constants = constants
 
