@@ -10,7 +10,6 @@ class Answer(Enum):
     memout = 4
     timeout = 5
 
-
 class VariableDomain(Enum):
     Bool = 0
     Real = 1

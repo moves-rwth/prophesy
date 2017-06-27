@@ -1,9 +1,12 @@
-import prophesy.util as util
 import os
+import logging
+import re
+
+import prophesy.util as util
 from prophesy.adapter.pycarl import Integer, Rational
 from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
-import logging
+
 
 class ProphesyConfig(Configuration):
     # section names
@@ -20,7 +23,7 @@ class ProphesyConfig(Configuration):
         self._init_tools()
 
     def is_module_available(self, module):
-        return self.getboolean(ProphesyConfig.DEPENDENCIES, module)
+        return self.get_boolean(ProphesyConfig.DEPENDENCIES, module)
 
     def getAvailableSMTSolvers(self):
         if len(self.smtsolvers) == 0:
@@ -41,6 +44,8 @@ class ProphesyConfig(Configuration):
         return self.ppmcs
 
     def getAvailableSamplers(self):
+        if len(self.samplers) == 0:
+            raise RuntimeError("No sampler in environment")
         return self.samplers
 
     def _init_tools(self):
@@ -51,55 +56,26 @@ class ProphesyConfig(Configuration):
 
         storm_loc = self.get_storm()
         if storm_loc:
-            try:
-                util.run_tool([storm_loc], True)
-                self.ppmcs.add('storm')
-                self.pmcs.add('storm')
-                self.samplers['storm'] = storm_loc
-            except:
-                raise ConfigurationError("Storm is not found at " + storm_loc)
+            self.ppmcs.add('storm')
+            self.pmcs.add('storm')
+            self.samplers['storm'] = storm_loc  # TODO Just store 'storm'?
 
-        prism_loc = self.get_prism()
-        if prism_loc:
-            try:
-                util.run_tool([prism_loc], True)
-                self.ppmcs.add('prism')
-                self.pmcs.add('prism')
-                #self.samplers.add('prism')
-            except:
-                raise ConfigurationError("Prism is not found at " + prism_loc)
+        if self.get_prism():
+            self.ppmcs.add('prism')
+            self.pmcs.add('prism')
+            #self.samplers.add('prism')
 
-        param_loc = self.get_param()
-        if param_loc:
-            try:
-                util.run_tool([param_loc], True)
-                self.ppmcs.add('param')
-            except:
-                raise ConfigurationError("Param is not found at " + param_loc)
+        if self.get_param():
+            self.ppmcs.add('param')
 
-        z3_loc = self.get_z3()
-        if z3_loc:
-            try:
-                util.run_tool([z3_loc], True)
-                self.smtsolvers.add('z3')
-            except:
-                raise ConfigurationError("Z3 is not found at " + z3_loc)
+        if self.get_z3():
+            self.smtsolvers.add('z3')
 
-        yices_loc = self.get_yices()
-        if yices_loc:
-            try:
-                util.run_tool([yices_loc, '-h'], True)
-                self.smtsolvers.add('yices')
-            except:
-                raise ConfigurationError("Yices is not found at " + yices_loc)
+        if self.get_yices():
+            self.smtsolvers.add('yices')
 
-        isat_loc = self.get_isat()
-        if isat_loc:
-            try:
-                util.run_tool([isat_loc], True)
-                self.smtsolvers.add('isat')
-            except:
-                raise ConfigurationError("ISat is not found at " + isat_loc)
+        if self.get_isat():
+            self.smtsolvers.add('isat')
 
         if self.is_module_available("stormpy"):
             self.pmcs.add('stormpy')
@@ -107,29 +83,79 @@ class ProphesyConfig(Configuration):
 
         self.samplers['ratfunc'] = "Rational function"
 
+    def check_tools(self):
+        storm_loc = self.get_storm()
+        if storm_loc:
+            try:
+                output = util.run_tool([storm_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Storm is not found at " + storm_loc)
+            if not re.match(r"Storm ", output, re.MULTILINE):
+                raise ConfigurationError("Storm is not found at " + storm_loc)
+
+        prism_loc = self.get_prism()
+        if prism_loc:
+            try:
+                output = util.run_tool([prism_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Prism is not found at " + prism_loc)
+            if not re.match(r"PRISM", output, re.MULTILINE):
+                raise ConfigurationError("Prism is not found at " + prism_loc)
+
+        param_loc = self.get_param()
+        if param_loc:
+            # TODO check param similar to other tools
+            try:
+                util.run_tool([param_loc], True)
+            except:
+                raise ConfigurationError("Param is not found at " + param_loc)
+
+        z3_loc = self.get_z3()
+        if z3_loc:
+            try:
+                output = util.run_tool([z3_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Z3 is not found at " + z3_loc)
+            if not re.match(r"Z3", output, re.MULTILINE):
+                raise ConfigurationError("Z3 is not found at " + z3_loc)
+
+        yices_loc = self.get_yices()
+        if yices_loc:
+            # TODO check yices similar to other tools
+            try:
+                util.run_tool([yices_loc, '-h'], True)
+            except:
+                raise ConfigurationError("Yices is not found at " + yices_loc)
+
+        isat_loc = self.get_isat()
+        if isat_loc:
+            # TODO check isat similar to other tools
+            try:
+                util.run_tool([isat_loc], True)
+            except:
+                raise ConfigurationError("ISat is not found at " + isat_loc)
+
+    def get_tool(self, toolname):
+        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, toolname)
+        return os.path.expanduser(tool_loc) if tool_loc else None
+
     def get_storm(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "storm")
-        return tool_loc if tool_loc else None
+        return self.get_tool("storm")
 
     def get_prism(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "prism")
-        return tool_loc if tool_loc else None
+        return self.get_tool("prism")
 
     def get_param(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "param")
-        return tool_loc if tool_loc else None
+        return self.get_tool("param")
 
     def get_z3(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "z3")
-        return tool_loc if tool_loc else None
+        return self.get_tool("z3")
 
     def get_yices(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "yices")
-        return tool_loc if tool_loc else None
+        return self.get_tool("yices")
 
     def get_isat(self):
-        tool_loc = self.get(ProphesyConfig.EXTERNAL_TOOLS, "isat")
-        return tool_loc if tool_loc else None
+        return self.get_tool("isat")
 
     def get_intermediate_dir(self):
         dir = self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
@@ -143,31 +169,32 @@ class ProphesyConfig(Configuration):
 
     def get_sampling_min_distance(self):
         # Minimum distance between points to allow further sampling
-        return float(self.get(ProphesyConfig.SAMPLING, "distance"))
+        return self.get_float(ProphesyConfig.SAMPLING, "distance")
 
     def get_sampling_epsilon(self):
         # Smallest discernable difference for intervals (used for strict bounds)
         return Rational(Integer(1), Integer(800))
         # TODO why is the following commented out.
-        # return float(self.get(ProphesyConfig.SAMPLING, "epsilon"))
+        # return self.get_float(ProphesyConfig.SAMPLING, "epsilon")
 
     def get_regions_precision(self):
         # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
-        return float(self.get(ProphesyConfig.CONSTRAINTS, "precision"))
+        return self.get_float(ProphesyConfig.CONSTRAINTS, "precision")
 
     def get_smt_timeout(self):
-        return float(self.get(ProphesyConfig.SMT, "timeout"))
+        return self.get_float(ProphesyConfig.SMT, "timeout")
 
     def getSection(self, sec):
         return self.getAll()[sec]
 
 configuration = ProphesyConfig()
 
+# TODO Put in config
 TOOLNAME = "prophesy"
 VERSION = [0, 3, 0]
 SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
 
-logging.basicConfig(filename='prophesy.log',level=logging.DEBUG)
+logging.basicConfig(filename='prophesy.log', level=logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)

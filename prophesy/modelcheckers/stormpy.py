@@ -1,3 +1,5 @@
+import logging
+
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.config import configuration
@@ -6,17 +8,17 @@ from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.sampling.sampler import Sampler
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.resultfile import ParametricResult
+from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
-import pycarl
-import pycarl.formula
+logger = logging.getLogger(__name__)
 
 
 if not configuration.is_module_available("stormpy"):
     raise ModuleError("Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 else:
+    import stormpy
     import stormpy.info
     import stormpy.logic
-    import stormpy.core
 
 
 class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
@@ -43,10 +45,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def set_pctl_formula(self, formula):
         """Sets the pctl-formular to modelcheck the current model with that formula. The formula is directly parsed."""
         if self.program == None:
-            # Otherwise we cannot parse all kind of formulae.
-            raise NotEnoughInformationError("Stormpy requires the program before the formula can be loaded.")
-
-        if self.program is not None:
+            self.pctl_formula = stormpy.parse_properties(formula)
+        else:
             self.pctl_formula = stormpy.parse_properties_for_prism_program(formula, self.program)
 
     def load_model_from_prismfile(self, p_file, constants):
@@ -56,8 +56,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         #TODO use constants here.
         self.program = stormpy.parse_prism_program(self.prism_file.location)
 
-    def set_bisimulation(self, type):
-        """Sets the bisimulation type for Strom. Raises a ConfigurationError, if the type is not valid."""
+    def set_bisimulation_type(self, type):
+        """Sets the bisimulation type for Storm. Raises a ConfigurationError, if the type is not valid."""
         if type < 0 or type > 3:
             raise ConfigurationError("Bisimulationtype not valid.")
         else:
@@ -65,8 +65,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def _build_model(self):
         if self.prism_file.nr_parameters() == 0:
-            self.model = stormpy.build_model(self.program)
+            assert not self.program.has_undefined_constants
+            self.model = stormpy.build_model(self.program, self.pctl_formula)
         else:
+            assert self.program.has_undefined_constants
             self.model = stormpy.build_parametric_model(self.program, self.pctl_formula)
 
     def perform_sampling(self, samplepoints):
@@ -81,8 +83,9 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
         if self.model is None:
             self._build_model()
 
-        result = stormpy.model_checking(model, self.pctl_formula[0])
-
-        return ParametricResult(self.prism_file.parameters,
-                                list(result.constraints_graph_preserving) + list(result.constraints_well_formed),
-                                result.result_function)
+        result = stormpy.model_checking(self.model, self.pctl_formula[0])
+        initial_state = self.model.initial_states[0]
+        result = result.at(initial_state)
+        constraints = []
+        # TODO set constraints (graph_preserving and well_formed
+        return ParametricResult(self.prism_file.parameters, constraints, result)

@@ -1,11 +1,10 @@
 """
 Helper module for simplified sampling access.
 """
-import logging
-
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.sampling.sampling_linear import LinearRefinement
+
 
 def uniform_samples(interface, parameters, samples_per_dim):
     """Generate a uniform grid of samples."""

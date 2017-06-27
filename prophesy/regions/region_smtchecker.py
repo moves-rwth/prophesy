@@ -1,16 +1,17 @@
+import time
+
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
-
-import time
-from prophesy.smt.smt import Answer
+from prophesy.smt.smt import Answer, VariableDomain
 from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 from prophesy.adapter.pycarl import Rational
-from prophesy.data.constraint import region_from_hyperrectangle, region_from_polygon
+from prophesy.data.constraint import region_from_polygon
 
 
 import prophesy.adapter.pycarl as pc
 from prophesy.data.interval import Interval, BoundType
 from prophesy.adapter.pycarl import Constraint, Relation
+
 
 
 class SmtRegionChecker(RegionChecker):
@@ -27,11 +28,10 @@ class SmtRegionChecker(RegionChecker):
         self.benchmark_output = []
 
     # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
-    # TODO this method has to change, if we also support direct encoding of the lin eq system.
-    def _initialize(self, smt2interface, result, threshold,
+    def initialize(self, result, threshold,
                                         solution_bound=Interval(0, BoundType.closed, None, BoundType.open)):
         for p in result.parameters:
-            smt2interface.add_variable(p.variable.name, VariableDomain.Real)
+            self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
         safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
         badVar = pc.Variable("__bad", pc.VariableType.BOOL)
@@ -39,31 +39,31 @@ class SmtRegionChecker(RegionChecker):
         rf1Var = pc.Variable("rf1")
         rf2Var = pc.Variable("rf2")
 
-        smt2interface.add_variable(safeVar, VariableDomain.Bool)
-        smt2interface.add_variable(badVar, VariableDomain.Bool)
-        smt2interface.add_variable(thresholdVar, VariableDomain.Real)
+        self._smt2interface.add_variable(safeVar, VariableDomain.Bool)
+        self._smt2interface.add_variable(badVar, VariableDomain.Bool)
+        self._smt2interface.add_variable(thresholdVar, VariableDomain.Real)
 
         safe_relation = pc.Relation.GEQ
         bad_relation = pc.Relation.LESS
 
         if pc.denominator(result.ratfunc) != 1:
-            smt2interface.add_variable(rf1Var, VariableDomain.Real)
-            smt2interface.add_variable(rf2Var, VariableDomain.Real)
+            self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
+            self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
             safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
             bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, bad_relation)
             rf1_constraint = Constraint(rf1Var - pc.numerator(result.ratfunc), Relation.EQ)
             rf2_constraint = Constraint(rf2Var - pc.denominator(result.ratfunc), Relation.EQ)
-            smt2interface.assert_constraint(rf1_constraint)
-            smt2interface.assert_constraint(rf2_constraint)
+            self._smt2interface.assert_constraint(rf1_constraint)
+            self._smt2interface.assert_constraint(rf2_constraint)
         else:
             safe_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, safe_relation)
             bad_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, bad_relation)
 
         threshold_constraint = Constraint(pc.Polynomial(thresholdVar) - threshold, Relation.EQ)
 
-        smt2interface.assert_constraint(threshold_constraint)
-        smt2interface.assert_guarded_constraint("__safe", safe_constraint)
-        smt2interface.assert_guarded_constraint("__bad", bad_constraint)
+        self._smt2interface.assert_constraint(threshold_constraint)
+        self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
+        self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
 
     def print_info(self):
         i = 1
@@ -93,7 +93,7 @@ class SmtRegionChecker(RegionChecker):
 
         variables = self.parameters.get_variables()
         if isinstance(polygon, HyperRectangle):
-            constraint = region_from_hyperrectangle(polygon, variables)
+            constraint = polygon.to_formula(variables)
         else:
             constraint = region_from_polygon(polygon, variables)
 

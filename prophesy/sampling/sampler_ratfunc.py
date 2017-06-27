@@ -3,6 +3,7 @@ import logging
 from prophesy.sampling.sampler import Sampler
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 
+
 class RatFuncSampling(Sampler):
     """Simple sampler based on pycarl rational function"""
 

@@ -1,10 +1,9 @@
 import os
-from prophesy.config import configuration
 import tempfile
-import subprocess
 import logging
 import re
 
+from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.util import run_tool, ensure_dir_exists
@@ -36,20 +35,17 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
 
     def version(self):
         """
-        
+
         :return: Version information about the model checker
         """
         args = [self.location, '--version']
-        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
-        # pipe.communicate()
-        outputstr = pipe.communicate()[0].decode(encoding='UTF-8')
+        outputstr = run_tool(args, True)
         output = outputstr.split("\n")
         return output[0]
 
     def set_bisimulation_type(self, t):
         assert(isinstance(t, BisimulationType))
         self.bisimulation = t
-
 
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
@@ -61,8 +57,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def get_rational_function(self):
         logger.info("Compute solution function")
 
-        if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
-        if self.prismfile is None: raise NotEnoughInformationError("model missing")
+        if self.pctlformula is None:
+            raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile is None:
+            raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
@@ -74,24 +72,24 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
                 '--prism', self.prismfile.location,
                 '--prop', self.pctlformula,
                 '--parametric',
-                '--parametric:resultfile', resultfile]
+                '--parametric:resultfile', resultfile,
+                '--elimination:order', 'fwrev']
         if self.bisimulation == BisimulationType.strong:
             args.append('--bisimulation')
         if constants_string != "":
             args.append('-const')
             args.append(constants_string)
-        args.append('--elimination:order')
-        args.append("fwrev")
 
         logger.info("Call storm")
         ret_code = run_tool(args, False)
         if ret_code != 0:
+            # TODO throw exception?
             logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
         else:
             logger.info("Storm call finished successfully")
 
         param_result = read_pstorm_result(resultfile)
-        os.unlink(resultfile)
+        os.remove(resultfile)
         return param_result
 
     def perform_sampling(self, samplepoints, constants=None):
@@ -144,6 +142,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
             result = Rational(result)
 
             samples.add_result(InstantiationResult(sample_point, result))
-            os.unlink(resultfile)
+            os.remove(resultfile)
 
         return samples

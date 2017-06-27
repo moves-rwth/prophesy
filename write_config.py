@@ -15,10 +15,7 @@ def find_tool(name, path=None):
     :return: The location of the path, and an empty string otherwise
     """
     res = find_executable(name, path)
-    if res:
-        return res
-    else:
-        return ""
+    return res if res else ""
 
 def check_python_api(name):
     """

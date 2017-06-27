@@ -8,6 +8,7 @@ import logging
 
 from prophesy.exceptions.configuration_error import ConfigurationError
 
+
 class Configuration():
     def __init__(self, config_file):
         self._config = configparser.ConfigParser()
@@ -21,23 +22,29 @@ class Configuration():
                 "Unable to read configuration file '{}'".format(config_file))
         self._importedFrom = config_file
 
-    def get(self, section, key):
+    def check_existence(self, section, key):
         if section not in self._config:
             raise ConfigurationError("Cannot find section {}".format(section))
 
         if key not in self._config[section]:
             raise ConfigurationError(
                 "Cannot find key {} in section {}".format(key, section))
+
+    def get(self, section, key):
+        self.check_existence(section, key)
         return self._config[section][key]
 
-    def getboolean(self, section, key):
-        if section not in self._config:
-            raise ConfigurationError("Cannot find section {}".format(section))
-
-        if key not in self._config[section]:
-            raise ConfigurationError(
-                "Cannot find key {} in section {}".format(key, section))
+    def get_boolean(self, section, key):
+        self.check_existence(section, key)
         return self._config.getboolean(section, key)
+
+    def get_float(self, section, key):
+        self.check_existence(section, key)
+        return self._config.getfloat(section, key)
+
+    def get_int(self, section, key):
+        self.check_existence(section, key)
+        return self._config.getint(section, key)
 
     def getAll(self):
         result = {}
@@ -84,7 +91,7 @@ def run_tool(args, quiet=False, logfile=None):
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     if quiet and logfile is None:
-        return pipe.communicate()[0]
+        return pipe.communicate()[0].decode(encoding='UTF-8')
     else:
         for line in iter(pipe.stdout.readline, ""):
             if not line and pipe.poll() is not None:
@@ -96,6 +103,7 @@ def run_tool(args, quiet=False, logfile=None):
                 write_string_to_file(logfile, output + "\n", append=True)
 
     return pipe.returncode
+
 
 def open_file(path):
     """Open file with system-default application.
@@ -115,6 +123,7 @@ def write_string_to_file(path, string, append=False):
     with open(path, 'a' if append else 'w') as f:
         f.write(string)
 
+
 def write_string_to_tmpfile(string):
     """
     :param string:
@@ -123,6 +132,7 @@ def write_string_to_tmpfile(string):
     _, path, = tempfile.mkstemp(suffix=".pctl", text=True)
     write_string_to_file(path, string)
     return path
+
 
 def which(program):
     """

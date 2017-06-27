@@ -1,9 +1,11 @@
+import logging
+
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation
 from prophesy.adapter.pycarl import Rational, Variable
 from prophesy.data.point import Point
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 def read_samples_file(path, parameters):
     """

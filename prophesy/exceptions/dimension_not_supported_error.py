@@ -7,7 +7,3 @@ class DimensionNotSupportedError(Exception):
         self.min_supported_dim = min_supported_dim
         self.max_supported_dim = max_supported_dim
         self.requested_dim = requested_dim
-
-
-
-

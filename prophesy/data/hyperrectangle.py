@@ -1,6 +1,10 @@
 from prophesy.data.interval import Interval
 from prophesy.data.point import Point
+import prophesy.adapter.pycarl as pc
+from prophesy.data.interval import BoundType
 
+
+# TOOD remove numpy?
 import numpy as np
 
 

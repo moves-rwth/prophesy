@@ -4,10 +4,13 @@ import logging
 from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
 import prophesy.adapter.pycarl as pc
-from prophesy.adapter.pycarl  import Constraint, Relation
+
+from prophesy.data.constraint import parse_constraint
+from prophesy.adapter.pycarl import Constraint, Relation
 
 
 logger = logging.getLogger(__name__)
+
 
 class ParametricResult(object):
     """Stores the data that may result from loading a parametric model, which
@@ -97,6 +100,7 @@ def write_pstorm_result(location, result):
         f.write("!Result: {0}\n".format(str(result.ratfunc).replace('^', '**')))
         f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
         #f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
+
 
 def read_param_result(location):
     with open(location) as f:

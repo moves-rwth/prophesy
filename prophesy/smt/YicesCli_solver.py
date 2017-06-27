@@ -16,7 +16,6 @@ class YicesCLISolver(SmtlibSolver):
     def _additional_args(self):
         return []
 
-
     def _hard_timeout_option(self):
         return "--timeout=" + str(int(self.timeout))
 

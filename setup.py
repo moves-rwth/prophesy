@@ -2,7 +2,6 @@ from distutils.core import setup
 from distutils.command.build import build
 from setuptools.command.test import test as TestCommand
 import write_config
-import os
 import sys
 
 if sys.version_info[0] == 2:
@@ -59,7 +58,7 @@ setup(
              'scripts/modelsampling.py',
              'scripts/prismfiletoratfunc.py',
              'scripts/ratfilesampling.py',
-             'scripts/webcegar'],
+             'scripts/webcegar.py'],
     cmdclass={
         'build': ConfigBuild,
         'test': Tox

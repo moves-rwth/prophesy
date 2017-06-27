@@ -1,5 +1,6 @@
 from prophesy.util import check_filepath_for_reading
 
+
 class PctlFile:
     def __init__(self, location):
         check_filepath_for_reading(location)

@@ -1,6 +1,7 @@
 from numpy import arange
 from itertools import product
-    
+
+
 class Range:
     """
     A container similar to the Python native range construct, consisting of a lower bound, an upper bound

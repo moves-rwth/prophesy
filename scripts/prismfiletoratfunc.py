@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+
 import sys
 from argparse import ArgumentParser
 import logging
-
 
 from prophesy.data.constant import parse_constants_string
 from prophesy.input.prismfile import PrismFile
@@ -10,8 +10,8 @@ from prophesy.input.pctlfile import PctlFile
 from prophesy.input.resultfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
-
 from prophesy.config import configuration
+
 
 def parse_cli_args(args):
     parser = ArgumentParser(description='Transform a prism file to a rational function.')
@@ -30,9 +30,10 @@ def parse_cli_args(args):
     return parser.parse_args(args)
 
 
-def run(args = sys.argv[1:], interactive = True):
-    pmcs = configuration.getAvailableParametricMCs()
+def run(args=sys.argv[1:], interactive = True):
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
+    pmcs = configuration.getAvailableParametricMCs()
     constants = parse_constants_string(cmdargs.constants)
 
     prism_file = PrismFile(cmdargs.file)
@@ -42,15 +43,15 @@ def run(args = sys.argv[1:], interactive = True):
         if 'storm' not in pmcs:
             raise RuntimeError("Storm location not configured.")
         tool = StormModelChecker()
+    elif cmdargs.prism:
+        if 'prism' not in pmcs:
+            raise RuntimeError("Prism location not configured.")
+        tool = PrismModelChecker()
     elif cmdargs.stormpy:
         if 'stormpy' not in pmcs:
             raise RuntimeError("Stormpy dependency not configured.")
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
         tool = StormpyModelChecker()
-    elif cmdargs.prism:
-        if 'prism' not in pmcs:
-            raise RuntimeError("Prism location not configured.")
-        tool = PrismModelChecker()
     else:
         raise RuntimeError("No supported model checker defined")
 

@@ -1,5 +1,4 @@
 import logging
-
 import tempfile
 
 import matplotlib
@@ -8,17 +7,17 @@ from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
 
-
 from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
+
+import numpy as np
 
 from prophesy.data.hyperrectangle import  HyperRectangle
 from prophesy.config import configuration
 
-import numpy as np
-
 
 logger = logging.getLogger(__name__)
+
 
 def plot_samples(samples, parameters, safe_above_threshold, threshold):
     """Plot samples and return path to file."""
@@ -108,7 +107,6 @@ class Plot(object):
 
         elif len(parameters) == 2:
 
-
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
 
@@ -145,7 +143,6 @@ class Plot(object):
             y_coords = [y for x, y in samples_blue]
             ax1.scatter(x_coords, y_coords, marker='.', c='blue')
 
-
             ax1.set_xlim([float(parameters[0].interval.left_bound()), float(parameters[0].interval.right_bound())])
             ax1.set_ylim([float(parameters[1].interval.left_bound()), float(parameters[1].interval.right_bound())])
             ax1.set_xlabel(str(parameters[0].variable))
@@ -155,4 +152,3 @@ class Plot(object):
             if display:
                 pyplot.show()
             pyplot.close(fig)
-

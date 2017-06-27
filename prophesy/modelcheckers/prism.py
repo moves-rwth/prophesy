@@ -5,6 +5,7 @@ import logging
 
 from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
+from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
@@ -19,9 +20,21 @@ logger = logging.getLogger(__name__)
 class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
     def __init__(self, location=configuration.get_prism()):
         self.location = location
+        self.bisimulation = BisimulationType.strong
         self.pctlformula = None
         self.prismfile = None
         self.constants = None
+
+    def name(self):
+        return "prism"
+
+    def version(self):
+        args = [self.location, '-version']
+        return run_tool(args, True)
+
+    def set_bisimulation_type(self, t):
+        assert(isinstance(t, BisimulationType))
+        self.bisimulation = t
 
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
@@ -30,17 +43,52 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
         self.prismfile = prismfile
         self.constants = constants
 
-    def name(self):
-        return "prism"
-
-    def version(self):
-        args = [self.location, '-version']
-        pipe = subprocess.Popen(args, stdout=subprocess.PIPE)
-        # pipe.communicate()
-        return pipe.communicate()[0].decode(encoding='UTF-8')
-
     def get_rational_function(self):
-        raise NotImplementedError("This is missing")
+        logger.info("Compute solution function")
+
+        if self.pctlformula is None:
+            raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile is None:
+            raise NotEnoughInformationError("model missing")
+
+        # create a temporary file for the result.
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+
+        constants_string = self.constants.to_key_value_string()
+
+        args = [self.location,
+                self.prismfile.location,
+                '--pctl', self.pctlformula,
+                '-exportresults', resultfile,
+                '-paramelimorder', 'fwrev']
+        if self.bisimulation == BisimulationType.strong:
+            args.append('-parambisim')
+            args.append('strong')
+        if constants_string != "":
+            args.append('-const')
+            args.append(constants_string)
+        variables = self.prismfile.parameters.get_variables()
+        args.append('-param')
+        args.append('"{}"'.format(', '.join([str(var) for var in variables])))
+
+        logger.info("Call prism")
+        ret_code = run_tool(args, False)
+        if ret_code != 0:
+            # TODO throw exception?
+            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+        else:
+            logger.info("Prism call finished successfully")
+
+        # TODO: return result in correct format
+        result = ""
+        with open(resultfile, 'r') as f:
+            result += f.read() + "\n";
+        os.remove(resultfile)
+        logger.debug("Result: {}".format(result))
+
+        raise NotImplementedError("Writing of prism result is not implemented")
+        return None
 
     def perform_uniform_sampling(self, parameters, samples_per_dimension):
         logger.info("Perform uniform sampling")
@@ -71,8 +119,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
             logger.info("Prism call finished successfully")
         found_parameters, _, samples = read_samples_file(resultpath, parameters)
 
-        os.unlink(resultpath)
-        os.unlink(pctlpath)
+        os.remove(resultpath)
+        os.remove(pctlpath)
         return samples
 
     def perform_sampling(self, samplepoints):
@@ -109,6 +157,6 @@ class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
                 sample_value = Rational(tmp)
 
             samples.add_result(InstantiationResult(sample_point, sample_value))
-        os.unlink(resultpath)
-        os.unlink(pctlpath)
+        os.remove(resultpath)
+        os.remove(pctlpath)
         return samples

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import sys
 import logging
 import copy
@@ -16,9 +15,8 @@ from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.stormpy import StormpyModelChecker
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.adapter.pycarl import Rational
-
-
 from prophesy.config import configuration
+
 
 def parse_cli_args(args):
     parser = ArgumentParser(description='Perform sampling on a prism file')
@@ -41,9 +39,11 @@ def parse_cli_args(args):
 
     return parser.parse_args(args)
 
+
 def run(args = sys.argv[1:], interactive=True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
     threshold = Rational(cmdargs.threshold)
     constants = parse_constants_string(cmdargs.constants)
 
@@ -75,7 +75,6 @@ def run(args = sys.argv[1:], interactive=True):
         parameters.remove_variable(const_variable)
     parameters.make_intervals_closed(0.0001)
 
-    print(prism_file.parameters)
     logging.info("Performing uniform sampling:")
 
     initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)
@@ -89,5 +88,6 @@ def run(args = sys.argv[1:], interactive=True):
     else:
         logging.info("Cannot plot, as dimension is too high!")
 
+
 if __name__ == "__main__":
-   run()
+    run()

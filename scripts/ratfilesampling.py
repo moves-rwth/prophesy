@@ -11,6 +11,7 @@ from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.util import open_file
 from prophesy.adapter.pycarl import Rational
+from prophesy.config import configuration
 
 
 def parse_cli_args(args):
@@ -30,6 +31,7 @@ def parse_cli_args(args):
 
 def run(args=sys.argv[1:], interactive=True):
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
     threshold = Rational(cmdargs.threshold)
 
     # Read previously generated result
@@ -52,8 +54,6 @@ def run(args=sys.argv[1:], interactive=True):
             open_file(plot_path)
     else:
         logging.info("Cannot plot, as dimension is too high!")
-
-
 
 
 if __name__ == "__main__":

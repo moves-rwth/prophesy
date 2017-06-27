@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-
 import sys
 import logging
 
@@ -14,7 +13,6 @@ from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import open_file
 from prophesy.smt.isat import IsatSolver
-from prophesy.smt.smt import setup_smt
 from prophesy.smt.smtlib import SmtlibSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy.smt.YicesCli_solver import YicesCLISolver
@@ -22,6 +20,7 @@ from prophesy import config
 from prophesy.config import configuration
 
 logger = logging.getLogger(__name__)
+
 
 def parse_cli_args(args, solversConfig):
     parser = ArgumentParser(description='Build regions based on a sample file')
@@ -54,10 +53,12 @@ def parse_cli_args(args, solversConfig):
 
     return parser.parse_args(args)
 
+
 def run(args = sys.argv[1:], interactive=True):
     interactive = False #TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
     cmdargs = parse_cli_args(args, solvers)
+    configuration.check_tools()
 
     threshold_area = cmdargs.threshold_area
     result = read_pstorm_result(cmdargs.rat_file)
@@ -80,8 +81,6 @@ def run(args = sys.argv[1:], interactive=True):
         raise RuntimeError("No threshold specified via command line or samples file.")
     logger.debug("Threshold: {}".format(threshold))
 
-
-
     logger.debug("Setup SMT interface")
     if cmdargs.z3:
         if 'z3' not in solvers:
@@ -100,10 +99,10 @@ def run(args = sys.argv[1:], interactive=True):
 
     smt2interface.run()
 
-    setup_smt(smt2interface, result, threshold)
 
     logger.info("Generating regions")
     checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
+    checker.initialize(result, threshold)
     arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
     if cmdargs.rectangles:
@@ -119,7 +118,7 @@ def run(args = sys.argv[1:], interactive=True):
     if cmdargs.iterations is not None:
         generator.generate_constraints(max_iter=cmdargs.iterations)
     else:
-        generator.generate_constraints(max_area=cmdargs.area)
+        generator.generate_constraints(max_area=pc.Rational(cmdargs.area))
 
     if interactive:
         open_file(generator.result_file)
@@ -128,7 +127,6 @@ def run(args = sys.argv[1:], interactive=True):
 
     if cmdargs.logcallsdestination:
         smt2interface.to_file(cmdargs.logcallsdestination)
-
 
 
 if __name__ == "__main__":

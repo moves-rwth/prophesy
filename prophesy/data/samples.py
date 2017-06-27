@@ -1,6 +1,7 @@
 from collections import OrderedDict, Set
-from prophesy.data.point import Point
 from enum import Enum
+
+from prophesy.data.point import Point
 
 
 class InexactRelation(Enum):
@@ -10,8 +11,8 @@ class InexactRelation(Enum):
     GREATER = 3
 
 
-class InexactInstantiationResult():
-    def __init__(self,rel, threshold):
+class InexactInstantiationResult:
+    def __init__(self, rel, threshold):
         self.relation = rel
         self.threshold = threshold
 
@@ -37,15 +38,14 @@ class ParameterInstantiation(OrderedDict):
         assert self.get_parameters() == other.get_parameters()
         return self.get_point(self.get_parameters()).numerical_distance(other.get_point(other.get_parameters()))
 
-
     def distance(self, other):
         assert self.get_parameters() == other.get_parameters()
         return self.get_point(self.get_parameters()).distance(other.get_point(self.get_parameters()))
 
-    def get_point(self, parameters = None):
+    def get_point(self, parameters=None):
         """Return the Point corresponding to this sample, given variable
         ordering provided as argument
-        @param variables VariableOrder. Must correspond to variables of this
+        @param parameters ParameterOrder. Must correspond to parameters of this
             sample point.
         """
         if not parameters:
@@ -54,7 +54,7 @@ class ParameterInstantiation(OrderedDict):
 
     @classmethod
     def from_point(cls, pt, parameters):
-        """Construnct SamplePoint from Point and ParameterOrder
+        """Construct SamplePoint from Point and ParameterOrder
         @param pt Point of pycarl.Rational
         @param parameters ParameterOrder
         """
@@ -69,7 +69,9 @@ class ParameterInstantiation(OrderedDict):
             hsh ^= hash(v)
         return hsh
 
+
 class ParameterInstantiations(list):
+
     def __init__(self, *args):
         super().__init__(*args)
         self.parameters = None
@@ -107,9 +109,7 @@ class InstantiationResult(object):
         return cls(ParameterInstantiation.from_point(pt, parameters), res)
 
 
-
-
-class InstantiationResultDict():
+class InstantiationResultDict:
     """
     Maintains a set of instantiations with their results.
     """
@@ -142,7 +142,7 @@ class InstantiationResultDict():
         return iter(self._values.items())
 
     def update(self, other):
-        for k,v in other:
+        for k, v in other:
             assert isinstance(k, ParameterInstantiation)
             assert k.get_parameters() == self.parameters
             self._values[k] = v
@@ -173,7 +173,6 @@ class InstantiationResultDict():
             else:
                 below_threshold._values[k] = v
         return above_threshold, below_threshold
-
 
     def filter_instantiation(self, filter_func):
         filtered = InstantiationResultDict(self.parameters)
@@ -249,5 +248,3 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     weight += offset
 
     return ParameterInstantiation.from_point((deltas * weight + sample1.instantiation.get_point().to_float()).to_nice_rationals(), sample1.get_parameters())
-
-

@@ -1,9 +1,11 @@
 import math
+import logging
+
 from prophesy.sampling.sample_generator import SampleGenerator
 from prophesy.data.samples import weighed_interpolation,  ParameterInstantiations
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means
@@ -22,7 +24,7 @@ class LinearRefinement(SampleGenerator):
         logger.debug("Compute new points to sample.")
         if not self.first:
             # TODO: what should the distance be?
-            self.samples = self.samples.filter(lambda value: abs(value - self.threshold) * 800 > 1)
+            self.samples = self.samples.filter_values(lambda value: abs(value - self.threshold) * 800 > 1)
         else:
             self.first = False
 
@@ -66,8 +68,6 @@ class LinearRefinement(SampleGenerator):
                 if i > len(p) - 1:
                     return True
         return False
-
-
 
     def _compute_points(self, safe_samples, bad_samples):
         delta = self._min_dist()

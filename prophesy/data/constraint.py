@@ -1,9 +1,9 @@
 
-import prophesy.adapter.pycarl  as pc
-from prophesy.data.interval import BoundType
+from prophesy.adapter.pycarl import Polynomial, Rational, parse
+import prophesy.adapter.pycarl as pc
 from shapely.geometry.polygon import LinearRing, Polygon, orient
-from prophesy.adapter.pycarl  import Polynomial, Rational, parse
 from prophesy.data.samples import ParameterInstantiation
+
 
 def parse_constraint(constraint_str):
     args = constraint_str.split(",")
@@ -12,6 +12,7 @@ def parse_constraint(constraint_str):
     res = parse(args[0])
     rel = parse_relation(args[1])
     return res
+
 
 def parse_relation(relation_string):
     if relation_string == ">=":
@@ -23,7 +24,6 @@ def parse_relation(relation_string):
     elif relation_string == ">":
         return pc.Relation.GREATER
     raise ValueError("Cannot parse {} as a relation".format(relation_string))
-
 
 
 def region_from_polygon(polygon, variables):
