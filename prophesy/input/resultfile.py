@@ -81,6 +81,7 @@ def read_pstorm_result(location):
     logger.debug("Building rational function...")
     l = match.split('/')
     num = pc.parse(l[0])
+
     if len(l) > 1:
         denom = pc.parse(l[1])
         ratfunc = num/denom
@@ -88,6 +89,7 @@ def read_pstorm_result(location):
         ratfunc = num
         if isinstance(ratfunc, pc.Monomial):
             ratfunc = pc.Polynomial(ratfunc)
+    logger.debug("Rational function is %s", ratfunc)
 
     logger.debug("Parsing complete.")
     return ParametricResult(parameters, constraints, ratfunc)
