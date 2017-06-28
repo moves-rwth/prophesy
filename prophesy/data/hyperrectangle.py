@@ -124,8 +124,7 @@ class HyperRectangle(object):
 
     def setminus(self, other, dimension=0):
         """
-        DOES NOT WORK
-        TODO: erweitere implementierung auf mehr dimensionen
+        Does a setminus operation on hyperrectangles and returns a list with hyperrects covering the resulting area
         :param other: the other HyperRectangle
         :param dimension: dimension where to start the operation
         :return: a list of HyperRectangles
