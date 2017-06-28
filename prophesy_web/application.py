@@ -11,6 +11,8 @@ import re
 import shutil
 import uuid
 import subprocess
+import logging
+
 
 from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.websocket import WebSocketHandler
@@ -22,9 +24,7 @@ from shapely.geometry.polygon import Polygon
 from prophesy.input.resultfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from prophesy.input.prismfile import PrismFile
-from prophesy.modelcheckers.param import ParamParametricModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy.smt.smt import setup_smt
 from prophesy.smt.isat import IsatSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
@@ -49,8 +49,12 @@ default_results = {}
 if configuration.is_module_available('stormpy'):
     from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
+
+logger = logging.getLogger("ProphesyWeb")
+
 def _jsonSamples(samples):
     return [{"coordinate" : res.instantiation.get_point(samples.parameters).to_float().coordinates, "value" : float(res.result)} for res in samples.instantiation_results()]
+
 
 def _jsonPoly(polygon):
     if isinstance(polygon, Polygon):
@@ -73,7 +77,7 @@ def getSat(satname):
 def getSampler(satname, result = None, prism_file = None, pctl_formula = None):
     if satname == 'ratfunc':
         # Do not use rationals for now
-        return RatFuncSampling(result.ratfunc, result.parameters.get_variables())
+        return RatFuncSampling(result.ratfunc, result.parameters)
     elif satname == 'prism':
         mc = PrismModelChecker()
         mc.load_model_from_prismfile(result.prism_file)
@@ -360,7 +364,7 @@ class UploadPctl(CegarHandler):
 class RunPrism(CegarHandler):
     def post(self):
         # Run the uploaded prism file with the chosen mctool
-        print("Prism CALL")
+        logger.info("RunPrism POST request")
 
         # Get the current prism file and save it temporarily
         prism_files = self._get_session("prism-files", {})
@@ -372,7 +376,7 @@ class RunPrism(CegarHandler):
         pctl_formulas = self._get_session("pctl-formulas", {})
         current_pctl_group = self.get_argument("pctl_group")
         current_pctl_formula = self.get_argument("pctl_property")
-        print("Use Group: {0} with formula {1}".format(current_pctl_group, current_pctl_formula))
+        logger.debug("Use Group: {0} with formula {1}".format(current_pctl_group, current_pctl_formula))
         pctl_string = pctl_formulas[current_pctl_group][current_pctl_formula]
 
 
@@ -385,25 +389,30 @@ class RunPrism(CegarHandler):
 
         # Try to load the model
         try:
+            logger.debug("Load model from prism file")
             tool.load_model_from_prismfile(prism_file)
         except Exception as e:
             return self._json_error("Error while loading model: {}".format(e))
 
         # Try to load the formula
         try:
+            logger.debug("Load formula")
             tool.set_pctl_formula(pctl_string)
         except Exception as e:
             return self._json_error("Error while loading the formula into the tool: {}".format(e))
 
         # Run the mctool to evaluate the current ration function
         try:
+            logger.debug("Construct solution function")
             result = tool.get_rational_function()
         except Exception as e:
             return self._json_error("Error while computing rational function: {}".format(e))
 
         # Save the result temporarily
+        logger.debug("Open file to store result")
         (res_fd, res_file) = tempfile.mkstemp(".result", "param", web_configuration.get_results_dir())
         os.close(res_fd)
+        logger.debug("Write result")
         write_pstorm_result(res_file, result)
 
         result_files = self._get_session('result_files', {})
@@ -471,7 +480,7 @@ class PingRedis(CegarHandler):
 class Samples(CegarHandler):
     def get(self):
         result = self._getResultData(self._get_session('current_result', None))
-        flattenedsamples = _jsonSamples(self._get_session('samples', InstantiationResultDict(result.parameters.get_variable_order())))
+        flattenedsamples = _jsonSamples(self._get_session('samples', InstantiationResultDict(result.parameters)))
         return self._json_ok(flattenedsamples)
 
     def post(self):
@@ -487,11 +496,11 @@ class Samples(CegarHandler):
         if coordinates is None:
             return self._json_error("Unable to read coordinates", 400)
         result = self._getResultData(self._get_session('current_result', None))
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variables()))
+        samples = self._get_session('samples', InstantiationResultDict(result.parameters))
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
         coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
-        sample_points = ParameterInstantiations.from_points(coordinates, result.parameters.get_variables())
+        sample_points = ParameterInstantiations.from_points(coordinates, result.parameters)
         new_samples = sampling_interface.perform_sampling(sample_points)
         if socket is not None:
             socket.send_samples(new_samples)
@@ -515,9 +524,9 @@ class Samples(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
-        variables = result.parameters.get_variable_order()
+        parameters = result.parameters
         sampler = getSampler(self._get_session('sampler'), result)
-        new_samples = sampler.perform_sampling([ParameterInstantiation({variables[0]:x, variables[1]:y})])
+        new_samples = sampler.perform_sampling([ParameterInstantiation({parameters[0]:x, parameters[1]:y})])
         samples = self._get_session('samples', InstantiationResultDict())
         samples.update(new_samples)
         return self._json_ok()
@@ -558,11 +567,11 @@ class GenerateSamples(CegarHandler):
 
         socket = self._get_socket()
 
-        variables = result.parameters.get_variables()
+        parameters = result.parameters
 
 
-        samples = self._get_session('samples', InstantiationResultDict(variables))
-        new_samples = InstantiationResultDict(variables)
+        samples = self._get_session('samples', InstantiationResultDict(parameters))
+        new_samples = InstantiationResultDict(parameters)
         sampling_interface = getSampler(self._get_session('sampler'), result)
         if generator_type == 'uniform':
             intervals = result.parameters.get_variable_bounds()
@@ -599,14 +608,14 @@ class ConstraintHandler(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variables()))
-        threshold = self._get_session('threshold', 0.5)
+        samples = self._get_session('samples', InstantiationResultDict(result.parameters))
+        threshold = self._get_session('threshold', Rational("1/2"))
 
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
-        setup_smt(smt2interface, result, threshold)
-        
+
         checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
+        checker.initialize(result,threshold)
 
         if type == 'planes':
             return self._json_error("Planes generator was dropped in v2")
@@ -631,7 +640,9 @@ class ConstraintHandler(CegarHandler):
         #smt2interface.run()
 
         unsat = []
-        new_samples = {}
+        result = self._getResultData(self._get_session('current_result', None))
+
+        new_samples = InstantiationResultDict(result.parameters)
         for result in generator:
             (check_result, data) = result
             if check_result is RegionCheckResult.unsat:
@@ -694,7 +705,7 @@ class Constraints(ConstraintHandler):
         result = self._getResultData(self._get_session('current_result', None))
         if result is None:
             return self._json_error("Unable to load result data", 500)
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters.get_variable_order()))
+        samples = self._get_session('samples', InstantiationResultDict(result.parameters))
         constraints = self._get_session('regions', [])
 
         samples.update(new_samples)

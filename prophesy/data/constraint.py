@@ -40,7 +40,7 @@ def region_from_polygon(polygon, variables):
             assert len(list(polygon.interiors)) == 0
             polygon = orient(polygon, sign=1.0)
             polygon = polygon.exterior
-        points = list(polygon.coords)
+        points = [(Rational(c1), Rational(c2)) for c1, c2 in list(polygon.coords)]
         assert len(points) >= 2
 
         constraint = None
@@ -60,7 +60,7 @@ def region_from_polygon(polygon, variables):
             poly = Polynomial(-Rational(c))
             for variable, coefficient in zip(variables, dvec):
                 if coefficient != 0:
-                    poly = poly + variable * coefficient
+                    poly = poly + Polynomial(variable) * coefficient
 
             # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
             new_constraint = pc.Constraint(poly, pc.Relation.LEQ)
