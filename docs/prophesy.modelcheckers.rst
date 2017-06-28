@@ -31,7 +31,7 @@ prophesy.modelcheckers.ppmc module
     :show-inheritance:
 
 Implementations
-----------
+----------------
 
 prophesy.modelcheckers.storm module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -2,7 +2,7 @@ prophesy.input package
 ======================
 
 Input file handlers
-----------
+----------------------------------
 
 prophesy.input.pctlfile module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -11,3 +11,4 @@ tmp/
 *.egg-info
 .tox
 .cache
+_build/
