@@ -20,9 +20,9 @@ class Sampler(object):
         for each dimension, in order) and the number of samples per
         dimension, a uniformly-spaced grid of points (the cartesian
         product) is sampled.
-        @param parameters 
-        @param iterable of Interval
-        @param samples_per_dimension int
+        
+        :param parameters: Parameters together with their region.
+        :param samples_per_dimension: In how many points should the region be divided.
         """
         if samples_per_dimension < 1:
             raise RuntimeError("No. of samples per dimension must be >= 2")
@@ -42,4 +42,11 @@ class Sampler(object):
         return self.perform_sampling(sample_points)
 
     def perform_sampling(self, samplepoints):
+        """
+        Given some parameter instantiations, perform sampling on these instantiations.
+        
+        :param samplepoints: An iterable yielding parameter instantiations
+        :return: A collection with the results of these samples
+        :rtype: InstantiationResultDict
+        """
         raise NotImplementedError("Abstract sampling function called")

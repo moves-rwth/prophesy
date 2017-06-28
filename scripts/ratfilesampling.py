@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 import logging
 
 from prophesy.output.plot import plot_samples
-from prophesy.input.resultfile import read_pstorm_result
+from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.input.samplefile import write_samples_file
 from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling

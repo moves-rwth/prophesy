@@ -3,6 +3,9 @@ from prophesy.data.hyperrectangle import HyperRectangle
 
 
 class QuadAndSamples:
+    """
+    Named tuple for easier code understanding
+    """
     def __init__(self, quad, samples):
         self.quad = quad
         self.samples = samples

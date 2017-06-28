@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 
+from prophesy.sampling.sampler import Sampler
+
 
 class BisimulationType(Enum):
     none = 0
@@ -8,7 +10,7 @@ class BisimulationType(Enum):
     weak = 2
 
 
-class ProbabilisticModelChecker:
+class ProbabilisticModelChecker(Sampler):
     """
     An abstraction of probabilistic model checkers for concrete systems
     """

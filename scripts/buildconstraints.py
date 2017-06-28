@@ -8,7 +8,7 @@ import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import ConstraintQuads
 from prophesy.regions.region_smtchecker import SmtRegionChecker
-from prophesy.input.resultfile import read_pstorm_result
+from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import open_file

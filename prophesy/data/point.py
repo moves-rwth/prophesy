@@ -26,7 +26,7 @@ class Point:
     """
     def __init__(self, *args):
         """
-        @param args Numerical values to represent the point. 
+        :param args: Numerical values to represent the point. 
         """
         self.coordinates = tuple(args)
 

@@ -17,9 +17,9 @@ from prophesy.adapter.pycarl import Constraint, Relation
 class SmtRegionChecker(RegionChecker):
     def __init__(self, smt2interface, parameters, ratfunc):
         """
-        @param smt2interface SMTSolver to check regions with
-        @param parameters ParameterOrder
-        @param ratfunc RationalFunction, used to evaluate solutions
+        :param smt2interface: SMTSolver to check regions with
+        :param parameters: ParameterOrder
+        :param ratfunc: RationalFunction, used to evaluate solutions
         """
         self._smt2interface = smt2interface
         self.parameters = parameters
@@ -30,6 +30,13 @@ class SmtRegionChecker(RegionChecker):
     # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
     def initialize(self, result, threshold,
                                         solution_bound=Interval(0, BoundType.closed, None, BoundType.open)):
+        """
+        Initializes the smt solver to consider the problem at hand.
+        
+        :param result: 
+        :param threshold: 
+        :param solution_bound: 
+        """
         for p in result.parameters:
             self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
@@ -85,8 +92,9 @@ class SmtRegionChecker(RegionChecker):
         returns tuple (valid constraint, polygon/counterexample point)
         if constraint is valid the tuple  is (True, polygon added)
         if constraint is invalid the tuple is (False, point as counterexample)
-        @param polygon, either HyperRectangle or shapely Polygon
-        @param safe Boolean to indicate if the region should be considered as safe or unsafe
+        
+        :param polygon: either HyperRectangle or shapely Polygon
+        :param safe: Boolean to indicate if the region should be considered as safe or unsafe
         """
         smt_successful = False
         smt_model = None

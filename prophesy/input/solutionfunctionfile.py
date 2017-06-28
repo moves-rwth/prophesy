@@ -5,7 +5,6 @@ from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
 import prophesy.adapter.pycarl as pc
 
-from prophesy.data.constraint import parse_constraint
 from prophesy.adapter.pycarl import Constraint, Relation
 
 

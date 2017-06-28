@@ -11,14 +11,13 @@ from prophesy.util import run_tool, ensure_dir_exists, write_string_to_tmpfile
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 from prophesy.data.constant import Constants
 from prophesy.adapter.pycarl import Rational
-from prophesy.sampling.sampler import Sampler
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 import prophesy.data.range
 
 logger = logging.getLogger(__name__)
 
 
-class PrismModelChecker(ParametricProbabilisticModelChecker, Sampler):
+class PrismModelChecker(ParametricProbabilisticModelChecker):
     def __init__(self, location=configuration.get_prism()):
         self.location = location
         self.bisimulation = BisimulationType.strong

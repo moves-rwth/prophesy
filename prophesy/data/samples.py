@@ -52,9 +52,10 @@ class ParameterInstantiation(dict):
 
     @classmethod
     def from_point(cls, pt, parameters):
-        """Construct SamplePoint from Point and ParameterOrder
-        @param pt Point of pycarl.Rational
-        @param parameters ParameterOrder
+        """Construct ParameterInstantiation from Point and ParameterOrder
+        
+        :param pt: Point of pycarl.Rational
+        :param parameters: ParameterOrder
         """
         sp = cls()
         for (val, var) in zip(pt, parameters):
@@ -76,6 +77,12 @@ class ParameterInstantiations(list):
 
     @classmethod
     def from_points(cls, pts, parameters):
+        """
+        
+        :param pts: 
+        :param parameters: 
+        :return: 
+        """
         res = cls([ParameterInstantiation.from_point(pt, parameters) for pt in pts])
         res.parameters = parameters
         return res
@@ -88,22 +95,37 @@ class InstantiationResult(object):
 
     def __init__(self, instantiation, result):
         """
-        @param pt data.Point. Order has to follow the canonical model order
-        @param val pycarl.Rational
-        @param variables VariableOrder (Optional)
+        :param instantiation:
+        :param result: 
         """
         assert isinstance(instantiation, ParameterInstantiation)
         self.instantiation = instantiation
         self.result = result
 
     def get_instantiation_point(self, variable_order):
+        """
+        
+        :param variable_order: 
+        :return: 
+        """
         return self.instantiation.get_point(variable_order)
 
     def get_parameters(self):
+        """
+        
+        :return: 
+        """
         return self.instantiation.get_parameters()
 
     @classmethod
     def from_point(cls, pt, res, parameters):
+        """
+        
+        :param pt: 
+        :param res: 
+        :param parameters: 
+        :return: 
+        """
         return cls(ParameterInstantiation.from_point(pt, parameters), res)
 
 
@@ -114,7 +136,7 @@ class InstantiationResultDict:
 
     def __init__(self, parameters):
         """
-        @param variables, VariableOrder
+        :param parameters: Parameters for the dictionary.
         """
         self._values = OrderedDict()
         self.parameters = parameters
@@ -150,7 +172,7 @@ class InstantiationResultDict:
 
     def add_result(self, instantiation_result):
         """
-        @param sample Sample
+        :param sample: Sample
         """
         assert isinstance(instantiation_result, InstantiationResult)
         assert instantiation_result.instantiation.get_parameters() == set(self.parameters)
@@ -159,9 +181,10 @@ class InstantiationResultDict:
     def split(self, threshold):
         """Split given samples into separated sample dictionaries, where the value
         either >= or < threshold.
-        @param samples SampleDict
-        @param threshold pycarl.Rational
-        @return (SampleDict >=, SampleDict <)
+        
+        :param samples: SampleDict
+        :param threshold: pycarl.Rational
+        :return: (SampleDict >=, SampleDict <)
         """
         above_threshold = InstantiationResultDict(self.parameters)
         below_threshold = InstantiationResultDict(self.parameters)
@@ -181,8 +204,9 @@ class InstantiationResultDict:
 
     def filter_value(self, filter_func):
         """Returns samples for which filter_func returns true.
-        @param samples SampleDict
-        @param filter_func callable to filter values, return True to keep sample
+        
+        :param samples: SampleDict
+        :param filter_func: callable to filter values, return True to keep sample
         """
         filtered = InstantiationResultDict(self.parameters)
         for k, v in self._values.items():
@@ -209,6 +233,7 @@ class InstantiationResultDict:
     def check(self):
         """
         Validity check
+        
         :return: True if instantiations map exactly the parameters to values
         """
         pass
@@ -219,12 +244,13 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     result in a point estimated close to the given treshold (by linear
     interpolation). Fudge allows to offset this point slightly either
     positively or negatively.
-    @param sample1 Sample
-    @param sample2 Sample
-    @param threshold pycarl.Rational
-    @param fudge float Percentage of distance betwen both samples to fudge
+    
+    :param sample1: Sample
+    :param sample2: Sample
+    :param threshold: pycarl.Rational
+    :param fudge: float Percentage of distance betwen both samples to fudge
         around
-    @return tuple of pycarl.Rational if interpolated point, or None if the
+    :return tuple of pycarl.Rational if interpolated point, or None if the
         values are too close
     """
     # If point values are too close, do not interpolate

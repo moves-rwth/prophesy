@@ -9,8 +9,8 @@ class RatFuncSampling(Sampler):
 
     def __init__(self, ratfunc, parameters):
         """
-        @param ratfunc pycarl.RationalFunction (or lower)
-        @param variables VariableOrder
+        :param ratfunc: pycarl.RationalFunction (or lower)
+        :param parameters: VariableOrder
         """
         super().__init__()
 
@@ -19,8 +19,9 @@ class RatFuncSampling(Sampler):
 
     def perform_sampling(self, samplepoints):
         """
-        @param samplepoints iterable of SamplePoint (preferably SamplePoints)
-        @return SampleDict
+        :param samplepoints: iterable of SamplePoint 
+        :return: 
+        :rtype: InstantiationResultDict
         """
 
         samples = InstantiationResultDict(self.parameters)

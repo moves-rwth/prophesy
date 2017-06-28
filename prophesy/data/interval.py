@@ -12,9 +12,11 @@ class BoundType(Enum):
 def string_to_interval(input_string, internal_parse_func):
     """
     Given a string which encodes an interval, constructs the interval
+    
     :param input_string: 
     :param internal_parse_func: 
-    :return: 
+    :return: The represented interval
+    :rtype: Interval
     """
     assert isinstance(input_string, str)
     input_string = input_string.strip()
@@ -45,6 +47,7 @@ def string_to_interval(input_string, internal_parse_func):
 def create_embedded_closed_interval(interval, epsilon):
     """
     For an (half) open interval from l to r, create a closed interval [l+eps, r-eps]. 
+    
     :param interval: The interval which goes into the method
     :param epsilon: An epsilon offset used to close.
     :return: A closed interval.
@@ -96,7 +99,8 @@ class Interval:
     def empty(self):
         """
         Does the interval contain any points.
-        :return: 
+        
+        :return: True, iff there exists a point in the interval.
         """
         if self._left_value == self._right_value:
             return (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open)
@@ -105,6 +109,7 @@ class Interval:
     def contains(self, pt):
         """
         Does the interval contain a specific point
+        
         :param pt: A value
         :return: True if the value lies between the bounds.
         """
@@ -116,17 +121,25 @@ class Interval:
     def is_closed(self):
         """
         Does the interval have closed bounds on both sides.
-        :return: 
+        
+        :return: True iff both bounds are closed.
         """
         return self.right_bound_type() == BoundType.closed and self.left_bound_type() == BoundType.closed
 
     def width(self):
+        """
+        The width of the interval
+        
+        :return: right bound - left bound
+        """
         return self._right_value - self._left_value
 
     def split(self):
         """
         Split the interval in two equally large halfs.
-        :return: 
+        
+        :return: Two intervals, the first from the former left bound to (excluding) middle point (leftbound + rightbound)/2, 
+                                the second from the middle point (including) till the former right bound
         """
         mid = self._left_value + self.width() / 2
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
@@ -134,13 +147,15 @@ class Interval:
     def close(self):
         """
         Make all bounds closed
-        :return: 
+        
+        :return: A new interval which has closed bounds instead.
         """
         return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
 
     def intersect(self, other):
         """
         Compute intersection between to intervals
+        
         :param other: 
         :return: 
         """

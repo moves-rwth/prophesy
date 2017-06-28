@@ -20,10 +20,10 @@ prophesy.input.prismfile module
     :undoc-members:
     :show-inheritance:
 
-prophesy.input.resultfile module
+prophesy.input.solutionfunctionfile module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: prophesy.input.resultfile
+.. automodule:: prophesy.input.solutionfunctionfile
     :members:
     :undoc-members:
     :show-inheritance:

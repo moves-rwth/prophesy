@@ -7,7 +7,7 @@ from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.util import run_tool, ensure_dir_exists
-from prophesy.input.resultfile import read_pstorm_result
+from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.sampling.sampler import Sampler
 from prophesy.adapter.pycarl import Rational
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
@@ -17,7 +17,7 @@ from prophesy.exceptions.not_enough_information_error import NotEnoughInformatio
 logger = logging.getLogger(__name__)
 
 
-class StormModelChecker(ParametricProbabilisticModelChecker, Sampler):
+class StormModelChecker(ParametricProbabilisticModelChecker):
     """
     Class wrapping the storm model checker CLI.
     """

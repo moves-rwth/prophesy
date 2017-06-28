@@ -7,7 +7,7 @@ import logging
 from prophesy.data.constant import parse_constants_string
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
-from prophesy.input.resultfile import write_pstorm_result
+from prophesy.input.solutionfunctionfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.config import configuration

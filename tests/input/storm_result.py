@@ -1,4 +1,4 @@
-from prophesy.input.resultfile import read_pstorm_result
+from prophesy.input.solutionfunctionfile import read_pstorm_result
 
 from helpers.helper import get_example_path
 

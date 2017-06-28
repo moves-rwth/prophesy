@@ -7,7 +7,7 @@ from prophesy.exceptions.module_error import ModuleError
 from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.sampling.sampler import Sampler
 from prophesy.input.prismfile import PrismFile
-from prophesy.input.resultfile import ParametricResult
+from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ else:
     import stormpy.logic
 
 
-class StormpyModelChecker(ParametricProbabilisticModelChecker, Sampler):
+class StormpyModelChecker(ParametricProbabilisticModelChecker):
     """This is the python interface class to use the Storm Modelchecker"""
 
     def __init__(self):

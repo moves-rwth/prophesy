@@ -13,6 +13,7 @@ Module contents
 Interfaces
 ----------
 
+.. _ref_prophesy.modelcheckers.pmc:
 
 prophesy.modelcheckers.pmc module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

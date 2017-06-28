@@ -9,6 +9,7 @@ class Constant(object):
     def __init__(self, variable, value):
         """
         Initialise the constant
+        
         :param variable:  pycarl.Variable which encodes the constant
         :param value: expression for the value of the constant
         """
@@ -25,7 +26,8 @@ class Constants(object):
 
     def has_variable(self, var):
         """
-        Does the container contain a constant encoded by the given variable
+        Does the container contain a constant encoded by the given variable?
+        
         :param var: The variable which might be contained.
         :return: 
         """
@@ -34,6 +36,7 @@ class Constants(object):
     def get_constant(self, var):
         """
         Get the constant associated with the given variable 
+        
         :param var: 
         :return: 
         """
@@ -42,6 +45,7 @@ class Constants(object):
     def add(self, constant):
         """
         Add a constant.
+        
         :param constant: 
         :return: 
         """
@@ -51,6 +55,7 @@ class Constants(object):
         """
         Provides a key-value string from variable to constant value.
         The key-value string format can be immediately used for storm or prism.
+        
         :param to_float: Should the constant value be casted into a float
         :return: A string of the format var1=val1,...,varn=valn
         """
@@ -65,6 +70,7 @@ class Constants(object):
     def variables(self):
         """
         The set of variables which represent the constants contained.
+        
         :return: A iterable over the variables.
         """
         return self.constants.keys()
@@ -79,6 +85,7 @@ class Constants(object):
 def parse_constants_string(input_string):
     """
     Parses a key-value string 
+    
     :param input_string: 
     :return: 
     """

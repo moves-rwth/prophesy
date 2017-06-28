@@ -21,7 +21,7 @@ from tornado import gen
 from pycket.session import SessionMixin
 from shapely.geometry.polygon import Polygon
 
-from prophesy.input.resultfile import read_param_result, read_pstorm_result, \
+from prophesy.input.solutionfunctionfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
 from prophesy.input.prismfile import PrismFile
 from prophesy.modelcheckers.storm import StormModelChecker

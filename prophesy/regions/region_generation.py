@@ -137,9 +137,10 @@ class RegionGenerator:
     @abstractmethod
     def reject_constraint(self, constraint, safe, sample):
         """Called for a constraint that is rejected (sample found).
-        @param constraint Polygon or HyperRectangle
-        @param safe Boolean
-        @param sample Sample
+        
+        :param constraint: Polygon or HyperRectangle
+        :param safe: Boolean
+        :param sample: Sample
         """
         raise NotImplementedError("Abstract parent method")
 
@@ -158,8 +159,11 @@ class RegionGenerator:
     def generate_constraints(self, max_iter=-1, max_area=1):
         """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
-        max_iter: Number of regions to generate/check at most (not counting SMT failures),
-        -1 for unbounded"""
+        
+        :param max_iter: Number of regions to generate/check at most (not counting SMT failures),
+        -1 for unbounded
+        "param max_area: Maximal area that should be covered.
+        """
         if max_iter == 0:
             return self.safe_polys, self.bad_polys, self.new_samples
 
