@@ -7,7 +7,7 @@ from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 class RatFuncSampling(Sampler):
     """Simple sampler based on pycarl rational function"""
 
-    def __init__(self, ratfunc, variables):
+    def __init__(self, ratfunc, parameters):
         """
         @param ratfunc pycarl.RationalFunction (or lower)
         @param variables VariableOrder
@@ -15,7 +15,7 @@ class RatFuncSampling(Sampler):
         super().__init__()
 
         self.ratfunc = ratfunc
-        self.variables = variables
+        self.parameters = parameters
 
     def perform_sampling(self, samplepoints):
         """
@@ -23,7 +23,7 @@ class RatFuncSampling(Sampler):
         @return SampleDict
         """
 
-        samples = InstantiationResultDict(self.variables)
+        samples = InstantiationResultDict(self.parameters)
         for sample_point in samplepoints:
             # TODO wrap the following in a function.
             #for var in self.ratfunc.gather_variables():
