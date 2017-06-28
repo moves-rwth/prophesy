@@ -3,6 +3,7 @@
 import configparser
 import os
 import importlib
+import logging
 from distutils.spawn import find_executable
 
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
@@ -14,10 +15,7 @@ def find_tool(name, path=None):
     :return: The location of the path, and an empty string otherwise
     """
     res = find_executable(name, path)
-    if res:
-        return res
-    else:
-        return ""
+    return res if res else ""
 
 def check_python_api(name):
     """
@@ -53,6 +51,7 @@ def get_initial_config(config):
     config_tools = {}
     config_tools["z3"] = find_tool("z3")
     config_tools["isat"] = find_tool("isat")
+    config_tools["yices"] = find_tool("yices-smt2")
     config_tools["param"] = find_tool("param")
     config_tools["storm"] = find_tool("storm")
     config_tools["prism"] = find_tool("prism")
@@ -75,18 +74,23 @@ def get_initial_config(config):
     config_constraints["precision"] = str(0.0001)
     config["constraints"] = config_constraints
 
+    config_smt = {}
+    config_smt["timeout"] = str(10)
+    config["smt"] = config_smt
+
+
 def write_initial_config():
     config = configparser.ConfigParser()
     get_initial_config(config)
     path = os.path.join(thisfilepath, "prophesy", "prophesy.cfg")
-    print("Writing config to " + path)
+    logging.info("Writing config to " + path)
     with open(path, 'w') as configfile:
         config.write(configfile)
 
     config = configparser.ConfigParser()
     get_initial_web_config(config)
     path = os.path.join(thisfilepath, "prophesy_web", "prophesy_web.cfg")
-    print("Writing config to " + path)
+    logging.info("Writing config to " + path)
     with open(path, 'w') as configfile:
         config.write(configfile)
 

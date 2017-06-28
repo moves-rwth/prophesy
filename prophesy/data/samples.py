@@ -1,234 +1,274 @@
-from collections import OrderedDict
+from collections import OrderedDict, Set
+from enum import Enum
+
 from prophesy.data.point import Point
-from pycarl import Rational
 
-# Placeholder values for samples of which the exact value is not known,
-# but can be considered safe (above) or unsafe (below)
-SAMPLE_ABOVE = Rational(2)
-SAMPLE_BELOW = Rational(-1)
 
-# If a sample is requested that is out of bounds, result is invalid
-SAMPLE_INVALID = None
+class InexactRelation(Enum):
+    LESS = 0
+    LEQ = 1
+    GEQ = 2
+    GREATER = 3
 
-class SamplePoint(dict):
-    """Simple dictionary mapping a pycarl.Variable to pycarl.Rational.
+
+class InexactInstantiationResult:
+    def __init__(self, rel, threshold):
+        self.relation = rel
+        self.threshold = threshold
+
+
+class ParameterInstantiation(dict):
+    """Simple dictionary mapping from a Parameter to pycarl.Rational.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_point(self, variables):
+    def get_parameters(self):
+        parameters = []
+        for k in self.keys():
+            parameters.append(k)
+        return set(parameters)
+
+    def __sub__(self, other):
+        assert self.get_parameters() == other.get_parameters()
+        return self.get_point(self.get_parameters()) - other.get_point(other.get_parameters())
+
+    def numerical_distance(self, other):
+        assert self.get_parameters() == other.get_parameters()
+        return self.get_point(self.get_parameters()).numerical_distance(other.get_point(other.get_parameters()))
+
+    def distance(self, other):
+        assert self.get_parameters() == other.get_parameters()
+        return self.get_point(self.get_parameters()).distance(other.get_point(self.get_parameters()))
+
+    def get_point(self, parameters):
         """Return the Point corresponding to this sample, given variable
         ordering provided as argument
-        @param variables VariableOrder. Must correspond to variables of this
+        @param parameters ParameterOrder. Must correspond to parameters of this
             sample point.
         """
-        return Point(*[self[var] for var in variables])
+        return Point(*[self[var] for var in parameters])
 
     @classmethod
-    def from_point(cls, pt, variables):
-        """Construnct SamplePoint from Point and VariableOrder
-        @param pt Point of pycarl.Rational
-        @param variables VariableOrder
+    def from_point(cls, pt, parameters):
+        """Construct ParameterInstantiation from Point and ParameterOrder
+        
+        :param pt: Point of pycarl.Rational
+        :param parameters: ParameterOrder
         """
         sp = cls()
-        for (val, var) in zip(pt, variables):
+        for (val, var) in zip(pt, parameters):
             sp[var] = val
         return sp
 
-class SamplePoints(object):
-    """Collection of SamplePoint. When iterated over, returns a SamplePoint,
-    but internally stores things slightly more efficient
-    """
-    def __init__(self, points, variables):
+    def __hash__(self):
+        hsh = 0
+        for v in self.values():
+            hsh ^= hash(v)
+        return hsh
+
+
+class ParameterInstantiations(list):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.parameters = None
+
+    @classmethod
+    def from_points(cls, pts, parameters):
         """
-        @param points Iterable of Point
-        @param variables VariableOrder
+        
+        :param pts: 
+        :param parameters: 
+        :return: 
         """
-        self.points = points
-        self.variables = variables
+        res = cls([ParameterInstantiation.from_point(pt, parameters) for pt in pts])
+        res.parameters = parameters
+        return res
 
-    def __len__(self):
-        return len(self.points)
 
-    def __getitem__(self, key):
-        pt = self.points[key]
-        tups = zip(pt, self.variables)
-        return {var:val for var, val in tups}
-
-    def __setitem__(self, key, value):
-        self.points[key] = value
-
-    def __reversed__(self):
-        return reversed(self.points)
-
-    def __iter__(self):
-        for pt in self.points:
-            assert len(pt) == len(self.variables), \
-                "Sample point not defined for all variables"
-            tups = zip(self.variables, pt)
-            yield SamplePoint({var:val for var, val in tups})
-
-    def __item__(self, index):
-        pass
-
-    def __str__(self):
-        return "SamplePoints({}, {})".format(self.points, self.variables)
-
-    def __repr__(self):
-        return "SamplePoints({!r}, {!r})".format(self.points, self.variables)
-
-class Sample(object):
+class InstantiationResult(object):
     """Class to represent a single sample. Maps a point (tuple of
     pycarl.Rational) to a value (pycarl.Rational).
     """
 
-    def __init__(self, pt, val, variables=None):
+    def __init__(self, instantiation, result):
         """
-        @param pt data.Point. Order has to follow the canonical model order
-        @param val pycarl.Rational
-        @param variables VariableOrder (Optional)
+        :param instantiation:
+        :param result: 
         """
-        self.pt = pt
-        self.val = val
-        self.variables = variables
+        assert isinstance(instantiation, ParameterInstantiation)
+        self.instantiation = instantiation
+        self.result = result
 
-    def distance(self, other):
-        """Returns the distance (magnitute) between this sample and the other
-        sample.
-        @param other Sample
-        @return pycarl.Rational
+    def get_instantiation_point(self, variable_order):
         """
-        return self.pt.distance(other.pt)
+        
+        :param variable_order: 
+        :return: 
+        """
+        return self.instantiation.get_point(variable_order)
 
-    def reorder(self, variables):
-        """returns a new Sample for which the coordinates are reordered
-        according to the given variable order.
-        @param variables VariableOrder, variables must match self.variables
-        @return Sample
+    def get_parameters(self):
         """
-        order = [self.variables.index(var) for var in variables]
-        pt = Point(*[self.pt[index] for index in order])
-        return Sample(pt, self.val, variables)
+        
+        :return: 
+        """
+        return self.instantiation.get_parameters()
 
     @classmethod
-    def from_sample_point(cls, sample_point, variables, value):
-        """Create Sample out of given SamplePoint, variable ordering and value
-        @param sample_point SamplePoint to indicate location
-        @param variables VariableOrder. Must correspond to variables of the
-            sample point.
-        @value value pycarl.Rational, value of the Sample
-        @return Sample
+    def from_point(cls, pt, res, parameters):
         """
-        return cls(sample_point.get_point(variables), value, variables)
+        
+        :param pt: 
+        :param res: 
+        :param parameters: 
+        :return: 
+        """
+        return cls(ParameterInstantiation.from_point(pt, parameters), res)
 
-class SampleDict(OrderedDict):
-    """Simple wrapper to maintain a dictionary of valuation -> sample. Ordering
-    of the dictionary is based on order of sampling (and not valuation).
-    Key is Point, Value is Rational
+
+class InstantiationResultDict:
+    """
+    Maintains a set of instantiations with their results.
     """
 
-    def __init__(self, variables=None):
+    def __init__(self, parameters):
         """
-        @param variables, VariableOrder (Optional)
+        :param parameters: Parameters for the dictionary.
         """
-        super().__init__()
-        self.variables = variables
+        self._values = OrderedDict()
+        self.parameters = parameters
+        assert self._parameters_check()
 
-    def add_sample(self, sample):
+    def has(self, instantiation):
+        return instantiation in self._values
+
+    def remove(self, instantiation):
+        del self._values[instantiation]
+
+    def _parameters_check(self):
         """
-        @param sample Sample
+        
+        :return: True if all variables are indeed set variables
         """
-        self[sample.pt] = sample.val
+        for p in self.parameters:
+            if p.variable.is_no_variable:
+                return False
+        return True
+
+    def __iter__(self):
+        return iter(self._values.items())
+
+    def update(self, other):
+        for k, v in other:
+            assert isinstance(k, ParameterInstantiation)
+            assert k.get_parameters() == set(self.parameters)
+            self._values[k] = v
+
+    def __len__(self):
+        return len(self._values)
+
+    def add_result(self, instantiation_result):
+        """
+        :param sample: Sample
+        """
+        assert isinstance(instantiation_result, InstantiationResult)
+        assert instantiation_result.instantiation.get_parameters() == set(self.parameters)
+        self._values[instantiation_result.instantiation] = instantiation_result.result
 
     def split(self, threshold):
         """Split given samples into separated sample dictionaries, where the value
         either >= or < threshold.
-        @param samples SampleDict
-        @param threshold pycarl.Rational
-        @return (SampleDict >=, SampleDict <)
+        
+        :param samples: SampleDict
+        :param threshold: pycarl.Rational
+        :return: (SampleDict >=, SampleDict <)
         """
-        above_threshold = SampleDict(self.variables)
-        below_threshold = SampleDict(self.variables)
-        for k, v in self.items():
+        above_threshold = InstantiationResultDict(self.parameters)
+        below_threshold = InstantiationResultDict(self.parameters)
+        for k, v in self._values.items():
             if v >= threshold:
-                above_threshold[k] = v
+                above_threshold._values[k] = v
             else:
-                below_threshold[k] = v
+                below_threshold._values[k] = v
         return above_threshold, below_threshold
 
-    def filter(self, filter_func):
-        """Returns samples for which filter_func returns true.
-        @param samples SampleDict
-        @param filter_func callable to filter values, return True to keep sample
-        """
-        filtered = SampleDict(self.variables)
-        for k, v in self.items():
-            if filter_func(v):
-                filtered[k] = v
+    def filter_instantiation(self, filter_func):
+        filtered = InstantiationResultDict(self.parameters)
+        for k,v in self._values.items():
+            if filter_func(k):
+                filtered._values[k] = v
         return filtered
 
-    def reorder(self, variables):
-        """returns a new SampleDict for which the coordinates are reordered
-        according to the given variable order.
-        @param variables VariableOrder, variables must match self.variables
-        @return SampleDict
+    def filter_value(self, filter_func):
+        """Returns samples for which filter_func returns true.
+        
+        :param samples: SampleDict
+        :param filter_func: callable to filter values, return True to keep sample
         """
-        order = [self.variables.index(var) for var in variables]
-        sorted_dict = SampleDict(variables)
-        for k, v in self.items():
-            pt = Point(*[k[index] for index in order])
-            sorted_dict[pt] = v
-        return sorted_dict
+        filtered = InstantiationResultDict(self.parameters)
+        for k, v in self._values.items():
+            if filter_func(v):
+                filtered._values[k] = v
+        return filtered
 
     def copy(self):
-        copy_dict = SampleDict(self.variables)
-        for k, v in self.items():
-            copy_dict[k] = v
-        return copy_dict
+        copied = InstantiationResultDict(self.parameters)
+        for k, v in self._values.items():
+            copied._values[k] = v
+        return copied
 
-    def samples(self):
+    def instantiation_results(self):
         """Returns Sample instances, as generator
         """
-        for pt, val in self.items():
-            yield Sample(pt, val, self.variables)
+        for pt, val in self._values.items():
+            assert pt.get_parameters() == set(self.parameters)
+            yield InstantiationResult(pt, val)
 
-def split_samples(samples, threshold):
-    """
-    @see SampleDict.split
-    """
-    return samples.split(threshold)
+    def instantiations(self):
+        return self._values.keys()
+
+    def check(self):
+        """
+        Validity check
+        
+        :return: True if instantiations map exactly the parameters to values
+        """
+        pass
+
 
 def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     """Interpolates between sample sample1 and sample2 to
     result in a point estimated close to the given treshold (by linear
     interpolation). Fudge allows to offset this point slightly either
     positively or negatively.
-    @param sample1 Sample
-    @param sample2 Sample
-    @param threshold pycarl.Rational
-    @param fudge float Percentage of distance betwen both samples to fudge
+    
+    :param sample1: Sample
+    :param sample2: Sample
+    :param threshold: pycarl.Rational
+    :param fudge: float Percentage of distance betwen both samples to fudge
         around
-    @return tuple of pycarl.Rational if interpolated point, or None if the
+    :return tuple of pycarl.Rational if interpolated point, or None if the
         values are too close
     """
     # If point values are too close, do not interpolate
-    distance = abs(sample1.val - sample2.val)
-    if distance < 0.00001:
+    distance = abs(float(sample1.result) - float(sample2.result))
+    if 10000*distance < 1:
         return None
 
-    weight = abs(threshold - sample1.val) / distance
+    weight = abs(float(threshold) - float(sample1.result)) / distance
 
-    deltas = tuple([pt2 - pt1 for (pt1, pt2) in zip(sample1.pt, sample2.pt)])
+    deltas = (sample2.instantiation - sample1.instantiation).to_float()
 
-    magnitude = sample1.distance(sample2)
+    magnitude = sample1.instantiation.numerical_distance(sample2.instantiation)
     offset = abs(fudge) / magnitude
 
     # Positive fudge moves towards larger value
-    if (sample1.val > sample2.val) == (fudge > 0):
+    if (sample1.result > sample2.result) == (fudge > 0):
         offset *= -1
 
     weight += offset
 
-    #TODO: Cast tofloat, otherwise performance tanks. Need to figure out why
-    return Point(*[float(d*weight) + pt for d, pt in zip(deltas, sample1.pt)])
+    return ParameterInstantiation.from_point((deltas * weight + sample1.instantiation.get_point(sample1.get_parameters()).to_float()).to_nice_rationals(), sample1.get_parameters())

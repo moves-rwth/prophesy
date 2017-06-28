@@ -9,7 +9,8 @@ class BoundType(Enum):
     def negated(b):
         return BoundType.closed if b == BoundType.open else BoundType.open
 
-
+    def __int__(self):
+        return 0 if self == BoundType.open else 1
 # (a <= X <= b) => [a,b]
 # Will be updated by pycarl constraints, incl. parser.
 # This is a dict as a switch-case workaround
@@ -44,7 +45,6 @@ def string_to_interval(input, internal_parse_func):
     else:
         raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected '(' or '[' at the start.")
 
-    right_bt = None
     if input[-1] == ")":
         right_bt = BoundType.open
     elif input[-1] == "]":
@@ -65,9 +65,10 @@ def string_to_interval(input, internal_parse_func):
 def create_embedded_closed_interval(interval, epsilon):
     """
     For an (half) open interval from l to r, create a closed interval [l+eps, r-eps]. 
-    :param interval: 
-    :param epsilon: 
-    :return: 
+    
+    :param interval: The interval which goes into the method
+    :param epsilon: An epsilon offset used to close.
+    :return: A closed interval.
     """
 
     if interval.is_closed():
@@ -91,9 +92,11 @@ def create_embedded_closed_interval(interval, epsilon):
 
 class Interval:
     """
-    Interval class for arbitrary types
+    Interval class for arbitrary (constant) types.
+    Construction from string is possible via string_to_interval
+    TODO support half-bounded intervals (e.g some value for infty)
     """
-    def __init__(self, left_value, left_bt, right_value, right_bt ):
+    def __init__(self, left_value, left_bt, right_value, right_bt):
         self._left_bound_type = left_bt
         self._left_value = left_value
         self._right_bound_type = right_bt
@@ -112,30 +115,68 @@ class Interval:
         return self._right_bound_type
 
     def empty(self):
+        """
+        Does the interval contain any points.
+        
+        :return: True, iff there exists a point in the interval.
+        """
         if self._left_value == self._right_value:
             return (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open)
         return self._left_value > self._right_value
 
     def contains(self, pt):
+        """
+        Does the interval contain a specific point
+        
+        :param pt: A value
+        :return: True if the value lies between the bounds.
+        """
         if self._left_value < pt < self._right_value: return True
         if pt == self._left_value and self._left_bound_type == BoundType.closed: return True
         if pt == self._right_value and self._right_bound_type == BoundType.closed: return True
         return False
 
     def is_closed(self):
+        """
+        Does the interval have closed bounds on both sides.
+        
+        :return: True iff both bounds are closed.
+        """
         return self.right_bound_type() == BoundType.closed and self.left_bound_type() == BoundType.closed
 
     def width(self):
+        """
+        The width of the interval
+        
+        :return: right bound - left bound
+        """
         return self._right_value - self._left_value
 
-    def split(self, bias = 0.5):
-        mid = self._left_value + self.width() * bias
+    def split(self):
+        """
+        Split the interval in two equally large halfs.
+        
+        :return: Two intervals, the first from the former left bound to (excluding) middle point (leftbound + rightbound)/2, 
+                                the second from the middle point (including) till the former right bound
+        """
+        mid = self._left_value + self.width() / 2
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 
     def close(self):
+        """
+        Make all bounds closed
+        
+        :return: A new interval which has closed bounds instead.
+        """
         return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
 
     def intersect(self, other):
+        """
+        Compute intersection between to intervals
+        
+        :param other: 
+        :return: 
+        """
         assert isinstance(other, Interval)
 
         # create new left bound
@@ -167,8 +208,7 @@ class Interval:
         return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
 
     def __repr__(self):
-        return "Interval({!r}, {!r}, {!r}, {!r})".format(self._left_value,
-            self._left_bound_type, self._right_value, self._right_bound_type)
+        return ("(" if self._left_bound_type == BoundType.open else "[") + repr(self._left_value) + "," + repr(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
 
     def __eq__(self, other):
         assert isinstance(other, Interval)
@@ -180,7 +220,7 @@ class Interval:
         return True
 
     def __hash__(self):
-        return hash([self._left_value, self._right_value, self._left_bound_type, self._right_bound_type])
+        return hash(self._left_value) ^ hash(self._right_value) + int(self._left_bound_type) + int(self._right_bound_type)
 
     def setminus(self, other):
         intersectionInterval = self.intersect(other)

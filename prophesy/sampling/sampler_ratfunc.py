@@ -1,26 +1,36 @@
+import logging
+
 from prophesy.sampling.sampler import Sampler
-from prophesy.data.samples import SampleDict
+from prophesy.data.samples import InstantiationResultDict, InstantiationResult
+
 
 class RatFuncSampling(Sampler):
     """Simple sampler based on pycarl rational function"""
 
-    def __init__(self, ratfunc, variables):
+    def __init__(self, ratfunc, parameters):
         """
-        @param ratfunc pycarl.RationalFunction (or lower)
-        @param variables VariableOrder
+        :param ratfunc: pycarl.RationalFunction (or lower)
+        :param parameters: VariableOrder
         """
         super().__init__()
 
         self.ratfunc = ratfunc
-        self.variables = variables
+        self.parameters = parameters
 
     def perform_sampling(self, samplepoints):
         """
-        @param samplepoints iterable of SamplePoint (preferably SamplePoints)
-        @return SampleDict
+        :param samplepoints: iterable of SamplePoint 
+        :return: 
+        :rtype: InstantiationResultDict
         """
-        samples = SampleDict(self.variables)
+
+        samples = InstantiationResultDict(self.parameters)
         for sample_point in samplepoints:
-            pt = sample_point.get_point(self.variables)
-            samples[pt] = self.ratfunc.evaluate(sample_point)
+            # TODO wrap the following in a function.
+            #for var in self.ratfunc.gather_variables():
+            #    assert var in sample_point.get_parameters()
+            logging.debug("....")
+            res = self.ratfunc.evaluate(dict([(k.variable, v) for k,v in sample_point.items()]))
+            logging.debug("={}".format(res))
+            samples.add_result(InstantiationResult(sample_point, res))
         return samples

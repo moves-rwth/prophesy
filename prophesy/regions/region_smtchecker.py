@@ -1,24 +1,76 @@
+import time
+
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.smt.smt import Answer, VariableDomain
+from prophesy.data.samples import ParameterInstantiation, InstantiationResult
+from prophesy.adapter.pycarl import Rational
+from prophesy.data.constraint import region_from_polygon
 
-import time
-from prophesy.smt.smt import Answer
-from prophesy.data.samples import SamplePoint, Sample
-from pycarl import Rational
-from prophesy.data.constraint import region_from_hyperrectangle, region_from_polygon
+
+import prophesy.adapter.pycarl as pc
+from prophesy.data.interval import Interval, BoundType
+from prophesy.adapter.pycarl import Constraint, Relation
+
+
 
 class SmtRegionChecker(RegionChecker):
     def __init__(self, smt2interface, parameters, ratfunc):
         """
-        @param smt2interface SMTSolver to check regions with
-        @param parameters ParameterOrder
-        @param ratfunc RationalFunction, used to evaluate solutions
+        :param smt2interface: SMTSolver to check regions with
+        :param parameters: ParameterOrder
+        :param ratfunc: RationalFunction, used to evaluate solutions
         """
         self._smt2interface = smt2interface
         self.parameters = parameters
         self._ratfunc = ratfunc
 
         self.benchmark_output = []
+
+    # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
+    def initialize(self, result, threshold,
+                                        solution_bound=Interval(0, BoundType.closed, None, BoundType.open)):
+        """
+        Initializes the smt solver to consider the problem at hand.
+        
+        :param result: 
+        :param threshold: 
+        :param solution_bound: 
+        """
+        for p in result.parameters:
+            self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
+
+        safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
+        badVar = pc.Variable("__bad", pc.VariableType.BOOL)
+        thresholdVar = pc.Variable("T")
+        rf1Var = pc.Variable("rf1")
+        rf2Var = pc.Variable("rf2")
+
+        self._smt2interface.add_variable(safeVar, VariableDomain.Bool)
+        self._smt2interface.add_variable(badVar, VariableDomain.Bool)
+        self._smt2interface.add_variable(thresholdVar, VariableDomain.Real)
+
+        safe_relation = pc.Relation.GEQ
+        bad_relation = pc.Relation.LESS
+
+        if pc.denominator(result.ratfunc) != 1:
+            self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
+            self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
+            safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
+            bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, bad_relation)
+            rf1_constraint = Constraint(rf1Var - pc.numerator(result.ratfunc), Relation.EQ)
+            rf2_constraint = Constraint(rf2Var - pc.denominator(result.ratfunc), Relation.EQ)
+            self._smt2interface.assert_constraint(rf1_constraint)
+            self._smt2interface.assert_constraint(rf2_constraint)
+        else:
+            safe_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, safe_relation)
+            bad_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, bad_relation)
+
+        threshold_constraint = Constraint(pc.Polynomial(thresholdVar) - threshold, Relation.EQ)
+
+        self._smt2interface.assert_constraint(threshold_constraint)
+        self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
+        self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
 
     def print_info(self):
         i = 1
@@ -40,15 +92,16 @@ class SmtRegionChecker(RegionChecker):
         returns tuple (valid constraint, polygon/counterexample point)
         if constraint is valid the tuple  is (True, polygon added)
         if constraint is invalid the tuple is (False, point as counterexample)
-        @param polygon, either HyperRectangle or shapely Polygon
-        @param safe Boolean to indicate if the region should be considered as safe or unsafe
+        
+        :param polygon: either HyperRectangle or shapely Polygon
+        :param safe: Boolean to indicate if the region should be considered as safe or unsafe
         """
         smt_successful = False
         smt_model = None
 
-        variables = self.parameters.get_variable_order()
+        variables = self.parameters.get_variables()
         if isinstance(polygon, HyperRectangle):
-            constraint = region_from_hyperrectangle(polygon, variables)
+            constraint = polygon.to_formula(variables)
         else:
             constraint = region_from_polygon(polygon, variables)
 
@@ -71,12 +124,8 @@ class SmtRegionChecker(RegionChecker):
                     self.benchmark_output.append((checkresult, duration, polygon.area))
                 #self.print_benchmark_output(self.benchmark_output)
                 if not checkresult in [Answer.sat, Answer.unsat]:
-                    # smt call not finished -> change constraint to make it better computable
-                    # TODO what to do in GUI?
-                    #print("{}: Change constraint for better computation".format(checkresult))
                     break
                 else:
-                    smt_successful = True
                     if checkresult == Answer.sat:
                         smt_model = smt_context.get_model()
                     break
@@ -85,13 +134,13 @@ class SmtRegionChecker(RegionChecker):
             return RegionCheckResult.unsat, None
         elif checkresult == Answer.sat:
             # add new point as counter example to existing regions
-            sample = SamplePoint()
-            for var in variables:
-                value = smt_model[var.name]
+            sample = ParameterInstantiation()
+            for par in self.parameters:
+                value = smt_model[par.variable.name]
                 rational = Rational(value)
-                sample[var] = rational
-            value = self._ratfunc.evaluate(sample)
-            return RegionCheckResult.sat, Sample.from_sample_point(sample, variables, value)
+                sample[par] = rational
+            value = self._ratfunc.evaluate(dict([(k.variable, v) for k,v in sample.items()]))
+            return RegionCheckResult.sat, InstantiationResult(sample, value)
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None

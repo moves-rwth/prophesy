@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 
-
 from prophesy.modelcheckers.pmc import ProbabilisticModelChecker
 
 

@@ -2,6 +2,7 @@ from prophesy.data.interval import Interval, BoundType
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.point import Point
 
+
 def test_hyperrectangle_splitting():
     i = Interval(0.0, BoundType.closed, 2.0, BoundType.closed)
     j = Interval(4.0, BoundType.open, 8.0, BoundType.closed)
@@ -15,6 +16,7 @@ def test_hyperrectangle_splitting():
     i01 = HyperRectangle(Interval(1.0, BoundType.closed, 2.0, BoundType.closed), Interval(6.0, BoundType.closed, 8.0, BoundType.closed))
     assert i00 in res
     assert i01 in res
+
 
 def test_hyperrectangle_vertices():
     i = Interval(0.0, BoundType.closed, 2.0, BoundType.closed)

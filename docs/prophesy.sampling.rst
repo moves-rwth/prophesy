@@ -1,19 +1,17 @@
 prophesy.sampling package
 =========================
 
-Submodules
-----------
+Sampling is the package to get a rough image of the parameter space by considering single points in the parameter space.
 
-prophesy.sampling.sample_generator module
--------------------------------------
 
-.. automodule:: prophesy.sampling.sample_generator
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Sampler: How to sample?
+-------------------------------------------
+
+The basic interface for sampling is the sampler interface.
+Besides sampling on given points, it supports uniform sampling as some samplers might perform better.
 
 prophesy.sampling.sampler module
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.sampling.sampler
     :members:
@@ -21,31 +19,36 @@ prophesy.sampling.sampler module
     :show-inheritance:
 
 prophesy.sampling.sampler_ratfunc module
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.sampling.sampler_ratfunc
     :members:
     :undoc-members:
     :show-inheritance:
 
-prophesy.sampling.sampling module
----------------------------------
+Sampling via probabilistic model checking
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+One can also sample via probabilistic model checkers, see :ref:`ref_prophesy.modelcheckers.pmc`.
 
-.. automodule:: prophesy.sampling.sampling
+
+
+Sampling: Where to sample?
+-------------------------------------------
+
+To determine sample points based on the already sampled information, we provide sample generators.
+
+
+prophesy.sampling.sample_generator module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.sampling.sample_generator
     :members:
     :undoc-members:
     :show-inheritance:
 
-prophesy.sampling.sampling_delaunay module
-------------------------------------------
-
-.. automodule:: prophesy.sampling.sampling_delaunay
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 prophesy.sampling.sampling_linear module
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.sampling.sampling_linear
     :members:
@@ -53,26 +56,24 @@ prophesy.sampling.sampling_linear module
     :show-inheritance:
 
 prophesy.sampling.sampling_uniform module
------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.sampling.sampling_uniform
     :members:
     :undoc-members:
     :show-inheritance:
 
-prophesy.sampling.voronoi module
---------------------------------
-
-.. automodule:: prophesy.sampling.voronoi
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 
-Module contents
----------------
+High-level convenience functions
+------------------------------------------
 
-.. automodule:: prophesy.sampling
+.. This part is not really nice yet, so I put it at the end of the docu.
+
+prophesy.sampling.sampling module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.sampling.sampling
     :members:
     :undoc-members:
     :show-inheritance:

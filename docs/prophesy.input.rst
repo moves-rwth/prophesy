@@ -1,31 +1,39 @@
 prophesy.input package
 ======================
 
-Submodules
-----------
+Input file handlers
+----------------------------------
 
 prophesy.input.pctlfile module
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.input.pctlfile
     :members:
     :undoc-members:
     :show-inheritance:
 
+prophesy.input.prismfile module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-prophesy.input.resultfile module
---------------------------------
+.. automodule:: prophesy.input.prismfile
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: prophesy.input.resultfile
+prophesy.input.solutionfunctionfile module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.input.solutionfunctionfile
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+prophesy.input.samplefile module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.input.samplefile
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: prophesy.input
-    :members:
-    :undoc-members:
-    :show-inheritance:

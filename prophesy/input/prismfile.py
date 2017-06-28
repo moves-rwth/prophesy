@@ -2,11 +2,13 @@ import os
 import re
 import shutil
 import tempfile
+
 from prophesy.config import configuration
 from prophesy.util import ensure_dir_exists, check_filepath_for_reading
 from prophesy.data.parameter import ParameterOrder, Parameter
 from prophesy.data import interval
-from pycarl.core import Rational, Variable
+from prophesy.adapter.pycarl import Rational, Variable
+
 
 class PrismFile:
     """Wrapper for Prism file; extracts parameter names."""
@@ -28,8 +30,7 @@ class PrismFile:
             inputstring = f.read()
             parameter_names = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
             for par_name in parameter_names:
-                bound = interval.Interval(0.0, interval.BoundType.open,
-                    1.0, interval.BoundType.open)
+                bound = interval.Interval(0.0, interval.BoundType.open, 1.0, interval.BoundType.open)
                 self.parameters.append(Parameter(Variable(par_name), bound))
 
     def make_temporary_copy(self):

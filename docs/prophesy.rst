@@ -7,20 +7,21 @@ Subpackages
 .. toctree::
 
     prophesy.data
-    prophesy.exceptions
-    prophesy.input
-    prophesy.modelcheckers
-    prophesy.output
     prophesy.regions
     prophesy.sampling
+    prophesy.modelcheckers
     prophesy.smt
+    prophesy.exceptions
+    prophesy.input
+    prophesy.output
 
-Submodules
-----------
+
+Utility methods
+-------------------------------
 
 
 prophesy.util module
---------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.util
     :members:
@@ -28,11 +29,11 @@ prophesy.util module
     :show-inheritance:
 
 
+prophesy.config module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Module contents
----------------
-
-.. automodule:: prophesy
+.. automodule:: prophesy.config
     :members:
     :undoc-members:
     :show-inheritance:
+

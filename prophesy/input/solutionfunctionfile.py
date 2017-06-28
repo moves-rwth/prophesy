@@ -1,11 +1,15 @@
 import re
-from prophesy.data.rationalfunction import RationalFunction
+import logging
+
 from prophesy.data import interval
 from prophesy.data.parameter import ParameterOrder, Parameter
-from pycarl.core import Rational, Variable
-from prophesy.data.constraint import parse_constraint
-from pycarl.formula.formula import Constraint, Relation
-from pycarl.parse import parse, parseExpr
+import prophesy.adapter.pycarl as pc
+
+from prophesy.adapter.pycarl import Constraint, Relation
+
+
+logger = logging.getLogger(__name__)
+
 
 class ParametricResult(object):
     """Stores the data that may result from loading a parametric model, which
@@ -35,25 +39,28 @@ def read_pstorm_result(location):
         inputstring = f.read()
 
     # Build parameters
-    #print("Reading parameters...")
+    logger.debug("Reading parameters...")
     parameters = ParameterOrder()
     parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
-            var = Variable(name_and_info[0].strip())
+            var = pc.Variable(name_and_info[0].strip())
             if len(name_and_info) == 1:
-                bound = interval.Interval(0.0, interval.BoundType.open,
-                    1.0, interval.BoundType.open)
+                bound = interval.Interval(pc.Rational(0), interval.BoundType.open,
+                    pc.Rational(1), interval.BoundType.open)
             else:
-                bound = interval.string_to_interval(name_and_info[1], Rational)
+                bound = interval.string_to_interval(name_and_info[1], pc.Rational)
             parameters.append(Parameter(var, bound))
+    logger.debug("Parameters: %s", str(parameters))
 
     # Build well-defined constraints
-    #print("Reading constraints...")
+    logging.debug("Reading constraints...")
     constraints_string = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
-    constraints = [parse_constraint(cond) for cond in constraints_string[1:]]
+    #TODO fix as soon as parser for constraints is available.
+    constraints = []
+    #constraints = [parse_constraint(cond) for cond in constraints_string[1:]]
 
     # Build graph-preserving constraints
     constraints_string = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
@@ -61,51 +68,59 @@ def read_pstorm_result(location):
         constraints_string = constraints_string[0].split("\n")[:-1]
     else:
         constraints_string = []
-    gpconstraints = [parse_constraint(cond) for cond in constraints_string[1:]]
+    # TODO fix as soon as parser for constraints is available
+    gpconstraints = []
+    #gpconstraints = [parse_constraint(cond) for cond in constraints_string[1:]]
     constraints += gpconstraints
 
+
     # Build rational function
-    #print("Reading rational function...")
+    logger.debug("Reading rational function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
-    #print("Building rational function...")
+    logger.debug("Building rational function...")
     l = match.split('/')
-    num = parse(l[0])
+    num = pc.parse(l[0])
+
     if len(l) > 1:
-        denom = parse(l[1])
+        denom = pc.parse(l[1])
         ratfunc = num/denom
     else:
         ratfunc = num
+        if isinstance(ratfunc, pc.Monomial):
+            ratfunc = pc.Polynomial(ratfunc)
+    logger.debug("Rational function is %s", ratfunc)
 
-    #print("Parsing complete")
+    logger.debug("Parsing complete.")
     return ParametricResult(parameters, constraints, ratfunc)
 
 
 def write_pstorm_result(location, result):
+    logger.info("Write solution function and constraints to %s", location)
     with open(location, "w") as f:
         f.write("!Parameters: {0}\n".format("; ".join([str(p) for p in result.parameters])))
         f.write("!Result: {0}\n".format(str(result.ratfunc).replace('^', '**')))
         f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
         #f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
 
+
 def read_param_result(location):
     with open(location) as f:
         inputs = [l.strip() for l in f.readlines()]
 
     # Build parameters
-    #print("Reading parameters")
+    logger.debug("Reading parameters")
     parameters = ParameterOrder()
     parameter_strings = inputs[1][1:-1].split(", ")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
-            var = Variable(parameter_string.strip().strip())
+            var = pc.Variable(parameter_string.strip().strip())
             bound = interval.Interval(0.0, interval.BoundType.open,
                 1.0, interval.BoundType.open)
             parameters.append(Parameter(var, bound))
 
-    #print("Reading constraints")
+    logger.debug("Reading constraints")
     ranges = re.split(r"(?<=]) (?=\[)", inputs[2][1:-1])
     ranges = [r[1:-1].split(", ") for r in ranges]
-    #print(ranges)
     if len(parameter_strings) != len(ranges):
         raise RuntimeError("Number of ranges does not match number of parameters")
     # Build well-defined constraints
@@ -114,10 +129,9 @@ def read_param_result(location):
         # ran = [lower .. upper]
         constraints.append(Constraint(p.variable - ran[0], Relation.GEQ))
         constraints.append(Constraint(p.variable - ran[1], Relation.LEQ))
-    #print(constraints)
 
     # Build rational function
-    #print("Parsing rational function")
-    ratfunc = RationalFunction(parseExpr(inputs[3]))
+    logger.debug("Parsing rational function")
+    ratfunc = pc.RationalFunction(parse(inputs[3]))
 
     return ParametricResult(parameters, constraints, ratfunc)

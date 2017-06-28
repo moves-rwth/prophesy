@@ -1,5 +1,8 @@
 import math
-from pycarl import Rational
+
+from prophesy.adapter.pycarl import Rational, Integer
+from prophesy.data.nice_approximation import FixedDenomFloatApproximation
+
 
 def _sqrt_approx(i):
     """
@@ -9,12 +12,13 @@ def _sqrt_approx(i):
     orig_type = type(i)
     if not isinstance(i, (int, float)):
         # if i is a rational number for which the sqrt might be not a
-        # ratonal number, then use some approx.
+        # rational number, then use some approx.
         i = float(i)
 
     #TODO this might be much closer than necessary here.
     float_sqrt = math.sqrt(i)
     return orig_type(float_sqrt)
+
 
 class Point:
     """
@@ -22,23 +26,28 @@ class Point:
     """
     def __init__(self, *args):
         """
-        @param args Numerical values to represent the point. Any numerical type,
-            recommended pycarl.Rational
+        :param args: Numerical values to represent the point. 
         """
-        assert len(args) > 1, "1D point, normally not needed"
-        args = [a if isinstance(a, Rational) else Rational(a) for a in args]
         self.coordinates = tuple(args)
-        #TODO: backwards compatibility for Delaunay
-        self.x = self.coordinates[0]
-        if len(self.coordinates) > 1:
-            self.y = self.coordinates[1]
-        if len(self.coordinates) > 2:
-            self.z = self.coordinates[2]
+
+    def to_float(self):
+        return Point(*[float(c) for c in self.coordinates])
+
+    def to_nice_rationals(self, ApproxType = FixedDenomFloatApproximation):
+        approx = ApproxType(Integer(16384))
+        return Point(*[approx.find(c) for c in self.coordinates])
 
     def distance(self, other):
         res = 0.0
         for i, j in zip(self.coordinates, other.coordinates):
-            res = res + pow(i-j,2)
+            tres = type(res)
+            res = res + tres(pow(i-j,2))
+        return _sqrt_approx(res)
+
+    def numerical_distance(self, other):
+        res = 0.0
+        for i, j in zip(self.coordinates, other.coordinates):
+            res = res + (pow(float(i)-float(j),2))
         return _sqrt_approx(res)
 
     def dimension(self):
@@ -52,6 +61,17 @@ class Point:
 
     def __iter__(self):
         return iter(self.coordinates)
+
+    def __add__(self, other):
+        assert self.dimension() == other.dimension()
+        return Point(*[c1 + c2 for (c1, c2) in zip(self.coordinates, other.coordinates)])
+
+    def __sub__(self, other):
+        assert self.dimension() == other.dimension()
+        return Point(*[c1 - c2 for (c1, c2) in zip(self.coordinates, other.coordinates)])
+
+    def __mul__(self, sc):
+        return Point(*[c1 * sc for c1 in self.coordinates])
 
     def __len__(self):
         return len(self.coordinates)

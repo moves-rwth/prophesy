@@ -1,38 +1,33 @@
-import pycarl.parse
-from pycarl.formula import Relation, Constraint
-from prophesy.data.interval import BoundType
+
+from prophesy.adapter.pycarl import Polynomial, Rational, parse
+import prophesy.adapter.pycarl as pc
 from shapely.geometry.polygon import LinearRing, Polygon, orient
-from pycarl import Polynomial, Rational
-from prophesy.data.samples import SamplePoint
+from prophesy.data.samples import ParameterInstantiation
+
 
 def parse_constraint(constraint_str):
-    return pycarl.parse.parseExpr(constraint_str)
-
-def region_from_hyperrectangle(hyperrectangle, variables):
-    """Given HyperRectangle and VariableOrder, compute constraints
-    @param hyperrectangle HyperRectangle
-    @param variables VariableOrder
-    @return pycarl.Formula or pycarl.Constraint
     """
-    constraint = None
-    for variable, interval in zip(variables, hyperrectangle.intervals):
-        lbound_relation = Relation.GEQ if interval.left_bound_type() == BoundType.closed else Relation.GREATER
-        lbound = Constraint(variable-interval.left_bound(), lbound_relation)
-        if constraint is None:
-            constraint = lbound
-        else:
-            constraint = constraint & lbound
-        rbound_relation = Relation.LEQ if interval.right_bound_type() == BoundType.closed else Relation.LESS
-        rbound = Constraint(variable-interval.right_bound(), rbound_relation)
-        constraint = constraint & rbound
-    return constraint
+    :param constraint_str: 
+    :return: 
+    """
+    #TODO deprecated as soon as pycarl parsing is available.
+    args = constraint_str.split(",")
+    if len(args) != 2:
+        raise ValueError("Constraint string should be of the form <rational function>,<relation>, but is {}".format(constraint_str))
+    res = parse(args[0])
+    return res
+
 
 def region_from_polygon(polygon, variables):
-        """Compute regions from polygon (Polygon, LineString or LinearRing)
+        """Compute formula representing  polygon (Polygon, LineString or LinearRing)
         Area will be considered at the rhs (ccw) of line segments
-        @param polygon Polygon, LineString or LinearRing, must be convex
-        @return pycarl.Formula or pycarl.Constraint
+        
+        :param polygon: Polygon, LineString or LinearRing, must be convex
+        :return: Formula s.t. points in polygon are satisfied.
+        :rtype: pycarl.Formula or pycarl.Constraint
         """
+        if len(variables) > 2: raise ValueError("The method is only available for two dimensional polygons.")
+
         if isinstance(polygon, LinearRing):
             # Convert to polygon so it can be oriented
             polygon = Polygon(polygon)
@@ -41,7 +36,7 @@ def region_from_polygon(polygon, variables):
             assert len(list(polygon.interiors)) == 0
             polygon = orient(polygon, sign=1.0)
             polygon = polygon.exterior
-        points = list(polygon.coords)
+        points = [(Rational(c1), Rational(c2)) for c1, c2 in list(polygon.coords)]
         assert len(points) >= 2
 
         constraint = None
@@ -52,7 +47,6 @@ def region_from_polygon(polygon, variables):
             dvec = tuple([c2 - c1 for c1, c2 in zip(p1, p2)])
             # Make vector orthogonal to hyperplane
             # NOTE: rotate clockwise
-            # TODO: 2D only
             dvec = (dvec[1], -dvec[0])
 
             # Constant is dot-product of directional vector and origin
@@ -61,10 +55,9 @@ def region_from_polygon(polygon, variables):
             poly = Polynomial(-Rational(c))
             for variable, coefficient in zip(variables, dvec):
                 if coefficient != 0:
-                    poly = poly + variable * coefficient
+                    poly = poly + Polynomial(variable) * coefficient
 
-            # TODO: '<=' as polygon is CCW oriented, not sure if this applies to n-dimen
-            new_constraint = Constraint(poly, Relation.LEQ)
+            new_constraint = pc.Constraint(poly, pc.Relation.LEQ)
             if constraint is None:
                 constraint = new_constraint
             else:
@@ -72,11 +65,13 @@ def region_from_polygon(polygon, variables):
 
         return constraint
 
+
 def is_point_fulfilling_constraint(pt, constraint):
     """Check whether the given point is satisfied by the regions
     (i.e. is contained by it)
-    @param pt SamplePoint
-    @param constraint pycarl.formula.Constraint or pycarl.formula.Formula
+    
+    :param pt: SamplePoint
+    :param constraint: pycarl.formula.Constraint or pycarl.formula.Formula
     """
-    assert isinstance(pt, SamplePoint)
+    assert isinstance(pt, ParameterInstantiation)
     return constraint.satisfied_by(pt)

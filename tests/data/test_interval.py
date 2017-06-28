@@ -1,5 +1,6 @@
 from prophesy.data.interval import Interval, string_to_interval, BoundType, constraint_to_interval
 
+
 def test_interval_parsing():
     int1 = string_to_interval("(2,5)", int)
     assert int1.left_bound() == 2

@@ -1,13 +1,41 @@
+import logging
+import tempfile
+
 import matplotlib
 matplotlib.use('Agg') # use for plotting without X-server
 from matplotlib import pyplot
 from matplotlib import patches
 from matplotlib.colors import ColorConverter
+
 from shapely.geometry.linestring import LineString
 from shapely.geometry.polygon import Polygon
-from prophesy.data.hyperrectangle import  HyperRectangle
 
 import numpy as np
+
+from prophesy.data.hyperrectangle import  HyperRectangle
+from prophesy.config import configuration
+
+
+logger = logging.getLogger(__name__)
+
+
+def plot_samples(samples, parameters, safe_above_threshold, threshold):
+    """Plot samples and return path to file."""
+    if not safe_above_threshold:
+        Plot.flip_green_red = True
+
+    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
+
+    samples_green = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if res.result >= threshold]
+    samples_red = [res.instantiation.get_point(parameters) for res in samples.instantiation_results()
+                     if res.result < threshold]
+
+    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
+                      path_to_save=plot_path, display=False)
+    logger.info("Samples rendered to {}".format(plot_path))
+
+    return plot_path
+
 
 class Plot(object):
     flip_green_red = False
@@ -47,10 +75,37 @@ class Plot(object):
                      poly_green=[], poly_red=[], poly_blue=[],
                      anchor_points=[], additional_arrows=[],
                      path_to_save=None, display=False):
-        if len(parameters) == 2:
-            if Plot.flip_green_red:
-                samples_green, samples_red = samples_red, samples_green
-                poly_green, poly_red = poly_red, poly_green
+        logger.info("Plot results")
+
+        if len(parameters) > 2:
+            raise ValueError("Cannot plot for more than 2 parameters.")
+
+        if Plot.flip_green_red:
+            samples_green, samples_red = samples_red, samples_green
+            poly_green, poly_red = poly_red, poly_green
+
+        if len(parameters) == 1:
+            fig = pyplot.figure()
+            ax1 = fig.add_subplot(111)
+            ax1.plot(samples_green, len(samples_green) * [1], "o", c='green')
+            ax1.plot(samples_red, len(samples_red) * [1], "x", c='red')
+
+            ax1.axes.get_yaxis().set_visible(False)
+            ax1.set_xlabel(str(parameters[0].variable))
+            ax1.patch.set_visible(False)
+            fig.patch.set_visible(False)
+
+            # get rid of the frame
+            for spine in fig.gca().spines.values():
+                spine.set_visible(False)
+
+            if path_to_save is not None:
+                pyplot.savefig(path_to_save, format="PDF")
+            if display:
+                pyplot.show()
+            pyplot.close(fig)
+
+        elif len(parameters) == 2:
 
             fig = pyplot.figure()
             ax1 = fig.add_subplot(111)
@@ -88,7 +143,6 @@ class Plot(object):
             y_coords = [y for x, y in samples_blue]
             ax1.scatter(x_coords, y_coords, marker='.', c='blue')
 
-
             ax1.set_xlim([float(parameters[0].interval.left_bound()), float(parameters[0].interval.right_bound())])
             ax1.set_ylim([float(parameters[1].interval.left_bound()), float(parameters[1].interval.right_bound())])
             ax1.set_xlabel(str(parameters[0].variable))
@@ -98,6 +152,3 @@ class Plot(object):
             if display:
                 pyplot.show()
             pyplot.close(fig)
-
-        else:
-            assert False

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
-import tempfile
 import sys
 from argparse import ArgumentParser
+import logging
 
-
-from prophesy.output.plot import Plot
-from prophesy.input.resultfile import read_pstorm_result
-from prophesy.config import configuration
+from prophesy.output.plot import plot_samples
+from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.input.samplefile import write_samples_file
 from prophesy.sampling.sampling import uniform_samples,refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
-from prophesy.util import open_file, ensure_dir_exists
+from prophesy.util import open_file
+from prophesy.adapter.pycarl import Rational
+from prophesy.config import configuration
 
 
 def parse_cli_args(args):
@@ -29,42 +29,31 @@ def parse_cli_args(args):
     return parser.parse_args(args)
 
 
-def plot_samples(samples, parameters, safe_above_threshold, threshold):
-    """Plot samples and return path to file."""
-    if not safe_above_threshold:
-        Plot.flip_green_red = True
-
-    _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
-
-    samples_green = [pt for pt, v in samples.items() if v >= threshold]
-    samples_red = [pt for pt, v in samples.items() if v < threshold]
-
-    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
-                      path_to_save=plot_path, display=False)
-    print("Samples rendered to {}".format(plot_path))
-
-    return plot_path
-
-
-def run(args=sys.argv, interactive=True):
+def run(args=sys.argv[1:], interactive=True):
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
+    threshold = Rational(cmdargs.threshold)
 
     # Read previously generated result
     result = read_pstorm_result(cmdargs.rat_file)
-    print("Parameters:", result.parameters)
+    logging.debug("Parameters: %s", str(result.parameters))
 
-    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters.get_variable_order())
+    sampling_interface = RatFuncSampling(result.ratfunc, result.parameters)
 
     initial_samples = uniform_samples(sampling_interface, result.parameters, cmdargs.samplingnr)
-    print("Performing uniform sampling: {} samples".format(len(initial_samples)))
+    logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, result.parameters, initial_samples, cmdargs.iterations,
-                                     cmdargs.threshold)
-    write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
+                                     threshold)
+    write_samples_file(result.parameters, refined_samples, cmdargs.samples_file)
 
-    plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
-    if interactive:
-        open_file(plot_path)
+    if len(result.parameters) <= 2:
+        plot_path = plot_samples(refined_samples, result.parameters, cmdargs.safe_above_threshold, threshold)
+
+        if interactive:
+            open_file(plot_path)
+    else:
+        logging.info("Cannot plot, as dimension is too high!")
 
 
 if __name__ == "__main__":

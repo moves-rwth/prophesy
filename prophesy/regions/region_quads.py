@@ -1,10 +1,15 @@
 from prophesy.regions.region_generation import RegionGenerator
 from prophesy.data.hyperrectangle import HyperRectangle
 
+
 class QuadAndSamples:
+    """
+    Named tuple for easier code understanding
+    """
     def __init__(self, quad, samples):
         self.quad = quad
         self.samples = samples
+
 
 class ConstraintQuads(RegionGenerator):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
@@ -18,11 +23,11 @@ class ConstraintQuads(RegionGenerator):
         quad = HyperRectangle(*self.parameters.get_variable_bounds())
         quadsamples = []
 
-        for pt, v in samples.items():
-            if not quad.contains(pt):
+        for instantiation, value in samples:
+            if not quad.contains(instantiation.get_point(parameters)):
                 continue
-            safe = v >= self.threshold
-            quadsamples.append((pt, safe))
+            safe = value >= self.threshold
+            quadsamples.append((instantiation.get_point(parameters), safe))
         self.check_quad(quad, quadsamples)
         self._sort_quads_by_size()
 
@@ -34,7 +39,6 @@ class ConstraintQuads(RegionGenerator):
         for q in self.quads:
             boxes.append(q.poly)
         self.plot_results(poly_blue=boxes, display=False)
-
 
     def check_quad(self, quad, samples, depth=0):
         """Check if given quad can be assumed safe or bad based on
@@ -68,9 +72,6 @@ class ConstraintQuads(RegionGenerator):
                 newsamples.append((pt, safe))
             self.check_quad(newquad, newsamples, depth + 1)
 
-
-
-
     def fail_constraint(self, constraint, safe):
         # Split quad and try again
         quadelem = self.quads[0]
@@ -92,7 +93,7 @@ class ConstraintQuads(RegionGenerator):
     def reject_constraint(self, constraint, safe, sample):
         # New sample, add it to current quad, and check it
         # Also remove failed quad
-        self.quads[0].samples.append((sample.pt, not safe))
+        self.quads[0].samples.append((sample.get_instantiation_point(self.parameters), not safe))
         self.check_quad(self.quads[0].quad, self.quads[0].samples)
         self.quads = self.quads[1:]
         self._sort_quads_by_size()

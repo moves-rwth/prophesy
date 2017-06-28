@@ -2,7 +2,6 @@ from distutils.core import setup
 from distutils.command.build import build
 from setuptools.command.test import test as TestCommand
 import write_config
-import os
 import sys
 
 if sys.version_info[0] == 2:
@@ -32,7 +31,7 @@ class ConfigBuild(build):
 
 setup(
     name="Prophesy",
-    version="1.1",
+    version="1.2",
     author="S. Junges, H. Bruintjes, M. Volk",
     author_email="sebastian.junges@cs.rwth-aachen.de",
     maintainer="S. Junges",
@@ -44,7 +43,7 @@ setup(
               "prophesy.modelcheckers", "prophesy.data",
               "prophesy.regions", "prophesy.exceptions",
               "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=1.2', 'stormpy', 'shapely',
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0', 'stormpy', 'shapely',
                       'numpy', 'matplotlib'],
     tests_require=['pytest'],
     extras_require = {
@@ -59,7 +58,7 @@ setup(
              'scripts/modelsampling.py',
              'scripts/prismfiletoratfunc.py',
              'scripts/ratfilesampling.py',
-             'scripts/webcegar'],
+             'scripts/webcegar.py'],
     cmdclass={
         'build': ConfigBuild,
         'test': Tox

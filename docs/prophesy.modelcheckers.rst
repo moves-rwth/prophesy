@@ -1,19 +1,22 @@
 prophesy.modelcheckers package
 ==============================
 
-Submodules
-----------
 
-prophesy.modelcheckers.param module
------------------------------------
+Module contents
+---------------
 
-.. automodule:: prophesy.modelcheckers.param
+.. automodule:: prophesy.modelcheckers
     :members:
     :undoc-members:
     :show-inheritance:
 
+Interfaces
+----------
+
+.. _ref_prophesy.modelcheckers.pmc:
+
 prophesy.modelcheckers.pmc module
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.modelcheckers.pmc
     :members:
@@ -21,17 +24,18 @@ prophesy.modelcheckers.pmc module
     :show-inheritance:
 
 prophesy.modelcheckers.ppmc module
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.modelcheckers.ppmc
     :members:
     :undoc-members:
     :show-inheritance:
 
-
+Implementations
+----------------
 
 prophesy.modelcheckers.storm module
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.modelcheckers.storm
     :members:
@@ -39,7 +43,7 @@ prophesy.modelcheckers.storm module
     :show-inheritance:
 
 prophesy.modelcheckers.stormpy module
--------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: prophesy.modelcheckers.stormpy
     :members:
@@ -47,10 +51,20 @@ prophesy.modelcheckers.stormpy module
     :show-inheritance:
 
 
-Module contents
----------------
 
-.. automodule:: prophesy.modelcheckers
+prophesy.modelcheckers.param module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.modelcheckers.param
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+prophesy.modelcheckers.prism module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.modelcheckers.prism
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,27 +1,27 @@
 prophesy.exceptions package
 ===========================
 
-Submodules
-----------
 
-prophesy.exceptions.IOError module
-----------------------------------
-
-.. automodule:: prophesy.exceptions.IOError
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-prophesy.exceptions.configuration_error module
-----------------------------------------------
 
 .. automodule:: prophesy.exceptions.configuration_error
     :members:
     :undoc-members:
     :show-inheritance:
 
-prophesy.exceptions.not_enough_information_error module
--------------------------------------------------------
+.. automodule:: prophesy.exceptions.dimension_not_supported_error
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: prophesy.exceptions.IOError
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: prophesy.exceptions.module_error
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 .. automodule:: prophesy.exceptions.not_enough_information_error
     :members:
@@ -29,10 +29,5 @@ prophesy.exceptions.not_enough_information_error module
     :show-inheritance:
 
 
-Module contents
----------------
 
-.. automodule:: prophesy.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
+

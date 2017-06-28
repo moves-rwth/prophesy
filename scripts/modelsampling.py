@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 
-
 import sys
+import logging
+import copy
 from argparse import ArgumentParser
 
+from prophesy.data.constant import parse_constants_string
+from prophesy.output.plot import plot_samples
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.samplefile import write_samples_file
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy.sampling.sampling import uniform_samples,refine_samples
-
-
+from prophesy.modelcheckers.stormpy import StormpyModelChecker
+from prophesy.sampling.sampling import uniform_samples, refine_samples
+from prophesy.adapter.pycarl import Rational
 from prophesy.config import configuration
+
 
 def parse_cli_args(args):
     parser = ArgumentParser(description='Perform sampling on a prism file')
@@ -24,6 +28,9 @@ def parse_cli_args(args):
     parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
     parser.add_argument('--threshold', type=float, help='the threshold', required=True)
+    parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
+    parser.add_argument('--constants', type=str, help='string with constants')
+
 
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--storm', action='store_true', help='use storm via cli')
@@ -32,10 +39,14 @@ def parse_cli_args(args):
 
     return parser.parse_args(args)
 
-def run(args = sys.argv[1:], interactive=True):
 
+def run(args = sys.argv[1:], interactive=True):
     pmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
+    configuration.check_tools()
+    threshold = Rational(cmdargs.threshold)
+    constants = parse_constants_string(cmdargs.constants)
+
     prism_file = PrismFile(cmdargs.file)
     pctl_file = PctlFile(cmdargs.pctl_file)
 
@@ -54,22 +65,28 @@ def run(args = sys.argv[1:], interactive=True):
     else:
         raise RuntimeError("No supported model checker defined")
 
-    tool.load_model_from_prismfile(prism_file)
+    tool.load_model_from_prismfile(prism_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     sampling_interface = tool
 
-    parameters = prism_file.parameters
+    parameters = copy.deepcopy(prism_file.parameters)
+    for const_variable in constants.variables():
+        parameters.remove_variable(const_variable)
     parameters.make_intervals_closed(0.0001)
 
-    print("TETST")
+    logging.info("Performing uniform sampling:")
+
     initial_samples = uniform_samples(sampling_interface, parameters, cmdargs.samplingnr)
-    print("Performing uniform sampling: {} samples".format(len(initial_samples)))
 
     refined_samples = refine_samples(sampling_interface, parameters, initial_samples, cmdargs.iterations,
-                                     cmdargs.threshold)
-    write_samples_file(result.parameters.get_variable_order(), refined_samples, cmdargs.samples_file)
+                                     threshold)
+    write_samples_file(parameters, refined_samples, cmdargs.samples_file)
 
-    plot_path = plot_samples(refined_samples, parameters, cmdargs.safe_above_threshold, cmdargs.threshold)
+    if len(parameters) <= 2:
+        plot_path = plot_samples(refined_samples, parameters, cmdargs.safe_above_threshold, threshold)
+    else:
+        logging.info("Cannot plot, as dimension is too high!")
+
 
 if __name__ == "__main__":
-   run()
+    run()
