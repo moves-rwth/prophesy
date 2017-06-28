@@ -86,13 +86,63 @@ class HyperRectangle(object):
         """
         return HyperRectangle([i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
 
-    #  TODO SETMINUS OPERATOR
-    def setminus(self, other):
-        if len(other.intervals) != len(self.intervals):
-            print("Different Dimensions")
-        for i, j in zip(self.intervals, other.intervals):
-            for k in range(0,len(i)):
-                print(i[k].setminus(j[k]))
+    def _setminus(self, other, dimension):
+        assert len(self.intervals) > dimension and len(other.intervals) > dimension
+        new_interval_list = self.intervals[dimension].setminus(other.intervals[dimension])
+        hrect_list = []
+        if len(new_interval_list) > 1:
+
+            # left part
+            changed_interval_list = list(self.intervals)
+            changed_interval_list[dimension] = new_interval_list[0]
+            hrect_list.append(HyperRectangle(*changed_interval_list))
+
+            # right part
+            changed_interval_list = list(self.intervals)
+            changed_interval_list[dimension] = new_interval_list[1]
+            hrect_list.append(HyperRectangle(*changed_interval_list))
+
+            # middle part which is cut away
+            middle_interval = Interval(new_interval_list[0].right_bound(), new_interval_list[0].right_bound_type(),
+                                       new_interval_list[1].left_bound(), new_interval_list[1].left_bound_type())
+            changed_interval_list = list(self.intervals)
+            changed_interval_list[dimension] = middle_interval
+            hrect_list.append(HyperRectangle(*changed_interval_list))
+
+        else:
+            # the cutted box
+            changed_interval_list = list(self.intervals)
+            changed_interval_list[dimension] = new_interval_list[0]
+            hrect_list.append(HyperRectangle(*changed_interval_list))
+
+            # the rest which have to be cutted recursively
+            changed_interval_list = list(self.intervals)
+            changed_interval_list[dimension] = other.intervals[dimension]
+            hrect_list.append(HyperRectangle(*changed_interval_list))
+
+        return hrect_list
+
+    def setminus(self, other, dimension=0):
+        """
+        DOES NOT WORK
+        TODO: erweitere implementierung auf mehr dimensionen
+        :param other: the other HyperRectangle
+        :param dimension: dimension where to start the operation
+        :return: a list of HyperRectangles
+        """
+        assert len(other.intervals) == len(self.intervals)
+        hrect_list = []
+        if dimension >= len(self.intervals):
+            return []
+        current_rect_list = self._setminus(other, dimension)
+        if len(current_rect_list) > 2:
+            hrect_list.append(current_rect_list[0])
+            hrect_list.append(current_rect_list[1])
+            hrect_list.extend(current_rect_list[2].setminus(other, dimension+1))
+        else:
+            hrect_list.append(current_rect_list[0])
+            hrect_list.extend(current_rect_list[1].setminus(other, dimension+1))
+        return hrect_list
 
     def __str__(self):
         return " x ".join([str(i) for i in self.intervals])
