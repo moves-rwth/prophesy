@@ -1,4 +1,4 @@
-from prophesy.data.interval import Interval, string_to_interval, BoundType
+from prophesy.data.interval import Interval, string_to_interval, BoundType, constraint_to_interval
 
 def test_interval_parsing():
     int1 = string_to_interval("(2,5)", int)
@@ -13,6 +13,11 @@ def test_interval_parsing():
     assert int1.right_bound() == 7
     assert int1.right_bound_type() == BoundType.closed
     assert str(int1) == "(2,7]";
+
+def test_constraint_to_interval():
+    s = "-10.2<fghhklöl<15.3"
+    interval = constraint_to_interval(s, float)
+    assert interval == string_to_interval("(-10.2,15.3)", float)
 
 def test_interval_setminus():
     i1 = string_to_interval("[-10,10]", float)  # the closed universe

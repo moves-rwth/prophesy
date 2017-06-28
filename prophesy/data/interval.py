@@ -1,4 +1,6 @@
+import re
 from enum import Enum
+
 
 class BoundType(Enum):
     open = 0
@@ -7,7 +9,28 @@ class BoundType(Enum):
     def negated(b):
         return BoundType.closed if b == BoundType.open else BoundType.open
 
-# TODO constraint to interval
+
+# (a <= X <= b) => [a,b]
+# Will be updated by pycarl constraints, incl. parser.
+# This is a dict as a switch-case workaround
+_rel_mapping = {"<=": BoundType.closed, "<": BoundType.open, ">=": BoundType.closed, ">": BoundType.open}
+
+
+def constraint_to_interval(input, internal_parse_func):
+    decimals = re.compile(r"<=|<|>=|>")
+    bounds = decimals.split(input)
+    relations = decimals.findall(input)
+    left_bound = bounds[0]
+    right_bound = bounds[2]
+    try:
+        left_bound = internal_parse_func(left_bound)
+        right_bound = internal_parse_func(right_bound)
+        assert len(relations) == 2
+        return Interval(left_bound, _rel_mapping[relations[0]],
+                        right_bound, _rel_mapping[relations[1]])
+    except ValueError:
+        print("Keine fließkommazahl")
+        return None
 
 
 def string_to_interval(input, internal_parse_func):
