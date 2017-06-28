@@ -17,7 +17,7 @@ class InexactInstantiationResult:
         self.threshold = threshold
 
 
-class ParameterInstantiation(OrderedDict):
+class ParameterInstantiation(dict):
     """Simple dictionary mapping from a Parameter to pycarl.Rational.
     """
 
@@ -28,7 +28,7 @@ class ParameterInstantiation(OrderedDict):
         parameters = []
         for k in self.keys():
             parameters.append(k)
-        return parameters
+        return set(parameters)
 
     def __sub__(self, other):
         assert self.get_parameters() == other.get_parameters()
@@ -42,14 +42,12 @@ class ParameterInstantiation(OrderedDict):
         assert self.get_parameters() == other.get_parameters()
         return self.get_point(self.get_parameters()).distance(other.get_point(self.get_parameters()))
 
-    def get_point(self, parameters=None):
+    def get_point(self, parameters):
         """Return the Point corresponding to this sample, given variable
         ordering provided as argument
         @param parameters ParameterOrder. Must correspond to parameters of this
             sample point.
         """
-        if not parameters:
-            parameters = self.get_parameters()
         return Point(*[self[var] for var in parameters])
 
     @classmethod
@@ -144,7 +142,7 @@ class InstantiationResultDict:
     def update(self, other):
         for k, v in other:
             assert isinstance(k, ParameterInstantiation)
-            assert k.get_parameters() == self.parameters
+            assert k.get_parameters() == set(self.parameters)
             self._values[k] = v
 
     def __len__(self):
@@ -155,7 +153,7 @@ class InstantiationResultDict:
         @param sample Sample
         """
         assert isinstance(instantiation_result, InstantiationResult)
-        assert instantiation_result.instantiation.get_parameters() == self.parameters
+        assert instantiation_result.instantiation.get_parameters() == set(self.parameters)
         self._values[instantiation_result.instantiation] = instantiation_result.result
 
     def split(self, threshold):
@@ -202,7 +200,7 @@ class InstantiationResultDict:
         """Returns Sample instances, as generator
         """
         for pt, val in self._values.items():
-            assert pt.get_parameters() == self.parameters
+            assert pt.get_parameters() == set(self.parameters)
             yield InstantiationResult(pt, val)
 
     def instantiations(self):
@@ -247,4 +245,4 @@ def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
 
     weight += offset
 
-    return ParameterInstantiation.from_point((deltas * weight + sample1.instantiation.get_point().to_float()).to_nice_rationals(), sample1.get_parameters())
+    return ParameterInstantiation.from_point((deltas * weight + sample1.instantiation.get_point(sample1.get_parameters()).to_float()).to_nice_rationals(), sample1.get_parameters())
