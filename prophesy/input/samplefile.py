@@ -32,10 +32,6 @@ def read_samples_file(path, parameters):
             parameter_names = parameter_names[:-1]
         start = 1
 
-        if parameters is None:
-            # Variable is by default constructed as REAL, which is good here
-            parameters = list(map(Variable, parameter_names))
-            assert False, "No longer supported"
 
 
         #Ignore thresholds
