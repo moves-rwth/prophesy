@@ -4,6 +4,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import modelsampling
 import pytest
 import time
+from tests import requires
+from requires import *
 
 EXAMPLE_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                               "benchmarkfiles/pdtmc")
@@ -15,10 +17,10 @@ target_file = "modelsampling_{}.samples".format(current_time)
 
 
 benchmarks = [
-    ("brp", "brp_16_2", "property1", 0.9, "stormpy"),
-    ("brp", "brp_16_2", "property1", 0.9, "prism"),
-    ("brp", "brp_16_2", "property1", 0.5, "prism"),
-    ("brp", "brp_16_2", "property1", 0.98, "prism"),
+    require_stormpy()(("brp", "brp_16_2", "property1", 0.9, "stormpy")),
+    require_prism()(("brp", "brp_16_2", "property1", 0.9, "prism")),
+    require_prism()(("brp", "brp_16_2", "property1", 0.5, "prism")),
+    require_prism()(("brp", "brp_16_2", "property1", 0.98, "prism")),
     #   ("brp", "brp_128-2", 0.9, True),
     #   ("brp", "brp_128-5", 0.9, True),
     #   ("brp", "brp_256-2", 0.9, True),

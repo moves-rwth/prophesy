@@ -9,6 +9,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import buildconstraints
 
+from tests import requires
+from requires import *
+
 EXAMPLE_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                               "benchmarkfiles/examples")
 
@@ -16,8 +19,8 @@ current_time = time.strftime("%H_%M", time.localtime())
 target_file = "constraint_generation_{}".format(current_time)
 
 benchmarks = [
-    ("brp", "brp_16-2", 0.95, "z3", "quads"),
-    ("brp", "brp_16-2", 0.95, "yices", "quads"),
+    require_z3()(("brp", "brp_16-2", 0.95, "z3", "quads")),
+    require_yices()(("brp", "brp_16-2", 0.95, "yices", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
   #  ("nand", "nand_10-1", 0.1, "z3", "quads"),
     #("crowds", "crowds_5-5", 0.5, "z3"),

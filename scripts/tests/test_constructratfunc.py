@@ -4,6 +4,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import prismfiletoratfunc
 import pytest
 import time
+from tests import requires
+from requires import *
 
 EXAMPLE_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                               "benchmarkfiles/pdtmc")
@@ -13,9 +15,9 @@ target_file = "buildratfunc_{}".format(current_time)
 
 
 benchmarks = [
-    ("brp", "brp_16_2", "property1", "storm"),
-    ("brp", "brp_16_2", "property1", "prism"),
-    ("brp", "brp_16_2", "property1", "stormpy"),
+    require_storm()(("brp", "brp_16_2", "property1", "storm")),
+    require_prism()(("brp", "brp_16_2", "property1", "prism")),
+    require_stormpy()(("brp", "brp_16_2", "property1", "stormpy")),
 ]
 
 @pytest.mark.parametrize("name,file,property,tool", benchmarks)
