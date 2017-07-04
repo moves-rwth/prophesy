@@ -157,6 +157,9 @@ class ProphesyConfig(Configuration):
     def get_isat(self):
         return self.get_tool("isat")
 
+    def has_stormpy(self):
+        return self.is_module_available("stormpy")
+
     def get_intermediate_dir(self):
         dir = self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
         util.ensure_dir_exists(dir)
