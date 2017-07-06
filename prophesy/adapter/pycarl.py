@@ -28,4 +28,4 @@ denominator = pycarl.gmp.denominator
 def parse(input):
     if not CARL_PARSER:
         raise ImportError("Parsing capabalities not available as pycarl was built without.")
-    res = pycarl.parse.deserialize(input, pycarl.gmp);
+    return pycarl.parse.deserialize(input, pycarl.gmp);
