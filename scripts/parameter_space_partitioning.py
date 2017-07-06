@@ -22,12 +22,13 @@ from prophesy.config import configuration
 logger = logging.getLogger(__name__)
 
 
-def parse_cli_args(args, solversConfig):
+def _get_argparser():
     parser = ArgumentParser(description='Build regions based on a sample file')
 
     parser.add_argument('--rat-file', help='file containing rational function', required=True)
     parser.add_argument('--samples-file', help='file containing the sample points', required=True)
-    parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination', required = False)
+    parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination',
+                        required=False)
     parser.add_argument('--threshold', help='gives the threshold', type=float)
 
     limit_group = parser.add_mutually_exclusive_group(required=True)
@@ -39,7 +40,7 @@ def parse_cli_args(args, solversConfig):
     method_group.add_argument('--quads', action='store_true', dest='quads')
     method_group.add_argument('--poly', action='store_true', dest='poly')
 
-    solvers_group = parser.add_mutually_exclusive_group(required=not solversConfig)
+    solvers_group = parser.add_mutually_exclusive_group(required=True)
     solvers_group.add_argument('--z3', action='store_true', help='location of z3')
     solvers_group.add_argument('--isat', action='store_true', help='location of isat')
     solvers_group.add_argument('--yices', action='store_true', help="location of yices")
@@ -51,7 +52,11 @@ def parse_cli_args(args, solversConfig):
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
 
-    return parser.parse_args(args)
+    return parser
+
+
+def parse_cli_args(args, solversConfig):
+    return _get_argparser().parse_args(args)
 
 
 def run(args = sys.argv[1:], interactive=True):

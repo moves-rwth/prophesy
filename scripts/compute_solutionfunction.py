@@ -13,7 +13,7 @@ from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.config import configuration
 
 
-def parse_cli_args(args):
+def _get_argparser():
     parser = ArgumentParser(description='Transform a prism file to a rational function.')
 
     parser.add_argument('--file', help='the input file containing the prism file', required=True)
@@ -27,7 +27,11 @@ def parse_cli_args(args):
     solver_group.add_argument('--prism', action='store_true', help='use prism via cli')
     solver_group.add_argument('--stormpy', action='store_true', help='use the python API')
 
-    return parser.parse_args(args)
+    return parser
+
+
+def parse_cli_args(args):
+    return _get_argparser().parse_args(args)
 
 
 def run(args=sys.argv[1:], interactive = True):

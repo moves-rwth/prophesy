@@ -17,8 +17,8 @@ from prophesy.adapter.pycarl import Rational
 from prophesy.config import configuration
 
 
-def parse_cli_args(args):
-    parser = ArgumentParser(description='Perform sampling on a prism file')
+def _get_argparser():
+    parser = ArgumentParser(prog="sampling_model", description='Perform sampling on a prism file')
 
     parser.add_argument('--file', help='the input file containing the prism file', required=True)
     parser.add_argument('--pctl-file', help='a file with a pctl property', required=True)
@@ -30,13 +30,16 @@ def parse_cli_args(args):
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
     parser.add_argument('--constants', type=str, help='string with constants')
 
-
     solver_group = parser.add_mutually_exclusive_group(required=True)
     solver_group.add_argument('--storm', action='store_true', help='use storm via cli')
     solver_group.add_argument('--prism', action='store_true', help='use prism via cli')
     solver_group.add_argument('--stormpy', action='store_true', help='use the storm via python API')
 
-    return parser.parse_args(args)
+    return parser
+
+
+def parse_cli_args(args):
+    return _get_argparser().parse_args(args)
 
 
 def run(args = sys.argv[1:], interactive=True):

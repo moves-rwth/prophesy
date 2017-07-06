@@ -13,6 +13,7 @@ User Guide:
 
    installation
    gettingstarted
+   scripts
    api
 
 

@@ -14,8 +14,7 @@ from prophesy.adapter.pycarl import Rational
 from prophesy.config import configuration
 
 
-def parse_cli_args(args):
-    """Parse and return command-line arguments."""
+def _get_argparser():
     parser = ArgumentParser(description='Perform sampling based on a rational function.')
 
     parser.add_argument('--rat-file', help='the input file containing the prism file', required=True)
@@ -26,7 +25,12 @@ def parse_cli_args(args):
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
 
-    return parser.parse_args(args)
+    return parser
+
+
+def parse_cli_args(args):
+    """Parse and return command-line arguments."""
+    return _get_argparser().parse_args(args)
 
 
 def run(args=sys.argv[1:], interactive=True):
