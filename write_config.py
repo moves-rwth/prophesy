@@ -54,6 +54,7 @@ def get_initial_config(config):
     config_tools["yices"] = find_tool("yices-smt2")
     config_tools["param"] = find_tool("param")
     config_tools["storm"] = find_tool("storm")
+    config_tools["storm-pars"] = find_tool("storm-pars")
     config_tools["prism"] = find_tool("prism")
     config["external_tools"] = config_tools
 
