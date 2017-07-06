@@ -16,7 +16,7 @@ target_file = "buildratfunc_{}".format(current_time)
 
 benchmarks = [
     require_storm()(("brp", "brp_16_2", "property1", "storm")),
-    require_prism()(("brp", "brp_16_2", "property1", "prism")),
+    require_prism(rational_function=True)(("brp", "brp_16_2", "property1", "prism")),
     require_stormpy()(("brp", "brp_16_2", "property1", "stormpy")),
 ]
 
