@@ -75,7 +75,7 @@ class TestTornado(TornadoTestCase):
             result_data = pfile.read()
         prismfile = ('prism-file', 'brp_16_2.pm', prismdata)
         pctlfile = ('pctl-file', 'property1.pctl', pctldata)
-        result_file = ('result-file', 'results_w_bisim.res', result_data)
+        result_file = ('result-file', 'brp_16-2.rat', result_data)
         ct, data = self.encode_multipart_formdata([], [prismfile])
         response = self._sendData('/uploadPrism', data=data, ct=ct)
         assert response.code == 200
