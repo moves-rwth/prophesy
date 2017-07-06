@@ -117,7 +117,6 @@ class SmtRegionChecker(RegionChecker):
                 start = time.time()
                 checkresult = smt_context.check()
                 duration = time.time() - start
-                #print("Call took {0} seconds".format(duration))
                 if isinstance(polygon, HyperRectangle):
                     self.benchmark_output.append((checkresult, duration, polygon.size()))
                 else:
