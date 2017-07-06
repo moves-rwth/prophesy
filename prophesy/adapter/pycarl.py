@@ -7,6 +7,9 @@ if CARL_PARSER:
     import pycarl.parse
     import pycarl.gmp.parse
 
+    ParserError = pycarl.parse.ParserError
+else:
+    ParserError = RuntimeError
 
 Variable = pycarl.Variable
 VariableType = pycarl.VariableType

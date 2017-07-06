@@ -42,7 +42,7 @@ from prophesy_web.config import configuration as web_configuration
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen
 
-from prophesy.adapter.pycarl  import Rational
+from prophesy.adapter.pycarl  import Rational, ParserError
 
 default_results = {}
 
@@ -137,15 +137,21 @@ class CegarHandler(RequestHandler, SessionMixin):
         return data
 
     def _getResultData(self, name):
+        #TODO what if there multiple properties for the same model??
         self.setup_results()
         result_files = self._get_session('result_files', {})
         if not name in result_files:
+            logger.warning("No known solution file for %s", name)
             return None
         try:
-            print(result_files[name])
+            logger.debug("Found solution file %s", result_files[name])
             result = read_pstorm_result(result_files[name])
             return result
-        except:
+        except ParserError as e:
+            logger.error(str(e))
+            raise RuntimeError("Invalid solution file {}".format(result_files[name]))
+        except Exception as e:
+            logger.warning(str(e))
             return None
 
     def setup_results(self):
