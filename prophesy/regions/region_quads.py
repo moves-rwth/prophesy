@@ -2,120 +2,129 @@ from prophesy.regions.region_generation import RegionGenerator
 from prophesy.data.hyperrectangle import HyperRectangle
 
 
-class QuadAndSamples:
+class regionAndSamples:
     """
     Named tuple for easier code understanding
     """
-    def __init__(self, quad, samples):
-        self.quad = quad
+    def __init__(self, region, samples):
+        self.region = region
         self.samples = samples
 
 
-class ConstraintQuads(RegionGenerator):
+class HyperRectangleRegions(RegionGenerator):
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
         super().__init__(samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
 
-        self.quads = []
+        self.regions = []
         # Number of consecutive recursive splits() maximum
         self.check_depth = 64
 
-        # Setup initial quad
-        quad = HyperRectangle(*self.parameters.get_variable_bounds())
-        quadsamples = []
+        # Setup initial region
+        region = HyperRectangle(*self.parameters.get_variable_bounds())
+        regionsamples = []
 
         for instantiation, value in samples:
-            if not quad.contains(instantiation.get_point(parameters)):
+            if not region.contains(instantiation.get_point(parameters)):
                 continue
             safe = value >= self.threshold
-            quadsamples.append((instantiation.get_point(parameters), safe))
-        self.check_quad(quad, quadsamples)
-        self._sort_quads_by_size()
+            regionsamples.append((instantiation.get_point(parameters), safe))
+        self.check_region(region, regionsamples)
+        self._sort_regions_by_size()
 
-    def _sort_quads_by_size(self, reverse=True):
-        self.quads.sort(key=lambda x: x.quad.size(), reverse=reverse)
+    def _sort_regions_by_size(self, reverse=True):
+        self.regions.sort(key=lambda x: x.region.size(), reverse=reverse)
 
     def plot_candidate(self):
         boxes = []
-        for q in self.quads:
+        for q in self.regions:
             boxes.append(q.poly)
         self.plot_results(poly_blue=boxes, display=False)
 
-    def check_quad(self, quad, samples, depth=0):
-        """Check if given quad can be assumed safe or bad based on
-        known samples. If samples are mixed, split the quad and retry.
-        Resulting quads are added to self.quads"""
+    def check_region(self, region, samples, depth=0):
+        """Check if given region can be assumed safe or bad based on
+        known samples. If samples are mixed, split the region and retry.
+        Resulting regions are added to self.regions"""
         if depth == self.check_depth:
             assert False, "Too deep"
-            self.quads.append(quad)
+            self.regions.append(region)
             return
 
         if len(samples) <= 1:
-            self.quads.append(QuadAndSamples(quad, samples))
+            self.regions.append(regionAndSamples(region, samples))
             return
         if all([sample[1] for sample in samples]):
             # All safe
-            self.quads.append(QuadAndSamples(quad, samples))
+            self.regions.append(regionAndSamples(region, samples))
             return
         elif all([not sample[1] for sample in samples]):
             # All bad
-            self.quads.append(QuadAndSamples(quad, samples))
+            self.regions.append(regionAndSamples(region, samples))
             return
 
-        newelems = quad.split_in_every_dimension()
+        newelems = region.split_in_every_dimension()
         if newelems is None:
             return None
-        for newquad in newelems:
+        for newregion in newelems:
             newsamples = []
             for pt, safe in samples:
-                if not newquad.contains(pt):
+                if not newregion.contains(pt):
                     continue
                 newsamples.append((pt, safe))
-            self.check_quad(newquad, newsamples, depth + 1)
+            self.check_region(newregion, newsamples, depth + 1)
 
-    def fail_constraint(self, constraint, safe):
-        # Split quad and try again
-        quadelem = self.quads[0]
-        newelems = quadelem.quad.split_in_every_dimension()
+    def fail_region(self, constraint, safe):
+        # Split region and try again
+        regionelem = self.regions[0]
+        newelems = regionelem.region.split_in_every_dimension()
         # Currently no need to check it,
-        # failure ony applies for quad that was already consistent
-        self.quads = self.quads[1:]
-        for newquad in newelems:
+        # failure ony applies for region that was already consistent
+        self.regions = self.regions[1:]
+        for newregion in newelems:
             newsamples = []
-            for pt, safe in quadelem.samples:
-                if not newquad.contains(pt):
+            for pt, safe in regionelem.samples:
+                if not newregion.contains(pt):
                     continue
                 newsamples.append((pt, safe))
-            self.quads.insert(0, QuadAndSamples(newquad, newsamples))
-        self._sort_quads_by_size()
-        quad = self.quads[0]
-        return quad.quad, safe
+            self.regions.insert(0, regionAndSamples(newregion, newsamples))
+        self._sort_regions_by_size()
+        region = self.regions[0]
+        return region.region, safe
 
-    def reject_constraint(self, constraint, safe, sample):
-        # New sample, add it to current quad, and check it
-        # Also remove failed quad
-        self.quads[0].samples.append((sample.get_instantiation_point(self.parameters), not safe))
-        self.check_quad(self.quads[0].quad, self.quads[0].samples)
-        self.quads = self.quads[1:]
-        self._sort_quads_by_size()
+    def reject_region(self, constraint, safe, sample):
+        # New sample, add it to current region, and check it
+        # Also remove failed region
+        self.regions[0].samples.append((sample.get_instantiation_point(self.parameters), not safe))
+        self.check_region(self.regions[0].region, self.regions[0].samples)
+        self.regions = self.regions[1:]
+        self._sort_regions_by_size()
+        
+    def refine_region(self, new_regions, safe):
+        """
+        If a constraint could not be checked, but we know that only a subconstraint has to be checked afterwards.
+        """
+        self.regions = self.regions[1:]
+        for region in new_regions:
+            self.regions.append(region)
+        self._sort_regions_by_size()
 
-    def accept_constraint(self, constraint, safe):
-        # Done with the quad
-        self.quads = self.quads[1:]
+    def accept_region(self, constraint, safe):
+        # Done with the region
+        self.regions = self.regions[1:]
 
-    def next_constraint(self):
-        if len(self.quads) == 0:
+    def next_region(self):
+        if len(self.regions) == 0:
             return None
 
-        quad = self.quads[0]
+        region = self.regions[0]
 
-        if len(quad.samples) == 0:
+        if len(region.samples) == 0:
             # Assume safe at first (rather arbitrary)
-            return  quad.quad, True
-        if all([sample[1] for sample in quad.samples]):
+            return  region.region, True
+        if all([sample[1] for sample in region.samples]):
             # All safe
-            return  quad.quad, True
-        elif all([not sample[1] for sample in quad.samples]):
+            return  region.region, True
+        elif all([not sample[1] for sample in region.samples]):
             # All bad
-            return quad.quad, False
+            return region.region, False
 
-        assert False, "A mixed quad was left in the quad queue, wut"
+        assert False, "A mixed region was left in the region queue, wut"

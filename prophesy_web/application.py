@@ -31,7 +31,7 @@ from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
 from prophesy.sampling.sampling_linear import LinearRefinement
-from prophesy.regions.region_quads import ConstraintQuads
+from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.regions.region_polygon import ConstraintPolygon
 
 from prophesy.util import ensure_dir_exists
@@ -622,7 +622,7 @@ class ConstraintHandler(CegarHandler):
         elif type == 'rectangles':
             return self._json_error("Rectangles generator was temporarily dropped in v2")
         elif type == 'quads':
-            generator = ConstraintQuads(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
+            generator = HyperRectangleRegions(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         elif type == 'poly':
             generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
         else:
@@ -645,12 +645,12 @@ class ConstraintHandler(CegarHandler):
         new_samples = InstantiationResultDict(result.parameters)
         for result in generator:
             (check_result, data) = result
-            if check_result is RegionCheckResult.unsat:
+            if check_result is RegionCheckResult.Satisfied:
                 (poly, safe) = data
                 unsat.append((_jsonPoly(poly), bool(safe)))
                 if socket is not None:
                     socket.send_constraints([unsat[-1]])
-            elif check_result is RegionCheckResult.sat:
+            elif check_result is RegionCheckResult.CounterExample:
                 (sample, safe) = data
                 new_samples[sample.pt] = sample.val
                 if socket is not None:

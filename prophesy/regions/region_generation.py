@@ -14,9 +14,11 @@ from prophesy.exceptions.module_error import ModuleError
 
 
 class RegionGenerator:
-    """A generator for regions. 
+    """
+    A generator for regions. 
     This class acts as an iterable that generates new regions (or counterexamples),
-     until the search space is exhausted (which possibly never happens)"""
+    until the search space is exhausted (which possibly never happens)\
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, samples, parameters, threshold, threshold_area, checker, _ratfunc):
@@ -47,7 +49,7 @@ class RegionGenerator:
 
     def __next__(self):
             # get next constraint depending on algorithm
-            result_constraint = self.next_constraint()
+            result_constraint = self.next_region()
             while result_constraint is not None:
                 polygon, area_safe = result_constraint
                 result = self._analyse_region(polygon, area_safe)
@@ -57,7 +59,7 @@ class RegionGenerator:
                 yield result
 
                 # get next constraint depending on algorithm
-                result_constraint = self.next_constraint()
+                result_constraint = self.next_region()
 
     def _add_pdf(self, name):
         """
@@ -122,20 +124,20 @@ class RegionGenerator:
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def next_constraint(self):
+    def next_region(self):
         """Generate a new set of regions ([regions], area, area_safe),
         where [regions] is a list of Constraint, area is a polygon representation of the new area
         and area_safe indicated whether the area should be determined safe (or not)"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def fail_constraint(self, constraint, safe):
+    def fail_region(self, constraint, safe):
         """Update current set of regions, usually to avoid mem or time out.
         Returns same as next_constraint"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def reject_constraint(self, constraint, safe, sample):
+    def reject_region(self, constraint, safe, sample):
         """Called for a constraint that is rejected (sample found).
         
         :param constraint: Polygon or HyperRectangle
@@ -145,7 +147,7 @@ class RegionGenerator:
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def accept_constraint(self, constraint, safe):
+    def accept_region(self, constraint, safe):
         """Called for a constraint that is accepted (i.e. unsat)"""
         raise NotImplementedError("Abstract parent method")
 
@@ -169,14 +171,20 @@ class RegionGenerator:
 
         for result in self:
             res_status, data = result
-            if res_status == RegionCheckResult.unsat :
+            if res_status == RegionCheckResult.Satisfied:
                 self.all_polys.append(data)
                 poly, safe = data
                 if safe:
                     self.safe_polys.append(poly)
                 else:
                     self.bad_polys.append(poly)
-            elif res_status == RegionCheckResult.sat:
+            elif res_status == RegionCheckResult.CounterExample:
+                pass
+            elif res_status == RegionCheckResult.Refined:
+                raise NotImplementedError("We have to record the refinement.")
+                #self.all_polys.append()
+
+            else:
                 pass
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
@@ -201,7 +209,7 @@ class RegionGenerator:
 
     def _analyse_region(self, polygon, safe):
         checkresult, additional = self.checker.analyse_region(polygon, safe)
-        if checkresult == RegionCheckResult.unsat:
+        if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
             self.samples = self.samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
 
@@ -211,13 +219,23 @@ class RegionGenerator:
             #            del self.samples[pt]
 
             # update everything in the algorithm according to correct new area
-            self.accept_constraint(polygon, safe)
+            self.accept_region(polygon, safe)
             return checkresult, (polygon, safe)
-        elif checkresult == RegionCheckResult.sat:
+        elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
             self.samples.add_result(additional)
-            self.reject_constraint(polygon, safe, additional)
+            self.reject_region(polygon, safe, additional)
             return checkresult, (additional, safe)
+        elif checkresult == RegionCheckResult.Refined:
+            # We refined the existing region.
+            # additional should contain the candidate for the counterexample.
+            # compute setminus operation to get accepted constraints:
+            # accepted = polygon.setminus(additional)
+
+            #return checkresult, (accepted, safe)
+            #TODO implement something.
+            pass
+
         else:
-            result_update = self.fail_constraint(polygon, safe)
+            result_update = self.fail_region(polygon, safe)
             return checkresult, result_update

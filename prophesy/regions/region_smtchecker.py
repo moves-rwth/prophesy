@@ -131,7 +131,7 @@ class SmtRegionChecker(RegionChecker):
                     break
 
         if checkresult == Answer.unsat:
-            return RegionCheckResult.unsat, None
+            return RegionCheckResult.Satisfied, None
         elif checkresult == Answer.sat:
             # add new point as counter example to existing regions
             sample = ParameterInstantiation()
@@ -139,8 +139,9 @@ class SmtRegionChecker(RegionChecker):
                 value = smt_model[par.variable.name]
                 rational = Rational(value)
                 sample[par] = rational
-            value = self._ratfunc.evaluate(dict([(k.variable, v) for k,v in sample.items()]))
-            return RegionCheckResult.sat, InstantiationResult(sample, value)
+            eval_dict = dict([(k.variable, v) for k,v in sample.items()])
+            value = self._ratfunc.evaluate(eval_dict)
+            return RegionCheckResult.CounterExample, InstantiationResult(sample, value)
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None

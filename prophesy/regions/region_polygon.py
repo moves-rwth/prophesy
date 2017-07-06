@@ -5,6 +5,10 @@ from prophesy.regions.region_generation import RegionGenerator
 
 
 class ConstraintPolygon(RegionGenerator):
+    """
+    This generator is meant to be used via a user interface, as it cannot generate new polygons itself.
+    Moreover, this generator is limited to 2 dimensions.
+    """
     def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
         if len(parameters) != 2:
             raise NotImplementedError
@@ -14,18 +18,18 @@ class ConstraintPolygon(RegionGenerator):
         self.safe_polygons = []
         self.bad_polygons = []
 
-    def fail_constraint(self, constraint, safe):
+    def fail_region(self, constraint, safe):
         # TODO inform user
         # TODO: convex constraint might be split in triangles
         return None
 
-    def accept_constraint(self, constraint, safe):
+    def accept_region(self, constraint, safe):
         pass
 
-    def reject_constraint(self, constraint, safe, sample):
+    def reject_region(self, constraint, safe, sample):
         pass
 
-    def next_constraint(self):
+    def next_region(self):
         if len(self.safe_polygons) > 0:
             poly = self.safe_polygons[0]
             self.safe_polygons = self.safe_polygons[1:]
@@ -38,16 +42,28 @@ class ConstraintPolygon(RegionGenerator):
         return None
 
     def add_polygon(self, polygon, safe):
+        """
+        Add new polygon
+        
+        :param polygon: 
+        :param safe: 
+        :return: 
+        """
         assert len(polygon.exterior.coords) >= 3, "Must supply at least 3 points"
         # Splitting the polygon immediately, the result may be smaller than
-        # what was input, but betther than failure
-        polys = self.get_convex_poly(polygon)
+        # what was input, but better than failure
+        polys = self._get_convex_poly(polygon)
         if safe:
             self.safe_polygons.extend(polys)
         else:
             self.bad_polygons.extend(polys)
 
-    def get_convex_poly(self, complex_poly):
+    def _get_convex_poly(self, complex_poly):
+        """
+        Makes polynomial convex.
+        :param complex_poly: 
+        :return: 
+        """
         # CCW polygon
         ccw_poly = orient(complex_poly, 1.0)
         convex_poly = ccw_poly.convex_hull
