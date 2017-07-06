@@ -21,8 +21,9 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
     """
     Class wrapping the storm model checker CLI.
     """
-    def __init__(self, location=configuration.get_storm()):
-        self.location = location
+    def __init__(self, main_location=configuration.get_storm(), parameter_location=configuration.get_storm_pars()):
+        self.main_location = main_location
+        self.parameter_location = parameter_location
         self.bisimulation = BisimulationType.strong
         self.pctlformula = ""
         self.prismfile = None
@@ -39,7 +40,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         :return: Version information about the model checker
         """
-        args = [self.location, '--version']
+        args = [self.main_location, '--version']
         outputstr = run_tool(args, True)
         output = outputstr.split("\n")
         return output[0]
@@ -69,7 +70,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         constants_string = self.constants.to_key_value_string()
 
-        args = [self.location,
+        args = [self.parameter_location,
                 '--prism', self.prismfile.location,
                 '--prop', self.pctlformula,
                 '--parametric',

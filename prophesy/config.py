@@ -93,6 +93,15 @@ class ProphesyConfig(Configuration):
             if not re.match(r"Storm ", output, re.MULTILINE):
                 raise ConfigurationError("Storm is not found at " + storm_loc)
 
+        storm_loc = self.get_storm_pars()
+        if storm_loc:
+            try:
+                output = util.run_tool([storm_loc, '--version'], True)
+            except:
+                raise ConfigurationError("Storm-pars is not found at " + storm_loc)
+            if not re.match(r"Storm-pars", output, re.MULTILINE):
+                raise ConfigurationError("Storm-pars is not found at " + storm_loc)
+
         prism_loc = self.get_prism()
         if prism_loc:
             try:
@@ -141,6 +150,9 @@ class ProphesyConfig(Configuration):
 
     def get_storm(self):
         return self.get_tool("storm")
+
+    def get_storm_pars(self):
+        return self.get_tool("storm-pars")
 
     def get_prism(self):
         return self.get_tool("prism")
