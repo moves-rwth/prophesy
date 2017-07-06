@@ -5,7 +5,7 @@ import time
 import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import ratfilesampling
+import sampling_solutionfunction
 
 
 EXAMPLE_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "benchmarkfiles/examples")
@@ -56,4 +56,4 @@ def test_script(name, benchmark, threshold, safe_above):
                ]
     if not safe_above:
         command.append("--bad-above-threshold")
-    ratfilesampling.run(command, False)
+    sampling_solutionfunction.run(command, False)

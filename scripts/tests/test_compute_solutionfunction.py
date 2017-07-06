@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import prismfiletoratfunc
+import compute_solutionfunction
 import pytest
 import time
 from tests import requires
@@ -30,5 +30,5 @@ def test_script(name, file, property, tool):
                '--result-file',
                target_file
                ]
-    prismfiletoratfunc.run(command, False)
+    compute_solutionfunction.run(command, False)
     os.remove(target_file)

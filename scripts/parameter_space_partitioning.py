@@ -6,7 +6,7 @@ import logging
 
 import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
-from prophesy.regions.region_quads import ConstraintQuads
+from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.output.plot import Plot
@@ -91,7 +91,7 @@ def run(args = sys.argv[1:], interactive=True):
             raise RuntimeError("Yices location not configured.")
         smt2interface = YicesCLISolver()
     elif cmdargs.isat:
-        if 'prism' not in pmcs:
+        if 'isat' not in solvers:
             raise RuntimeError("ISat location not configured.")
         smt2interface = IsatSolver()
     else:
@@ -108,7 +108,7 @@ def run(args = sys.argv[1:], interactive=True):
     if cmdargs.rectangles:
         raise NotImplementedError("Rectangles are currently not supported")
     elif cmdargs.quads:
-        generator = ConstraintQuads(*arguments)
+        generator = HyperRectangleRegions(*arguments)
     elif cmdargs.poly:
         generator = ConstraintPolygon(*arguments)
         # For testing

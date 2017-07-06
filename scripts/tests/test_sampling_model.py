@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import modelsampling
+import sampling_model
 import pytest
 import time
 from tests import requires
@@ -58,5 +58,5 @@ def test_script(name, file, property, threshold,tool):
                '--samples-file',
                target_file
                ]
-    modelsampling.run(command, False)
+    sampling_model.run(command, False)
     os.unlink(target_file)

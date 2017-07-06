@@ -7,7 +7,7 @@ import os
 import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import buildconstraints
+import parameter_space_partitioning
 
 from tests import requires
 from requires import *
@@ -60,4 +60,4 @@ def test_script(name, file, threshold, tool, method):
                 str(END_CRITERIA_VALUE),
                 "--{}".format(method),
                 ]
-    buildconstraints.run(command, False)
+    parameter_space_partitioning.run(command, False)
