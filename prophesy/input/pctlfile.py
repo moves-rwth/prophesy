@@ -2,6 +2,9 @@ from prophesy.util import check_filepath_for_reading
 
 
 class PctlFile:
+    """
+    Wrapper for pctl files, which contain a list of pctl formulae
+    """
     def __init__(self, location):
         check_filepath_for_reading(location)
         self.location = location

@@ -33,7 +33,7 @@ def read_samples_file(path, parameters):
         start = 1
 
 
-
+        #TODO check order of parameter names and parameters!
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
             if len(lines[1].split()) != 2:
