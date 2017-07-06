@@ -55,14 +55,14 @@ def _get_argparser():
     return parser
 
 
-def parse_cli_args(args, solversConfig):
+def parse_cli_args(args):
     return _get_argparser().parse_args(args)
 
 
 def run(args = sys.argv[1:], interactive=True):
     interactive = False #TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
-    cmdargs = parse_cli_args(args, solvers)
+    cmdargs = parse_cli_args(args)
     configuration.check_tools()
 
     threshold_area = cmdargs.threshold_area
@@ -91,14 +91,17 @@ def run(args = sys.argv[1:], interactive=True):
         if 'z3' not in solvers:
             raise RuntimeError("Z3 location not configured.")
         smt2interface = Z3CliSolver()
+        CheckerType = SmtRegionChecker
     elif cmdargs.yices:
         if 'yices' not in solvers:
             raise RuntimeError("Yices location not configured.")
         smt2interface = YicesCLISolver()
+        CheckerType = SmtRegionChecker
     elif cmdargs.isat:
         if 'isat' not in solvers:
             raise RuntimeError("ISat location not configured.")
         smt2interface = IsatSolver()
+        CheckerType = SmtRegionChecker
     else:
         raise RuntimeError("No supported smt solver defined")
 
@@ -106,7 +109,7 @@ def run(args = sys.argv[1:], interactive=True):
 
 
     logger.info("Generating regions")
-    checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
+    checker = CheckerType(smt2interface, result.parameters, result.ratfunc)
     checker.initialize(result, threshold)
     arguments = samples, result.parameters, threshold, threshold_area, checker, result.ratfunc
 
