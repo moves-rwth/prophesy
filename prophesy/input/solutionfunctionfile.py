@@ -58,9 +58,8 @@ def read_pstorm_result(location):
     logging.debug("Reading constraints...")
     constraints_string = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
-    #TODO fix as soon as parser for constraints is available.
     constraints = []
-    #constraints = [parse_constraint(cond) for cond in constraints_string[1:]]
+    constraints = [pc.parse(cond) for cond in constraints_string[1:]]
 
     # Build graph-preserving constraints
     constraints_string = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
@@ -68,9 +67,8 @@ def read_pstorm_result(location):
         constraints_string = constraints_string[0].split("\n")[:-1]
     else:
         constraints_string = []
-    # TODO fix as soon as parser for constraints is available
     gpconstraints = []
-    #gpconstraints = [parse_constraint(cond) for cond in constraints_string[1:]]
+    gpconstraints = [pc.parse(cond) for cond in constraints_string[1:]]
     constraints += gpconstraints
 
 
@@ -98,9 +96,9 @@ def write_pstorm_result(location, result):
     logger.info("Write solution function and constraints to %s", location)
     with open(location, "w") as f:
         f.write("!Parameters: {0}\n".format("; ".join([str(p) for p in result.parameters])))
-        f.write("!Result: {0}\n".format(str(result.ratfunc).replace('^', '**')))
-        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
-        #f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([str(c) for c in result.parameter_constraints])))
+        f.write("!Result: {0}\n".format((result.ratfunc.to_smt2())))
+        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.parameter_constraints])))
+        f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.parameter_constraints])))
 
 
 def read_param_result(location):
