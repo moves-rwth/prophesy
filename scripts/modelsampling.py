@@ -12,7 +12,6 @@ from prophesy.input.pctlfile import PctlFile
 from prophesy.input.samplefile import write_samples_file
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy.modelcheckers.stormpy import StormpyModelChecker
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.adapter.pycarl import Rational
 from prophesy.config import configuration
@@ -57,6 +56,8 @@ def run(args = sys.argv[1:], interactive=True):
     elif cmdargs.stormpy:
         if 'stormpy' not in pmcs:
             raise RuntimeError("Stormpy dependency not configured.")
+        # Do not import at top, as stormpy might not be available.
+        from prophesy.modelcheckers.stormpy import StormpyModelChecker
         tool = StormpyModelChecker()
     elif cmdargs.prism:
         if 'prism' not in pmcs:
