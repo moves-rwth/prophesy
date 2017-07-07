@@ -12,28 +12,38 @@ logger = logging.getLogger(__name__)
 
 
 class ParametricResult(object):
-    """Stores the data that may result from loading a parametric model, which
-    are its parameters, the rationalfunction it describes and any constraints
-    that apply to the parameters."""
-    def __init__(self, parameters, parameter_constraints, ratfunc):
+    """
+    Stores the data that represent a property of a parametric model, which
+    are its parameters, the solution function for the property
+    and any constraints that apply to the parameters.
+    """
+    def __init__(self, parameters, parameter_constraints, graph_preservation_constraints, ratfunc):
         """
-        @param parameters ParameterOrder
-        @param parameter_constraints List of constraints (pycarl.Formula or pycarl.Constraint)
-        @param ratfunc pycarl.RationalFunction (or lower)
+        :param parameters: ParameterOrder
+        :param parameter_constraints: Constraints that have to be fulfilled on the parameters in order to induce a well-defined model.
+        :type parameter_constraints: List[pycarl.Formula]
+        :param graph_preservation_constraints: Constraints that ensure that the graph-structure remains 
+        :type graph_preservation_constraints: List[pycarl.Formula]
+        :param ratfunc: Solution function
+        :type ratfunc: pycarl.RationalFunction (or lower)
         """
         self.parameters = parameters
-        self.parameter_constraints = parameter_constraints
+        self.welldefined_constraints = parameter_constraints
+        self.graph_preservation_constraints = graph_preservation_constraints
         self.ratfunc = ratfunc
 
     def __str__(self):
         output_template = "Parameters: {params}\nParameter Constraints:\n    {constrs}\nResult: {results}\n"
         return output_template.format(params=", ".join(map(str, self.parameters)),
-                                      constrs="\n    ".join(map(str, self.parameter_constraints)),
+                                      constrs="\n    ".join(map(str, self.welldefined_constraints)),
                                       results=self.ratfunc)
 
 
 def read_pstorm_result(location):
-    """Read the output of pstorm into a ParametricResult
+    """
+    Read the output of pstorm into a ParametricResult
+    :return: The data obtained from the model.
+    :rtype: ParametricResult
     """
     with open(location) as f:
         inputstring = f.read()
@@ -58,7 +68,6 @@ def read_pstorm_result(location):
     logging.debug("Reading constraints...")
     constraints_string = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
-    constraints = []
     constraints = [pc.parse(cond) for cond in constraints_string[1:]]
 
     # Build graph-preserving constraints
@@ -67,23 +76,22 @@ def read_pstorm_result(location):
         constraints_string = constraints_string[0].split("\n")[:-1]
     else:
         constraints_string = []
-    gpconstraints = []
-    gpconstraints = [pc.parse(cond) for cond in constraints_string[1:]]
-    constraints += gpconstraints
+    gpconstraints = [pc.parse(cond.strip()) for cond in constraints_string[1:] if cond.strip() != ""]
+
 
 
     # Build rational function
-    logger.debug("Reading rational function...")
+    logger.debug("Looking for solution function...")
     match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
-    logger.debug("Building rational function...")
+    logger.debug("Building solution function...")
     solution = pc.parse(match)
 
     if isinstance(solution, pc.Monomial):
         solution = pc.Polynomial(solution)
-    logger.debug("Rational function is %s", solution)
+    logger.debug("Solution function is %s", solution)
 
     logger.debug("Parsing complete.")
-    return ParametricResult(parameters, constraints, solution)
+    return ParametricResult(parameters, constraints, gpconstraints, solution)
 
 
 def write_pstorm_result(location, result):
@@ -91,8 +99,8 @@ def write_pstorm_result(location, result):
     with open(location, "w") as f:
         f.write("!Parameters: {0}\n".format("; ".join([str(p) for p in result.parameters])))
         f.write("!Result: {0}\n".format((result.ratfunc.to_smt2())))
-        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.parameter_constraints])))
-        f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.parameter_constraints])))
+        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.welldefined_constraints])))
+        f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.graph_preservation_constraints])))
 
 
 def read_param_result(location):
