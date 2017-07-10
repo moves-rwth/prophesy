@@ -72,7 +72,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         args = [self.parameter_location,
                 '--prism', self.prismfile.location,
-                '--prop', self.pctlformula,
+                '--prop', str(self.pctlformula),
                 '--parametric',
                 '--parametric:resultfile', resultfile,
                 '--elimination:order', 'fwrev']
@@ -113,7 +113,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
             args = [self.location,
                     '--prism', self.prismfile.location,
-                    '--prop', self.pctlformula,
+                    '--prop', str(self.pctlformula),
                     "-const", const_values_string]
             if self.bisimulation == BisimulationType.strong:
                 args.append('--bisimulation')

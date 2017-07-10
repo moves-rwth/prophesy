@@ -1,5 +1,5 @@
 from prophesy.util import check_filepath_for_reading
-
+from prophesy.data.property import Property
 
 class PctlFile:
     """
@@ -17,7 +17,8 @@ class PctlFile:
                 if line.startswith('#') or line.strip() == "":
                     pass
                 else:
-                    self.formulas.append(line.strip())
+
+                    self.formulas.append(Property.from_string(line.strip()))
 
     def get(self, index):
         if index >= self.get_nr_formulas():

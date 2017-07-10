@@ -44,10 +44,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def set_pctl_formula(self, formula):
         """Sets the pctl-formular to modelcheck the current model with that formula. The formula is directly parsed."""
+        #TODO instead of going via string, do a bit more meaningful stuff.
         if self.program == None:
-            self.pctl_formula = stormpy.parse_properties(formula)
+            self.pctl_formula = stormpy.parse_properties(str(formula))
         else:
-            self.pctl_formula = stormpy.parse_properties_for_prism_program(formula, self.program)
+            self.pctl_formula = stormpy.parse_properties_for_prism_program(str(formula), self.program)
 
     def load_model_from_prismfile(self, p_file, constants):
         """ Load a model encrypted in prism file format."""

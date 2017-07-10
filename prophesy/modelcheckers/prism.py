@@ -59,7 +59,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
         args = [self.location,
                 self.prismfile.location,
-                '--pctl', self.pctlformula,
+                '--pctl', str(self.pctlformula),
                 '-exportresults', resultfile,
                 '-paramelimorder', 'fwrev']
         if self.bisimulation == BisimulationType.strong:
@@ -106,7 +106,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
-        pctlpath = write_string_to_tmpfile(self.pctlformula)
+        pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
         args = [self.location, self.prismfile.location, pctlpath,
                 "-const", const_values_string,
@@ -129,7 +129,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
-        pctlpath = write_string_to_tmpfile(self.pctlformula)
+        pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
         print(samplepoints.parameters)
 
