@@ -14,8 +14,10 @@ from helpers.helper import get_example_path
 
 # Get the prophesy configuration data
 import prophesy.config as config # This imports the Class data file
-from prophesy.config import configuration # This imports the instanciated Object of 'ProphesyConfig'
+from prophesy.config import configuration # This imports the instantiated Object of 'ProphesyConfig'
+from prophesy_web.config import configuration as web_configuration
 
+@pytest.mark.skipif(not web_configuration.is_redis_running(), reason="requires running redis instance" )
 class TestTornado(TornadoTestCase):
     """ Testing of the tornado web framework. """
 

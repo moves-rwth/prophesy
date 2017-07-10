@@ -21,7 +21,10 @@ from helpers.helper import get_example_path
 # Get the prophesy configuration data
 import prophesy.config as config
 from prophesy.config import configuration
+from prophesy_web.config import configuration as web_configuration
 
+
+@pytest.mark.skipif(not web_configuration.is_redis_running(), reason="requires running redis instance" )
 @pytest.mark.incremental
 class TestTornado(TornadoTestCase):
     """ Testing of the workflow in Prophesy. """

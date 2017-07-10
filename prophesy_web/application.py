@@ -478,10 +478,7 @@ class UploadResult(CegarHandler):
 class PingRedis(CegarHandler):
 
     def get(self):
-        with Popen(["redis-cli", "ping"], stdout=subprocess.PIPE) as proc:
-            if proc.stdout.readline() == b'PONG\n':
-                return self._json_ok("running")
-        return self._json_error("Redis not running")
+        return self._json_ok("running") if web_configuration.is_redis_running() else self._json_error("Redis not running")
 
 class Samples(CegarHandler):
     def get(self):
