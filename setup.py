@@ -27,7 +27,7 @@ class ConfigBuild(build):
     def run(self):
         # Write config before executing setup, so cfg files are found
         write_config.write_initial_config()
-        build.run(self) 
+        build.run(self)
 
 setup(
     name="Prophesy",
@@ -54,10 +54,11 @@ setup(
         'prophesy': ['prophesy.cfg'],
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
-    scripts=['scripts/buildconstraints.py',
-             'scripts/modelsampling.py',
-             'scripts/prismfiletoratfunc.py',
-             'scripts/ratfilesampling.py',
+    scripts=[
+             'scripts/compute_solutionfunction.py',
+             'scripts/sampling_model.py',
+             'scripts/sampling_solutionfunction.py',
+             'scripts/parameter_space_partitioning.py',
              'scripts/webcegar.py'],
     cmdclass={
         'build': ConfigBuild,
