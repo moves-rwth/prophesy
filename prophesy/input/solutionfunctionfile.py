@@ -51,7 +51,7 @@ def read_pstorm_result(location):
     # Build parameters
     logger.debug("Reading parameters...")
     parameters = ParameterOrder()
-    parameter_strings = re.findall('!Parameters:\s(.*)', inputstring)[0].split(";")
+    parameter_strings = re.findall('\$Parameters:\s(.*)', inputstring)[0].split(";")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
@@ -66,23 +66,26 @@ def read_pstorm_result(location):
 
     # Build well-defined constraints
     logging.debug("Reading constraints...")
-    constraints_string = re.findall(r'(!Well-formed Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)[0]
+    constraints_string = re.findall(r'(\$Well-formed Constraints:\s*\n.+?)(?=\$|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
+    for cs in constraints_string[1:]:
+        print(cs)
     constraints = [pc.parse(cond) for cond in constraints_string[1:]]
+    logger.debug("Constraints: %s", str(constraints))
 
     # Build graph-preserving constraints
-    constraints_string = re.findall(r'(!Graph-preserving Constraints:\s*\n.+?)(?=!|(?:\s*\Z))', inputstring, re.DOTALL)
-    if len(constraints_string) > 0:
-        constraints_string = constraints_string[0].split("\n")[:-1]
-    else:
-        constraints_string = []
-    gpconstraints = [pc.parse(cond.strip()) for cond in constraints_string[1:] if cond.strip() != ""]
+    constraints_string = re.findall(r'(\$Graph-preserving Constraints:\s*\n.+?)(?=\$|(?:\s*\Z))', inputstring, re.DOTALL)[0]
+    constraints_string = constraints_string.split("\n")[:-1]
+    for cs in constraints_string[1:]:
+        print(cs)
+    gpconstraints = [pc.parse(cond) for cond in constraints_string[1:] if cond.strip() != ""]
+    logger.debug("GP Constraints: %s", str(gpconstraints))
 
 
 
     # Build rational function
     logger.debug("Looking for solution function...")
-    match = re.findall('!Result:(.*)$', inputstring, re.MULTILINE)[0]
+    match = re.findall('\$Result:(.*)$', inputstring, re.MULTILINE)[0]
     logger.debug("Building solution function...")
     solution = pc.parse(match)
 
@@ -97,10 +100,10 @@ def read_pstorm_result(location):
 def write_pstorm_result(location, result):
     logger.info("Write solution function and constraints to %s", location)
     with open(location, "w") as f:
-        f.write("!Parameters: {0}\n".format("; ".join([str(p) for p in result.parameters])))
-        f.write("!Result: {0}\n".format((result.ratfunc.to_smt2())))
-        f.write("!Well-formed Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.welldefined_constraints])))
-        f.write("!Graph-preserving Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.graph_preservation_constraints])))
+        f.write("$Parameters: {0}\n".format("; ".join([str(p) for p in result.parameters])))
+        f.write("$Result: {0}\n".format((result.ratfunc.to_smt2())))
+        f.write("$Well-formed Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.welldefined_constraints])))
+        f.write("$Graph-preserving Constraints:\n{0}\n".format("\n".join([c.to_smt2() for c in result.graph_preservation_constraints])))
 
 
 def read_param_result(location):
