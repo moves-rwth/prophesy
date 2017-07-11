@@ -8,6 +8,8 @@ import logging
 
 from prophesy.exceptions.configuration_error import ConfigurationError
 
+logger = logging.getLogger(__name__)
+
 
 class Configuration():
     def __init__(self, config_file):
@@ -53,10 +55,12 @@ class Configuration():
         return result
 
     def set(self, section, key, value):
+        logger.debug("Update config: / %s / %s = %s", section, key, value)
         self._config.set(section, key, value)
         self.modified = True
 
     def updateConfigurationFile(self):
+        logger.info("Update config file %s", self._importedFrom)
         with open(self._importedFrom, 'w') as f:
             self._config.write(f)
         self.modified = False
