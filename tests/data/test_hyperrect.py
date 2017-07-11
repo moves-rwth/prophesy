@@ -1,5 +1,6 @@
 from prophesy.data.interval import Interval, string_to_interval, BoundType
 from prophesy.data.hyperrectangle import HyperRectangle
+import prophesy.adapter.pycarl as pc
 
 
 def test_get_middle_component():
@@ -20,3 +21,8 @@ def test_setminus_hyperrectangles():
             hlist[2] == HyperRectangle(string_to_interval("(0.2,0.75)",float), string_to_interval("[0.0,0.3)",float)) and \
             hlist[3] == HyperRectangle(string_to_interval("(0.2,0.75)",float), string_to_interval("(0.6, 1.0]", float))
 
+def test_region_string():
+    h2 = HyperRectangle(string_to_interval("[2,5]",pc.Rational),string_to_interval("[3,6]",pc.Rational))
+    variables = [pc.Variable("x"), pc.Variable("y")]
+    h3 = HyperRectangle.from_region_string(h2.to_region_string(variables), variables)
+    assert h2 == h3

@@ -218,5 +218,26 @@ class HyperRectangle(object):
             ValueError("Region strings are only defined for closed intervals")
         var_strings = []
         for variable, interval in zip(variables, self.intervals):
-            var_strings.append("{}<={}<={}".format(interval.left_bound, str(variable), interval.right_bound))
+            var_strings.append("{}<={}<={}".format(interval.left_bound(), str(variable), interval.right_bound()))
         return ",".join(var_strings)
+
+    @classmethod
+    def from_region_string(cls, input_string, variables):
+        """
+        Constructs a hyperrectangle with dimensions according to the variable order.
+        :param input: 
+        :param variables: 
+        :return: A HyperRectangle
+        """
+        interval_strings = input_string.split(",")
+        variables_to_intervals = dict()
+        for int_str in interval_strings:
+            components = int_str.split("<=")
+            if len(components) != 3:
+                raise ValueError("Expected string in the form Number<=Variable<=Number, got {}".format(int_str))
+            variables_to_intervals[components[1]] = Interval(pc.Rational(components[0]), BoundType.closed, pc.Rational(components[2]), BoundType.closed)
+        ordered_intervals = []
+        for variable in variables:
+            ordered_intervals.append(variables_to_intervals[variable.name])
+        #TODO checks.
+        return cls(*ordered_intervals)
