@@ -30,7 +30,8 @@ class PrismFile:
             inputstring = f.read()
             parameter_names = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
             for par_name in parameter_names:
-                bound = interval.Interval(0.0, interval.BoundType.open, 1.0, interval.BoundType.open)
+                #TODO change this in order to support variables for rewards.
+                bound = interval.Interval(Rational(0), interval.BoundType.open, Rational(1), interval.BoundType.open)
                 self.parameters.append(Parameter(Variable(par_name), bound))
 
     def make_temporary_copy(self):
