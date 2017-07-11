@@ -91,7 +91,24 @@ class HyperRectangle(object):
         """
         return HyperRectangle([i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
 
+    def is_closed(self):
+        """
+        Checks whether the hyperrectangle is closed in every dimension.
+        :return: True iff all intervals are closed.
+        """
+        for i in self.intervals:
+            if not i.is_closed():
+                return False
+        return True
+
+
     def _setminus(self, other, dimension):
+        """
+        Helper function for setminus
+        :param other: 
+        :param dimension: 
+        :return: 
+        """
         assert len(self.intervals) > dimension and len(other.intervals) > dimension
         new_interval_list = self.intervals[dimension].setminus(other.intervals[dimension])
         hrect_list = []
@@ -189,3 +206,17 @@ class HyperRectangle(object):
             rbound = pc.Constraint(pc.Polynomial(variable) - interval.right_bound(), rbound_relation)
             constraint = constraint & rbound
         return constraint
+
+    def to_region_string(self, variables):
+        """
+        Constructs a region string, as e.g. used by storm-pars
+        :param variables: An ordered list of the variables
+        :type variables: List[pycarl.Variable]
+        :return: 
+        """
+        if not self.is_closed():
+            ValueError("Region strings are only defined for closed intervals")
+        var_strings = []
+        for variable, interval in zip(variables, self.intervals):
+            var_strings.append("{}<={}<={}".format(interval.left_bound, str(variable), interval.right_bound))
+        return ",".join(var_strings)
