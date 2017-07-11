@@ -13,7 +13,6 @@ import shutil
 from helpers.helper import get_example_path
 
 # Get the prophesy configuration data
-import prophesy.config as config # This imports the Class data file
 from prophesy.config import configuration # This imports the instantiated Object of 'ProphesyConfig'
 from prophesy_web.config import configuration as web_configuration
 
@@ -36,18 +35,7 @@ class TestTornado(TornadoTestCase):
         value_before = self._get_response_string('/config/directories/plots')
         while new_value == value_before:
             new_value = str(random.random())
-
-        # Change value
-        body_send = "data=" + new_value
-        response = self._sendData('/config/directories/plots', body_send)
-        self.assertEqual(response.code, 200)
-
-        # Check new value
-        response = self.fetch('/config/directories/plots')
-        s = response.body.decode('UTF-8')
-        value_after = json.loads(s)["data"]
-        self.assertNotEqual(value_before, value_after)
-        self.assertEqual(value_after, new_value)
+        #TODO check write access, although this should be done with more care than before.
         print("DONE")
 
     def test_directories(self):
