@@ -5,6 +5,7 @@ import logging
 import copy
 from argparse import ArgumentParser
 
+import prophesy.adapter.pycarl as pc
 from prophesy.data.constant import parse_constants_string
 from prophesy.output.plot import plot_samples
 from prophesy.input.prismfile import PrismFile
@@ -76,7 +77,7 @@ def run(args = sys.argv[1:], interactive=True):
     parameters = copy.deepcopy(prism_file.parameters)
     for const_variable in constants.variables():
         parameters.remove_variable(const_variable)
-    parameters.make_intervals_closed(0.0001)
+    parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
     logging.info("Performing uniform sampling:")
 
