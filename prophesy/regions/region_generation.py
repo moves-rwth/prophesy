@@ -21,16 +21,14 @@ class RegionGenerator:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, samples, parameters, threshold, threshold_area, checker, _ratfunc):
+    def __init__(self, samples, parameters, threshold, checker):
         self.samples = samples.copy()
         self.parameters = parameters
         self.threshold = threshold
-        self.threshold_area = threshold_area
 
         self.max_area_sum = HyperRectangle(*self.parameters.get_variable_bounds()).size()
 
         self.checker = checker
-        self.ratfunc = _ratfunc
 
         # Stores all regions as triple ([constraint], polygon representation, bad/safe)
         self.all_polys = []

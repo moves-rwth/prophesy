@@ -1,6 +1,13 @@
 from enum import Enum
 
 
+class ProblemDescription:
+    def __init__(self, solutionfunction=None, model=None, property=None):
+        self.solutionfunction = solutionfunction
+        self.model = model
+        self.property = property
+
+
 class RegionCheckResult(Enum):
     CounterExample = 0  #: The region does not satisfy the property; we found a counterexample
     Satisfied = 1       #: The region satisfies the property.

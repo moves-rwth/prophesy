@@ -9,11 +9,11 @@ class ConstraintPolygon(RegionGenerator):
     This generator is meant to be used via a user interface, as it cannot generate new polygons itself.
     Moreover, this generator is limited to 2 dimensions.
     """
-    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
+    def __init__(self, samples, parameters, threshold, _smt2interface):
         if len(parameters) != 2:
             raise NotImplementedError
 
-        RegionGenerator.__init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
+        RegionGenerator.__init__(self, samples, parameters, threshold, _smt2interface)
 
         self.safe_polygons = []
         self.bad_polygons = []

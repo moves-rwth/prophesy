@@ -9,9 +9,11 @@ from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.sampling.sampler import Sampler
-from prophesy.adapter.pycarl import Rational
+import prophesy.adapter.pycarl as pc
+from prophesy.data.property import Property, OperatorBound
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 from prophesy.data.constant import Constants
+from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 logger = logging.getLogger(__name__)
@@ -66,7 +68,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
-        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
         constants_string = self.constants.to_key_value_string()
 
@@ -141,9 +143,75 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                             break
             if result is None:
                 raise RuntimeError("Could not find result from storm in {}".format(resultfile))
-            result = Rational(result)
+            result = pc.Rational(result)
 
             samples.add_result(InstantiationResult(sample_point, result))
             os.remove(resultfile)
 
         return samples
+
+    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, safe):
+        logger.info("Check region")
+
+        if self.pctlformula is None:
+            raise NotEnoughInformationError("pctl formula missing")
+        if self.prismfile is None:
+            raise NotEnoughInformationError("model missing")
+
+        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        logger.debug("Region string is {}".format(region_string))
+        property_to_check = self.pctlformula
+        if safe:
+            rel = pc.Relation.GEQ
+        else:
+            rel = pc.Relation.LESS
+
+        property_to_check.bound = OperatorBound(rel, threshold)
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+
+        constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
+
+        args = [self.parameter_location,
+                '--prism', self.prismfile.location,
+                '--prop', str(property_to_check),
+                '--region', region_string,
+                '--resultfile', resultfile,
+                ]
+        if self.bisimulation == BisimulationType.strong:
+            args.append('--bisimulation')
+        if constants_string != "":
+            args.append('-const')
+            args.append(constants_string)
+
+        logger.info("Call storm")
+        ret_code = run_tool(args, False)
+        if ret_code != 0:
+            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+            raise RuntimeError("Storm-pars crashed.")
+        else:
+            logger.info("Storm call finished successfully")
+
+        regions = []
+        # with open(resultfile) as f:
+        #     for line in f:
+        #         res_line = line.split(":")
+        #         if len(res_line) != 2:
+        #             raise ValueError("Unexpected content in result file")
+        #         if res_line[0] == "AllViolated":
+        #             region_result = RegionCheckResult.allviolated
+        #         elif res_line[0] == "AllSatisfied":
+        #             region_result = RegionCheckResult.allsatisfied
+        #         elif res_line[0] == "ExistsBoth":
+        #             region_result = RegionCheckResult.unknown
+        #         elif res_line[0] == "Unknown":
+        #             region_result = RegionCheckResult.unknown
+        #         else:
+        #             raise RuntimeError("Unexpected content in result file")
+        #
+        #         region_string_out = res_line[1].strip()
+        #         region = HyperRectangle.from_region_string(region_string_out)
+        #         regions.append(region_result, region)
+        return regions
+
+
+

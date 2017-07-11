@@ -43,7 +43,6 @@ benchmarks = [
 
 @pytest.mark.parametrize("name,file,threshold,tool,method", benchmarks)
 def test_script(name, file, threshold, tool, method):
-    THRESHOLD_AREA = 0.001
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
 

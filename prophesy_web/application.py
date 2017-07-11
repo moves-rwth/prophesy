@@ -3,7 +3,7 @@ from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations, InstantiationResultDict
 from prophesy.regions.region_smtchecker import SmtRegionChecker
-from prophesy.regions.region_checker import RegionCheckResult
+from prophesy.regions.region_checker import RegionCheckResult, ProblemDescription
 from prophesy.data.hyperrectangle import HyperRectangle
 
 import tempfile
@@ -616,18 +616,20 @@ class ConstraintHandler(CegarHandler):
 
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
+        problem_description = ProblemDescription()
+        problem_description.solutionfunction = result
 
-        checker = SmtRegionChecker(smt2interface, result.parameters, result.ratfunc)
-        checker.initialize(result,threshold)
+        checker = SmtRegionChecker(smt2interface, result.parameters)
+        checker.initialize(problem_description,threshold)
 
         if type == 'planes':
             return self._json_error("Planes generator was dropped in v2")
         elif type == 'rectangles':
             return self._json_error("Rectangles generator was temporarily dropped in v2")
         elif type == 'quads':
-            generator = HyperRectangleRegions(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
+            generator = HyperRectangleRegions(samples, result.parameters, threshold, checker)
         elif type == 'poly':
-            generator = ConstraintPolygon(samples, result.parameters, threshold, 0.01, checker, result.ratfunc)
+            generator = ConstraintPolygon(samples, result.parameters, threshold, checker)
         else:
             return self._json_error("Bad generator")
         generator.plot = False

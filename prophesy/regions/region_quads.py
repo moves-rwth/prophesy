@@ -12,8 +12,8 @@ class regionAndSamples:
 
 
 class HyperRectangleRegions(RegionGenerator):
-    def __init__(self, samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc):
-        super().__init__(samples, parameters, threshold, threshold_area, _smt2interface, _ratfunc)
+    def __init__(self, samples, parameters, threshold, checker):
+        super().__init__(samples, parameters, threshold, checker)
 
         self.regions = []
         # Number of consecutive recursive splits() maximum

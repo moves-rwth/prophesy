@@ -15,28 +15,33 @@ from prophesy.adapter.pycarl import Constraint, Relation
 
 
 class SmtRegionChecker(RegionChecker):
-    def __init__(self, smt2interface, parameters, ratfunc):
+    def __init__(self, backend, parameters):
         """
-        :param smt2interface: SMTSolver to check regions with
-        :param parameters: ParameterOrder
-        :param ratfunc: RationalFunction, used to evaluate solutions
+        :param backend: Smt solver to check regions
+        :type backend: SMTSolver
+        :param parameters: The parameters of the problem
+        :type parameters: ParameterOrder
         """
-        self._smt2interface = smt2interface
+        self._smt2interface = backend
         self.parameters = parameters
-        self._ratfunc = ratfunc
+        self._ratfunc = None
 
         self.benchmark_output = []
 
     # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
-    def initialize(self, result, threshold,
+    def initialize(self, problem_description, threshold, constants=None,
                                         solution_bound=Interval(0, BoundType.closed, None, BoundType.open)):
         """
         Initializes the smt solver to consider the problem at hand.
         
-        :param result: 
+        :param problem_description: 
+        :type problem_description: ProblemDescription
         :param threshold: 
         :param solution_bound: 
         """
+        result = problem_description.solutionfunction
+        self._ratfunc = result.ratfunc
+
         for p in result.parameters:
             self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
@@ -58,8 +63,8 @@ class SmtRegionChecker(RegionChecker):
             self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
             safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
             bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, bad_relation)
-            rf1_constraint = Constraint(rf1Var - pc.numerator(result.ratfunc), Relation.EQ)
-            rf2_constraint = Constraint(rf2Var - pc.denominator(result.ratfunc), Relation.EQ)
+            rf1_constraint = Constraint(pc.Polynomial(rf1Var) - pc.numerator(result.ratfunc), Relation.EQ)
+            rf2_constraint = Constraint(pc.Polynomial(rf2Var) - pc.denominator(result.ratfunc), Relation.EQ)
             self._smt2interface.assert_constraint(rf1_constraint)
             self._smt2interface.assert_constraint(rf2_constraint)
         else:
@@ -121,7 +126,6 @@ class SmtRegionChecker(RegionChecker):
                     self.benchmark_output.append((checkresult, duration, polygon.size()))
                 else:
                     self.benchmark_output.append((checkresult, duration, polygon.area))
-                #self.print_benchmark_output(self.benchmark_output)
                 if not checkresult in [Answer.sat, Answer.unsat]:
                     break
                 else:
