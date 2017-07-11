@@ -32,8 +32,10 @@ def read_samples_file(path, parameters):
             parameter_names = parameter_names[:-1]
         start = 1
 
+        for par_name, par in zip(parameter_names, parameters):
+            if par_name != par.variable.name:
+                raise ValueError("Parameter names {} do not coincide with given parameters".format(parameter_names))
 
-        #TODO check order of parameter names and parameters!
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
             if len(lines[1].split()) != 2:
@@ -55,7 +57,6 @@ def read_samples_file(path, parameters):
                 #TODO
                 raise NotImplementedError("Inexact sampling results are not yet supported in v2")
             else:
-                #TODO: falling back to Python float parser, but a good Rational parser is better
                 value = Rational(items[-1])
             coords = map(Rational, items[:-1])
             samples.add_result(InstantiationResult(ParameterInstantiation.from_point(Point(*coords), parameters), value))
