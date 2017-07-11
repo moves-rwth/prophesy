@@ -98,7 +98,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         assert samples_per_dimension > 1
         ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in parameters.get_variable_bounds()]
 
-        range_strings = ["{0}:{1}:{2}".format(r.start, r.step, r.stop) for r in ranges]
+        range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
         const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(parameters.get_variables(), range_strings)])
         constants_string = self.constants.to_key_value_string(to_float = True)
         if constants_string != "":
