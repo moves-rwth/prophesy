@@ -113,7 +113,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
 
-            args = [self.location,
+            args = [self.main_location,
                     '--prism', self.prismfile.location,
                     '--prop', str(self.pctlformula),
                     "-const", const_values_string]
