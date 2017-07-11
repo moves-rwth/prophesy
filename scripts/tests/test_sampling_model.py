@@ -18,8 +18,8 @@ target_file = "modelsampling_{}.samples".format(current_time)
 
 benchmarks = [
     require_stormpy()(("brp", "brp_16_2", "property1", 0.9, "stormpy")),
+    require_storm()(("brp", "brp_16_2", "property1", 0.9, "storm")),
     require_prism()(("brp", "brp_16_2", "property1", 0.9, "prism")),
-    require_prism()(("brp", "brp_16_2", "property1", 0.5, "prism")),
     require_prism()(("brp", "brp_16_2", "property1", 0.98, "prism")),
     #   ("brp", "brp_128-2", 0.9, True),
     #   ("brp", "brp_128-5", 0.9, True),
