@@ -60,6 +60,9 @@ class ProphesyConfig(Configuration):
             self.pmcs.add('storm')
             self.samplers['storm'] = storm_loc  # TODO Just store 'storm'?
 
+        if self.get_storm_pars():
+            self.ppmcs.add('storm-pars')
+
         if self.get_prism():
             self.ppmcs.add('prism')
             self.pmcs.add('prism')
