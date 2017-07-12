@@ -34,7 +34,7 @@ def read_samples_file(path, parameters):
 
         for par_name, par in zip(parameter_names, parameters):
             if par_name != par.variable.name:
-                raise ValueError("Parameter names {} do not coincide with given parameters".format(parameter_names))
+                raise ValueError("Parameter names {} do not coincide with given parameters {}".format(parameter_names, parameters))
 
         #Ignore thresholds
         if lines[1].startswith("Threshold"):
