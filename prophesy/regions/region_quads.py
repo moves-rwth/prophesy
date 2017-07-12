@@ -2,13 +2,15 @@ from prophesy.regions.region_generation import RegionGenerator
 from prophesy.data.hyperrectangle import HyperRectangle
 
 
-class regionAndSamples:
+class _AnnotatedRegion:
     """
-    Named tuple for easier code understanding
+    Named tuple holding the region and additional information
     """
-    def __init__(self, region, samples):
+    def __init__(self, region, samples, well_defined = None, graph_preserving = None):
         self.region = region
         self.samples = samples
+        self.graph_preserving = graph_preserving
+        self.well_defined = well_defined
 
 
 class HyperRectangleRegions(RegionGenerator):
@@ -50,15 +52,15 @@ class HyperRectangleRegions(RegionGenerator):
             return
 
         if len(samples) <= 1:
-            self.regions.append(regionAndSamples(region, samples))
+            self.regions.append(_AnnotatedRegion(region, samples))
             return
         if all([sample[1] for sample in samples]):
             # All safe
-            self.regions.append(regionAndSamples(region, samples))
+            self.regions.append(_AnnotatedRegion(region, samples))
             return
         elif all([not sample[1] for sample in samples]):
             # All bad
-            self.regions.append(regionAndSamples(region, samples))
+            self.regions.append(_AnnotatedRegion(region, samples))
             return
 
         newelems = region.split_in_every_dimension()
@@ -85,7 +87,7 @@ class HyperRectangleRegions(RegionGenerator):
                 if not newregion.contains(pt):
                     continue
                 newsamples.append((pt, safe))
-            self.regions.insert(0, regionAndSamples(newregion, newsamples))
+            self.regions.insert(0, _AnnotatedRegion(newregion, newsamples))
         self._sort_regions_by_size()
         region = self.regions[0]
         return region.region, safe
