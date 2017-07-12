@@ -6,6 +6,7 @@ import re
 from prophesy.config import configuration
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
+from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.sampling.sampler import Sampler
@@ -159,12 +160,16 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("model missing")
 
         region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        print(hyperrectangle)
+        print(region_string)
         logger.debug("Region string is {}".format(region_string))
         property_to_check = self.pctlformula
         if safe:
             rel = pc.Relation.GEQ
         else:
             rel = pc.Relation.LESS
+        hypothesis = "allsat"
+
 
         property_to_check.bound = OperatorBound(rel, threshold)
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
@@ -175,7 +180,9 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                 '--prism', self.prismfile.location,
                 '--prop', str(property_to_check),
                 '--region', region_string,
+                '--hypothesis', hypothesis,
                 '--resultfile', resultfile,
+                '--noillustration'
                 ]
         if self.bisimulation == BisimulationType.strong:
             args.append('--bisimulation')
@@ -192,25 +199,35 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             logger.info("Storm call finished successfully")
 
         regions = []
-        # with open(resultfile) as f:
-        #     for line in f:
-        #         res_line = line.split(":")
-        #         if len(res_line) != 2:
-        #             raise ValueError("Unexpected content in result file")
-        #         if res_line[0] == "AllViolated":
-        #             region_result = RegionCheckResult.allviolated
-        #         elif res_line[0] == "AllSatisfied":
-        #             region_result = RegionCheckResult.allsatisfied
-        #         elif res_line[0] == "ExistsBoth":
-        #             region_result = RegionCheckResult.unknown
-        #         elif res_line[0] == "Unknown":
-        #             region_result = RegionCheckResult.unknown
-        #         else:
-        #             raise RuntimeError("Unexpected content in result file")
-        #
-        #         region_string_out = res_line[1].strip()
-        #         region = HyperRectangle.from_region_string(region_string_out)
-        #         regions.append(region_result, region)
+        with open(resultfile) as f:
+             for line in f:
+                 line = line.strip()
+                 if line[-1] != ";":
+                     raise ValueError("Expect line to end with a semicolon")
+                 line = line[:-1]
+                 res_line = line.split(":")
+                 if len(res_line) != 2:
+                     raise ValueError("Unexpected content in result file")
+                 if res_line[0] == "AllViolated":
+                     raise RuntimeError("Contradiction of hypothesis")
+                 elif res_line[0] == "AllSat":
+                     region_result = RegionCheckResult.Satisfied
+                 elif res_line[0] == "ExistsBoth":
+                     raise RuntimeError("Unexpected outcome, something went wrong.")
+                 elif res_line[0] == "Unknown":
+                     region_result = RegionCheckResult.unknown
+                 elif res_line[0] == "CenterSat" or res_line[0] == "CenterViolated":
+                     logger.warning("Center sat is not expected.")
+                     region_result = RegionCheckResult.unknown
+
+                 else:
+                     raise RuntimeError("Unexpected content '{}' in result file".format(res_line[0]))
+
+                 region_string_out = res_line[1].strip()
+                 region = HyperRectangle.from_region_string(region_string_out, parameters.get_variables())
+                 print(region_string_out)
+                 print(region)
+                 regions.append((region_result, region))
         return regions
 
 
