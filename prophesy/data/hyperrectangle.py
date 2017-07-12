@@ -101,6 +101,8 @@ class HyperRectangle(object):
                 return False
         return True
 
+    def close(self):
+        return HyperRectangle(*[i.close() for i  in self.intervals])
 
     def _setminus(self, other, dimension):
         """
@@ -215,7 +217,7 @@ class HyperRectangle(object):
         :return: 
         """
         if not self.is_closed():
-            ValueError("Region strings are only defined for closed intervals")
+            raise ValueError("Region strings are only defined for closed intervals")
         var_strings = []
         for variable, interval in zip(variables, self.intervals):
             var_strings.append("{}<={}<={}".format(interval.left_bound(), str(variable), interval.right_bound()))
