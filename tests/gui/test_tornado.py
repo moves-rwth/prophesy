@@ -57,13 +57,13 @@ class TestTornado(TornadoTestCase):
 
     def test_upload_files(self):
         print("Check if uploading files to the server works correctly...", flush=True)
-        with open(get_example_path("pdtmc", "brp", "brp_16_2.pm"), 'r') as pfile:
+        with open(get_example_path("pdtmc", "brp", "brp_16-2.pm"), 'r') as pfile:
             prismdata = pfile.read()
         with open(get_example_path("pdtmc", "brp", "property1.pctl"), 'r') as pfile:
             pctldata = pfile.read()
         with open(get_example_path("examples", "brp", "brp_16-2.rat"), 'r') as pfile:
             result_data = pfile.read()
-        prismfile = ('prism-file', 'brp_16_2.pm', prismdata)
+        prismfile = ('prism-file', 'brp_16-2.pm', prismdata)
         pctlfile = ('pctl-file', 'property1.pctl', pctldata)
         result_file = ('result-file', 'brp_16-2.rat', result_data)
         ct, data = self.encode_multipart_formdata([], [prismfile])
@@ -89,7 +89,7 @@ class TestTornado(TornadoTestCase):
     def test_1_run_with_storm(self):
         self.test_upload_files()
         print("Check if StoRM runs on uploaded file...")
-        ct, data = self.encode_multipart_formdata([("prism","brp_16_2.pm"),("pctl_group", "property1.pctl"),
+        ct, data = self.encode_multipart_formdata([("prism","brp_16-2.pm"),("pctl_group", "property1.pctl"),
                                                    ("pctl_property", "P=? [F \"target\"]"),
                                                    ("mctool", "storm")], [])
         response = self._sendData('/runPrism', data, ct)

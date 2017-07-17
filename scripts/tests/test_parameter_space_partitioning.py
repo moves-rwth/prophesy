@@ -14,11 +14,13 @@ from requires import *
 
 EXAMPLE_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                               "benchmarkfiles/examples")
+MODEL_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                              "benchmarkfiles/pdtmc")
 
 current_time = time.strftime("%H_%M", time.localtime())
 target_file = "constraint_generation_{}".format(current_time)
 
-benchmarks = [
+benchmarks_smt = [
     require_z3()(("brp", "brp_16-2", 0.95, "z3", "quads")),
     require_yices()(("brp", "brp_16-2", 0.95, "yices", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
@@ -41,8 +43,8 @@ benchmarks = [
 #   ("brp", "brp_256-5", "z3"),
 ]
 
-@pytest.mark.parametrize("name,file,threshold,tool,method", benchmarks)
-def test_script(name, file, threshold, tool, method):
+@pytest.mark.parametrize("name,file,threshold,tool,method", benchmarks_smt)
+def test_script_smt(name, file, threshold, tool, method):
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
 
@@ -50,6 +52,33 @@ def test_script(name, file, threshold, tool, method):
     command = [
                 "--rat-file",
                 os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, file)),
+                "--samples-file",
+                os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, file)),
+                "--{}".format(tool),
+                "--threshold",
+                str(threshold),
+                END_CRITERIA,
+                str(END_CRITERIA_VALUE),
+                "--{}".format(method),
+                ]
+    parameter_space_partitioning.run(command, False)
+
+
+benchmarks_pla = [
+    require_storm()(("brp", "brp_16-2", "property1", 0.95, "storm", "quads")),
+]
+
+
+@pytest.mark.parametrize("name,file,propertyfile,threshold,tool,method", benchmarks_pla)
+def test_script_pla(name, file, propertyfile, threshold, tool, method):
+    END_CRITERIA = "--area"
+    END_CRITERIA_VALUE = 0.30
+
+    command = [
+                "--model-file",
+                os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
+                "--property-file",
+                os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
                 "--samples-file",
                 os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, file)),
                 "--{}".format(tool),
