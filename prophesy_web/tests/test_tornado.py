@@ -52,7 +52,7 @@ class TestTornado(TornadoTestCase):
         section = configuration.getSection(configuration.EXTERNAL_TOOLS)
         for tool in section:
             if not section[tool] == '':
-                assert (os.path.isfile(section[tool]) == "True") or (shutil.which(section[tool]) is not None)
+                assert (os.path.isfile(os.path.expanduser(section[tool])) == True) or (shutil.which(section[tool]) is not None)
         print("DONE")
 
     def test_upload_files(self):
