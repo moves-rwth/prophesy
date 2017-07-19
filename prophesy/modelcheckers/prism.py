@@ -70,7 +70,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             args.append(constants_string)
         variables = self.prismfile.parameters.get_variables()
         args.append('-param')
-        args.append('"{}"'.format(', '.join([str(var) for var in variables])))
+        args.append('{}'.format(','.join([str(var) for var in variables])))
 
         logger.info("Call prism")
         ret_code = run_tool(args, False)
