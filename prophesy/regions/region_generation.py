@@ -180,7 +180,8 @@ class RegionGenerator:
             elif res_status == RegionCheckResult.Refined:
                 raise NotImplementedError("We have to record the refinement.")
                 #self.all_polys.append()
-
+            elif res_status == RegionCheckResult.unknown:
+                pass
             else:
                 assert False # All options should be covered by switching if/else
 
