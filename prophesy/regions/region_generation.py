@@ -156,7 +156,7 @@ class RegionGenerator:
             return pol.size()
         assert False
 
-    def generate_constraints(self, max_iter=-1, max_area=1):
+    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n = 1):
         """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
         
@@ -183,7 +183,7 @@ class RegionGenerator:
                 #self.all_polys.append()
 
             else:
-                pass
+                assert False # All options should be covered by switching if/else
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
             if area_sum > max_area * self.max_area_sum:
@@ -194,7 +194,7 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if len(self.all_polys) % 4 == 0:
+            if len(self.all_polys) % plot_every_n == 0:
                 self.plot_results(display=False)
 
         # Plot the final outcome
