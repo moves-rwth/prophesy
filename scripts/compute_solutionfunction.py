@@ -63,6 +63,17 @@ def run(args=sys.argv[1:], interactive = True):
     tool.load_model_from_prismfile(prism_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
+    if prism_file.parameters != result.parameters:
+        if len(prism_file.parameters) != len(result.parameters):
+            raise ValueError(
+                "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
+                                                                                      result.parameters))
+        for p in prism_file.parameters:
+            if p not in result.parameters:
+                raise ValueError(
+                    "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
+                                                                                          result.parameters))
+        result.parameters = prism_file.parameters
     write_pstorm_result(vars(cmdargs)["result_file"], result)
 
 if __name__ == "__main__":

@@ -46,18 +46,17 @@ class RegionGenerator:
         return next(self)
 
     def __next__(self):
+        result_constraint = self.next_region()
+        while result_constraint is not None:
+            polygon, area_safe = result_constraint
+            result = self._analyse_region(polygon, area_safe)
+            if result is None:
+                # End of generator
+                return
+            yield result
+
             # get next constraint depending on algorithm
             result_constraint = self.next_region()
-            while result_constraint is not None:
-                polygon, area_safe = result_constraint
-                result = self._analyse_region(polygon, area_safe)
-                if result is None:
-                    # End of generator
-                    return
-                yield result
-
-                # get next constraint depending on algorithm
-                result_constraint = self.next_region()
 
     def _add_pdf(self, name):
         """
@@ -156,7 +155,7 @@ class RegionGenerator:
             return pol.size()
         assert False
 
-    def generate_constraints(self, max_iter=-1, max_area=1):
+    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n = 1):
         """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
         
@@ -181,9 +180,10 @@ class RegionGenerator:
             elif res_status == RegionCheckResult.Refined:
                 raise NotImplementedError("We have to record the refinement.")
                 #self.all_polys.append()
-
-            else:
+            elif res_status == RegionCheckResult.unknown:
                 pass
+            else:
+                assert False # All options should be covered by switching if/else
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
             if area_sum > max_area * self.max_area_sum:
@@ -194,7 +194,7 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if len(self.all_polys) % 4 == 0:
+            if len(self.all_polys) % plot_every_n == 0:
                 self.plot_results(display=False)
 
         # Plot the final outcome

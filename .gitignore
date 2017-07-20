@@ -9,6 +9,8 @@ tmp/
 *.cfg
 *.egg-link
 *.egg-info
+*.out
+*.smt2
 .tox
 .cache
 _build/

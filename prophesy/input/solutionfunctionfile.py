@@ -68,20 +68,14 @@ def read_pstorm_result(location):
     logging.debug("Reading constraints...")
     constraints_string = re.findall(r'(\$Well-formed Constraints:\s*\n.+?)(?=\$|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
-    for cs in constraints_string[1:]:
-        print(cs)
     constraints = [pc.parse(cond) for cond in constraints_string[1:]]
     logger.debug("Constraints: %s", str(constraints))
 
     # Build graph-preserving constraints
     constraints_string = re.findall(r'(\$Graph-preserving Constraints:\s*\n.+?)(?=\$|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
-    for cs in constraints_string[1:]:
-        print(cs)
     gpconstraints = [pc.parse(cond) for cond in constraints_string[1:] if cond.strip() != ""]
     logger.debug("GP Constraints: %s", str(gpconstraints))
-
-
 
     # Build rational function
     logger.debug("Looking for solution function...")
