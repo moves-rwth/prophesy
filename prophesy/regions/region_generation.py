@@ -46,18 +46,17 @@ class RegionGenerator:
         return next(self)
 
     def __next__(self):
+        result_constraint = self.next_region()
+        while result_constraint is not None:
+            polygon, area_safe = result_constraint
+            result = self._analyse_region(polygon, area_safe)
+            if result is None:
+                # End of generator
+                return
+            yield result
+
             # get next constraint depending on algorithm
             result_constraint = self.next_region()
-            while result_constraint is not None:
-                polygon, area_safe = result_constraint
-                result = self._analyse_region(polygon, area_safe)
-                if result is None:
-                    # End of generator
-                    return
-                yield result
-
-                # get next constraint depending on algorithm
-                result_constraint = self.next_region()
 
     def _add_pdf(self, name):
         """
