@@ -22,7 +22,7 @@ class RegionGenerator:
     __metaclass__ = ABCMeta
 
     def __init__(self, samples, parameters, threshold, checker):
-        self.samples = samples.copy()
+        self.safe_samples, self.bad_samples = samples.copy().split(threshold)
         self.parameters = parameters
         self.threshold = threshold
 
@@ -36,6 +36,7 @@ class RegionGenerator:
         self.bad_polys = []
         self.new_samples = {}
 
+        self._plot_candidates = False
         self.plot = len(self.parameters) <= 2
         self.first_pdf = True
         ensure_dir_exists(configuration.get_plots_dir())
@@ -49,6 +50,8 @@ class RegionGenerator:
         result_constraint = self.next_region()
         while result_constraint is not None:
             polygon, area_safe = result_constraint
+            if self._plot_candidates:
+                self.plot_candidate()
             result = self._analyse_region(polygon, area_safe)
             if result is None:
                 # End of generator
@@ -91,9 +94,8 @@ class RegionGenerator:
         kwargs['poly_red'] = poly_red + self.bad_polys
 
         # Split samples appropriately
-        samples_green, samples_red = self.samples.split(self.threshold)
-        samples_green = [res.instantiation.get_point(self.parameters) for res in samples_green.instantiation_results()]
-        samples_red = [res.instantiation.get_point(self.parameters) for res in samples_red.instantiation_results()]
+        samples_green = [res.instantiation.get_point(self.parameters) for res in self.safe_samples.instantiation_results()]
+        samples_red = [res.instantiation.get_point(self.parameters) for res in self.bad_samples.instantiation_results()]
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
@@ -155,16 +157,20 @@ class RegionGenerator:
             return pol.size()
         assert False
 
-    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n = 1):
+    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True):
         """Iteratively generates new regions, heuristically, attempting to
         find the largest safe or unsafe area
         
         :param max_iter: Number of regions to generate/check at most (not counting SMT failures),
         -1 for unbounded
-        "param max_area: Maximal area that should be covered.
+        :param max_area: Maximal area that should be covered.
+        :param plot_every_n: How often should the plot be appended to the pdf.
+        :param plot_candidates: True, iff candidates should be plotted
         """
         if max_iter == 0:
             return self.safe_polys, self.bad_polys, self.new_samples
+
+        self._plot_candidates = plot_candidates
 
         for result in self:
             res_status, data = result
@@ -209,7 +215,9 @@ class RegionGenerator:
         checkresult, additional = self.checker.analyse_region(polygon, safe)
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
-            self.samples = self.samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
+            # TODO region might contain this info, why not use that.
+            self.safe_samples = self.safe_samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
+            self.bad_samples = self.bad_samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
 
             # TODO make the code above work with the polygons, as below.
             #for instantiation, _ in self.samples:
@@ -221,7 +229,10 @@ class RegionGenerator:
             return checkresult, (polygon, safe)
         elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
-            self.samples.add_result(additional)
+            if additional.result >= self.threshold:
+                self.safe_samples.add_result(additional)
+            else:
+                self.bad_samples.add_result(additional)
             self.reject_region(polygon, safe, additional)
             return checkresult, (additional, safe)
         elif checkresult == RegionCheckResult.Refined:

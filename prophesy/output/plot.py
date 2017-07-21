@@ -72,7 +72,7 @@ class Plot(object):
     @staticmethod
     def plot_results(parameters,
                      samples_green=[], samples_red=[], samples_blue=[],
-                     poly_green=[], poly_red=[], poly_blue=[],
+                     poly_green=[], poly_red=[], poly_blue_crossed=[], poly_blue_dotted = [], poly_blue=[],
                      anchor_points=[], additional_arrows=[],
                      path_to_save=None, display=False):
         logger.info("Plot results")
@@ -128,7 +128,11 @@ class Plot(object):
             for box in poly_red:
                 Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#c11b17", 0.6), ec=colorc.to_rgba("#c11b17"), hatch="x")
             for box in poly_blue:
-                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch=".")
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"))
+            for box in poly_blue_crossed:
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch="x")
+            for box in poly_blue_dotted:
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch="o")
 
             # Draw the samples last
             x_coords = [x for x, y in samples_green]

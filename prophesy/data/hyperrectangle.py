@@ -47,6 +47,9 @@ class HyperRectangle(object):
             result.append(Point(*[(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i,x in zip(range(0, self.dimension()), bits)]))
         return result
 
+    def center(self):
+        return Point(*[interval.center() for interval in self.intervals])
+
     def np_vertices(self):
         verts = self.vertices()
         return np.array([np.array(list(map(float,v))) for v in verts])
