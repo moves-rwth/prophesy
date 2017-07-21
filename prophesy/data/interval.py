@@ -152,6 +152,9 @@ class Interval:
         """
         return self._right_value - self._left_value
 
+    def center(self):
+        return (self._right_value + self._left_value) / 2
+
     def split(self):
         """
         Split the interval in two equally large halfs.
