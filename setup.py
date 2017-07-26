@@ -7,6 +7,7 @@ import sys
 if sys.version_info[0] == 2:
     sys.exit("Sorry, Python 2 is not supported.")
 
+
 class Tox(TestCommand):
     """Custom command to execute the tests using tox
     """
@@ -17,17 +18,18 @@ class Tox(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
+        # import here, cause outside the eggs aren't loaded
         import tox
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
 
-class ConfigBuild(build):
 
+class ConfigBuild(build):
     def run(self):
         # Write config before executing setup, so cfg files are found
         write_config.write_initial_config()
         build.run(self)
+
 
 setup(
     name="Prophesy",
@@ -38,16 +40,12 @@ setup(
     maintainer_email="sebastian.junges@cs.rwth-aachen.de",
     url="http://moves.rwth-aachen.de",
     description="Prophesy - Parametric Probabilistic Model Checking",
-    packages=["prophesy", "prophesy.smt",
-              "prophesy.sampling", "prophesy.output", "prophesy.input",
-              "prophesy.modelcheckers", "prophesy.data",
-              "prophesy.regions", "prophesy.exceptions",
-              "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0', 'stormpy', 'shapely',
-                      'numpy', 'matplotlib'],
+    packages=["prophesy", "prophesy.smt", "prophesy.sampling", "prophesy.output", "prophesy.input",
+              "prophesy.modelcheckers", "prophesy.data", "prophesy.regions", "prophesy.exceptions", "prophesy_web"],
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0', 'shapely', 'numpy', 'matplotlib'],
     tests_require=['pytest'],
-    extras_require = {
-        'stormpy' : ["stormpy"],
+    extras_require={
+        'stormpy': ["stormpy"],
         'pdf': ["PyPDF2"],
     },
     package_data={
@@ -55,11 +53,11 @@ setup(
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
     scripts=[
-             'scripts/compute_solutionfunction.py',
-             'scripts/sampling_model.py',
-             'scripts/sampling_solutionfunction.py',
-             'scripts/parameter_space_partitioning.py',
-             'scripts/webcegar.py'],
+        'scripts/compute_solutionfunction.py',
+        'scripts/sampling_model.py',
+        'scripts/sampling_solutionfunction.py',
+        'scripts/parameter_space_partitioning.py',
+        'scripts/webcegar.py'],
     cmdclass={
         'build': ConfigBuild,
         'test': Tox
