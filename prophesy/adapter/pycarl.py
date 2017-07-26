@@ -1,8 +1,11 @@
 import pycarl
 import pycarl.gmp
 import pycarl.gmp.formula
+import pycarl.formula
+import pycarl.convert
 
-from pycarl._config import CARL_PARSER
+from pycarl._config import CARL_PARSER, CARL_WITH_CLN
+
 if CARL_PARSER:
     import pycarl.parse
     import pycarl.gmp.parse
@@ -10,6 +13,11 @@ if CARL_PARSER:
     ParserError = pycarl.parse.ParserError
 else:
     ParserError = RuntimeError
+
+
+if CARL_WITH_CLN:
+    import pycarl.cln
+    import pycarl.cln.formula
 
 Variable = pycarl.Variable
 VariableType = pycarl.VariableType
@@ -27,8 +35,14 @@ Formula = pycarl.gmp.formula.Formula
 numerator = pycarl.gmp.numerator
 denominator = pycarl.gmp.denominator
 
+FormulaType = pycarl.formula.FormulaType
+
 
 def parse(input):
     if not CARL_PARSER:
         raise ImportError("Parsing capabalities not available as pycarl was built without.")
     return pycarl.parse.deserialize(input, pycarl.gmp);
+
+
+def convert(data):
+    return pycarl.convert.convert_to_gmp(data)

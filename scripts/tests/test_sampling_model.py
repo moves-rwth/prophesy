@@ -17,10 +17,10 @@ target_file = "modelsampling_{}.samples".format(current_time)
 
 
 benchmarks = [
-    require_stormpy()(("brp", "brp_16-2", "property1", 0.9, "stormpy")),
     require_storm()(("brp", "brp_16-2", "property1", 0.9, "storm")),
     require_prism()(("brp", "brp_16-2", "property1", 0.9, "prism")),
     require_prism()(("brp", "brp_16-2", "property1", 0.98, "prism")),
+    require_stormpy()(("brp", "brp_16-2", "property1", 0.9, "stormpy")),
     #   ("brp", "brp_128-2", 0.9, True),
     #   ("brp", "brp_128-5", 0.9, True),
     #   ("brp", "brp_256-2", 0.9, True),
@@ -41,6 +41,7 @@ benchmarks = [
     #   ("nand-reward", "nand_20-2", 0.5, True),
     #   ("nand-reward", "nand_20-5", 0.5, True),
 ]
+
 
 @pytest.mark.parametrize("name,file,property,threshold,tool", benchmarks)
 def test_script(name, file, property, threshold,tool):
