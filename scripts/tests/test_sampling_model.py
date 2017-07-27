@@ -1,20 +1,14 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import sampling_model
+import os.path
 import pytest
-import time
-from tests import requires
 from requires import *
+from conftest import MODEL_FOLDER, current_time
 
-EXAMPLE_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                              "benchmarkfiles/pdtmc")
+import sampling_model
+
 SAMPLINGNR = 3
 ITERATIONS = 1
 
-current_time = time.strftime("%H_%M", time.localtime())
-target_file = "modelsampling_{}.samples".format(current_time)
-
+target_file = "sampling_model_{}.samples".format(current_time)
 
 benchmarks = [
     require_storm()(("brp", "brp_16-2", "property1", 0.9, "storm")),
@@ -44,11 +38,11 @@ benchmarks = [
 
 
 @pytest.mark.parametrize("name,file,property,threshold,tool", benchmarks)
-def test_script(name, file, property, threshold,tool):
+def test_script(name, file, property, threshold, tool):
     command = ["--file",
-               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+               os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
                "--pctl-file",
-               os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
+               os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, property)),
                "--samplingnr",
                str(SAMPLINGNR),
                "--iterations",
@@ -60,4 +54,5 @@ def test_script(name, file, property, threshold,tool):
                target_file
                ]
     sampling_model.run(command, False)
+    assert os.path.isfile(target_file)
     os.unlink(target_file)
