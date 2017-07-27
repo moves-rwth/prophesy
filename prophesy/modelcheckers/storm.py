@@ -121,7 +121,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                 args.append('--bisimulation')
 
             logger.info("Call storm")
-            ret_code = run_tool(args, quiet=False, logfile=resultfile)
+            ret_code = run_tool(args, quiet=False, outputfile=resultfile)
             if ret_code != 0:
                 logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
             else:

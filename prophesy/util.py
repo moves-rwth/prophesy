@@ -11,13 +11,25 @@ from prophesy.exceptions.configuration_error import ConfigurationError
 logger = logging.getLogger(__name__)
 
 
-class Configuration():
+class Configuration:
+    """
+    Configuration for prophesy.
+    """
+
     def __init__(self, config_file):
+        """
+        Constructor.
+        :param config_file: Path to config file.
+        """
         self._config = configparser.ConfigParser()
-        self._importFromFile(config_file)
+        self._import_from_file(config_file)
         self.modified = False
 
-    def _importFromFile(self, config_file):
+    def _import_from_file(self, config_file):
+        """
+        Import configuration from file.
+        :param config_file: Configuration file.
+        """
         parsed_files = self._config.read(config_file)
         if len(parsed_files) == 0:
             raise ConfigurationError(
@@ -25,6 +37,11 @@ class Configuration():
         self._importedFrom = config_file
 
     def check_existence(self, section, key):
+        """
+        Check if the given key exists in the configuration and raise a ConfigurationError if not.
+        :param section: Section.
+        :param key: Key.
+        """
         if section not in self._config:
             raise ConfigurationError("Cannot find section {}".format(section))
 
@@ -33,33 +50,70 @@ class Configuration():
                 "Cannot find key {} in section {}".format(key, section))
 
     def get(self, section, key):
+        """
+        Get config value for given key.
+        :param section: Section.
+        :param key: Key.
+        :return: Config value.
+        """
         self.check_existence(section, key)
         return self._config[section][key]
 
     def get_boolean(self, section, key):
+        """
+        Get config value as boolean.
+        :param section: Section.
+        :param key: Key.
+        :return: Config value as boolean.
+        """
         self.check_existence(section, key)
         return self._config.getboolean(section, key)
 
     def get_float(self, section, key):
+        """
+        Get config value as float.
+        :param section: Section.
+        :param key: Key.
+        :return: Config value as float.
+        """
         self.check_existence(section, key)
         return self._config.getfloat(section, key)
 
     def get_int(self, section, key):
+        """
+        Get config value as integer.
+        :param section: Section.
+        :param key: Key.
+        :return: Config value as integer.
+        """
         self.check_existence(section, key)
         return self._config.getint(section, key)
 
-    def getAll(self):
+    def get_all(self):
+        """
+        Get all entries of the configuration.
+        :return: Dict with all entries.
+        """
         result = {}
         for section in self._config.sections():
             result[section] = dict(self._config.items(section))
         return result
 
     def set(self, section, key, value):
+        """
+        Set config entry.
+        :param section: Section.
+        :param key: Key.
+        :param value: New value.
+        """
         logger.debug("Update config: / %s / %s = %s", section, key, value)
         self._config.set(section, key, value)
         self.modified = True
 
-    def updateConfigurationFile(self):
+    def update_configuration_file(self):
+        """
+        Write configuration file again.
+        """
         logger.info("Update config file %s", self._importedFrom)
         with open(self._importedFrom, 'w') as f:
             self._config.write(f)
@@ -67,7 +121,10 @@ class Configuration():
 
 
 def ensure_dir_exists(path):
-    """Checks whether the directory exists and creates it if not."""
+    """
+    Check whether the directory exists and create it if not. Raises an IOError if not successful.
+    :param path: Directory path.
+    """
     assert path is not None
     try:
         os.makedirs(path)
@@ -79,22 +136,29 @@ def ensure_dir_exists(path):
 
 
 def check_filepath_for_reading(filepath, filedescription_string="file"):
-    """Raises exception if file does not exist or is not readable."""
+    """
+    Check if the given path can be read. Raises an IOError otherwise.
+    :param filepath: Path.
+    :param filedescription_string: Type of path (file/dir).
+    """
     if not os.path.isfile(filepath):
         raise IOError(filedescription_string + " not found at " + filepath)
     if not os.access(filepath, os.R_OK):
         raise IOError("No read access on " + filedescription_string + ". Location: '" + "'.")
 
 
-def run_tool(args, quiet=False, logfile=None):
+def run_tool(args, quiet=False, outputfile=None):
     """
-    Executes a process,
-    :returns: the `stdout`
+    Executes a process.
+    :param args: CLI arguments to execute.
+    :param quiet: If false the output is logged.
+    :param outputfile: Path for saving output.
+    :return: Stdout of process or exitcode.
     """
     logger = logging.getLogger("External Tool")
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    if quiet and logfile is None:
+    if quiet and outputfile is None:
         return pipe.communicate()[0].decode(encoding='UTF-8')
     else:
         for line in iter(pipe.stdout.readline, ""):
@@ -103,26 +167,28 @@ def run_tool(args, quiet=False, logfile=None):
             output = line.decode(encoding='UTF-8').rstrip()
             if not quiet and output != "":
                 logger.debug("\t * " + output)
-            if logfile is not None:
-                write_string_to_file(logfile, output + "\n", append=True)
+            if outputfile is not None:
+                write_string_to_file(outputfile, output + "\n", append=True)
 
     return pipe.returncode
 
 
 def open_file(path):
-    """Open file with system-default application.
-
-    Works for Mac OS (`open`) and Linux with `xdg-open`."""
+    """
+    Open file with system-default application.
+    Works for Mac OS (`open`) and Linux with `xdg-open`.
+    :param path: Path.
+    """
     platform_specific_open = 'open' if platform.system() == 'Darwin' else 'xdg-open'
     os.system("{open_cmd} {file}".format(open_cmd=platform_specific_open, file=path))
 
 
 def write_string_to_file(path, string, append=False):
     """
-    :param path: File where we want to put the string
-    :param string: New content
-    :param append: If True, append to file, else overwrite
-    :return:
+    Write string to file.
+    :param path: File where we want to put the string.
+    :param string: New content.
+    :param append: If True, append to file, else overwrite.
     """
     with open(path, 'a' if append else 'w') as f:
         f.write(string)
@@ -130,8 +196,9 @@ def write_string_to_file(path, string, append=False):
 
 def write_string_to_tmpfile(string):
     """
-    :param string:
-    :return: The path to the temporary file
+    Write string to temporary file.
+    :param string: New content.
+    :return: The path to the temporary file.
     """
     _, path, = tempfile.mkstemp(suffix=".pctl", text=True)
     write_string_to_file(path, string)
@@ -140,22 +207,24 @@ def write_string_to_tmpfile(string):
 
 def which(program):
     """
+    Check if executable exists and return its path.
     See http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028#377028
-    :param program: String with name of the program
-    :return:
+    :param program: String with name of the program.
+    :return: Path to program or None if not found.
     """
     from prophesy import config
     from prophesy.config import configuration
 
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+    def is_exe(path_exe):
+        return os.path.isfile(path_exe) and os.access(path_exe, os.X_OK)
 
     fpath, fname = os.path.split(program)
     if fpath:
         if is_exe(program):
             return program
     else:
-        for path in os.environ["PATH"].split(os.pathsep) + configuration.get(config.DIRECTORIES, "custom_path").split(","):
+        for path in os.environ["PATH"].split(os.pathsep) + configuration.get(config.DIRECTORIES, "custom_path").split(
+                ","):
             path = path.strip('"')
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):

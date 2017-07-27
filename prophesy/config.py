@@ -203,7 +203,7 @@ class ProphesyConfig(Configuration):
         return self.get_float(ProphesyConfig.SMT, "timeout")
 
     def getSection(self, sec):
-        return self.getAll()[sec]
+        return self.get_all()[sec]
 
 configuration = ProphesyConfig()
 

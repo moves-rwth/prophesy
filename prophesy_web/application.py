@@ -797,7 +797,7 @@ class Configuration(CegarHandler):
         if section:
             if key:
                 return self._json_ok(configuration.get(section, key))
-        return self._json_ok(configuration.getAll())
+        return self._json_ok(configuration.get_all())
 
     # Sets the given configuartions from the Webinterface (JSON)
     def put(self):
@@ -808,7 +808,7 @@ class Configuration(CegarHandler):
         if section:
             if key:
                 configuration.set(section, key, str(self.get_argument("data")))
-                configuration.updateConfigurationFile()
+                configuration.update_configuration_file()
                 return self._json_ok()
         return self._json_error()
 
