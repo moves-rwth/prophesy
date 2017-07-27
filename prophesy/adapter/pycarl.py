@@ -43,5 +43,17 @@ def parse(input):
     return pycarl.parse.deserialize(input, pycarl.gmp);
 
 
-def convert(data):
-    return pycarl.convert.convert_to_gmp(data)
+if CARL_WITH_CLN:
+    def convert_to(data):
+        return pycarl.convert.convert_to_cln(data)
+
+
+    def convert_from(data):
+        return pycarl.convert.convert_to_gmp(data)
+else:
+    def convert_to(data):
+        return data
+
+
+    def convert_from(data):
+        return data
