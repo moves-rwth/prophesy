@@ -1,5 +1,4 @@
 import os
-import subprocess
 import tempfile
 import logging
 
@@ -18,7 +17,15 @@ logger = logging.getLogger(__name__)
 
 
 class PrismModelChecker(ParametricProbabilisticModelChecker):
+    """
+    Class wrapping the prism model checker CLI.
+    """
+
     def __init__(self, location=configuration.get_prism()):
+        """
+        Constructor
+        :param location: Path to prism binary.
+        """
         self.location = location
         self.bisimulation = BisimulationType.strong
         self.pctlformula = None
@@ -32,9 +39,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         args = [self.location, '-version']
         return run_tool(args, True)
 
-    def set_bisimulation_type(self, t):
-        assert(isinstance(t, BisimulationType))
-        self.bisimulation = t
+    def set_bisimulation_type(self, bisimulationType):
+        assert (isinstance(bisimulationType, BisimulationType))
+        self.bisimulation = bisimulationType
 
     def set_pctl_formula(self, formula):
         self.pctlformula = formula
@@ -94,13 +101,16 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Perform uniform sampling")
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
-        assert len(self.prismfile.parameters) - len(self.constants) == len(parameters.get_variables()), "Number of intervals does not match number of parameters"
+        assert len(self.prismfile.parameters) - len(self.constants) == len(
+            parameters.get_variables()), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
-        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in parameters.get_variable_bounds()]
+        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in
+                  parameters.get_variable_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
-        const_values_string = ",".join(["{0}={1}".format(p, r) for (p, r) in zip(parameters.get_variables(), range_strings)])
-        constants_string = self.constants.to_key_value_string(to_float = True)
+        const_values_string = ",".join(
+            ["{0}={1}".format(p, r) for (p, r) in zip(parameters.get_variables(), range_strings)])
+        constants_string = self.constants.to_key_value_string(to_float=True)
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string
 
@@ -135,7 +145,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
         samples = InstantiationResultDict(samplepoints.parameters)
         for sample_point in samplepoints:
-            const_values_string = ",".join(["{0}={1}".format(parameter.variable, float(val)) for parameter, val in sample_point.items()])
+            const_values_string = ",".join(
+                ["{0}={1}".format(parameter.variable, float(val)) for parameter, val in sample_point.items()])
             constants_string = self.constants.to_key_value_string(to_float=True)
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
@@ -160,3 +171,6 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         os.remove(resultpath)
         os.remove(pctlpath)
         return samples
+
+    def check_hyperrectangle(self, parameter_ranges, threshold, hypothesis):
+        raise NotImplementedError("Checking of hyperrectangles with prism is not implemented.")

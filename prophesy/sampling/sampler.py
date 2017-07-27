@@ -1,4 +1,5 @@
 import itertools
+from abc import abstractmethod
 from numpy import linspace
 
 from prophesy.data.interval import BoundType
@@ -9,12 +10,16 @@ from prophesy.adapter.pycarl import Rational
 
 
 class Sampler(object):
-    """Base class for performing sampling of given set of points"""
+    """
+    Base class for performing sampling of given set of points
+    """
+
     def __init__(self):
         pass
 
     def perform_uniform_sampling(self, parameters, samples_per_dimension):
-        """Samples a uniform grid of points.
+        """
+        Samples a uniform grid of points.
 
         Given a list of intervals (i.e., the first and last point;
         for each dimension, in order) and the number of samples per
@@ -41,6 +46,7 @@ class Sampler(object):
 
         return self.perform_sampling(sample_points)
 
+    @abstractmethod
     def perform_sampling(self, samplepoints):
         """
         Given some parameter instantiations, perform sampling on these instantiations.

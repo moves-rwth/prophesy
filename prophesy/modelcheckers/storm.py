@@ -9,9 +9,8 @@ from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.solutionfunctionfile import read_pstorm_result
-from prophesy.sampling.sampler import Sampler
 import prophesy.adapter.pycarl as pc
-from prophesy.data.property import Property, OperatorBound
+from prophesy.data.property import OperatorBound
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 from prophesy.data.constant import Constants
 from prophesy.data.hyperrectangle import HyperRectangle
@@ -24,7 +23,13 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
     """
     Class wrapping the storm model checker CLI.
     """
+
     def __init__(self, main_location=configuration.get_storm(), parameter_location=configuration.get_storm_pars()):
+        """
+        Constructor.
+        :param main_location: Path to main storm binary.
+        :param parameter_location: Path to storm-pars binary.
+        """
         self.main_location = main_location
         self.parameter_location = parameter_location
         self.bisimulation = BisimulationType.strong
@@ -33,23 +38,16 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         self.constants = None
 
     def name(self):
-        """
-        :return: The name of the model sample engine
-        """
         return "storm"
 
     def version(self):
-        """
-
-        :return: Version information about the model checker
-        """
         args = [self.main_location, '--version']
         outputstr = run_tool(args, True)
         output = outputstr.split("\n")
         return output[0]
 
     def set_bisimulation_type(self, t):
-        assert(isinstance(t, BisimulationType))
+        assert (isinstance(t, BisimulationType))
         self.bisimulation = t
 
     def set_pctl_formula(self, formula):
@@ -109,7 +107,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         for sample_point in samplepoints:
             _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
-            const_values_string = ",".join(["{0}={1}".format(parameter.variable, val) for parameter, val in sample_point.items()])
+            const_values_string = ",".join(
+                ["{0}={1}".format(parameter.variable, val) for parameter, val in sample_point.items()])
             constants_string = self.constants.to_key_value_string(to_float=True)
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
@@ -170,7 +169,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             rel = pc.Relation.LESS
         hypothesis = "allsat"
 
-
         property_to_check.bound = OperatorBound(rel, threshold)
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
@@ -200,35 +198,32 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         regions = []
         with open(resultfile) as f:
-             for line in f:
-                 line = line.strip()
-                 if line[-1] != ";":
-                     raise ValueError("Expect line to end with a semicolon")
-                 line = line[:-1]
-                 res_line = line.split(":")
-                 if len(res_line) != 2:
-                     raise ValueError("Unexpected content in result file")
-                 if res_line[0] == "AllViolated":
-                     raise RuntimeError("Contradiction of hypothesis")
-                 elif res_line[0] == "AllSat":
-                     region_result = RegionCheckResult.Satisfied
-                 elif res_line[0] == "ExistsBoth":
-                     raise RuntimeError("Unexpected outcome, something went wrong.")
-                 elif res_line[0] == "Unknown":
-                     region_result = RegionCheckResult.unknown
-                 elif res_line[0] == "CenterSat" or res_line[0] == "CenterViolated":
-                     logger.warning("Center sat is not expected.")
-                     region_result = RegionCheckResult.unknown
+            for line in f:
+                line = line.strip()
+                if line[-1] != ";":
+                    raise ValueError("Expect line to end with a semicolon")
+                line = line[:-1]
+                res_line = line.split(":")
+                if len(res_line) != 2:
+                    raise ValueError("Unexpected content in result file")
+                if res_line[0] == "AllViolated":
+                    raise RuntimeError("Contradiction of hypothesis")
+                elif res_line[0] == "AllSat":
+                    region_result = RegionCheckResult.Satisfied
+                elif res_line[0] == "ExistsBoth":
+                    raise RuntimeError("Unexpected outcome, something went wrong.")
+                elif res_line[0] == "Unknown":
+                    region_result = RegionCheckResult.unknown
+                elif res_line[0] == "CenterSat" or res_line[0] == "CenterViolated":
+                    logger.warning("Center sat is not expected.")
+                    region_result = RegionCheckResult.unknown
 
-                 else:
-                     raise RuntimeError("Unexpected content '{}' in result file".format(res_line[0]))
+                else:
+                    raise RuntimeError("Unexpected content '{}' in result file".format(res_line[0]))
 
-                 region_string_out = res_line[1].strip()
-                 region = HyperRectangle.from_region_string(region_string_out, parameters.get_variables())
-                 print(region_string_out)
-                 print(region)
-                 regions.append((region_result, region))
+                region_string_out = res_line[1].strip()
+                region = HyperRectangle.from_region_string(region_string_out, parameters.get_variables())
+                print(region_string_out)
+                print(region)
+                regions.append((region_result, region))
         return regions
-
-
-

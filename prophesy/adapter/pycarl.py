@@ -14,7 +14,6 @@ if CARL_PARSER:
 else:
     ParserError = RuntimeError
 
-
 if CARL_WITH_CLN:
     import pycarl.cln
     import pycarl.cln.formula
