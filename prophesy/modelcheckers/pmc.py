@@ -42,10 +42,4 @@ class ProbabilisticModelChecker(Sampler):
     def set_bisimulation(self, BisimulationType):
         raise NotImplementedError
 
-    @abstractmethod
-    def uniform_sample(self, ranges):
-        raise NotImplementedError
-
-    @abstractmethod
-    def sample(self, samplePoints):
-        raise NotImplementedError
+    
