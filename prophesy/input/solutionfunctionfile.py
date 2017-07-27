@@ -69,20 +69,18 @@ def read_pstorm_result(location):
     constraints_string = re.findall(r'(\$Well-formed Constraints:\s*\n.+?)(?=\$|(?:\s*\Z))', inputstring, re.DOTALL)[0]
     constraints_string = constraints_string.split("\n")[:-1]
     constraints = [pc.parse(cond) for cond in constraints_string[1:]]
-    logger.debug("Constraints: %s", str(constraints))
-
+    logger.debug("Constraints: %s",  ",".join([str(c) for c in constraints]))
     # Build graph-preserving constraints
     constraints_string = re.findall(r'(\$Graph-preserving Constraints:\s*\n.+?)(?=\$|(?:\s*\Z))', inputstring, re.DOTALL)[0]
-    constraints_string = constraints_string.split("\n")[:-1]
+    constraints_string = constraints_string.split("\n")
     gpconstraints = [pc.parse(cond) for cond in constraints_string[1:] if cond.strip() != ""]
-    logger.debug("GP Constraints: %s", str(gpconstraints))
+    logger.debug("GP Constraints: %s", ",".join([str(c) for c in gpconstraints]))
 
     # Build rational function
     logger.debug("Looking for solution function...")
     match = re.findall('\$Result:(.*)$', inputstring, re.MULTILINE)[0]
     logger.debug("Building solution function...")
     solution = pc.parse(match)
-
     if isinstance(solution, pc.Monomial):
         solution = pc.Polynomial(solution)
     logger.debug("Solution function is %s", solution)
