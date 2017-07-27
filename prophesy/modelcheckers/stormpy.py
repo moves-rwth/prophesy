@@ -96,7 +96,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = self.check_model(self, model, self.pctl_formula[0])
+        rational_function = self.check_model(self.model, self.pctl_formula[0])
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
