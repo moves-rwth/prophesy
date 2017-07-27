@@ -34,7 +34,7 @@ def parse_cli_args(args):
     return _get_argparser().parse_args(args)
 
 
-def run(args=sys.argv[1:], interactive = True):
+def run(args=sys.argv[1:], interactive=True):
     cmdargs = parse_cli_args(args)
     configuration.check_tools()
     pmcs = configuration.getAvailableParametricMCs()
@@ -75,6 +75,7 @@ def run(args=sys.argv[1:], interactive = True):
                                                                                           result.parameters))
         result.parameters = prism_file.parameters
     write_pstorm_result(vars(cmdargs)["result_file"], result)
+
 
 if __name__ == "__main__":
     run()

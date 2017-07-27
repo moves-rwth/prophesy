@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     app = make_app(cmdargs.server_host)
 
-    if(not cmdargs.server_quiet):
+    if (not cmdargs.server_quiet):
         print("Starting webservice...")
 
     app.listen(cmdargs.server_port)

@@ -53,9 +53,9 @@ def _get_argparser():
     solvers_group.add_argument('--yices', action='store_true', help="Use Yices (SMT)")
     solvers_group.add_argument('--storm', action="store_true", help="Use Storm (PLA)")
 
-
     parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
-    parser.add_argument('--epsilon-pmc', type=pc.Rational, help="if set, uses this epsilon as an offset to the parameter values")
+    parser.add_argument('--epsilon-pmc', type=pc.Rational,
+                        help="if set, uses this epsilon as an offset to the parameter values")
 
     return parser
 
@@ -64,8 +64,8 @@ def parse_cli_args(args):
     return _get_argparser().parse_args(args)
 
 
-def run(args = sys.argv[1:], interactive=True):
-    interactive = False #TODO remove, just for debugging.
+def run(args=sys.argv[1:], interactive=True):
+    interactive = False  # TODO remove, just for debugging.
     solvers = configuration.getAvailableSMTSolvers()
     ppmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
@@ -99,7 +99,7 @@ def run(args = sys.argv[1:], interactive=True):
 
     if cmdargs.threshold:
         threshold = cmdargs.threshold
-    #TODO allow setting threshold via property
+    # TODO allow setting threshold via property
 
     logger.debug("Threshold: {}".format(threshold))
 
@@ -131,8 +131,6 @@ def run(args = sys.argv[1:], interactive=True):
 
     else:
         raise RuntimeError("No supported smt solver defined")
-
-
 
     logger.info("Generating regions")
     checker = CheckerType(backend, parameters)
