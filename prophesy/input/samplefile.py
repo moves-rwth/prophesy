@@ -51,6 +51,7 @@ def read_samples_file(path, parameters):
                 continue
             items = line.split()
             if len(items) - 1 != len(parameter_names):
+                # Prism reports that probs are negative:
                 if line.find("are negative") > 0:
                     coords = map(Rational, items[:len(parameter_names)])
                     samples.add_result(
@@ -66,6 +67,8 @@ def read_samples_file(path, parameters):
             elif items[-1] == "above":
                 #TODO
                 raise NotImplementedError("Inexact sampling results are not yet supported in v2")
+            elif items[-1] == "InstantiationResultFlag.NOT_WELLDEFINED":
+                value = InstantiationResultFlag.NOT_WELLDEFINED
             else:
                 value = Rational(items[-1])
             coords = map(Rational, items[:-1])
