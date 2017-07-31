@@ -18,13 +18,14 @@ class ParametricProbabilisticModelChecker(ProbabilisticModelChecker):
         raise NotImplementedError("Abstract function called")
 
     @abstractmethod
-    def check_hyperrectangle(self, parameter_ranges, threshold, hypothesis):
+    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         """
-        Check given hyperrectangle.
-        :param parameter_ranges: A dictionary of variable name to its interval.
-        :param hypothesis: Whether the rectangle is expected to be above or below the given threshold.
+        Check if the given hypothesis holds in the given hyperrectangle.
+        :param parameters: A dictionary of variable name to its interval.
+        :param hyperrectangle: Hyperrectangle.
         :param threshold: A value indicating the threshold, that is, a value expected to be
                           above or below each value in the hyperrectangle.
+        :param above_threshold: Whether the rectangle is expected to be above or below the given threshold.
         :return: True iff the hypothesis holds.
         """
         raise NotImplementedError("Abstract function called")

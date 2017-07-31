@@ -172,5 +172,5 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         os.remove(pctlpath)
         return samples
 
-    def check_hyperrectangle(self, parameter_ranges, threshold, hypothesis):
+    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         raise NotImplementedError("Checking of hyperrectangles with prism is not implemented.")

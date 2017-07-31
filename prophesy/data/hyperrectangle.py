@@ -3,7 +3,6 @@ from prophesy.data.point import Point
 import prophesy.adapter.pycarl as pc
 from prophesy.data.interval import BoundType
 
-
 # TOOD remove numpy?
 import numpy as np
 
@@ -21,7 +20,7 @@ class HyperRectangle(object):
         self.intervals = tuple(intervals)
 
     @classmethod
-    def from_extremal_points(cls, lowerpoint, upperpoint, boundtype ):
+    def from_extremal_points(cls, lowerpoint, upperpoint, boundtype):
         """
         :param lowerpoint: A point corresponding to the lower boundary
         :param upperpoint: A point corresponding to the upper boundary
@@ -29,22 +28,25 @@ class HyperRectangle(object):
             HyperRectangle
         :return HyperRectangle
         """
-        return cls.__init__(*[Interval(l,boundtype,r,boundtype) for l,r in zip(lowerpoint, upperpoint)])
+        return cls.__init__(*[Interval(l, boundtype, r, boundtype) for l, r in zip(lowerpoint, upperpoint)])
 
     def dimension(self):
         return len(self.intervals)
 
     def empty(self):
         for interv in self.intervals:
-            if interv.empty(): return True
+            if interv.empty():
+                return True
         return False
 
     def vertices(self):
         result = []
-        for i in range(0,pow(2,self.dimension()), 1):
+        for i in range(0, pow(2, self.dimension()), 1):
             num_bits = self.dimension()
             bits = [(i >> bit) & 1 for bit in range(num_bits - 1, -1, -1)]
-            result.append(Point(*[(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i,x in zip(range(0, self.dimension()), bits)]))
+            result.append(Point(
+                *[(self.intervals[i].left_bound() if x == 0 else self.intervals[i].right_bound()) for i, x in
+                  zip(range(0, self.dimension()), bits)]))
         return result
 
     def center(self):
@@ -52,9 +54,9 @@ class HyperRectangle(object):
 
     def np_vertices(self):
         verts = self.vertices()
-        return np.array([np.array(list(map(float,v))) for v in verts])
+        return np.array([np.array(list(map(float, v))) for v in verts])
 
-    #def vertices_and_inward_dir(self):
+    # def vertices_and_inward_dir(self):
 
     def split_in_every_dimension(self):
         """
@@ -62,11 +64,11 @@ class HyperRectangle(object):
         :return: The 2^n many hyperrectangles obtained by the split
         """
         result = []
-        splitted_intervals =  [tuple(interv.split()) for interv in self.intervals]
-        for i in range(0,pow(2,self.dimension()), 1):
+        splitted_intervals = [tuple(interv.split()) for interv in self.intervals]
+        for i in range(0, pow(2, self.dimension()), 1):
             num_bits = self.dimension()
             bits = [(i >> bit) & 1 for bit in range(num_bits - 1, -1, -1)]
-            result.append(HyperRectangle(*[splitted_intervals[i][x] for i,x in zip(range(0, self.dimension()), bits)]))
+            result.append(HyperRectangle(*[splitted_intervals[i][x] for i, x in zip(range(0, self.dimension()), bits)]))
         return result
 
     def size(self):
@@ -105,7 +107,7 @@ class HyperRectangle(object):
         return True
 
     def close(self):
-        return HyperRectangle(*[i.close() for i  in self.intervals])
+        return HyperRectangle(*[i.close() for i in self.intervals])
 
     def _setminus(self, other, dimension):
         """
@@ -164,17 +166,17 @@ class HyperRectangle(object):
         if len(current_rect_list) > 2:
             hrect_list.append(current_rect_list[0])
             hrect_list.append(current_rect_list[1])
-            hrect_list.extend(current_rect_list[2].setminus(other, dimension+1))
+            hrect_list.extend(current_rect_list[2].setminus(other, dimension + 1))
         else:
             hrect_list.append(current_rect_list[0])
-            hrect_list.extend(current_rect_list[1].setminus(other, dimension+1))
+            hrect_list.extend(current_rect_list[1].setminus(other, dimension + 1))
         return hrect_list
 
     def __str__(self):
         return " x ".join([str(i) for i in self.intervals])
 
     def __repr__(self):
-        return "HyperRectangle({})".format(", ".join(map(repr,self.intervals)))
+        return "HyperRectangle({})".format(", ".join(map(repr, self.intervals)))
 
     def __eq__(self, other):
         for i, j in zip(self.intervals, other.intervals):
@@ -240,9 +242,10 @@ class HyperRectangle(object):
             components = int_str.split("<=")
             if len(components) != 3:
                 raise ValueError("Expected string in the form Number<=Variable<=Number, got {}".format(int_str))
-            variables_to_intervals[components[1]] = Interval(pc.Rational(components[0]), BoundType.closed, pc.Rational(components[2]), BoundType.closed)
+            variables_to_intervals[components[1]] = Interval(pc.Rational(components[0]), BoundType.closed,
+                                                             pc.Rational(components[2]), BoundType.closed)
         ordered_intervals = []
         for variable in variables:
             ordered_intervals.append(variables_to_intervals[variable.name])
-        #TODO checks.
+        # TODO checks.
         return cls(*ordered_intervals)

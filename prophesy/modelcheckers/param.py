@@ -33,5 +33,5 @@ class ParamParametricModelChecker(ParametricProbabilisticModelChecker):
     def perform_sampling(self, samplepoints):
         raise NotImplementedError("Param is currently not supported")
 
-    def check_hyperrectangle(self, parameter_ranges, threshold, hypothesis):
+    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         raise NotImplementedError("Param is currently not supported")
