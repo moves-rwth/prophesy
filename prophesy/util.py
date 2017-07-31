@@ -169,7 +169,7 @@ def run_tool(args, quiet=False, outputfile=None):
                 logger.debug("\t * " + output)
             if outputfile is not None:
                 write_string_to_file(outputfile, output + "\n", append=True)
-
+    pipe.terminate()
     return pipe.returncode
 
 
