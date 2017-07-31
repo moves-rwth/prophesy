@@ -6,8 +6,11 @@ from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
+from prophesy.data.property import OperatorBound
 from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
+from prophesy.regions.region_checker import RegionCheckResult
+from prophesy.data.hyperrectangle import HyperRectangle
 import prophesy.adapter.stormpy as stormpy
 import prophesy.adapter.pycarl as pc
 
@@ -27,7 +30,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             raise ModuleError(
                 "Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 
-        self.bisimulation = BisimulationType.strong
+        self.bisimulation = stormpy.BisimulationType.STRONG
         self.pctl_formula = None
         self.prism_file = None
         self.constants = None
@@ -55,14 +58,18 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.program = stormpy.parse_prism_program(self.prism_file.location)
 
     def set_bisimulation_type(self, bisimulationType):
-        if bisimulationType < 0 or bisimulationType > 3:
-            raise ConfigurationError("Bisimulationtype not valid.")
+        if bisimulationType == BisimulationType.weak:
+            self.bisimulation = stormpy.BisimulationType.WEAK
+        elif bisimulationType == BisimulationType.strong:
+            self.bisimulation = stormpy.BisimulationType.STRONG
+        elif bisimulationType == BisimulationType.none:
+            self.bisimulation == None
         else:
-            self.bisimulation = bisimulationType
+            raise ConfigurationError("Bisimulation type {} not valid.".format(bisimulationType))
 
     def build_model(self):
         """
-        Build prism model.
+        Build prism model and (optionally) perform bisimulation.
         """
         logger.info("Build model")
 
@@ -77,6 +84,27 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         else:
             assert self.program.has_undefined_constants
             self.model = stormpy.build_parametric_model(self.program, self.pctl_formula)
+
+        if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
+            logger.info("Perform bisimulation")
+            self.model = stormpy.perform_bisimulation(self.model, self.pctl_formula, self.bisimulation)
+
+    def create_parameter_mapping(self, prophesy_parameters):
+        """
+        Create a mapping from prophesy parameters to model parameters in stormpy.
+        :param prophesy_parameters: Parameters in prophesy.
+        :return: Dict of prophesy parameters to stormpy parameters.
+        """
+
+        assert self.model is not None
+        parameter_mapping = {}
+        model_parameters = self.model.collect_probability_parameters()
+        for parameter in prophesy_parameters:
+            param_string = str(parameter.variable)
+            model_param = next((var for var in model_parameters if str(var) == param_string), None)
+            assert model_param is not None
+            parameter_mapping[parameter] = model_param
+        return parameter_mapping
 
     def check_model(self, model, property):
         """
@@ -123,13 +151,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Perform uniform sampling")
 
         # Initialize mapping from prophesy variables to model parameters in stormpy
-        parameter_mapping = {}
-        model_parameters = self.model.collect_probability_parameters()
-        for parameter in samplepoints.parameters:
-            param_string = str(parameter.variable)
-            model_param = next((var for var in model_parameters if str(var) == param_string), None)
-            assert model_param is not None
-            parameter_mapping[parameter] = model_param
+        parameter_mapping = self.create_parameter_mapping(samplepoints.parameters)
 
         # Perform sampling with model instantiator
         logger.info("Call stormpy for sampling")
