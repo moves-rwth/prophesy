@@ -1,5 +1,6 @@
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 
+
 class PlaRegionChecker(RegionChecker):
     def __init__(self, backend, parameters):
         """
@@ -11,13 +12,13 @@ class PlaRegionChecker(RegionChecker):
         self._parameters = parameters
         self.threshold = None
 
-    def initialize(self, info, threshold, constants=None):
-        if not info.model:
+    def initialize(self, problem_description, threshold, constants=None):
+        if not problem_description.model:
             raise ValueError("PLA requires the model to be present")
-        if not info.property:
+        if not problem_description.property:
             raise ValueError("PLA requires the property to be present")
-        self._checker.load_model_from_prismfile(info.model, constants)
-        self._checker.set_pctl_formula(info.property)
+        self._checker.load_model_from_prismfile(problem_description.model, constants)
+        self._checker.set_pctl_formula(problem_description.property)
         self.threshold = threshold
 
     def print_info(self):
@@ -41,5 +42,3 @@ class PlaRegionChecker(RegionChecker):
             return RegionCheckResult.unknown, None
         else:
             raise ValueError("Pla is not expected to result other kind of results")
-
-

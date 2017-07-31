@@ -7,11 +7,9 @@ from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 from prophesy.adapter.pycarl import Rational
 from prophesy.data.constraint import region_from_polygon
 
-
 import prophesy.adapter.pycarl as pc
 from prophesy.data.interval import Interval, BoundType
 from prophesy.adapter.pycarl import Constraint, Relation
-
 
 
 class SmtRegionChecker(RegionChecker):
@@ -25,20 +23,10 @@ class SmtRegionChecker(RegionChecker):
         self._smt2interface = backend
         self.parameters = parameters
         self._ratfunc = None
-
         self.benchmark_output = []
 
     # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
-    def initialize(self, problem_description, threshold, constants=None,
-                                        solution_bound=Interval(0, BoundType.closed, None, BoundType.open)):
-        """
-        Initializes the smt solver to consider the problem at hand.
-        
-        :param problem_description: 
-        :type problem_description: ProblemDescription
-        :param threshold: 
-        :param solution_bound: 
-        """
+    def initialize(self, problem_description, threshold, constants=None):
         result = problem_description.solutionfunction
         self._ratfunc = result.ratfunc
 
@@ -86,11 +74,14 @@ class SmtRegionChecker(RegionChecker):
             total_sec = total_sec + benchmark[1]
             if benchmark[0] == Answer.unsat:
                 total_area = total_area + benchmark[2]
-            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1], total_sec, float(benchmark[2]), float(total_area)))
+            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1],
+                                                                                    total_sec, float(benchmark[2]),
+                                                                                    float(total_area)))
             i = i + 1
 
     def analyse_region(self, polygon, safe):
-        """Extends the current area by using the new polygon
+        """
+        Extends the current area by using the new polygon
         regions are the newly added regions for the polygon
         polygon marks the new area to cover
         safe indicates whether the area is safe or bad
@@ -126,7 +117,7 @@ class SmtRegionChecker(RegionChecker):
                     self.benchmark_output.append((checkresult, duration, polygon.size()))
                 else:
                     self.benchmark_output.append((checkresult, duration, polygon.area))
-                if not checkresult in [Answer.sat, Answer.unsat]:
+                if checkresult not in [Answer.sat, Answer.unsat]:
                     break
                 else:
                     if checkresult == Answer.sat:
@@ -142,7 +133,7 @@ class SmtRegionChecker(RegionChecker):
                 value = smt_model[par.variable.name]
                 rational = Rational(value)
                 sample[par] = rational
-            eval_dict = dict([(k.variable, v) for k,v in sample.items()])
+            eval_dict = dict([(k.variable, v) for k, v in sample.items()])
             value = self._ratfunc.evaluate(eval_dict)
             return RegionCheckResult.CounterExample, InstantiationResult(sample, value)
         else:

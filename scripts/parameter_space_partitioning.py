@@ -52,6 +52,7 @@ def _get_argparser():
     solvers_group.add_argument('--isat', action='store_true', help="Use Isat (ICP)")
     solvers_group.add_argument('--yices', action='store_true', help="Use Yices (SMT)")
     solvers_group.add_argument('--storm', action="store_true", help="Use Storm (PLA)")
+    solvers_group.add_argument('--stormpy', action="store_true", help="Use Stormpy (PLA)")
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
     parser.add_argument('--epsilon-pmc', type=pc.Rational,
@@ -64,8 +65,7 @@ def parse_cli_args(args):
     return _get_argparser().parse_args(args)
 
 
-def run(args=sys.argv[1:], interactive=True):
-    interactive = False  # TODO remove, just for debugging.
+def run(args=sys.argv[1:], interactive=False):
     solvers = configuration.getAvailableSMTSolvers()
     ppmcs = configuration.getAvailableParametricMCs()
     cmdargs = parse_cli_args(args)
@@ -79,6 +79,8 @@ def run(args=sys.argv[1:], interactive=True):
         problem_description.solutionfunction = result
     if cmdargs.model_file:
         model_file = PrismFile(cmdargs.model_file)
+        if not cmdargs.property_file:
+            raise RuntimeError("Property file needed when model file is given.")
         properties = PctlFile(cmdargs.property_file)
         if cmdargs.rat_file and parameters != model_file.parameters:
             raise ValueError("Model file and solution function parameters do not coincide")
@@ -97,10 +99,9 @@ def run(args=sys.argv[1:], interactive=True):
     if parameters != sample_parameters:
         raise RuntimeError("Sampling and problem parameters are not equal")
 
+    # TODO allow setting threshold via property
     if cmdargs.threshold:
         threshold = cmdargs.threshold
-    # TODO allow setting threshold via property
-
     logger.debug("Threshold: {}".format(threshold))
 
     logger.debug("Setup Region Checker Interface")
@@ -109,43 +110,47 @@ def run(args=sys.argv[1:], interactive=True):
             raise RuntimeError("Z3 location not configured.")
         backend = Z3CliSolver()
         backend.run()
-        CheckerType = SmtRegionChecker
+        checker = SmtRegionChecker(backend, parameters)
     elif cmdargs.yices:
         if 'yices' not in solvers:
             raise RuntimeError("Yices location not configured.")
         backend = YicesCLISolver()
         backend.run()
-        CheckerType = SmtRegionChecker
+        checker = SmtRegionChecker(backend, parameters)
     elif cmdargs.isat:
         if 'isat' not in solvers:
             raise RuntimeError("ISat location not configured.")
         backend = IsatSolver()
         backend.run()
-        CheckerType = SmtRegionChecker
+        checker = SmtRegionChecker(backend, parameters)
     elif cmdargs.storm:
         if 'storm-pars' not in ppmcs:
-            raise RuntimeError("Storm location not configured")
+            raise RuntimeError("Storm location not configured.")
         backend = StormModelChecker()
-
-        CheckerType = PlaRegionChecker
-
+        checker = PlaRegionChecker(backend, parameters)
+    elif cmdargs.stormpy:
+        if 'stormpy' not in ppmcs:
+            raise RuntimeError("Stormpy dependency not configured.")
+        # Do not import at top, as stormpy might not be available.
+        from prophesy.modelcheckers.stormpy import StormpyModelChecker
+        backend = StormpyModelChecker()
+        checker = PlaRegionChecker(backend, parameters)
     else:
-        raise RuntimeError("No supported smt solver defined")
+        raise RuntimeError("No supported region checker defined.")
 
     logger.info("Generating regions")
-    checker = CheckerType(backend, parameters)
     checker.initialize(problem_description, threshold)
     arguments = samples, parameters, threshold, checker
 
     if cmdargs.rectangles:
-        raise NotImplementedError("Rectangles are currently not supported")
+        raise NotImplementedError("Rectangles are currently not supported.")
     elif cmdargs.quads:
         generator = HyperRectangleRegions(*arguments)
     elif cmdargs.poly:
         generator = ConstraintPolygon(*arguments)
         # For testing
     else:
-        assert False
+        raise RuntimeError("No supported region type defined.")
 
     if cmdargs.iterations is not None:
         generator.generate_constraints(max_iter=cmdargs.iterations)
@@ -155,7 +160,7 @@ def run(args=sys.argv[1:], interactive=True):
     if interactive:
         open_file(generator.result_file)
 
-    if not cmdargs.storm:
+    if not cmdargs.storm and not cmdargs.stormpy:
         backend.stop()
 
     if cmdargs.logcallsdestination:

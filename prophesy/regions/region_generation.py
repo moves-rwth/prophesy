@@ -65,9 +65,10 @@ class RegionGenerator:
         """
         Adds pdf with name to result.pdf in tmp directory
         """
-        #TODO Only do this if the option is installed.
+        # TODO Only do this if the option is installed.
         if not configuration.is_module_available("pypdf2"):
-            raise ModuleError("Module pypdf2 is needed for using the pdf export for regions. Maybe your config is oudated?")
+            raise ModuleError(
+                "Module pypdf2 is needed for using the pdf export for regions. Maybe your config is oudated?")
         from PyPDF2 import PdfFileMerger, PdfFileReader
 
         if self.first_pdf:
@@ -94,7 +95,8 @@ class RegionGenerator:
         kwargs['poly_red'] = poly_red + self.bad_polys
 
         # Split samples appropriately
-        samples_green = [res.instantiation.get_point(self.parameters) for res in self.safe_samples.instantiation_results()]
+        samples_green = [res.instantiation.get_point(self.parameters) for res in
+                         self.safe_samples.instantiation_results()]
         samples_red = [res.instantiation.get_point(self.parameters) for res in self.bad_samples.instantiation_results()]
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
@@ -112,7 +114,7 @@ class RegionGenerator:
 
     def intersects(self, polygon1, polygon2):
         """checks if two polygons intersect, touching is okay"""
-        #TODO first check bounding boxes?
+        # TODO first check bounding boxes?
         return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
 
     @abstractmethod
@@ -185,11 +187,11 @@ class RegionGenerator:
                 pass
             elif res_status == RegionCheckResult.Refined:
                 raise NotImplementedError("We have to record the refinement.")
-                #self.all_polys.append()
+                # self.all_polys.append()
             elif res_status == RegionCheckResult.unknown:
                 pass
             else:
-                assert False # All options should be covered by switching if/else
+                assert False  # All options should be covered by switching if/else
 
             area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
             if area_sum > max_area * self.max_area_sum:
@@ -216,11 +218,13 @@ class RegionGenerator:
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
             # TODO region might contain this info, why not use that.
-            self.safe_samples = self.safe_samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
-            self.bad_samples = self.bad_samples.filter_instantiation(lambda x: not polygon.contains(x.get_point(self.parameters)))
+            self.safe_samples = self.safe_samples.filter_instantiation(
+                lambda x: not polygon.contains(x.get_point(self.parameters)))
+            self.bad_samples = self.bad_samples.filter_instantiation(
+                lambda x: not polygon.contains(x.get_point(self.parameters)))
 
             # TODO make the code above work with the polygons, as below.
-            #for instantiation, _ in self.samples:
+            # for instantiation, _ in self.samples:
             #        if shapely.geometry.Point(*pt).within(polygon):
             #            del self.samples[pt]
 
@@ -241,8 +245,8 @@ class RegionGenerator:
             # compute setminus operation to get accepted constraints:
             # accepted = polygon.setminus(additional)
 
-            #return checkresult, (accepted, safe)
-            #TODO implement something.
+            # return checkresult, (accepted, safe)
+            # TODO implement something.
             pass
 
         else:
