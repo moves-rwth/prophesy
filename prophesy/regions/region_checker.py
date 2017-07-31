@@ -2,10 +2,12 @@ from enum import Enum
 
 
 class ProblemDescription:
-    def __init__(self, solutionfunction=None, model=None, property=None):
+    def __init__(self, solutionfunction=None, model=None, property=None, wd_constraints=None, gp_constraints=None):
         self.solutionfunction = solutionfunction
         self.model = model
         self.property = property
+        self.welldefined_constraints = wd_constraints
+        self.graph_preserving_constraints = gp_constraints
 
 
 class RegionCheckResult(Enum):

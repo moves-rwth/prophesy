@@ -12,6 +12,8 @@ from prophesy.util import ensure_dir_exists
 from prophesy.config import configuration
 from prophesy.exceptions.module_error import ModuleError
 
+from prophesy.regions.welldefinedness import WelldefinednessResult
+
 
 class RegionGenerator:
     """
@@ -21,8 +23,8 @@ class RegionGenerator:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, samples, parameters, threshold, checker):
-        self.safe_samples, self.bad_samples = samples.copy().split(threshold)
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints):
+        self.safe_samples, self.bad_samples, self.illdefined_samples = samples.copy().split(threshold)
         self.parameters = parameters
         self.threshold = threshold
 
@@ -34,7 +36,10 @@ class RegionGenerator:
         self.all_polys = []
         self.safe_polys = []
         self.bad_polys = []
+        self.illdefined_polys = []
         self.new_samples = {}
+        self.wd_constraints = wd_constraints
+        self.gp_constraints = gp_constraints
 
         self._plot_candidates = False
         self.plot = len(self.parameters) <= 2
@@ -49,14 +54,18 @@ class RegionGenerator:
     def __next__(self):
         result_constraint = self.next_region()
         while result_constraint is not None:
-            polygon, area_safe = result_constraint
+            polygon, welldefined, area_safe = result_constraint
             if self._plot_candidates:
                 self.plot_candidate()
-            result = self._analyse_region(polygon, area_safe)
-            if result is None:
-                # End of generator
-                return
-            yield result
+            if welldefined == WelldefinednessResult.Illdefined:
+                self.ignore_region()
+                yield WelldefinednessResult.Illdefined, polygon
+            else:
+                result = self._analyse_region(polygon, welldefined, area_safe)
+                if result is None:
+                    # End of generator
+                    return
+                yield result
 
             # get next constraint depending on algorithm
             result_constraint = self.next_region()
@@ -92,6 +101,8 @@ class RegionGenerator:
         kwargs['poly_green'] = poly_green + self.safe_polys
         poly_red = kwargs.get('poly_red', [])
         kwargs['poly_red'] = poly_red + self.bad_polys
+        poly_black = kwargs.get('poly_black', [])
+        kwargs['poly_black'] = poly_black + self.illdefined_polys
 
         # Split samples appropriately
         samples_green = [res.instantiation.get_point(self.parameters) for res in self.safe_samples.instantiation_results()]
@@ -105,6 +116,7 @@ class RegionGenerator:
                           *args, **kwargs)
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
+
 
     def is_inside_polygon(self, point, polygon):
         # checks if the point lies inside the polygon
@@ -124,19 +136,17 @@ class RegionGenerator:
 
     @abstractmethod
     def next_region(self):
-        """Generate a new set of regions ([regions], area, area_safe),
-        where [regions] is a list of Constraint, area is a polygon representation of the new area
-        and area_safe indicated whether the area should be determined safe (or not)"""
+        """Generate a new set of regions"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def fail_region(self, constraint, safe):
+    def fail_region(self, region, safe):
         """Update current set of regions, usually to avoid mem or time out.
         Returns same as next_constraint"""
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def reject_region(self, constraint, safe, sample):
+    def reject_region(self, region, safe, sample):
         """Called for a constraint that is rejected (sample found).
         
         :param constraint: Polygon or HyperRectangle
@@ -146,8 +156,15 @@ class RegionGenerator:
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def accept_region(self, constraint, safe):
-        """Called for a constraint that is accepted (i.e. unsat)"""
+    def ignore_region(self):
+        """
+        Region is overall ill-defined, skip it
+        """
+        raise NotImplementedError("Abstract parent method")
+
+    @abstractmethod
+    def accept_region(self):
+        """Called for a constraint that is accepted"""
         raise NotImplementedError("Abstract parent method")
 
     def _area(self, pol):
@@ -174,7 +191,10 @@ class RegionGenerator:
 
         for result in self:
             res_status, data = result
-            if res_status == RegionCheckResult.Satisfied:
+            if res_status == WelldefinednessResult.Illdefined:
+                self.all_polys.append((data,WelldefinednessResult.Illdefined))
+                self.illdefined_polys.append(data)
+            elif res_status == RegionCheckResult.Satisfied:
                 self.all_polys.append(data)
                 poly, safe = data
                 if safe:
@@ -211,7 +231,8 @@ class RegionGenerator:
 
         return self.safe_polys, self.bad_polys, self.new_samples
 
-    def _analyse_region(self, polygon, safe):
+    def _analyse_region(self, polygon, welldefined, safe):
+        assert welldefined == WelldefinednessResult.Welldefined
         checkresult, additional = self.checker.analyse_region(polygon, safe)
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
@@ -224,8 +245,8 @@ class RegionGenerator:
             #        if shapely.geometry.Point(*pt).within(polygon):
             #            del self.samples[pt]
 
-            # update everything in the algorithm according to correct new area
-            self.accept_region(polygon, safe)
+            # update everything
+            self.accept_region()
             return checkresult, (polygon, safe)
         elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
