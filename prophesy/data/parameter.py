@@ -14,6 +14,10 @@ class Parameter(object):
         self.variable = variable
         self.interval = interval
 
+    @property
+    def name(self):
+        return self.variable.name
+
     def __hash__(self):
         return hash(self.variable) ^ hash(self.interval)
 
