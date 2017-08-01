@@ -16,6 +16,13 @@ class Constant(object):
         self.variable = variable
         self.value = value
 
+    @property
+    def name(self):
+        """
+        
+        :return: The name of the variable representing the constant 
+        """
+        return self.variable.name
 
 class Constants(object):
     """
