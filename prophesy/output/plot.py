@@ -13,7 +13,8 @@ from shapely.geometry.polygon import Polygon
 
 import numpy as np
 
-from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.samples import InstantiationResultFlag
+from prophesy.data.hyperrectangle import  HyperRectangle
 from prophesy.config import configuration
 
 logger = logging.getLogger(__name__)
@@ -35,12 +36,13 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
 
     _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
 
-    samples_green = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if
-                     res.result >= threshold]
-    samples_red = [res.instantiation.get_point(parameters) for res in samples.instantiation_results()
-                   if res.result < threshold]
 
-    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
+    samples_non_defined = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if res.result == InstantiationResultFlag.NOT_WELLDEFINED]
+    samples_green = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result >= threshold]
+    samples_red = [res.instantiation.get_point(parameters) for res in samples.instantiation_results()
+                     if res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result < threshold]
+
+    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red, samples_black=samples_non_defined,
                       path_to_save=plot_path, display=False)
     logger.info("Samples rendered to {}".format(plot_path))
 
@@ -92,8 +94,8 @@ class Plot(object):
 
     @staticmethod
     def plot_results(parameters,
-                     samples_green=[], samples_red=[], samples_blue=[],
-                     poly_green=[], poly_red=[], poly_blue_crossed=[], poly_blue_dotted=[], poly_blue=[],
+                     samples_green=[], samples_red=[], samples_blue=[], samples_black=[],
+                     poly_green=[], poly_red=[], poly_blue_crossed=[], poly_blue_dotted = [], poly_blue=[], poly_black=[],
                      anchor_points=[], additional_arrows=[],
                      path_to_save=None, display=False):
         """
@@ -126,6 +128,8 @@ class Plot(object):
             ax1 = fig.add_subplot(111)
             ax1.plot(samples_green, len(samples_green) * [1], "o", c='green')
             ax1.plot(samples_red, len(samples_red) * [1], "x", c='red')
+            ax1.plot(samples_blue, len(samples_blue) * [1], ".", c='blue')
+            ax1.plot(samples_black, len(samples_black) * [1], "+", c='black')
 
             ax1.axes.get_yaxis().set_visible(False)
             ax1.set_xlabel(str(parameters[0].variable))
@@ -167,6 +171,8 @@ class Plot(object):
                 Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#c11b17", 0.6), ec=colorc.to_rgba("#c11b17"), hatch="x")
             for box in poly_blue:
                 Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"))
+            for box in poly_black:
+                Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#030303", 0.6), ec=colorc.to_rgba("#030303"), hatch="+")
             for box in poly_blue_crossed:
                 Plot.plot_poly(ax1, box, fc=colorc.to_rgba("#1b17c1", 0.6), ec=colorc.to_rgba("#1b17c1"), hatch="x")
             for box in poly_blue_dotted:
@@ -184,6 +190,10 @@ class Plot(object):
             x_coords = [x for x, y in samples_blue]
             y_coords = [y for x, y in samples_blue]
             ax1.scatter(x_coords, y_coords, marker='.', c='blue')
+
+            x_coords = [x for x, y in samples_black]
+            y_coords = [y for x, y in samples_black]
+            ax1.scatter(x_coords, y_coords, marker='+', c='black')
 
             ax1.set_xlim([float(parameters[0].interval.left_bound()), float(parameters[0].interval.right_bound())])
             ax1.set_ylim([float(parameters[1].interval.left_bound()), float(parameters[1].interval.right_bound())])

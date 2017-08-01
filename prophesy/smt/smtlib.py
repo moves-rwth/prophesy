@@ -20,11 +20,7 @@ def _smtfile_header():
     return formula
 
 
-def constraint_to_smt2(constraint):
-    if isinstance(constraint, Constraint):
-        constraint = Formula(constraint)
-    assert isinstance(constraint, Formula)
-    return str(constraint)
+
 
 
 class SmtlibSolver(SMTSolver):
@@ -171,14 +167,14 @@ class SmtlibSolver(SMTSolver):
         self.status[-1] += s
 
     def assert_constraint(self, constraint):
-        s = "(assert " + constraint_to_smt2(constraint) + " )\n"
+        s = "(assert " + constraint.to_smt2() + " )\n"
         self.string += s
         if self.incremental:
             self._write(s)
         self.status[-1] += s
 
     def assert_guarded_constraint(self, guard, constraint):
-        s = "(assert (=> " + guard + " " + constraint_to_smt2(constraint) + " ))\n"
+        s = "(assert (=> " + guard + " " + constraint.to_smt2() + " ))\n"
         self.string += s
         if self.incremental:
             self._write(s)

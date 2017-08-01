@@ -76,7 +76,9 @@ def run(args=sys.argv[1:], interactive=False):
     if cmdargs.rat_file:
         result = read_pstorm_result(cmdargs.rat_file)
         parameters = result.parameters
-        problem_description.solutionfunction = result
+        problem_description.solutionfunction = result.ratfunc
+        problem_description.welldefined_constraints = result.welldefined_constraints
+        problem_description.graph_preserving_constraints = result.graph_preservation_constraints
     if cmdargs.model_file:
         model_file = PrismFile(cmdargs.model_file)
         if not cmdargs.property_file:
@@ -97,6 +99,7 @@ def run(args=sys.argv[1:], interactive=False):
     logger.debug("Loading samples")
     sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, parameters)
     if parameters != sample_parameters:
+        # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
 
     # TODO allow setting threshold via property
@@ -140,7 +143,10 @@ def run(args=sys.argv[1:], interactive=False):
 
     logger.info("Generating regions")
     checker.initialize(problem_description, threshold)
-    arguments = samples, parameters, threshold, checker
+    if problem_description.welldefined_constraints is None:
+        raise NotImplementedError("Currently we need the well-definedness constraints from the result file.")
+
+    arguments = samples, parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
 
     if cmdargs.rectangles:
         raise NotImplementedError("Rectangles are currently not supported.")
@@ -152,10 +158,12 @@ def run(args=sys.argv[1:], interactive=False):
     else:
         raise RuntimeError("No supported region type defined.")
 
+
+    #TODO set plot frequency
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter=cmdargs.iterations)
+        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=10, plot_candidates=False)
     else:
-        generator.generate_constraints(max_area=pc.Rational(cmdargs.area))
+        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=10, plot_candidates=False)
 
     if interactive:
         open_file(generator.result_file)

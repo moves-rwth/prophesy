@@ -1,6 +1,6 @@
 import logging
 
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation
+from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation, InstantiationResultFlag
 from prophesy.adapter.pycarl import Rational, Variable
 from prophesy.data.point import Point
 
@@ -44,9 +44,20 @@ def read_samples_file(path, parameters):
             start += 1
 
         samples = InstantiationResultDict(parameters)
+        skip_next = False
         for i, line in enumerate(lines[start:]):
+            if skip_next:
+                skip_next = False
+                continue
             items = line.split()
             if len(items) - 1 != len(parameter_names):
+                # Prism reports that probs are negative:
+                if line.find("are negative") > 0:
+                    coords = map(Rational, items[:len(parameter_names)])
+                    samples.add_result(
+                        InstantiationResult(ParameterInstantiation.from_point(Point(*coords), parameters), InstantiationResultFlag.NOT_WELLDEFINED))
+                    skip_next = True
+                    continue
                 logger.error("Invalid input in %s on line %s: '%s'", path, str(i + start), line)
                 continue
             if items[-1] == "below":
@@ -56,6 +67,8 @@ def read_samples_file(path, parameters):
             elif items[-1] == "above":
                 #TODO
                 raise NotImplementedError("Inexact sampling results are not yet supported in v2")
+            elif items[-1] == "InstantiationResultFlag.NOT_WELLDEFINED":
+                value = InstantiationResultFlag.NOT_WELLDEFINED
             else:
                 value = Rational(items[-1])
             coords = map(Rational, items[:-1])

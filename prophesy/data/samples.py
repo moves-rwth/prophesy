@@ -17,6 +17,10 @@ class InexactInstantiationResult:
         self.threshold = threshold
 
 
+class InstantiationResultFlag(Enum):
+    NOT_WELLDEFINED = 0
+
+
 class ParameterInstantiation(dict):
     """Simple dictionary mapping from a Parameter to pycarl.Rational.
     """
@@ -100,6 +104,9 @@ class InstantiationResult(object):
         """
         assert isinstance(instantiation, ParameterInstantiation)
         self.instantiation = instantiation
+        self.well_defined = True
+        if result == InstantiationResultFlag.NOT_WELLDEFINED:
+            self.well_defined = False
         self.result = result
 
     def get_instantiation_point(self, variable_order):
@@ -176,7 +183,10 @@ class InstantiationResultDict:
         """
         assert isinstance(instantiation_result, InstantiationResult)
         assert instantiation_result.instantiation.get_parameters() == set(self.parameters)
-        self._values[instantiation_result.instantiation] = instantiation_result.result
+        if instantiation_result.well_defined:
+            self._values[instantiation_result.instantiation] = instantiation_result.result
+        else:
+            self._values[instantiation_result.instantiation] = InstantiationResultFlag.NOT_WELLDEFINED
 
     def split(self, threshold):
         """Split given samples into separated sample dictionaries, where the value
@@ -188,12 +198,15 @@ class InstantiationResultDict:
         """
         above_threshold = InstantiationResultDict(self.parameters)
         below_threshold = InstantiationResultDict(self.parameters)
+        illdefined = InstantiationResultDict(self.parameters)
         for k, v in self._values.items():
-            if v >= threshold:
+            if v == InstantiationResultFlag.NOT_WELLDEFINED:
+                illdefined._values[k] = v
+            elif v >= threshold:
                 above_threshold._values[k] = v
             else:
                 below_threshold._values[k] = v
-        return above_threshold, below_threshold
+        return above_threshold, below_threshold, illdefined
 
     def filter_instantiation(self, filter_func):
         filtered = InstantiationResultDict(self.parameters)

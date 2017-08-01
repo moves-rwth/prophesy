@@ -23,7 +23,7 @@ class ConstraintPolygon(RegionGenerator):
         # TODO: convex constraint might be split in triangles
         return None
 
-    def accept_region(self, constraint, safe):
+    def accept_region(self):
         pass
 
     def reject_region(self, constraint, safe, sample):

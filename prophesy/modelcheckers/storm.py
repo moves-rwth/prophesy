@@ -10,8 +10,8 @@ from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 import prophesy.adapter.pycarl as pc
-from prophesy.data.property import OperatorBound
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult
+from prophesy.data.property import Property, OperatorBound
+from prophesy.data.samples import InstantiationResultDict, InstantiationResult, InstantiationResultFlag
 from prophesy.data.constant import Constants
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
@@ -123,7 +123,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             logger.info("Call storm")
             ret_code = run_tool(args, quiet=False, outputfile=resultfile)
             if ret_code != 0:
-                logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+                logger.debug("Storm output logged in %s", resultfile)
+                # Do not crash here
             else:
                 logger.info("Storm call finished successfully")
                 logger.debug("Storm output logged in %s", resultfile)
@@ -131,19 +132,24 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             result = None
             with open(resultfile) as f:
                 for line in f:
+                    if "Substitution yielding negative" in line:
+                        result = InstantiationResultFlag.NOT_WELLDEFINED
+                        ret_code = 0
+                        break
                     match = re.search(r"Result (.*): (.*)", line)
                     if match:
                         # Check for exact result
                         match_exact = re.search(r"(.*) \(approx. .*\)", match.group(2))
                         if match_exact:
-                            result = match_exact.group(1)
+                            result = pc.Rational(match_exact.group(1))
                             break
                         else:
-                            result = match.group(2)
+                            result = pc.Rational(match.group(2))
                             break
             if result is None:
                 raise RuntimeError("Could not find result from storm in {}".format(resultfile))
-            result = pc.Rational(result)
+            if ret_code != 0:
+                raise RuntimeError("Storm crashed.")
 
             samples.add_result(InstantiationResult(sample_point, result))
             os.remove(resultfile)
