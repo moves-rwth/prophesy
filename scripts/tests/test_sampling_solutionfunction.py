@@ -5,8 +5,8 @@ from conftest import EXAMPLE_FOLDER, current_time
 
 import sampling_solutionfunction
 
-SAMPLINGNR = 4
-ITERATIONS = 2
+SAMPLINGNR = 3
+ITERATIONS = 1
 
 target_file = "sampling_solutionfunction_{}.samples".format(current_time)
 

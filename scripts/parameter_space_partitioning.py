@@ -76,6 +76,7 @@ def run(args=sys.argv[1:], interactive=True):
     if cmdargs.rat_file:
         result = read_pstorm_result(cmdargs.rat_file)
         parameters = result.parameters
+        problem_description.parameters = parameters
         problem_description.solutionfunction = result.ratfunc
         problem_description.welldefined_constraints = result.welldefined_constraints
         problem_description.graph_preserving_constraints = result.graph_preservation_constraints
@@ -84,7 +85,7 @@ def run(args=sys.argv[1:], interactive=True):
         properties = PctlFile(cmdargs.property_file)
         if cmdargs.rat_file and parameters != model_file.parameters:
             raise ValueError("Model file and solution function parameters do not coincide")
-        parameters = model_file.parameters
+        problem_description.parameters = model_file.parameters
         problem_description.model = model_file
         problem_description.property = properties.get(0)
 
@@ -95,8 +96,8 @@ def run(args=sys.argv[1:], interactive=True):
         Plot.flip_green_red = True
 
     logger.debug("Loading samples")
-    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, parameters)
-    if parameters != sample_parameters:
+    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, problem_description.parameters)
+    if problem_description.parameters != sample_parameters:
         # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
 
@@ -136,12 +137,12 @@ def run(args=sys.argv[1:], interactive=True):
         raise RuntimeError("No supported smt solver defined")
 
     logger.info("Generating regions")
-    checker = CheckerType(backend, parameters)
+    checker = CheckerType(backend, problem_description.parameters)
     checker.initialize(problem_description, threshold)
     if problem_description.welldefined_constraints is None:
         raise NotImplementedError("Currently we need the well-definedness constraints from the result file.")
 
-    arguments = samples, parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
+    arguments = samples, problem_description.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
 
     if cmdargs.rectangles:
         raise NotImplementedError("Rectangles are currently not supported")

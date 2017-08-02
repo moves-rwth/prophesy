@@ -2,7 +2,8 @@ from enum import Enum
 
 
 class ProblemDescription:
-    def __init__(self, solutionfunction=None, model=None, property=None, wd_constraints=None, gp_constraints=None):
+    def __init__(self, solutionfunction=None, parameters=None, model=None, property=None, wd_constraints=None, gp_constraints=None):
+        self.parameters = parameters
         self.solutionfunction = solutionfunction
         self.model = model
         self.property = property
