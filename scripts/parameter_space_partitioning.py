@@ -140,7 +140,9 @@ def run(args=sys.argv[1:], interactive=True):
     checker = CheckerType(backend, problem_description.parameters)
     checker.initialize(problem_description, threshold)
     if problem_description.welldefined_constraints is None:
-        raise NotImplementedError("Currently we need the well-definedness constraints from the result file.")
+        wd, gp = backend.get_parameter_constraints()
+        problem_description.welldefined_constraints = wd
+        problem_description.graph_preserving_constraints = gp
 
     arguments = samples, problem_description.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
 
