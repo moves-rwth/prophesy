@@ -39,9 +39,13 @@ class ParametricResult(object):
                                       results=self.ratfunc)
 
 
-def read_pstorm_result(location):
+def read_pstorm_result(location, require_result=True):
     """
     Read the output of pstorm into a ParametricResult
+    :param location: The location of the file to be read
+    :type location: str
+    :param require_result: If true, parsing fails if no result is found
+    :type require_result: Bool
     :return: The data obtained from the model.
     :rtype: ParametricResult
     """
@@ -78,12 +82,19 @@ def read_pstorm_result(location):
 
     # Build rational function
     logger.debug("Looking for solution function...")
-    match = re.findall('\$Result:(.*)$', inputstring, re.MULTILINE)[0]
-    logger.debug("Building solution function...")
-    solution = pc.parse(match)
-    if isinstance(solution, pc.Monomial):
-        solution = pc.Polynomial(solution)
-    logger.debug("Solution function is %s", solution)
+    match = re.findall('\$Result:(.*)$', inputstring, re.MULTILINE)
+
+    if require_result:
+        if len(match) == 0:
+            raise ValueError("Expected a result in the result file at {}".format(location))
+    if len(match) > 0:
+        logger.debug("Building solution function...")
+        solution = pc.parse(match[0])
+        if isinstance(solution, pc.Monomial):
+            solution = pc.Polynomial(solution)
+        logger.debug("Solution function is %s", solution)
+    else:
+        solution = None
 
     logger.debug("Parsing complete.")
     return ParametricResult(parameters, constraints, gpconstraints, solution)
