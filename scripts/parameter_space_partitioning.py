@@ -76,6 +76,7 @@ def run(args=sys.argv[1:], interactive=False):
     if cmdargs.rat_file:
         result = read_pstorm_result(cmdargs.rat_file)
         parameters = result.parameters
+        problem_description.parameters = parameters
         problem_description.solutionfunction = result.ratfunc
         problem_description.welldefined_constraints = result.welldefined_constraints
         problem_description.graph_preserving_constraints = result.graph_preservation_constraints
@@ -86,7 +87,7 @@ def run(args=sys.argv[1:], interactive=False):
         properties = PctlFile(cmdargs.property_file)
         if cmdargs.rat_file and parameters != model_file.parameters:
             raise ValueError("Model file and solution function parameters do not coincide")
-        parameters = model_file.parameters
+        problem_description.parameters = model_file.parameters
         problem_description.model = model_file
         problem_description.property = properties.get(0)
 
@@ -97,8 +98,8 @@ def run(args=sys.argv[1:], interactive=False):
         Plot.flip_green_red = True
 
     logger.debug("Loading samples")
-    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, parameters)
-    if parameters != sample_parameters:
+    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, problem_description.parameters)
+    if problem_description.parameters != sample_parameters:
         # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
 
@@ -113,40 +114,41 @@ def run(args=sys.argv[1:], interactive=False):
             raise RuntimeError("Z3 location not configured.")
         backend = Z3CliSolver()
         backend.run()
-        checker = SmtRegionChecker(backend, parameters)
+        CheckerType = SmtRegionChecker
     elif cmdargs.yices:
         if 'yices' not in solvers:
             raise RuntimeError("Yices location not configured.")
         backend = YicesCLISolver()
         backend.run()
-        checker = SmtRegionChecker(backend, parameters)
+        CheckerType = SmtRegionChecker
     elif cmdargs.isat:
         if 'isat' not in solvers:
             raise RuntimeError("ISat location not configured.")
         backend = IsatSolver()
         backend.run()
-        checker = SmtRegionChecker(backend, parameters)
+        CheckerType = SmtRegionChecker
     elif cmdargs.storm:
         if 'storm-pars' not in ppmcs:
             raise RuntimeError("Storm location not configured.")
         backend = StormModelChecker()
-        checker = PlaRegionChecker(backend, parameters)
+        CheckerType = PlaRegionChecker
     elif cmdargs.stormpy:
         if 'stormpy' not in ppmcs:
             raise RuntimeError("Stormpy dependency not configured.")
         # Do not import at top, as stormpy might not be available.
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
         backend = StormpyModelChecker()
-        checker = PlaRegionChecker(backend, parameters)
+        CheckerType = PlaRegionChecker
     else:
         raise RuntimeError("No supported region checker defined.")
 
     logger.info("Generating regions")
+    checker = CheckerType(backend, problem_description.parameters)
     checker.initialize(problem_description, threshold)
     if problem_description.welldefined_constraints is None:
         raise NotImplementedError("Currently we need the well-definedness constraints from the result file.")
 
-    arguments = samples, parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
+    arguments = samples, problem_description.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
 
     if cmdargs.rectangles:
         raise NotImplementedError("Rectangles are currently not supported.")

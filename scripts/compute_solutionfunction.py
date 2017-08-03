@@ -63,12 +63,13 @@ def run(args=sys.argv[1:], interactive=True):
     tool.load_model_from_prismfile(prism_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
-    if [p for p in prism_file.parameters if not constants.has_variable(p.variable)] != result.parameters:
-        if len(prism_file.parameters) != len(result.parameters):
+    problem_parameters = [p for p in prism_file.parameters if not constants.has_variable(p.variable)]
+    if problem_parameters != result.parameters:
+        if len(problem_parameters) != len(result.parameters):
             raise ValueError(
                 "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
                                                                                       result.parameters))
-        for p in prism_file.parameters:
+        for p in problem_parameters:
             if p not in result.parameters:
                 raise ValueError(
                     "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,

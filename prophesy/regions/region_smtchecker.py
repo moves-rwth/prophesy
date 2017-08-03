@@ -27,10 +27,17 @@ class SmtRegionChecker(RegionChecker):
 
     # Can we set the lower rat_func_bound to an open interval, thus exclude the zero?
     def initialize(self, problem_description, threshold, constants=None):
-        result = problem_description.solutionfunction
-        self._ratfunc = result.ratfunc
+        """
+        Initializes the smt solver to consider the problem at hand.
+        
+        :param problem_description: 
+        :type problem_description: ProblemDescription
+        :param threshold: 
+        :param constants: 
+        """
+        self._ratfunc = problem_description.solutionfunction
 
-        for p in result.parameters:
+        for p in problem_description.parameters:
             self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
         safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
@@ -46,7 +53,7 @@ class SmtRegionChecker(RegionChecker):
         safe_relation = pc.Relation.GEQ
         bad_relation = pc.Relation.LESS
 
-        if pc.denominator(result.ratfunc) != 1:
+        if pc.denominator(self._ratfunc) != 1:
             self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
             self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
             safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, safe_relation)
@@ -56,8 +63,8 @@ class SmtRegionChecker(RegionChecker):
             self._smt2interface.assert_constraint(rf1_constraint)
             self._smt2interface.assert_constraint(rf2_constraint)
         else:
-            safe_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, safe_relation)
-            bad_constraint = Constraint(pc.numerator(result.ratfunc) - thresholdVar, bad_relation)
+            safe_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, safe_relation)
+            bad_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, bad_relation)
 
         threshold_constraint = Constraint(pc.Polynomial(thresholdVar) - threshold, Relation.EQ)
 
