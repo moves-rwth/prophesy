@@ -246,14 +246,21 @@ class Interval:
 
     def __eq__(self, other):
         assert isinstance(other, Interval)
-        if self.empty() and other.empty(): return True
-        if not self._left_bound_type == other._left_bound_type: return False
-        if not self._left_value == other._left_value: return False
-        if not self._right_bound_type == other._right_bound_type: return False
-        if not self._right_value == other._right_value: return False
+        if self.empty() and other.empty():
+            return True
+        if not self._left_bound_type == other.left_bound_type():
+            return False
+        if not self._left_value == other.left_bound():
+            return False
+        if not self._right_bound_type == other.right_bound_type():
+            return False
+        if not self._right_value == other.right_bound():
+            return False
         return True
 
     def __hash__(self):
+        if self.empty():
+            return 0
         return hash(self._left_value) ^ hash(self._right_value) + int(self._left_bound_type) + int(self._right_bound_type)
 
     def setminus(self, other):
