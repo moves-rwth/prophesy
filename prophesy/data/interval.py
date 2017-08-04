@@ -31,7 +31,6 @@ def constraint_to_interval(input, internal_parse_func):
         return Interval(left_bound, _rel_mapping[relations[0]],
                         right_bound, _rel_mapping[relations[1]])
     except ValueError:
-        print("Keine fließkommazahl")
         return None
 
 
@@ -289,15 +288,11 @@ class Interval:
         elif intersectionInterval == self:
             return []
         else:
-            #print(intersectionInterval)
             if self._left_value == intersectionInterval._left_value:
-                #print("Starten beide Links")
                 if self._left_value == intersectionInterval._right_value:
-                   # print("Only remove left bound if necessary")
                     return [Interval(self._left_value, BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
                                      self._right_bound_type)]
                 else:
-                   # print("Haben nur gleichen Start")
                     if intersectionInterval._left_bound_type == BoundType.open \
                             and self._left_bound_type == BoundType.closed:
                         return [Interval(self._left_value, self._left_bound_type,
@@ -310,13 +305,10 @@ class Interval:
                                  BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
                                  self._right_bound_type)]
             elif self._right_value == intersectionInterval._right_value:
-              #  print("Ende beide rechts")
                 if self._right_value == intersectionInterval._left_value:
-                   # print("Only remove right bound if necessary")
                     return [Interval(self._left_value, self._left_bound_type, self._right_value,
                                      BoundType.negated(intersectionInterval._right_bound_type))]
                 else:
-                    #print("Haben nur gleiches ende")
                     if intersectionInterval._right_bound_type == BoundType.open and\
                             self._right_bound_type == BoundType.closed:
                         return [Interval(self._right_value, self._right_bound_type,
@@ -329,7 +321,6 @@ class Interval:
                                  self._left_bound_type, intersectionInterval._left_value,
                                  BoundType.negated(intersectionInterval._left_bound_type))]
             else:
-                #print("Intersection 'inside' the interval")
                 return [Interval(self._left_value, self._left_bound_type,
                                  intersectionInterval._left_value, BoundType.negated(intersectionInterval._left_bound_type)),
                         Interval(intersectionInterval._right_value, BoundType.negated(intersectionInterval._right_bound_type),
