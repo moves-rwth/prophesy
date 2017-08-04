@@ -1,6 +1,7 @@
 import re
 from enum import Enum
-
+import math
+import pycarl
 
 class BoundType(Enum):
     open = 0
@@ -94,13 +95,24 @@ class Interval:
     """
     Interval class for arbitrary (constant) types.
     Construction from string is possible via string_to_interval
-    TODO support half-bounded intervals (e.g some value for infty)
     """
     def __init__(self, left_value, left_bt, right_value, right_bt):
+        """
+        Construct an interval
+        
+        :param left_value: The lower bound, or -pycarl.inf if unbounded from below
+        :param left_bt: If the lower bound is open or closed
+        :type left_bt: BoundType
+        :param right_value: The upper bound, or or pycarl.inf if unbounded from below
+        :param right_bt: If the upper bound is open or closed
+        :type right_bt: BoundType
+        """
         self._left_bound_type = left_bt
         self._left_value = left_value
         self._right_bound_type = right_bt
         self._right_value = right_value
+        assert left_value != pycarl.inf or left_bt == BoundType.open
+        assert right_value is not None or right_bt == BoundType.open
 
     def left_bound(self):
         return self._left_value
@@ -131,10 +143,21 @@ class Interval:
         :param pt: A value
         :return: True if the value lies between the bounds.
         """
+        if self._left_value is None and self._right_value is None: return True
+        if self._left_value is None and pt < self._right_value: return True
+        if self._right_value is None and pt > self._left_value: return True
         if self._left_value < pt < self._right_value: return True
         if pt == self._left_value and self._left_bound_type == BoundType.closed: return True
         if pt == self._right_value and self._right_bound_type == BoundType.closed: return True
         return False
+
+    def is_bounded(self):
+        """
+        Checks whether the interval is bounded
+        
+        :return:  The interval is bounded, if both the left and the right bound are not equal to infinity.
+        """
+        return self._left_value > -pycarl.inf and self._right_value < pycarl.inf
 
     def is_closed(self):
         """
@@ -148,29 +171,37 @@ class Interval:
         """
         The width of the interval
         
-        :return: right bound - left bound
+        :return: right bound - left bound, if bounded from both sides, and math.inf otherwise
         """
+        if self._left_value is None or self._right_value is None: return math.inf
         return self._right_value - self._left_value
 
     def center(self):
+        """
+        Gets the center of the interval. 
+        
+        :return: 
+        """
         return (self._right_value + self._left_value) / 2
 
     def split(self):
         """
-        Split the interval in two equally large halfs.
+        Split the interval in two equally large halfs. Can only be called on bounded intervals
         
         :return: Two intervals, the first from the former left bound to (excluding) middle point (leftbound + rightbound)/2, 
                                 the second from the middle point (including) till the former right bound
         """
+        assert self._left_value != -pycarl.inf and self._right_value != pycarl.inf
         mid = self._left_value + self.width() / 2
         return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
 
     def close(self):
         """
-        Make all bounds closed
+        Make all bounds closed. Can not be called on unbounded intervals
         
         :return: A new interval which has closed bounds instead.
         """
+        assert self._left_value != -pycarl.inf and self._right_value != pycarl.inf
         return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
 
     def intersect(self, other):
