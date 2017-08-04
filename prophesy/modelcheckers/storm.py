@@ -57,6 +57,38 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         self.prismfile = prismfile
         self.constants = constants
 
+    def get_parameter_constraints(self):
+        if self.prismfile is None:
+            raise NotEnoughInformationError("model missing")
+        if self.pctlformula is None:
+            raise NotEnoughInformationError("pctl formula missing") # TODO not strictly necessary
+
+        ensure_dir_exists(configuration.get_intermediate_dir())
+        _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+
+        constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
+
+        args = [self.parameter_location,
+                '--prism', self.prismfile.location,
+                '--prop', str(self.pctlformula),
+                '--parametric',
+                '--parametric:resultfile', resultfile,
+                '--onlyconstraints']
+        if constants_string != "":
+            args.append('-const')
+            args.append(constants_string)
+
+        logger.info("Call storm")
+        ret_code = run_tool(args, False)
+        if ret_code != 0:
+            # TODO throw exception?
+            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+        else:
+            logger.info("Storm call finished successfully")
+
+        param_result = read_pstorm_result(resultfile, False)
+        return param_result.welldefined_constraints, param_result.graph_preservation_constraints
+
     def get_rational_function(self):
         logger.info("Compute solution function")
 
@@ -69,7 +101,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
-        constants_string = self.constants.to_key_value_string()
+        constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
 
         args = [self.parameter_location,
                 '--prism', self.prismfile.location,
@@ -109,7 +141,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
             const_values_string = ",".join(
                 ["{0}={1}".format(parameter.variable, val) for parameter, val in sample_point.items()])
-            constants_string = self.constants.to_key_value_string(to_float=True)
+            constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
 

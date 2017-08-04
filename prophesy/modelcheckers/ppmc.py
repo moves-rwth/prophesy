@@ -18,6 +18,15 @@ class ParametricProbabilisticModelChecker(ProbabilisticModelChecker):
         raise NotImplementedError("Abstract function called")
 
     @abstractmethod
+    def get_parameter_constraints(self):
+        """
+        For the model and the parameters at hand, get the constraints under which they induce a welldefined model
+
+        :return: Two list of constraints, one with the welldefinedness constraints, one with the graph preservation constraints.
+        """
+        raise NotImplementedError("Abstract function called")
+
+    @abstractmethod
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         """
         Check if the given hypothesis holds in the given hyperrectangle.

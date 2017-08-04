@@ -68,14 +68,109 @@ Step-by-step guide (minimal)
         $ cd <location>
 
 - Obtain pycarl
+    * Download the latest release::
+
+        $ git clone https://github.com/moves-rwth/pycarl
+        $ cd pycarl
+
+    * Run setup.py, e.g.::
+
+        $ python setup.py develop
+
+    * Done::
+
+        $ cd <location>
 
 - Obtain prophesy
 
+    * Download the latest release
+
+    * Write an initial config file::
+
+        $ python write_config.py
+
+    * Run setup.py, e.g.::
+
+        $ python setup.py develop
+
+    * Done
 
 .. _installation_step_by_step_full:
 
 Step-by-step guide (full)
 -------------------------------
 
-Test
 
+- Change directories to a suitable location::
+
+    $ cd <location>
+
+- Obtain carl
+    * Download the latest release or clone the git repository from `carl <https://github.com/smtrat/carl>`_, e.g.::
+
+        $ git clone https://github.com/smtrat/carl.git
+        $ cd carl
+
+    * Prepare the build::
+
+        $ mkdir build && cd build
+        $ cmake .. -DUSE_CLN_NUMBERS=ON -DUSE_GINAC=ON
+
+    * Build lib_carl::
+
+        $ make lib_carl
+
+    * Done::
+
+        $ cd <location>
+
+- Obtain carl-parser
+    * Download the latest release::
+
+        $ git clone https://github.com/smtrat/carl-parser.git
+        $ cd carl-parser
+
+    * Prepare the build::
+
+        $ mkdir build && cd build
+        $ cmake ..
+
+    * Build the parser::
+
+        $ make
+
+    * Done::
+
+        $ cd <location>
+
+- Obtain pycarl
+    * Download the latest release::
+
+        $ git clone https://github.com/moves-rwth/pycarl
+        $ cd pycarl
+
+    * Run setup.py, e.g.::
+
+        $ python setup.py develop
+
+    * Done::
+
+        $ cd <location>
+
+- Obtain storm
+
+- Obtain stormpy
+
+- Obtain prophesy
+
+    * Download the latest release
+
+    * Write an initial config file::
+
+        $ python write_config.py
+
+    * Run setup.py, e.g.::
+
+        $ python setup.py develop
+
+    * Done
