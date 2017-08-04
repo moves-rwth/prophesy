@@ -35,31 +35,47 @@ def constraint_to_interval(input, internal_parse_func):
         return None
 
 
-def string_to_interval(input, internal_parse_func):
-    assert isinstance(input, str)
-    input = input.strip()
-    left_bt = None
-    if input[0] == "(":
+def string_to_interval(input_str, internal_parse_func):
+    """
+    Parsing intervals
+    
+    :param input_str: A string of the form [l,r] or (l,r) or the like.
+    :param internal_parse_func: the function to parse l and r, in case they are not -infty or infty, respectively
+    :return: An interval
+    """
+    assert isinstance(input_str, str)
+    input_str = input_str.strip()
+    if input_str[0] == "(":
         left_bt = BoundType.open
-    elif input[0] == "[":
+    elif input_str[0] == "[":
         left_bt = BoundType.closed
     else:
-        raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected '(' or '[' at the start.")
+        raise RuntimeError("Cannot parse the interval given by: " + input_str + ". Expected '(' or '[' at the start.")
 
-    if input[-1] == ")":
+    if input_str[-1] == ")":
         right_bt = BoundType.open
-    elif input[-1] == "]":
+    elif input_str[-1] == "]":
         right_bt = BoundType.closed
     else:
-        raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected ')' or ']' at the end.")
+        raise RuntimeError("Cannot parse the interval given by: " + input_str + ". Expected ')' or ']' at the end.")
 
-    inbetween = input[1:-1]
+    inbetween = input_str[1:-1]
     bounds = inbetween.split(",")
     if len(bounds) != 2:
-        raise RuntimeError("Cannot parse the interval given by: " + input + ". Expected exactly one comma in the interval.")
+        raise RuntimeError("Cannot parse the interval given by: " + input_str + ". Expected exactly one comma in the interval.")
 
-    left_value = internal_parse_func(bounds[0])
-    right_value = internal_parse_func(bounds[1])
+    if bounds[0] == "-infty":
+        left_value = -pycarl.inf
+        if left_bt == BoundType.closed:
+            raise ValueError("Invalid interval {}: Infinity cannot have a closed bound.".format(input_str))
+    else:
+        left_value = internal_parse_func(bounds[0])
+    if bounds[1] == "infty":
+        right_value = pycarl.inf
+        if right_bt == BoundType.closed:
+            raise ValueError("Invalid interval {}: Infinity cannot have a closed bound".format(input_str))
+    else:
+        right_value = internal_parse_func(bounds[1])
     return Interval(left_value, left_bt, right_value, right_bt)
 
 
