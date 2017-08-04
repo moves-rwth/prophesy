@@ -91,6 +91,9 @@ def create_embedded_closed_interval(interval, epsilon):
     if interval.is_closed():
         return interval
 
+    if not interval.is_bounded():
+        raise ValueError("Cannot create embedded closes interval, as infinity plus/minus epsilon remains infinity.")
+
     if interval.left_bound_type() == BoundType.open:
         if interval.right_bound_type() == BoundType.open:
             if interval.width() <= 2*epsilon:
