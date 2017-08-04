@@ -1,6 +1,4 @@
 import math
-
-from prophesy.adapter.pycarl import Rational, Integer
 from prophesy.data.nice_approximation import FixedDenomFloatApproximation
 
 
@@ -22,7 +20,7 @@ def _sqrt_approx(i):
 
 class Point:
     """
-    A n-dimensional point class.
+    An n-dimensional point class.
     """
     def __init__(self, *args):
         """
@@ -33,11 +31,27 @@ class Point:
     def to_float(self):
         return Point(*[float(c) for c in self.coordinates])
 
-    def to_nice_rationals(self, ApproxType = FixedDenomFloatApproximation):
-        approx = ApproxType(Integer(16384))
+    def to_nice_rationals(self, ApproxType = FixedDenomFloatApproximation, approx_type_arg = 16384):
+        """
+        Transfer the coordinates into rational numbers with smaller coefficients
+        
+        :param ApproxType: The type of approximation to use
+        :param approx_type_arg: An argument for the approximation, typically some sort of precision of the approximation
+        :return: A point with slightly modified coordinates
+        :rtype: Point
+        """
+        approx = ApproxType(approx_type_arg)
         return Point(*[approx.find(c) for c in self.coordinates])
 
     def distance(self, other):
+        """
+        Computes the (Euclidean) distance between this point and another point 
+        
+        :param other: Another n-dimensional point
+        :type other: Point
+        :return: The Euclidean distance
+        """
+        assert self.dimension() == other.dimension()
         res = 0.0
         for i, j in zip(self.coordinates, other.coordinates):
             tres = type(res)
@@ -45,15 +59,34 @@ class Point:
         return _sqrt_approx(res)
 
     def numerical_distance(self, other):
+        """
+        Computes the (Euclidean) distance between this point and another point, using floating point arithmetic
+        
+        :param other: Another n-dimensional point
+        :type other: Point
+        :return: 
+        """
+        assert self.dimension() == other.dimension()
         res = 0.0
         for i, j in zip(self.coordinates, other.coordinates):
             res = res + (pow(float(i)-float(j),2))
         return _sqrt_approx(res)
 
     def dimension(self):
+        """
+        The dimension of the point, e.g. the number of coordinates
+        
+        :return: The number of entries 
+        """
         return len(self.coordinates)
 
     def projection(self, dims):
+        """
+        Project the point onto the selected dimensions
+        
+        :param dims: An iterable of dimensions to select
+        :return: A len(dims)-dimensional Point
+        """
         return Point(*[self.coordinates[i] for i in dims])
 
     def __str__(self):

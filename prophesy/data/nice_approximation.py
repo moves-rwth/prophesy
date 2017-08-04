@@ -2,7 +2,7 @@ from prophesy.adapter.pycarl import Rational, Integer
 
 
 class FixedDenomFloatApproximation:
-    def __init__(self, denom):
+    def __init__(self, Integer(denom)):
         self.denom = denom
 
     def find(self, input):
