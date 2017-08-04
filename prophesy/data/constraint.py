@@ -5,18 +5,6 @@ from shapely.geometry.polygon import LinearRing, Polygon, orient
 from prophesy.data.samples import ParameterInstantiation
 
 
-def parse_constraint(constraint_str):
-    """
-    :param constraint_str: 
-    :return: 
-    """
-    #TODO deprecated as soon as pycarl parsing is available.
-    args = constraint_str.split(",")
-    if len(args) != 2:
-        raise ValueError("Constraint string should be of the form <rational function>,<relation>, but is {}".format(constraint_str))
-    res = parse(args[0])
-    return res
-
 
 def region_from_polygon(polygon, variables):
         """Compute formula representing  polygon (Polygon, LineString or LinearRing)
@@ -64,14 +52,3 @@ def region_from_polygon(polygon, variables):
                 constraint = constraint & new_constraint
 
         return constraint
-
-
-def is_point_fulfilling_constraint(pt, constraint):
-    """Check whether the given point is satisfied by the regions
-    (i.e. is contained by it)
-    
-    :param pt: SamplePoint
-    :param constraint: pycarl.formula.Constraint or pycarl.formula.Formula
-    """
-    assert isinstance(pt, ParameterInstantiation)
-    return constraint.satisfied_by(pt)
