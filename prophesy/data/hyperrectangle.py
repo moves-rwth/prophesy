@@ -2,7 +2,7 @@ from prophesy.data.interval import Interval
 from prophesy.data.point import Point
 import prophesy.adapter.pycarl as pc
 from prophesy.data.interval import BoundType
-
+import pycarl
 
 # TOOD remove numpy?
 import numpy as np
@@ -53,8 +53,6 @@ class HyperRectangle(object):
     def np_vertices(self):
         verts = self.vertices()
         return np.array([np.array(list(map(float,v))) for v in verts])
-
-    #def vertices_and_inward_dir(self):
 
     def split_in_every_dimension(self):
         """
@@ -194,22 +192,22 @@ class HyperRectangle(object):
         return self.intervals[key]
 
     def to_formula(self, variables):
-        """Given HyperRectangle and VariableOrder, compute constraints
-        @param hyperrectangle HyperRectangle
-        @param variables VariableOrder
-        @return pycarl.Formula or pycarl.Constraint
+        """Given list of variables, compute constraints
+        
+        :param variables: Variables for each dimension
+        :return: A formula specifying the points inside the hyperrectangle
+        :rtype: pc.Constraint or pc.Formula
         """
-        constraint = None
+        constraint = pc.Constraint(True)
         for variable, interval in zip(variables, self.intervals):
-            lbound_relation = pc.Relation.GEQ if interval.left_bound_type() == BoundType.closed else pc.Relation.GREATER
-            lbound = pc.Constraint(pc.Polynomial(variable) - interval.left_bound(), lbound_relation)
-            if constraint is None:
-                constraint = lbound
-            else:
+            if interval.left_bound != -pycarl.inf:
+                lbound_relation = pc.Relation.GEQ if interval.left_bound_type() == BoundType.closed else pc.Relation.GREATER
+                lbound = pc.Constraint(pc.Polynomial(variable) - interval.left_bound(), lbound_relation)
                 constraint = constraint & lbound
-            rbound_relation = pc.Relation.LEQ if interval.right_bound_type() == BoundType.closed else pc.Relation.LESS
-            rbound = pc.Constraint(pc.Polynomial(variable) - interval.right_bound(), rbound_relation)
-            constraint = constraint & rbound
+            if interval.right_bound != pycarl.inf:
+                rbound_relation = pc.Relation.LEQ if interval.right_bound_type() == BoundType.closed else pc.Relation.LESS
+                rbound = pc.Constraint(pc.Polynomial(variable) - interval.right_bound(), rbound_relation)
+                constraint = constraint & rbound
         return constraint
 
     def to_region_string(self, variables):
