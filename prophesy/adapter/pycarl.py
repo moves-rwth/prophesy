@@ -36,6 +36,8 @@ denominator = pycarl.gmp.denominator
 
 FormulaType = pycarl.formula.FormulaType
 
+inf = pycarl.inf
+
 
 def parse(input):
     if not CARL_PARSER:

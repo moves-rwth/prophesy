@@ -1,5 +1,5 @@
 from prophesy.data.interval import Interval, string_to_interval, BoundType, constraint_to_interval
-
+import pycarl
 
 def test_interval_parsing():
     int1 = string_to_interval("(2,5)", int)
@@ -14,6 +14,31 @@ def test_interval_parsing():
     assert int1.right_bound() == 7
     assert int1.right_bound_type() == BoundType.closed
     assert str(int1) == "(2,7]";
+
+def test_interval_intersect():
+    i1 = Interval(-pycarl.inf, BoundType.open, pycarl.inf, BoundType.open)
+    assert i1.intersect(i1) == i1
+    i2 = Interval(-3, BoundType.open, 4, BoundType.closed)
+    assert i1.intersect(i2) == i2
+    assert i2.intersect(i1) == i2
+    i3 = Interval(5, BoundType.open, 6, BoundType.closed)
+    assert i3.intersect(i2).empty()
+    i4 = Interval(4, BoundType.closed, 6, BoundType.open)
+    i5 = Interval(5, BoundType.open, 6, BoundType.open)
+    assert i4.intersect(i3) == i5
+    assert i4.intersect(i2) == Interval(4, BoundType.closed, 4, BoundType.closed)
+
+def test_contains():
+    i1 = Interval(-pycarl.inf, BoundType.open, pycarl.inf, BoundType.open)
+    assert i1.contains(3)
+    assert i1.contains(-4)
+    i2 = Interval(-3, BoundType.open, 4, BoundType.closed)
+    assert i2.contains(4)
+    assert not i2.contains(-3)
+
+def test_hash():
+    i1 = Interval(-pycarl.inf, BoundType.open, pycarl.inf, BoundType.open)
+    hash(i1)
 
 def test_constraint_to_interval():
     s = "-10.2<fghhklöl<15.3"
@@ -167,5 +192,3 @@ def test_interval_setminus():
     i = string_to_interval("(-20,20]", float)
     intersection = i1.setminus(i)
     assert not intersection
-
-    print("All tests passed through!")
