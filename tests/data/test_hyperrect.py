@@ -1,5 +1,6 @@
 from prophesy.data.interval import Interval, string_to_interval, BoundType
 from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.point import Point
 import prophesy.adapter.pycarl as pc
 
 
