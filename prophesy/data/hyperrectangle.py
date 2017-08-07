@@ -203,11 +203,11 @@ class HyperRectangle(object):
         """
         constraint = pc.Constraint(True)
         for variable, interval in zip(variables, self.intervals):
-            if interval.left_bound != -pycarl.inf:
+            if interval.left_bound != -inf:
                 lbound_relation = pc.Relation.GEQ if interval.left_bound_type() == BoundType.closed else pc.Relation.GREATER
                 lbound = pc.Constraint(pc.Polynomial(variable) - interval.left_bound(), lbound_relation)
                 constraint = constraint & lbound
-            if interval.right_bound != pycarl.inf:
+            if interval.right_bound != inf:
                 rbound_relation = pc.Relation.LEQ if interval.right_bound_type() == BoundType.closed else pc.Relation.LESS
                 rbound = pc.Constraint(pc.Polynomial(variable) - interval.right_bound(), rbound_relation)
                 constraint = constraint & rbound
