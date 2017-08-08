@@ -207,11 +207,6 @@ class ProphesyConfig(Configuration):
 
 configuration = ProphesyConfig()
 
-# TODO Put in config
-TOOLNAME = "prophesy"
-VERSION = [0, 3, 0]
-SUPPORT = ["Nils Jansen, Sebastian Junges, Matthias Volk"]
-
 logging.basicConfig(filename='prophesy.log', level=logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 ch = logging.StreamHandler()

@@ -2,28 +2,32 @@ import subprocess
 import functools
 import logging
 
-from prophesy.config import TOOLNAME
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
-from prophesy.adapter.pycarl import Constraint, Formula, Rational
+from prophesy.adapter.pycarl import Rational
 
 logger = logging.getLogger(__name__)
 
 
 def _smtfile_header():
+    """
+    smtlib header that describes the file.
+    
+    :return: string with the description
+    """
     formula = "(set-logic QF_NRA)\n"
     formula += "(set-info :source |\n"
     formula += "Probabilistic verification" + "\n"
-    formula += TOOLNAME + "\n"
+    formula +=  "prophesy" + "\n"
     formula += "|)\n"
-    formula += "(set-info :smt-prophesy-version 2.0)\n"
+    formula += "(set-info :smt-version 2.0)\n"
     formula += "(set-info :category \"industrial\")\n"
     return formula
 
 
-
-
-
 class SmtlibSolver(SMTSolver):
+    """
+    Abstract class for smt-lib based command line interfaces for SMT solvers.
+    """
     def __init__(self, location, memout=4000, timeout=100, incremental=True):
         self.location = location
         self.formula = _smtfile_header()
