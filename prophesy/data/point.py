@@ -13,7 +13,7 @@ def _sqrt_approx(i):
         # rational number, then use some approx.
         i = float(i)
 
-    #TODO this might be much closer than necessary here.
+    # TODO this might be much closer than necessary here.
     float_sqrt = math.sqrt(i)
     return orig_type(float_sqrt)
 

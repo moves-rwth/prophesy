@@ -13,7 +13,7 @@ from prophesy.adapter.pycarl import Constraint, Relation
 
 
 class SmtRegionChecker(RegionChecker):
-    def __init__(self, backend, parameters):
+    def __init__(self, backend):
         """
         :param backend: Smt solver to check regions
         :type backend: SMTSolver
@@ -21,7 +21,7 @@ class SmtRegionChecker(RegionChecker):
         :type parameters: ParameterOrder
         """
         self._smt2interface = backend
-        self.parameters = parameters
+        self.parameters = None
         self._ratfunc = None
         self.benchmark_output = []
 
@@ -35,9 +35,12 @@ class SmtRegionChecker(RegionChecker):
         :param threshold: 
         :param constants: 
         """
+        assert problem_description.solutionfunction is not None
+        assert problem_description.parameters is not None
         self._ratfunc = problem_description.solutionfunction
+        self.parameters = problem_description.parameters
 
-        for p in problem_description.parameters:
+        for p in self.parameters:
             self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
 
         safeVar = pc.Variable("__safe", pc.VariableType.BOOL)

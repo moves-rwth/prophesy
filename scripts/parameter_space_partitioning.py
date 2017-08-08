@@ -143,7 +143,7 @@ def run(args=sys.argv[1:], interactive=False):
         raise RuntimeError("No supported region checker defined.")
 
     logger.info("Generating regions")
-    checker = CheckerType(backend, problem_description.parameters)
+    checker = CheckerType(backend)
     checker.initialize(problem_description, threshold)
     if problem_description.welldefined_constraints is None:
         wd, gp = backend.get_parameter_constraints()

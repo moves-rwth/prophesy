@@ -617,9 +617,10 @@ class ConstraintHandler(CegarHandler):
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
         problem_description = ProblemDescription()
-        problem_description.solutionfunction = result
+        problem_description.solutionfunction = result.ratfunc
+        problem_description.parameters = result.parameters
 
-        checker = SmtRegionChecker(smt2interface, result.parameters)
+        checker = SmtRegionChecker(smt2interface)
         checker.initialize(problem_description,threshold)
 
         if type == 'planes':
@@ -627,9 +628,9 @@ class ConstraintHandler(CegarHandler):
         elif type == 'rectangles':
             return self._json_error("Rectangles generator was temporarily dropped in v2")
         elif type == 'quads':
-            generator = HyperRectangleRegions(samples, result.parameters, threshold, checker)
+            generator = HyperRectangleRegions(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
         elif type == 'poly':
-            generator = ConstraintPolygon(samples, result.parameters, threshold, checker)
+            generator = ConstraintPolygon(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
         else:
             return self._json_error("Bad generator")
         generator.plot = False
