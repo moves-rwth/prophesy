@@ -8,6 +8,7 @@ from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 from prophesy.data.property import OperatorBound
 from prophesy.input.solutionfunctionfile import ParametricResult
+from prophesy.data.constant import Constants
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
@@ -31,8 +32,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 "Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 
         self.bisimulation = stormpy.BisimulationType.STRONG
-        self.pctl_formula = None
-        self.prism_file = None
+        self.pctlformula = None
+        self.prismfile = None
         self.constants = None
         self.program = None
         self.last_result = None
@@ -49,15 +50,15 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def set_pctl_formula(self, formula):
         # TODO instead of going via string, do a bit more meaningful stuff.
         if self.program is None:
-            self.pctl_formula = stormpy.parse_properties(str(formula))
+            self.pctlformula = stormpy.parse_properties(str(formula))
         else:
-            self.pctl_formula = stormpy.parse_properties_for_prism_program(str(formula), self.program)
+            self.pctlformula = stormpy.parse_properties_for_prism_program(str(formula), self.program)
 
-    def load_model_from_prismfile(self, p_file, constants):
-        self.prism_file = p_file
+    def load_model_from_prismfile(self, prism_file, constants=Constants()):
+        self.prismfile = prism_file
         self.constants = constants
         # TODO use constants here.
-        self.program = stormpy.parse_prism_program(self.prism_file.location)
+        self.program = stormpy.parse_prism_program(self.prismfile.location)
 
     def set_bisimulation_type(self, bisimulationType):
         if bisimulationType == BisimulationType.weak:
@@ -75,21 +76,21 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         """
         logger.info("Build model")
 
-        if self.prism_file is None:
+        if self.prismfile is None:
             raise NotEnoughInformationError("Prism model not set.")
-        if self.pctl_formula is None:
+        if self.pctlformula is None:
             raise NotEnoughInformationError("PCTL formula not set.")
 
-        if self.prism_file.nr_parameters() == 0:
+        if self.prismfile.nr_parameters() == 0:
             assert not self.program.has_undefined_constants
-            self.model = stormpy.build_model(self.program, self.pctl_formula)
+            self.model = stormpy.build_model(self.program, self.pctlformula)
         else:
             assert self.program.has_undefined_constants
-            self.model = stormpy.build_parametric_model(self.program, self.pctl_formula)
+            self.model = stormpy.build_parametric_model(self.program, self.pctlformula)
 
         if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
             logger.info("Perform bisimulation")
-            self.model = stormpy.perform_bisimulation(self.model, self.pctl_formula, self.bisimulation)
+            self.model = stormpy.perform_bisimulation(self.model, self.pctlformula, self.bisimulation)
 
     def create_parameter_mapping(self, prophesy_parameters):
         """
@@ -150,13 +151,13 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = self.check_model(self.model, self.pctl_formula[0])
+        rational_function = self.check_model(self.model, self.pctlformula[0])
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
         parameter_constraints, graph_preservation_constraints = self.get_parameter_constraints()
 
-        return ParametricResult(self.prism_file.parameters, parameter_constraints, graph_preservation_constraints,
+        return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
     def perform_sampling(self, samplepoints, constants=None):
