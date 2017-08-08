@@ -37,6 +37,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.program = None
         self.last_result = None
         self.model = None
+        self.parameter_constraints = None
+        self.graph_preservation_constraints = None
 
     def name(self):
         return "stormpy"
@@ -118,6 +120,30 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Convert to gmp
         return pc.convert_from(result)
 
+    def get_parameter_constraints(self):
+        if self.model is None:
+            self.build_model()
+
+        if self.parameter_constraints is None or self.graph_preservation_constraints is None:
+            # Collect constraints if not already there
+            logger.info("Call stormpy for constraints")
+
+            collector = stormpy.ConstraintCollector(self.model)
+            self.parameter_constraints = []
+            self.graph_preservation_constraints = []
+            # Convert formulas to gmp
+            for formula in collector.wellformed_constraints:
+                assert formula.type == pc.FormulaType.CONSTRAINT
+                converted_formula = pc.Formula(pc.convert_from(formula.get_constraint()))
+                self.parameter_constraints.append(converted_formula)
+            for formula in collector.graph_preserving_constraints:
+                assert formula.type == pc.FormulaType.CONSTRAINT
+                converted_formula = pc.Formula(pc.convert_from(formula.get_constraint()))
+                self.graph_preservation_constraints.append(converted_formula)
+            logger.info("Stormpy call finished")
+
+        return self.parameter_constraints, self.graph_preservation_constraints
+
     def get_rational_function(self):
         if self.model is None:
             self.build_model()
@@ -128,18 +154,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
-        collector = stormpy.ConstraintCollector(self.model)
-        parameter_constraints = []
-        graph_preservation_constraints = []
-        # Convert formulas to gmp
-        for formula in collector.wellformed_constraints:
-            assert formula.type == pc.FormulaType.CONSTRAINT
-            converted_formula = pc.Formula(pc.convert_from(formula.get_constraint()))
-            parameter_constraints.append(converted_formula)
-        for formula in collector.graph_preserving_constraints:
-            assert formula.type == pc.FormulaType.CONSTRAINT
-            converted_formula = pc.Formula(pc.convert_from(formula.get_constraint()))
-            graph_preservation_constraints.append(converted_formula)
+        parameter_constraints, graph_preservation_constraints = self.get_parameter_constraints()
 
         return ParametricResult(self.prism_file.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
