@@ -7,7 +7,7 @@ import logging
 import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import HyperRectangleRegions
-from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
 from prophesy.regions.region_checker import ProblemDescription
 from prophesy.input.solutionfunctionfile import read_pstorm_result
@@ -17,11 +17,9 @@ from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
 from prophesy.util import open_file
 from prophesy.smt.isat import IsatSolver
-from prophesy.smt.smtlib import SmtlibSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy import config
 from prophesy.config import configuration
 
 logger = logging.getLogger(__name__)
@@ -114,19 +112,19 @@ def run(args=sys.argv[1:], interactive=False):
             raise RuntimeError("Z3 location not configured.")
         backend = Z3CliSolver()
         backend.run()
-        CheckerType = SmtRegionChecker
+        CheckerType = SolutionFunctionRegionChecker
     elif cmdargs.yices:
         if 'yices' not in solvers:
             raise RuntimeError("Yices location not configured.")
         backend = YicesCLISolver()
         backend.run()
-        CheckerType = SmtRegionChecker
+        CheckerType = SolutionFunctionRegionChecker
     elif cmdargs.isat:
         if 'isat' not in solvers:
             raise RuntimeError("ISat location not configured.")
         backend = IsatSolver()
         backend.run()
-        CheckerType = SmtRegionChecker
+        CheckerType = SolutionFunctionRegionChecker
     elif cmdargs.storm:
         if 'storm-pars' not in ppmcs:
             raise RuntimeError("Storm location not configured.")
