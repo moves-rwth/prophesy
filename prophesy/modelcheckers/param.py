@@ -24,6 +24,9 @@ class ParamParametricModelChecker(ParametricProbabilisticModelChecker):
     def version(self):
         raise NotImplementedError("Param is currently not supported")
 
+    def get_parameter_constraints(self):
+        raise NotImplementedError("Param is currently not supported")
+
     def get_rational_function(self):
         raise NotImplementedError("Param is currently not supported")
 

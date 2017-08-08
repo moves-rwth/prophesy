@@ -50,6 +50,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         self.prismfile = prismfile
         self.constants = constants
 
+    def get_parameter_constraints(self):
+        raise NotImplementedError("Generating constraints for parameters in prism is not implemented.")
+
     def get_rational_function(self):
         logger.info("Compute solution function")
 
