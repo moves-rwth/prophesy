@@ -3,10 +3,30 @@ from distutils.command.build import build
 from setuptools.command.test import test as TestCommand
 import write_config
 import sys
+import re
 
 if sys.version_info[0] == 2:
     sys.exit("Sorry, Python 2 is not supported.")
 
+
+def obtain_version():
+    """
+    Obtains the version as specified in prophesy.
+    :return: Version of prophesy.
+    """
+    verstr = "unknown"
+    try:
+        verstrline = open('prophesy/_version.py', "rt").read()
+    except EnvironmentError:
+        pass  # Okay, there is no version file.
+    else:
+        VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+        mo = re.search(VSRE, verstrline, re.M)
+        if mo:
+            verstr = mo.group(1)
+        else:
+            raise RuntimeError("unable to find version in prophesy/_version.py")
+    return verstr
 
 class Tox(TestCommand):
     """Custom command to execute the tests using tox
@@ -33,7 +53,7 @@ class ConfigBuild(build):
 
 setup(
     name="Prophesy",
-    version="1.2",
+    version=obtain_version(),
     author="S. Junges, H. Bruintjes, M. Volk",
     author_email="sebastian.junges@cs.rwth-aachen.de",
     maintainer="S. Junges",
