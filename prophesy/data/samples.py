@@ -43,16 +43,22 @@ class ParameterInstantiation(dict):
         return self.get_point(self.get_parameters()).numerical_distance(other.get_point(other.get_parameters()))
 
     def distance(self, other):
+        """
+        Distance between two instantiations over the same parameters (in the same order)
+        
+        :param other: 
+        :return: The distance
+        """
         assert self.get_parameters() == other.get_parameters()
         return self.get_point(self.get_parameters()).distance(other.get_point(self.get_parameters()))
 
     def get_point(self, parameters):
         """Return the Point corresponding to this sample, given variable
         ordering provided as argument
-        @param parameters ParameterOrder. Must correspond to parameters of this
-            sample point.
+        :param parameters: Must correspond to parameters of this sample point.
+        :type parameters: Iterable[Parameter]
         """
-        return Point(*[self[var] for var in parameters])
+        return Point(*[self[par] for par in parameters])
 
     @classmethod
     def from_point(cls, pt, parameters):
@@ -109,13 +115,13 @@ class InstantiationResult(object):
             self.well_defined = False
         self.result = result
 
-    def get_instantiation_point(self, variable_order):
+    def get_instantiation_point(self, parameters):
         """
         
         :param variable_order: 
         :return: 
         """
-        return self.instantiation.get_point(variable_order)
+        return self.instantiation.get_point(parameters)
 
     def get_parameters(self):
         """
@@ -193,8 +199,8 @@ class InstantiationResultDict:
         either >= or < threshold.
         
         :param samples: SampleDict
-        :param threshold: pycarl.Rational
-        :return: (SampleDict >=, SampleDict <)
+        :type threshold: pycarl.Rational
+        :return: (SampleDict >=, SampleDict <, SampleDict illdefined)
         """
         above_threshold = InstantiationResultDict(self.parameters)
         below_threshold = InstantiationResultDict(self.parameters)
@@ -218,7 +224,7 @@ class InstantiationResultDict:
     def filter_value(self, filter_func):
         """Returns samples for which filter_func returns true.
         
-        :param samples: SampleDict
+        :type samples: SampleDict
         :param filter_func: callable to filter values, return True to keep sample
         """
         filtered = InstantiationResultDict(self.parameters)
@@ -243,27 +249,22 @@ class InstantiationResultDict:
     def instantiations(self):
         return self._values.keys()
 
-    def check(self):
-        """
-        Validity check
-        
-        :return: True if instantiations map exactly the parameters to values
-        """
-        pass
 
 
 def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     """Interpolates between sample sample1 and sample2 to
-    result in a point estimated close to the given treshold (by linear
+    result in a point estimated close to the given threshold (by linear
     interpolation). Fudge allows to offset this point slightly either
     positively or negatively.
     
     :param sample1: Sample
     :param sample2: Sample
-    :param threshold: pycarl.Rational
-    :param fudge: float Percentage of distance betwen both samples to fudge
+    :param threshold: The value we are interested in 
+    :type threshold: pycarl.Rational
+    :param fudge: Fraction of distance betwen both samples to fudge
         around
-    :return tuple of pycarl.Rational if interpolated point, or None if the
+    :type fudge: float
+    :return: tuple of pycarl.Rational if interpolated point, or None if the
         values are too close
     """
     # If point values are too close, do not interpolate

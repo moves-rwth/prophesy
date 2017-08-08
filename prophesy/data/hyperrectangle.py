@@ -23,11 +23,12 @@ class HyperRectangle(object):
     @classmethod
     def from_extremal_points(cls, lowerpoint, upperpoint, boundtype):
         """
+        From a point containing all the lower boudnaries and a point containing all upper boundaries, construct a hyperrectangle
+        
         :param lowerpoint: A point corresponding to the lower boundary
         :param upperpoint: A point corresponding to the upper boundary
-        :param boundtype: BoundType to use as bounds for the resulting
-            HyperRectangle
-        :return HyperRectangle
+        :param boundtype: BoundType to use as bounds for the resulting HyperRectangle
+        :return: HyperRectangle
         """
         return cls.__init__(*[Interval(l, boundtype, r, boundtype) for l, r in zip(lowerpoint, upperpoint)])
 
@@ -60,6 +61,7 @@ class HyperRectangle(object):
     def split_in_every_dimension(self):
         """
         Splits the hyperrectangle in every dimension
+        
         :return: The 2^n many hyperrectangles obtained by the split
         """
         result = []

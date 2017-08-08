@@ -2,7 +2,7 @@ import os
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations, InstantiationResultDict
-from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
 from prophesy.regions.region_checker import RegionCheckResult, ProblemDescription
 from prophesy.data.hyperrectangle import HyperRectangle
 
@@ -40,7 +40,6 @@ from prophesy.config import configuration
 from prophesy_web.config import configuration as web_configuration
 
 from concurrent.futures import ThreadPoolExecutor
-from subprocess import Popen
 
 from prophesy.adapter.pycarl  import Rational, ParserError
 
@@ -597,8 +596,6 @@ class GenerateSamples(CegarHandler):
 
             return new_samples
 
-
-
         new_samples = yield self.executor.submit(generate_samples, samples_generator, iterations)
 
         samples.update(new_samples)
@@ -620,7 +617,7 @@ class ConstraintHandler(CegarHandler):
         problem_description.solutionfunction = result.ratfunc
         problem_description.parameters = result.parameters
 
-        checker = SmtRegionChecker(smt2interface)
+        checker = SolutionFunctionRegionChecker(smt2interface)
         checker.initialize(problem_description,threshold)
 
         if type == 'planes':

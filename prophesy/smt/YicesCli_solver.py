@@ -7,6 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class YicesCLISolver(SmtlibSolver):
+    """
+    Yices 2 (cli) wrapper class
+    """
     def __init__(self, location=configuration.get_yices(), memout=4000, timeout=configuration.get_smt_timeout()):
         super().__init__(location, memout, timeout, False)
 
