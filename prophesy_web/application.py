@@ -628,9 +628,9 @@ class ConstraintHandler(CegarHandler):
         elif type == 'rectangles':
             return self._json_error("Rectangles generator was temporarily dropped in v2")
         elif type == 'quads':
-            generator = HyperRectangleRegions(samples, result.parameters, threshold, checker)
+            generator = HyperRectangleRegions(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
         elif type == 'poly':
-            generator = ConstraintPolygon(samples, result.parameters, threshold, checker)
+            generator = ConstraintPolygon(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
         else:
             return self._json_error("Bad generator")
         generator.plot = False
