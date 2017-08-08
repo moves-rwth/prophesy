@@ -52,6 +52,7 @@ def test_script_smt(name, file, threshold, tool, method):
 benchmarks_pla = [
     require_storm()(("brp", "brp_16-2", "property1", 0.95, "storm", "quads")),
     require_storm()(("crowds", "crowds_3-5", "property1", 0.95, "storm", "quads")),
+    require_stormpy()(("brp", "brp_16-2", "property1", 0.95, "stormpy", "quads")),
 ]
 
 

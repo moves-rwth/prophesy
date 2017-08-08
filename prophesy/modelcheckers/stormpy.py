@@ -183,5 +183,46 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Sampling with stormpy successfully finished")
         return samples
 
-    def check_hyperrectangle(self, parameter_ranges, threshold, hypothesis):
-        raise NotImplementedError("Checking of hyperrectangles with stormpy is not implemented.")
+    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
+        logger.info("Check region via stormpy")
+
+        if self.model is None:
+            self.build_model()
+
+        # Set threshold and bound in formula
+        formula = self.pctlformula[0].raw_formula
+        expression_manager = stormpy.ExpressionManager()
+        expression = expression_manager.create_rational(pc.Rational(threshold))
+        formula.set_bound(stormpy.logic.ComparisonType.GEQ if above_threshold else stormpy.logic.ComparisonType.LESS,
+                          expression)
+
+        # Initialize PLA checker
+        pla_checker = stormpy.pars.create_region_checker(self.model, formula)
+        model_parameters = self.model.collect_probability_parameters()
+        # Set region
+        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        logger.debug("Region string is {}".format(region_string))
+        region = stormpy.pars.ParameterRegion(region_string, model_parameters)
+        # Check via PLA
+        logger.info("Call stormpy for PLA check")
+        result = pla_checker.check_region(region, stormpy.pars.RegionResultHypothesis.ALLSAT,
+                                          stormpy.pars.RegionResult.UNKNOWN, False)
+        logger.info("Stormpy call finished successfully with result: {}".format(result))
+
+        if result == stormpy.pars.RegionResult.ALLVIOLATED:
+            raise RuntimeError("Contradiction of hypothesis")
+        elif result == stormpy.pars.RegionResult.ALLSAT:
+            region_result = RegionCheckResult.Satisfied
+        elif result == stormpy.pars.RegionResult.EXISTSBOTH:
+            raise RuntimeError("Unexpected outcome, something went wrong.")
+        elif result == stormpy.pars.RegionResult.UNKNOWN:
+            region_result = RegionCheckResult.unknown
+        elif result == stormpy.pars.RegionResult.CENTERSAT or result == stormpy.pars.RegionResult.CENTERVIOLATED:
+            logger.warning("Center sat is not expected.")
+            region_result = RegionCheckResult.unknown
+        else:
+            raise RuntimeError("Unexpected result '{}'".format(result))
+
+        region = HyperRectangle.from_region_string(region_string, parameters.get_variables())
+        regions = [(region_result, region)]
+        return regions

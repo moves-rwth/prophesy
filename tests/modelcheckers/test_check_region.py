@@ -12,7 +12,7 @@ from requires import *
 tools = [
     require_storm()(StormModelChecker),
     # require_prism(rational_function=True)(PrismModelChecker),
-    # require_stormpy()(StormpyModelChecker),
+    require_stormpy()(StormpyModelChecker),
 ]
 
 
