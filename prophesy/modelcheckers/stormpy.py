@@ -177,7 +177,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         for sample_point in samplepoints:
             point = {parameter_mapping[parameter]: pc.convert_to(val) for parameter, val in sample_point.items()}
             instantiated_model = instantiator.instantiate(point)
-            result = self.check_model(instantiated_model, self.pctl_formula[0])
+            result = self.check_model(instantiated_model, self.pctlformula[0])
             samples.add_result(InstantiationResult(sample_point, result))
 
         logger.info("Sampling with stormpy successfully finished")
