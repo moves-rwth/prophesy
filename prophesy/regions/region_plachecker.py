@@ -1,14 +1,14 @@
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 
 class PlaRegionChecker(RegionChecker):
-    def __init__(self, backend, parameters):
+    def __init__(self, backend):
         """
         :param backend: 
         :type backend: ParametricModelChecker
         :param parameters: 
         """
         self._checker = backend
-        self._parameters = parameters
+        self._parameters = None
         self.threshold = None
 
     def initialize(self, info, threshold, constants=None):
@@ -17,6 +17,7 @@ class PlaRegionChecker(RegionChecker):
         if not info.property:
             raise ValueError("PLA requires the property to be present")
         self._checker.load_model_from_prismfile(info.model, constants)
+        self._parameters = info.parameters
         self._checker.set_pctl_formula(info.property)
         self.threshold = threshold
 

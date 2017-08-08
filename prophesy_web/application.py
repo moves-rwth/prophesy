@@ -617,9 +617,10 @@ class ConstraintHandler(CegarHandler):
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
         problem_description = ProblemDescription()
-        problem_description.solutionfunction = result
+        problem_description.solutionfunction = result.ratfunc
+        problem_description.parameters = result.parameters
 
-        checker = SmtRegionChecker(smt2interface, result.parameters)
+        checker = SmtRegionChecker(smt2interface)
         checker.initialize(problem_description,threshold)
 
         if type == 'planes':
