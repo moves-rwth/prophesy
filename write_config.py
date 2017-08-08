@@ -72,7 +72,6 @@ def get_initial_config(config):
 
     # Setup constraint constants
     config_constraints = {}
-    config_constraints["precision"] = str(0.0001)
     config["constraints"] = config_constraints
 
     config_smt = {}

@@ -195,10 +195,6 @@ class ProphesyConfig(Configuration):
         # TODO why is the following commented out.
         # return self.get_float(ProphesyConfig.SAMPLING, "epsilon")
 
-    def get_regions_precision(self):
-        # Epsilon for ofsetting region bounds (e.g., for sampling inside a region)
-        return self.get_float(ProphesyConfig.CONSTRAINTS, "precision")
-
     def get_smt_timeout(self):
         return self.get_float(ProphesyConfig.SMT, "timeout")
 
