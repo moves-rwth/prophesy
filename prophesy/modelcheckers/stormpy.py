@@ -81,6 +81,23 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if self.pctlformula is None:
             raise NotEnoughInformationError("PCTL formula not set.")
 
+        if not self.program.undefined_constants_are_graph_preserving:
+            # Need to instantiate constants
+            description = stormpy.SymbolicModelDescription(self.program)
+            constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
+            constant_definitions = description.parse_constant_definitions(constants_string)
+            self.program = description.instantiate_constants(constant_definitions)
+
+            if description.is_prism_program:
+                self.program = self.program.as_prism_program()
+            elif description.is_jani_model:
+                self.program = self.program.as_jani_model()
+            else:
+                raise RuntimeError("Symbolic description type not known")
+
+        if not self.program.undefined_constants_are_graph_preserving:
+            raise RuntimeError("Given model file still contains undefined constants")
+
         if self.prismfile.nr_parameters() == 0:
             assert not self.program.has_undefined_constants
             self.model = stormpy.build_model(self.program, self.pctlformula)
