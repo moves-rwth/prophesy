@@ -13,11 +13,6 @@ prophesy.exceptions package
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: prophesy.exceptions.IOError
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: prophesy.exceptions.module_error
     :members:
     :undoc-members:
