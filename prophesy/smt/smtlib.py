@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 def _smtfile_header():
+    """
+    smtlib header that describes the file.
+    
+    :return: string with the description
+    """
     formula = "(set-logic QF_NRA)\n"
     formula += "(set-info :source |\n"
     formula += "Probabilistic verification" + "\n"
@@ -19,10 +24,10 @@ def _smtfile_header():
     return formula
 
 
-
-
-
 class SmtlibSolver(SMTSolver):
+    """
+    Abstract class for smt-lib based command line interfaces for SMT solvers.
+    """
     def __init__(self, location, memout=4000, timeout=100, incremental=True):
         self.location = location
         self.formula = _smtfile_header()
