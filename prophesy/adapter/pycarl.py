@@ -41,7 +41,7 @@ inf = pycarl.inf
 
 def parse(input):
     if not CARL_PARSER:
-        raise ImportError("Parsing capabalities not available as pycarl was built without.")
+        raise ImportError("Parsing capabilities not available as pycarl was built without parsing support.")
     return pycarl.parse.deserialize(input, pycarl.gmp);
 
 
