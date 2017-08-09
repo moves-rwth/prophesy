@@ -10,14 +10,14 @@ from helpers.helper import get_example_path
 from requires import *
 
 tools = [
-    require_storm()(StormModelChecker),
-    # require_prism(rational_function=True)(PrismModelChecker),
-    require_stormpy()(StormpyModelChecker),
+    require_storm()((StormModelChecker, "storm")),
+    # require_prism(rational_function=True)((PrismModelChecker, "prism")),
+    require_stormpy()((StormpyModelChecker, "stormpy")),
 ]
 
 
-@pytest.mark.parametrize("MCType", tools)
-def test_check_hyperrectangle(MCType):
+@pytest.mark.parametrize(("MCType,name"), tools)
+def test_check_hyperrectangle(MCType, name):
     tool = MCType()
     prism_file = PrismFile(get_example_path("pdtmc", "brp", "brp_16-2.pm"))
     pctl_file = PctlFile(get_example_path("pdtmc", "brp", "property1.pctl"))

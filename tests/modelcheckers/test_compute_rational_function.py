@@ -8,14 +8,14 @@ from helpers.helper import get_example_path
 from requires import *
 
 tools = [
-    require_storm()(StormModelChecker),
-    # require_prism(rational_function=True)(PrismModelChecker),
-    require_stormpy()(StormpyModelChecker),
+    require_storm()((StormModelChecker, "storm")),
+    # require_prism(rational_function=True)((PrismModelChecker, "prism")),
+    require_stormpy()((StormpyModelChecker, "stormpy")),
 ]
 
 
-@pytest.mark.parametrize("MCType", tools)
-def test_compute_rational_function(MCType):
+@pytest.mark.parametrize("MCType,name", tools)
+def test_compute_rational_function(MCType, name):
     tool = MCType()
     prism_file = PrismFile(get_example_path("pdtmc", "funny_defined", "fun.pm"))
     pctl_file = PctlFile(get_example_path("pdtmc", "funny_defined", "property1.pctl"))
@@ -30,8 +30,8 @@ def test_compute_rational_function(MCType):
     assert "q+p" in str(ratfunc)
 
 
-@pytest.mark.parametrize("MCType", tools)
-def test_get_parameter_constraints(MCType):
+@pytest.mark.parametrize("MCType,name", tools)
+def test_get_parameter_constraints(MCType, name):
     tool = MCType()
     prism_file = PrismFile(get_example_path("pdtmc", "funny_defined", "fun.pm"))
     pctl_file = PctlFile(get_example_path("pdtmc", "funny_defined", "property1.pctl"))
