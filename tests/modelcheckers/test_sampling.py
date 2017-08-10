@@ -1,6 +1,5 @@
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.stormpy import StormpyModelChecker
-from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 import prophesy.adapter.pycarl as pc
@@ -13,7 +12,6 @@ import copy
 
 tools = [
     require_storm()((StormModelChecker, "storm")),
-    # require_prism(rational_function=True)((PrismModelChecker, "prism")),
     require_stormpy()((StormpyModelChecker, "stormpy")),
 ]
 
