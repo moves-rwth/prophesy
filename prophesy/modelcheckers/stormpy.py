@@ -52,11 +52,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def set_pctl_formula(self, formula):
         if self._program is None:
+            logger.debug("Load formula without a program.")
             self.pctlformula = stormpy.parse_properties(str(formula))
         else:
+            logger.debug("Load formula with respect to program.")
             self.pctlformula = stormpy.parse_properties_for_prism_program(str(formula), self._program)
         # Reset formula for PLA
         self._pla_formula = None
+
 
     def load_model_from_prismfile(self, prism_file, constants=Constants()):
         self.prismfile = prism_file
