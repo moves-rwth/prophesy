@@ -1,17 +1,20 @@
 import re
 from enum import Enum
 import math
-import pycarl
+from prophesy.adapter.pycarl import inf as infinity
+
 
 class BoundType(Enum):
     open = 0
     closed = 1
 
-    def negated(b):
-        return BoundType.closed if b == BoundType.open else BoundType.open
-
     def __int__(self):
         return 0 if self == BoundType.open else 1
+
+    def negated(self):
+        return BoundType.closed if self == BoundType.open else BoundType.open
+
+
 # (a <= X <= b) => [a,b]
 # Will be updated by pycarl constraints, incl. parser.
 # This is a dict as a switch-case workaround
@@ -61,16 +64,17 @@ def string_to_interval(input_str, internal_parse_func):
     inbetween = input_str[1:-1]
     bounds = inbetween.split(",")
     if len(bounds) != 2:
-        raise RuntimeError("Cannot parse the interval given by: " + input_str + ". Expected exactly one comma in the interval.")
+        raise RuntimeError(
+            "Cannot parse the interval given by: " + input_str + ". Expected exactly one comma in the interval.")
 
     if bounds[0] == "-infty":
-        left_value = -pycarl.inf
+        left_value = -infinity
         if left_bt == BoundType.closed:
             raise ValueError("Invalid interval {}: Infinity cannot have a closed bound.".format(input_str))
     else:
         left_value = internal_parse_func(bounds[0])
     if bounds[1] == "infty":
-        right_value = pycarl.inf
+        right_value = infinity
         if right_bt == BoundType.closed:
             raise ValueError("Invalid interval {}: Infinity cannot have a closed bound".format(input_str))
     else:
@@ -95,11 +99,12 @@ def create_embedded_closed_interval(interval, epsilon):
 
     if interval.left_bound_type() == BoundType.open:
         if interval.right_bound_type() == BoundType.open:
-            if interval.width() <= 2*epsilon:
+            if interval.width() <= 2 * epsilon:
                 raise ValueError("Interval is not large enough.")
-            return Interval(interval.left_bound() + epsilon, BoundType.closed, interval.right_bound() - epsilon, BoundType.closed)
+            return Interval(interval.left_bound() + epsilon, BoundType.closed, interval.right_bound() - epsilon,
+                            BoundType.closed)
 
-    if interval.width() <=  epsilon:
+    if interval.width() <= epsilon:
         raise ValueError("Interval is not large enough.")
 
     if interval.left_bound_type == BoundType.open:
@@ -114,6 +119,7 @@ class Interval:
     Interval class for arbitrary (constant) types.
     Construction from string is possible via string_to_interval
     """
+
     def __init__(self, left_value, left_bt, right_value, right_bt):
         """
         Construct an interval
@@ -129,7 +135,7 @@ class Interval:
         self._left_value = left_value
         self._right_bound_type = right_bt
         self._right_value = right_value
-        assert left_value != pycarl.inf or left_bt == BoundType.open
+        assert left_value != infinity or left_bt == BoundType.open
         assert right_value is not None or right_bt == BoundType.open
 
     def left_bound(self):
@@ -151,7 +157,7 @@ class Interval:
         :return: True, iff there exists a point in the interval.
         """
         if self._left_value == self._right_value:
-            return (self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open)
+            return self._left_bound_type == BoundType.open or self._right_bound_type == BoundType.open
         return self._left_value > self._right_value
 
     def contains(self, pt):
@@ -175,7 +181,7 @@ class Interval:
         
         :return:  The interval is bounded, if both the left and the right bound are not equal to infinity.
         """
-        return self._left_value > -pycarl.inf and self._right_value < pycarl.inf
+        return self._left_value > -infinity and self._right_value < infinity
 
     def is_closed(self):
         """
@@ -209,9 +215,11 @@ class Interval:
         :return: Two intervals, the first from the former left bound to (excluding) middle point (leftbound + rightbound)/2, 
                                 the second from the middle point (including) till the former right bound
         """
-        assert self._left_value != -pycarl.inf and self._right_value != pycarl.inf
+        assert self._left_value != -infinity and self._right_value != infinity
         mid = self._left_value + self.width() / 2
-        return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed, self._right_value, self._right_bound_type)
+        return Interval(self._left_value, self._left_bound_type, mid, BoundType.open), Interval(mid, BoundType.closed,
+                                                                                                self._right_value,
+                                                                                                self._right_bound_type)
 
     def close(self):
         """
@@ -219,7 +227,7 @@ class Interval:
         
         :return: A new interval which has closed bounds instead.
         """
-        assert self._left_value != -pycarl.inf and self._right_value != pycarl.inf
+        assert self._left_value != -infinity and self._right_value != infinity
         return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
 
     def intersect(self, other):
@@ -257,10 +265,12 @@ class Interval:
         return Interval(newleft, newLB, newright, newRB)
 
     def __str__(self):
-        return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
+        return ("(" if self._left_bound_type == BoundType.open else "[") + str(self._left_value) + "," + str(
+            self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
 
     def __repr__(self):
-        return ("(" if self._left_bound_type == BoundType.open else "[") + repr(self._left_value) + "," + repr(self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
+        return ("(" if self._left_bound_type == BoundType.open else "[") + repr(self._left_value) + "," + repr(
+            self._right_value) + (")" if self._right_bound_type == BoundType.open else "]")
 
     def __eq__(self, other):
         assert isinstance(other, Interval)
@@ -279,7 +289,8 @@ class Interval:
     def __hash__(self):
         if self.empty():
             return 0
-        return hash(self._left_value) ^ hash(self._right_value) + int(self._left_bound_type) + int(self._right_bound_type)
+        return hash(self._left_value) ^ hash(self._right_value) + int(self._left_bound_type) + int(
+            self._right_bound_type)
 
     def setminus(self, other):
         intersectionInterval = self.intersect(other)
@@ -290,7 +301,8 @@ class Interval:
         else:
             if self._left_value == intersectionInterval._left_value:
                 if self._left_value == intersectionInterval._right_value:
-                    return [Interval(self._left_value, BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
+                    return [Interval(self._left_value, BoundType.negated(intersectionInterval._right_bound_type),
+                                     self._right_value,
                                      self._right_bound_type)]
                 else:
                     if intersectionInterval._left_bound_type == BoundType.open \
@@ -302,15 +314,15 @@ class Interval:
                                          self._right_bound_type)]
                     else:
                         return [Interval(intersectionInterval._right_value,
-                                 BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
-                                 self._right_bound_type)]
+                                         BoundType.negated(intersectionInterval._right_bound_type), self._right_value,
+                                         self._right_bound_type)]
             elif self._right_value == intersectionInterval._right_value:
                 if self._right_value == intersectionInterval._left_value:
                     return [Interval(self._left_value, self._left_bound_type, self._right_value,
                                      BoundType.negated(intersectionInterval._right_bound_type))]
                 else:
-                    if intersectionInterval._right_bound_type == BoundType.open and\
-                            self._right_bound_type == BoundType.closed:
+                    if intersectionInterval._right_bound_type == BoundType.open and \
+                                    self._right_bound_type == BoundType.closed:
                         return [Interval(self._right_value, self._right_bound_type,
                                          self._right_value, self._right_bound_type),
                                 Interval(self._left_value,
@@ -318,10 +330,12 @@ class Interval:
                                          BoundType.negated(intersectionInterval._left_bound_type))]
                     else:
                         return [Interval(self._left_value,
-                                 self._left_bound_type, intersectionInterval._left_value,
-                                 BoundType.negated(intersectionInterval._left_bound_type))]
+                                         self._left_bound_type, intersectionInterval._left_value,
+                                         BoundType.negated(intersectionInterval._left_bound_type))]
             else:
                 return [Interval(self._left_value, self._left_bound_type,
-                                 intersectionInterval._left_value, BoundType.negated(intersectionInterval._left_bound_type)),
-                        Interval(intersectionInterval._right_value, BoundType.negated(intersectionInterval._right_bound_type),
+                                 intersectionInterval._left_value,
+                                 BoundType.negated(intersectionInterval._left_bound_type)),
+                        Interval(intersectionInterval._right_value,
+                                 BoundType.negated(intersectionInterval._right_bound_type),
                                  self._right_value, self._right_bound_type)]
