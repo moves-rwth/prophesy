@@ -27,7 +27,7 @@ def _get_argparser():
     parser.add_argument('--samples-file', help='resulting file', default="samples.out")
     parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
-    parser.add_argument('--threshold', type=float, help='the threshold', required=True)
+    parser.add_argument('--threshold', type=Rational, help='the threshold', required=True)
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
     parser.add_argument('--constants', type=str, help='string with constants')
 

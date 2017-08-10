@@ -10,8 +10,8 @@ from prophesy.input.samplefile import write_samples_file
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.util import open_file
-from prophesy.adapter.pycarl import Rational
 from prophesy.config import configuration
+import prophesy.adapter.pycarl as pc
 
 
 def _get_argparser():
@@ -21,7 +21,7 @@ def _get_argparser():
     parser.add_argument('--samples-file', help='resulting file', default="samples.out")
     parser.add_argument('--samplingnr', type=int, help='number of samples per dimension', default=4)
     parser.add_argument('--iterations', type=int, help='number of sampling refinement iterations', default=0)
-    parser.add_argument('--threshold', type=float, help='the threshold', required=True)
+    parser.add_argument('--threshold', type=pc.Rational, help='the threshold', required=True)
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest="safe_above_threshold", default=True)
 
@@ -36,7 +36,7 @@ def parse_cli_args(args):
 def run(args=sys.argv[1:], interactive=True):
     cmdargs = parse_cli_args(args)
     configuration.check_tools()
-    threshold = Rational(cmdargs.threshold)
+    threshold = pc.Rational(cmdargs.threshold)
 
     # Read previously generated result
     result = read_pstorm_result(cmdargs.rat_file)
