@@ -61,7 +61,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if self.prismfile is None:
             raise NotEnoughInformationError("model missing")
         if self.pctlformula is None:
-            raise NotEnoughInformationError("pctl formula missing") # TODO not strictly necessary
+            raise NotEnoughInformationError("pctl formula missing")  # TODO not strictly necessary
 
         ensure_dir_exists(configuration.get_intermediate_dir())
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
@@ -127,7 +127,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         os.remove(resultfile)
         return param_result
 
-    def perform_sampling(self, samplepoints, constants=None):
+    def perform_sampling(self, samplepoints):
         logger.info("Perform uniform sampling")
         if self.pctlformula == None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile == None: raise NotEnoughInformationError("model missing")

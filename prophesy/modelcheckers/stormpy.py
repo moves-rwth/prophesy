@@ -177,7 +177,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
-    def perform_sampling(self, samplepoints, constants=None):
+    def perform_sampling(self, samplepoints):
         if self.model is None:
             self.build_model()
 
