@@ -158,6 +158,9 @@ class InstantiationResultDict:
     def has(self, instantiation):
         return instantiation in self._values
 
+    def get(self, instantiation):
+        return self._values[instantiation]
+
     def remove(self, instantiation):
         del self._values[instantiation]
 
