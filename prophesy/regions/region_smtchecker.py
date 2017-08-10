@@ -2,12 +2,10 @@ import time
 
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
-from prophesy.smt.smt import Answer, VariableDomain
-from prophesy.data.samples import ParameterInstantiation, InstantiationResult
-from prophesy.adapter.pycarl import Rational
+from prophesy.smt.smt import Answer
 from prophesy.data.constraint import region_from_polygon
 from abc import abstractmethod
-
+import prophesy.adapter.pycarl as pc
 
 class SmtRegionChecker(RegionChecker):
     def __init__(self, backend):
@@ -19,8 +17,9 @@ class SmtRegionChecker(RegionChecker):
         """
         self._smt2interface = backend
         self.parameters = None
-        self._ratfunc = None
         self.benchmark_output = []
+        self._safe_relation = pc.Relation.GEQ
+        self._bad_relation = pc.Relation.LESS
 
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
@@ -39,6 +38,16 @@ class SmtRegionChecker(RegionChecker):
                                                                                     total_sec, float(benchmark[2]),
                                                                                     float(total_area)))
             i = i + 1
+
+    @abstractmethod
+    def _evaluate(self, smt_model):
+        """
+        Takes the smt_model, creates a counterexample.
+        
+        :param smt_model: 
+        :return: 
+        """
+        raise RuntimeError("Abstract method called")
 
     def analyse_region(self, polygon, safe):
         """
@@ -88,15 +97,7 @@ class SmtRegionChecker(RegionChecker):
         if checkresult == Answer.unsat:
             return RegionCheckResult.Satisfied, None
         elif checkresult == Answer.sat:
-            # add new point as counter example to existing regions
-            sample = ParameterInstantiation()
-            for par in self.parameters:
-                value = smt_model[par.variable.name]
-                rational = Rational(value)
-                sample[par] = rational
-            eval_dict = dict([(k.variable, v) for k, v in sample.items()])
-            value = self._ratfunc.evaluate(eval_dict)
-            return RegionCheckResult.CounterExample, InstantiationResult(sample, value)
+            return RegionCheckResult.CounterExample, self._evaluate(smt_model)
         else:
             # SMT failed completely
             return RegionCheckResult.unknown, None

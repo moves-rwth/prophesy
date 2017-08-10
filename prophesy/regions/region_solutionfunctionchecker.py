@@ -2,6 +2,7 @@ from prophesy.regions.region_smtchecker import SmtRegionChecker
 import prophesy.adapter.pycarl as pc
 from prophesy.adapter.pycarl import Constraint, Relation
 from prophesy.smt.smt import VariableDomain
+from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 
 
 class SolutionFunctionRegionChecker(SmtRegionChecker):
@@ -15,6 +16,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         :param backend: 
         """
         super().__init__(backend)
+        self._ratfunc = None
 
     def initialize(self, problem_description, threshold, constants=None):
         """
@@ -43,8 +45,6 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(badVar, VariableDomain.Bool)
         self._smt2interface.add_variable(thresholdVar, VariableDomain.Real)
 
-        safe_relation = pc.Relation.GEQ
-        bad_relation = pc.Relation.LESS
 
         if pc.denominator(self._ratfunc) != 1:
             self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
@@ -56,11 +56,22 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             self._smt2interface.assert_constraint(rf1_constraint)
             self._smt2interface.assert_constraint(rf2_constraint)
         else:
-            safe_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, safe_relation)
-            bad_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, bad_relation)
+            safe_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, self._safe_relation)
+            bad_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, self._bad_relation)
 
         threshold_constraint = Constraint(pc.Polynomial(thresholdVar) - threshold, Relation.EQ)
 
         self._smt2interface.assert_constraint(threshold_constraint)
         self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
+
+
+    def _evaluate(self, smt_model):
+        sample = ParameterInstantiation()
+        for par in self.parameters:
+            value = smt_model[par.variable.name]
+            rational = pc.Rational(value)
+            sample[par] = rational
+        eval_dict = dict([(k.variable, v) for k, v in sample.items()])
+        value = self._ratfunc.evaluate(eval_dict)
+        return InstantiationResult(sample, value)

@@ -8,6 +8,7 @@ import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
+from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
 from prophesy.regions.region_checker import ProblemDescription
 from prophesy.input.solutionfunctionfile import read_pstorm_result
@@ -40,17 +41,24 @@ def _get_argparser():
     limit_group.add_argument('--iterations', dest='iterations', help='Number of regions to generate', type=int)
     limit_group.add_argument('--area', dest='area', help='Area (in [0,1]) to try to complete', type=float)
 
-    method_group = parser.add_mutually_exclusive_group(required=True)
-    method_group.add_argument('--rectangles', action='store_true', dest='rectangles')
-    method_group.add_argument('--quads', action='store_true', dest='quads')
-    method_group.add_argument('--poly', action='store_true', dest='poly')
+    region_group = parser.add_mutually_exclusive_group(required=True)
+    region_group.add_argument('--rectangles', action='store_true', dest='rectangles')
+    region_group.add_argument('--quads', action='store_true', dest='quads')
+    region_group.add_argument('--poly', action='store_true', dest='poly')
 
-    solvers_group = parser.add_mutually_exclusive_group(required=True)
+    method_group = parser.add_mutually_exclusive_group(required=True)
+    method_group.add_argument('--pla', action='store_true')
+    method_group.add_argument('--sfsmt', action='store_true')
+    method_group.add_argument('--etr', action='store_true')
+
+    solvers_group = parser.add_mutually_exclusive_group(required=False)
     solvers_group.add_argument('--z3', action='store_true', help="Use Z3 (SMT)")
     solvers_group.add_argument('--isat', action='store_true', help="Use Isat (ICP)")
     solvers_group.add_argument('--yices', action='store_true', help="Use Yices (SMT)")
-    solvers_group.add_argument('--storm', action="store_true", help="Use Storm (PLA)")
-    solvers_group.add_argument('--stormpy', action="store_true", help="Use Stormpy (PLA)")
+
+    modelchecker_group = parser.add_mutually_exclusive_group(required=False)
+    modelchecker_group.add_argument("--storm", action="store_true", help="Use storm")
+    modelchecker_group.add_argument("--stormpy", action="store_true", help="Use stormpy")
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
     parser.add_argument('--epsilon-pmc', type=pc.Rational,
@@ -107,44 +115,56 @@ def run(args=sys.argv[1:], interactive=False):
     logger.debug("Threshold: {}".format(threshold))
 
     logger.debug("Setup Region Checker Interface")
+
+
+
+    solver = None
     if cmdargs.z3:
         if 'z3' not in solvers:
             raise RuntimeError("Z3 location not configured.")
-        backend = Z3CliSolver()
-        backend.run()
-        CheckerType = SolutionFunctionRegionChecker
+        solver = Z3CliSolver()
+        solver.run()
     elif cmdargs.yices:
         if 'yices' not in solvers:
             raise RuntimeError("Yices location not configured.")
-        backend = YicesCLISolver()
-        backend.run()
-        CheckerType = SolutionFunctionRegionChecker
+        solver = YicesCLISolver()
+        solver.run()
     elif cmdargs.isat:
         if 'isat' not in solvers:
             raise RuntimeError("ISat location not configured.")
-        backend = IsatSolver()
-        backend.run()
-        CheckerType = SolutionFunctionRegionChecker
-    elif cmdargs.storm:
+        solver = IsatSolver()
+        solver.run()
+
+    mc = None
+    if cmdargs.storm:
         if 'storm-pars' not in ppmcs:
             raise RuntimeError("Storm location not configured.")
-        backend = StormModelChecker()
-        CheckerType = PlaRegionChecker
+        mc = StormModelChecker()
     elif cmdargs.stormpy:
         if 'stormpy' not in ppmcs:
             raise RuntimeError("Stormpy dependency not configured.")
         # Do not import at top, as stormpy might not be available.
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
-        backend = StormpyModelChecker()
-        CheckerType = PlaRegionChecker
+        mc = StormpyModelChecker()
+        if cmdargs.etr:
+            raise RuntimeError("Cannot use etr with storm")
+
+    if cmdargs.etr:
+        checker = EtrRegionChecker(solver)
+    elif cmdargs.sfsmt:
+        checker = SolutionFunctionRegionChecker(solver)
+    elif cmdargs.pla:
+        checker = PlaRegionChecker(mc)
     else:
-        raise RuntimeError("No supported region checker defined.")
+        raise RuntimeError("No method for region checking selected.")
 
     logger.info("Generating regions")
-    checker = CheckerType(backend)
     checker.initialize(problem_description, threshold)
     if problem_description.welldefined_constraints is None:
-        wd, gp = backend.get_parameter_constraints()
+        if mc is None:
+            raise RuntimeError("If welldefinedness constraints are unknown, a model checker is required.")
+        # TODO ugly, as this relies on the checker to be initialised. Please refactor.
+        wd, gp = mc.get_parameter_constraints()
         problem_description.welldefined_constraints = wd
         problem_description.graph_preserving_constraints = gp
 
@@ -163,18 +183,18 @@ def run(args=sys.argv[1:], interactive=False):
 
     #TODO set plot frequency
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=10, plot_candidates=False)
+        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=1, plot_candidates=True)
     else:
-        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=10, plot_candidates=False)
+        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=1, plot_candidates=True)
 
     if interactive:
         open_file(generator.result_file)
 
     if not cmdargs.storm and not cmdargs.stormpy:
-        backend.stop()
+        solver.stop()
 
     if cmdargs.logcallsdestination:
-        backend.to_file(cmdargs.logcallsdestination)
+        solver.to_file(cmdargs.logcallsdestination)
 
 
 if __name__ == "__main__":
