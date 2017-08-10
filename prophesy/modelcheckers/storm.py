@@ -44,7 +44,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         args = [self.main_location, '--version']
         outputstr = run_tool(args, True)
         output = outputstr.split("\n")
-        return output[0]
+        output = output[0].split(maxsplit=1)
+        return output[1]
 
     def set_bisimulation_type(self, t):
         assert (isinstance(t, BisimulationType))

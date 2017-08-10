@@ -59,7 +59,7 @@ def run(args=sys.argv[1:], interactive=True):
     else:
         raise RuntimeError("No supported model checker defined")
 
-    logging.info("Compute the rational function using " + tool.version())
+    logging.info("Compute the rational function using " + tool.name() + " "+ tool.version())
     tool.load_model_from_prismfile(prism_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
