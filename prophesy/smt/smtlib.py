@@ -84,7 +84,7 @@ class SmtlibSolver(SMTSolver):
                 self.exit_stored = False
             self._write("(exit)\n")
             self.process = None
-        elif self.exit_stored == False:
+        elif not self.exit_stored:
             self.string += "(exit)\n"
             self.exit_stored = True
 

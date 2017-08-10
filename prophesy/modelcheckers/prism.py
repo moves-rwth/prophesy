@@ -93,12 +93,11 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         # TODO: return result in correct format
         result = ""
         with open(resultfile, 'r') as f:
-            result += f.read() + "\n";
+            result += f.read() + "\n"
         os.remove(resultfile)
         logger.debug("Result: {}".format(result))
 
         raise NotImplementedError("Writing of prism result is not implemented")
-        return None
 
     def perform_uniform_sampling(self, parameters, samples_per_dimension):
         logger.info("Perform uniform sampling")

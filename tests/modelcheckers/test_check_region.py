@@ -16,7 +16,7 @@ tools = [
 ]
 
 
-@pytest.mark.parametrize(("MCType,name"), tools)
+@pytest.mark.parametrize("MCType,name", tools)
 def test_check_hyperrectangle(MCType, name):
     tool = MCType()
     prism_file = PrismFile(get_example_path("pdtmc", "brp", "brp_16-2.pm"))
