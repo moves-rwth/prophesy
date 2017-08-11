@@ -39,14 +39,14 @@ class RegionChecker:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, backend, parameters):
+    def __init__(self):
         """
         Constructor.
         :param backend: Backend to use for checking regions.
         :param parameters: The parameters of the problem.
         :type parameters: ParameterOrder.
         """
-        raise NotImplementedError("Abstract function called")
+        self.benchmark_output = []
 
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
@@ -59,12 +59,19 @@ class RegionChecker:
         """
         raise NotImplementedError("Abstract function called")
 
-    @abstractmethod
     def print_info(self):
-        """
-        Print information about region checking.
-        """
-        raise NotImplementedError("Abstract function called")
+        i = 1
+        print("no.  result   time  tot. time   area  tot. area")
+        total_sec = 0
+        total_area = 0
+        for benchmark in self.benchmark_output:
+            total_sec = total_sec + benchmark[1]
+            if benchmark[0] == RegionCheckResult.Satisfied:
+                total_area = total_area + benchmark[2]
+            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1],
+                                                                                    total_sec, float(benchmark[2]),
+                                                                                    float(total_area)))
+            i = i + 1
 
     @abstractmethod
     def analyse_region(self, region, safe):

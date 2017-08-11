@@ -15,9 +15,9 @@ class SmtRegionChecker(RegionChecker):
         :param parameters: The parameters of the problem
         :type parameters: ParameterOrder
         """
+        super().__init__()
         self._smt2interface = backend
         self.parameters = None
-        self.benchmark_output = []
         self._safe_relation = pc.Relation.GEQ
         self._bad_relation = pc.Relation.LESS
 
@@ -25,19 +25,7 @@ class SmtRegionChecker(RegionChecker):
     def initialize(self, problem_description, threshold, constants=None):
         raise NotImplementedError("Calling an abstract method")
 
-    def print_info(self):
-        i = 1
-        print("no.  result   time  tot. time   area  tot. area")
-        total_sec = 0
-        total_area = 0
-        for benchmark in self.benchmark_output:
-            total_sec = total_sec + benchmark[1]
-            if benchmark[0] == Answer.unsat:
-                total_area = total_area + benchmark[2]
-            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1],
-                                                                                    total_sec, float(benchmark[2]),
-                                                                                    float(total_area)))
-            i = i + 1
+
 
     @abstractmethod
     def _evaluate(self, smt_model):
@@ -83,20 +71,25 @@ class SmtRegionChecker(RegionChecker):
                 start = time.time()
                 checkresult = smt_context.check()
                 duration = time.time() - start
+
+                if checkresult == Answer.unsat:
+                    checkresult = RegionCheckResult.Satisfied
+                if checkresult == Answer.sat:
+                    checkresult = RegionCheckResult.CounterExample
                 if isinstance(polygon, HyperRectangle):
                     self.benchmark_output.append((checkresult, duration, polygon.size()))
                 else:
                     self.benchmark_output.append((checkresult, duration, polygon.area))
-                if checkresult not in [Answer.sat, Answer.unsat]:
+                if checkresult not in [RegionCheckResult.Satisfied, RegionCheckResult.CounterExample]:
                     break
                 else:
-                    if checkresult == Answer.sat:
+                    if checkresult == RegionCheckResult.CounterExample:
                         smt_model = smt_context.get_model()
                     break
 
-        if checkresult == Answer.unsat:
+        if checkresult == RegionCheckResult.Satisfied:
             return RegionCheckResult.Satisfied, None
-        elif checkresult == Answer.sat:
+        elif checkresult == RegionCheckResult.CounterExample:
             return RegionCheckResult.CounterExample, self._evaluate(smt_model)
         else:
             # SMT failed completely
