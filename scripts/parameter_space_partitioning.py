@@ -98,7 +98,7 @@ def run(args=sys.argv[1:], interactive=False):
         problem_description.property = properties.get(0)
 
     if cmdargs.epsilon_pmc:
-        parameters.make_intervals_closed(cmdargs.epsilon_pmc)
+        problem_description.parameters.make_intervals_closed(cmdargs.epsilon_pmc)
 
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
@@ -146,14 +146,15 @@ def run(args=sys.argv[1:], interactive=False):
         # Do not import at top, as stormpy might not be available.
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
         mc = StormpyModelChecker()
-        if cmdargs.etr:
-            raise RuntimeError("Cannot use etr with storm")
+
 
     if cmdargs.etr:
         checker = EtrRegionChecker(solver)
     elif cmdargs.sfsmt:
         checker = SolutionFunctionRegionChecker(solver)
     elif cmdargs.pla:
+        if mc is None:
+            raise RuntimeError("For PLA, a model checker is required.")
         checker = PlaRegionChecker(mc)
     else:
         raise RuntimeError("No method for region checking selected.")
