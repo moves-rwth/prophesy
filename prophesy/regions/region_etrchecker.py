@@ -29,6 +29,8 @@ class EtrRegionChecker(SmtRegionChecker):
         :param constants: 
         :return: 
         """
+        _bounded_variables = True # Add bounds to all state variables.
+
         if problem_description.model is None:
             raise ValueError("ETR checker requires the model as part of the problem description")
 
@@ -90,16 +92,23 @@ class EtrRegionChecker(SmtRegionChecker):
                 state_var = state_var_mapping.get(state.id)
                 if state_var is None:
                     continue
+                if _bounded_variables:
+                    self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
+                    self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.LESS, pc.Rational(1)))
                 state_equation = -pc.Polynomial(state_var)
                 for action in state.actions:
                     for transition in action.transitions:
-                        if pc.denominator(transition.value()) != 1:
+                        denom = pc.denominator(pc.convert_from(transition.value()))
+                        if not denom.is_constant():
                             raise RuntimeError("only polynomial constraints are supported right now.")
+                        denom = denom.constant_part()
+
                         value = pc.numerator(pc.convert_from(transition.value()))
                         if not value.is_constant():
-                            value = value.polynomial()
+                            value = value.polynomial() * (1 / denom)
                         else:
-                            value = pc.Polynomial(value.constant_part())
+                            value = pc.Polynomial(value.constant_part()) / denom
+
                         if prob0.get(transition.column):
                             continue
                         if prob1.get(transition.column):
