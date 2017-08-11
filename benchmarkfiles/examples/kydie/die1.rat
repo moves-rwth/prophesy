@@ -1,0 +1,12 @@
+$Parameters: p (0,1); q (0,1)
+$Result: (/ (* -1 (+ (* (* p p) q) (* (- 1) (* p p)) p (* (- 1) (* p q)))) (+ (* p q) (- 1)))
+$Well-formed Constraints:
+(<= (+ p (- 1)) 0)
+(<= (+ q (- 1)) 0)
+(<= (* (- 1) q) 0)
+(<= (* (- 1) p) 0)
+$Graph-preserving Constraints:
+(not (= (+ q (- 1)) 0))
+(not (= (+ p (- 1)) 0))
+(not (= p 0))
+(not (= q 0))
