@@ -29,6 +29,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         :param threshold: 
         :param constants: 
         """
+
+        bounded_variables = False
         assert problem_description.solutionfunction is not None
         assert problem_description.parameters is not None
         self._ratfunc = problem_description.solutionfunction
@@ -49,19 +51,28 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
         if pc.denominator(self._ratfunc) != 1:
             for constraint in problem_description.welldefined_constraints:
-                if not constraint.lhs.total_degree <= 1 or constraint.rel == pc.Relation.NEQ:
+                if not constraint.lhs.total_degree <= 1 or constraint.relation == pc.Relation.NEQ:
                     raise RuntimeError("Non-linear well-definednessconstraints are not supported right now")
             # We do know now that the well-defined points are connected.
             sample = self._get_welldefined_point(problem_description.welldefined_constraints)
             eval_dict = dict([(k.variable, v) for k, v in sample.items()])
             value = pc.denominator(self._ratfunc).evaluate(eval_dict)
-
             self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
             self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
+            if bounded_variables:
+                self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(rf1Var) - rf2Var, pc.Relation.LESS))
             if value < 0:
+                if bounded_variables:
+                    self._smt2interface.assert_constraint(pc.Constraint(rf1Var, pc.Relation.LESS, pc.Rational(0)))
+                    self._smt2interface.assert_constraint(pc.Constraint(rf2Var, pc.Relation.LESS, pc.Rational(0)))
+
                 safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, self._bad_relation)
                 bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, self._safe_relation)
             else:
+                if bounded_variables:
+                    self._smt2interface.assert_constraint(pc.Constraint(rf1Var, pc.Relation.GREATER, pc.Rational(0)))
+                    self._smt2interface.assert_constraint(pc.Constraint(rf2Var, pc.Relation.GREATER, pc.Rational(0)))
+
                 safe_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, self._safe_relation)
                 bad_constraint = Constraint(pc.Polynomial(rf1Var) - thresholdVar * rf2Var, self._bad_relation)
             rf1_constraint = Constraint(pc.Polynomial(rf1Var) - pc.numerator(self._ratfunc), Relation.EQ)
