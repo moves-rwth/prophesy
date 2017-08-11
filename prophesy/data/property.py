@@ -12,7 +12,7 @@ class OperatorType(Enum):
         if self == OperatorType.probability:
             return "P"
         else:
-            return "E"
+            return "R"
 
 class OperatorDirection(Enum):
     min = 0
@@ -132,20 +132,20 @@ class Property:
             input_string = input_string[1:]
             operator_direction = OperatorDirection.unspecified
             operator_type = OperatorType.probability
-        elif input_string[:4] == "Emin":
+        elif input_string[:4] == "Rmin":
             input_string = input_string[4:]
             operator_direction = OperatorDirection.min
             operator_type = OperatorType.reward
-        elif input_string[:4] == "Emax":
+        elif input_string[:4] == "Rmax":
             input_string = input_string[4:]
             operator_direction = OperatorDirection.max
             operator_type = OperatorType.reward
-        elif input_string[:1] == "E":
+        elif input_string[:1] == "R":
             input_string = input_string[1:]
             operator_direction = OperatorDirection.unspecified
             operator_type = OperatorType.reward
         else:
-            ValueError("Expect property {} to start with P/Pmin/Pmax/E/Emin/Emax".format(input_string))
+            ValueError("Expect property {} to start with P/Pmin/Pmax/R/Rmin/Rmax".format(input_string))
 
         reward_name = None
         if operator_type == OperatorType.reward and input_string[0] == "{":
