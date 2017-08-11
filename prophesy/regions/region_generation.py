@@ -222,7 +222,7 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if len(self.all_polys) % plot_every_n == 0:
+            if res_status != RegionCheckResult.unknown and len(self.all_polys) % plot_every_n == 0:
                 self.plot_results(display=False)
 
         # Plot the final outcome
