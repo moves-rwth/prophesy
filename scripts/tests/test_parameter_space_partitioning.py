@@ -6,8 +6,10 @@ from conftest import EXAMPLE_FOLDER, MODEL_FOLDER, current_time
 import parameter_space_partitioning
 
 benchmarks_smt = [
-    require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
-    require_yices()(("brp", "brp_16-2","property1", 0.95, "yices", "quads")),
+    require_z3()(("kydie", "die1", "property1", "15/100", "z3", "quads")),
+    require_yices()(("kydie", "die1", "property1", "15/100", "yices", "quads"))
+
+    #require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
     #  ("nand", "nand_10-1", 0.1, "z3", "quads"),
     # ("crowds", "crowds_5-5", 0.5, "z3"),
@@ -49,31 +51,29 @@ def test_script_sfsmt(name, file, propertyfile, threshold, tool, method):
     ]
     parameter_space_partitioning.run(command, False)
 
-# Slow, not enabled for now.
-# TODO use skip here
-# @pytest.mark.parametrize("name,file,propertyfile,threshold,tool,method", benchmarks_smt)
-# def test_script_etr(name, file, propertyfile, threshold, tool, method):
-#     END_CRITERIA = "--area"
-#     END_CRITERIA_VALUE = 0.30
-#
-#     command = [
-#         "--model-file",
-#         os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
-#         "--property-file",
-#         os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
-#         "--rat-file",
-#         os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, file)),
-#         "--samples-file",
-#         os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, file)),
-#         "--{}".format(tool),
-#         "--threshold",
-#         str(threshold),
-#         "--etr",
-#         END_CRITERIA,
-#         str(END_CRITERIA_VALUE),
-#         "--{}".format(method),
-#     ]
-#     parameter_space_partitioning.run(command, False)
+@pytest.mark.parametrize("name,file,propertyfile,threshold,tool,method", benchmarks_smt)
+def test_script_etr(name, file, propertyfile, threshold, tool, method):
+    END_CRITERIA = "--area"
+    END_CRITERIA_VALUE = 0.30
+
+    command = [
+        "--model-file",
+        os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
+        "--property-file",
+        os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
+        "--rat-file",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, file)),
+        "--samples-file",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, file)),
+        "--{}".format(tool),
+        "--threshold",
+        str(threshold),
+        "--etr",
+        END_CRITERIA,
+        str(END_CRITERIA_VALUE),
+        "--{}".format(method),
+    ]
+    parameter_space_partitioning.run(command, False)
 
 
 benchmarks_pla = [
