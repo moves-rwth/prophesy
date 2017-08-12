@@ -143,8 +143,6 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
         pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
-        print(samplepoints.parameters)
-
         samples = InstantiationResultDict(samplepoints.parameters)
         for sample_point in samplepoints:
             const_values_string = ",".join(

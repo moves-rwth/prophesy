@@ -1,9 +1,12 @@
 import os
 import tempfile
+import logging
 
 from prophesy.config import configuration
 from prophesy.smt.smt import SMTSolver, VariableDomain
 from prophesy.util import run_tool, ensure_dir_exists
+
+logger = logging.getLogger(__name__)
 
 
 def _constraint_to_isat(constraint):
@@ -12,7 +15,7 @@ def _constraint_to_isat(constraint):
 
 
 class IsatSolver(SMTSolver):
-    def __init__(self, location = configuration.get_isat()):
+    def __init__(self, location=configuration.get_isat()):
         self.location = location
         self.declstack = [list()]
         self.constraintstack = [list()]
@@ -45,7 +48,8 @@ class IsatSolver(SMTSolver):
 
         args = [self.location, resultfile, "--msw=0.0001", "--prabs=0.00001"]
 
-        print(run_tool(args))
+        result = run_tool(args)
+        logger.debug(result)
         os.unlink(resultfile)
 
     def push(self):

@@ -1,3 +1,5 @@
+import logging
+
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 from prophesy.modelcheckers.stormpy import StormpyModelChecker
 import prophesy.adapter.stormpy as sp
@@ -5,6 +7,9 @@ import prophesy.adapter.pycarl as pc
 from prophesy.smt.smt import VariableDomain
 from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations, InstantiationResult
 from prophesy.data.property import Property, OperatorType
+
+logger = logging.getLogger(__name__)
+
 
 class EtrRegionChecker(SmtRegionChecker):
     """
@@ -19,7 +24,6 @@ class EtrRegionChecker(SmtRegionChecker):
         super().__init__(backend)
         self.model_explorer = StormpyModelChecker()
 
-
     def initialize(self, problem_description, threshold, constants=None):
         """
         
@@ -29,7 +33,7 @@ class EtrRegionChecker(SmtRegionChecker):
         :param constants: 
         :return: 
         """
-        _bounded_variables = True # Add bounds to all state variables.
+        _bounded_variables = True  # Add bounds to all state variables.
 
         if problem_description.model is None:
             raise ValueError("ETR checker requires the model as part of the problem description")
@@ -81,7 +85,7 @@ class EtrRegionChecker(SmtRegionChecker):
             raise NotImplementedError("Rewards are not yet supported")
 
         safe_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._safe_relation)
-        bad_constraint  = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._bad_relation)
+        bad_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._bad_relation)
         self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
         threshold_constraint = pc.Constraint(pc.Polynomial(thresholdVar) - threshold, pc.Relation.EQ)
@@ -115,7 +119,7 @@ class EtrRegionChecker(SmtRegionChecker):
                             state_equation = state_equation + value
                             continue
                         state_equation = state_equation + value * state_var_mapping.get(transition.column)
-                print(state_equation)
+                logger.debug(state_equation)
                 state_constraint = pc.Constraint(state_equation, pc.Relation.EQ)
                 self._smt2interface.assert_constraint(state_constraint)
         else:
@@ -155,7 +159,6 @@ class EtrRegionChecker(SmtRegionChecker):
         psi_states = psi_result.get_truth_values()
         (prob0, prob1) = sp.compute_prob01_states(model, phi_states, psi_states)
         return prob0, prob1
-
 
     def _evaluate(self, smt_model):
         sample = ParameterInstantiation()
