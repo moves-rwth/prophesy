@@ -232,7 +232,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Set threshold and bound in formula
         formula = self.pctlformula[0].raw_formula
         expression_manager = stormpy.ExpressionManager()
-        expression = expression_manager.create_rational(pc.Rational(threshold))
+        expression = expression_manager.create_rational(pc.convert_from(threshold))
         formula.set_bound(stormpy.logic.ComparisonType.GEQ if above_threshold else stormpy.logic.ComparisonType.LESS,
                           expression)
 
