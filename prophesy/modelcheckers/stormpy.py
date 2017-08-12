@@ -193,8 +193,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         :param formula: Formula to check.
         :return: PLA model checker.
         """
-        if self._pla_checker is None or self._pla_formula != formula:
-            self._pla_formula = formula
+        if self._pla_checker is None or self._pla_formula != str(formula):
+            self._pla_formula = str(formula)
             self._pla_checker = stormpy.pars.create_region_checker(self.get_model(), formula)
         return self._pla_checker
 
