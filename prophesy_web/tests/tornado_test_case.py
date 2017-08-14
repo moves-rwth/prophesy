@@ -7,6 +7,7 @@ from tornado.testing import AsyncHTTPTestCase
 # For parsing json-strings in dicts
 import json
 
+
 class TornadoTestCase(AsyncHTTPTestCase):
     """ General class for testing the tornado web framework. """
     app = None
@@ -24,9 +25,9 @@ class TornadoTestCase(AsyncHTTPTestCase):
         response = self.fetch('/results')
         self.cookies = response.headers["Set-Cookie"]
         self.header_send = {"Host": "localhost:4242",
-            "Accept": "*/*",
-            "Cookie": self.cookies,
-        }
+                            "Accept": "*/*",
+                            "Cookie": self.cookies,
+                            }
 
     def _get_response_string(self, url):
         """ Returns the value of the json data element as a string. """
@@ -66,8 +67,8 @@ class TornadoTestCase(AsyncHTTPTestCase):
             L.append(
                 'Content-Disposition: form-data; name="{}"; filename="{}"'.
                     format(
-                        key, filename
-                    )
+                    key, filename
+                )
             )
             L.append('Content-Type: text/plain')
             L.append('')

@@ -13,10 +13,11 @@ import shutil
 from helpers.helper import get_example_path
 
 # Get the prophesy configuration data
-from prophesy.config import configuration # This imports the instantiated Object of 'ProphesyConfig'
+from prophesy.config import configuration  # This imports the instantiated Object of 'ProphesyConfig'
 from prophesy_web.config import configuration as web_configuration
 
-@pytest.mark.skipif(not web_configuration.is_redis_running(), reason="requires running redis instance" )
+
+@pytest.mark.skipif(not web_configuration.is_redis_running(), reason="requires running redis instance")
 class TestTornado(TornadoTestCase):
     """ Testing of the tornado web framework. """
 
@@ -35,7 +36,7 @@ class TestTornado(TornadoTestCase):
         value_before = self._get_response_string('/config/directories/plots')
         while new_value == value_before:
             new_value = str(random.random())
-        #TODO check write access, although this should be done with more care than before.
+        # TODO check write access, although this should be done with more care than before.
         print("DONE")
 
     def test_directories(self):
@@ -52,16 +53,17 @@ class TestTornado(TornadoTestCase):
         section = configuration.getSection(configuration.EXTERNAL_TOOLS)
         for tool in section:
             if not section[tool] == '':
-                assert (os.path.isfile(os.path.expanduser(section[tool])) == True) or (shutil.which(section[tool]) is not None)
+                assert (os.path.isfile(os.path.expanduser(section[tool])) == True) or (
+                    shutil.which(section[tool]) is not None)
         print("DONE")
 
     def test_upload_files(self):
         print("Check if uploading files to the server works correctly...", flush=True)
-        with open(get_example_path("pdtmc", "brp", "brp_16-2.pm"), 'r') as pfile:
+        with open(get_example_path("brp", "brp_16-2.pm"), 'r') as pfile:
             prismdata = pfile.read()
-        with open(get_example_path("pdtmc", "brp", "property1.pctl"), 'r') as pfile:
+        with open(get_example_path("brp", "property1.pctl"), 'r') as pfile:
             pctldata = pfile.read()
-        with open(get_example_path("examples", "brp", "brp_16-2.rat"), 'r') as pfile:
+        with open(get_example_path("brp", "brp_16-2.rat"), 'r') as pfile:
             result_data = pfile.read()
         prismfile = ('prism-file', 'brp_16-2.pm', prismdata)
         pctlfile = ('pctl-file', 'property1.pctl', pctldata)
@@ -89,7 +91,7 @@ class TestTornado(TornadoTestCase):
     def test_1_run_with_storm(self):
         self.test_upload_files()
         print("Check if StoRM runs on uploaded file...")
-        ct, data = self.encode_multipart_formdata([("prism","brp_16-2.pm"),("pctl_group", "property1.pctl"),
+        ct, data = self.encode_multipart_formdata([("prism", "brp_16-2.pm"), ("pctl_group", "property1.pctl"),
                                                    ("pctl_property", "P=? [F \"target\"]"),
                                                    ("mctool", "storm")], [])
         response = self._sendData('/runPrism', data, ct)
@@ -101,7 +103,7 @@ class TestTornado(TornadoTestCase):
         # REFACTOR ME - Should try sampling without creating the rational function with storm!
         self.test_1_run_with_storm()
         print("Check if sampling works on a StoRM generated result file...")
-        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        ct, data = self.encode_multipart_formdata([("pmc", "storm"), ("sampler", "ratfunc"), ("sat", "z3")], [])
         response = self._sendData('/environment', data, ct)
         samples = '[["0.00","0.00"],["0.50","0.50"],["1.00","1.00"]]'
         response = self._sendData('/samples', samples, "application/json")
@@ -130,7 +132,6 @@ class TestTornado(TornadoTestCase):
         assert response.code == 200
         print("DONE")
 
-
     def test_auto_constraint(self):
         print("TEST NOT IMPLEMENTED YET!")
 
@@ -138,7 +139,7 @@ class TestTornado(TornadoTestCase):
     def test_4_constraints(self):
         print("Check if user defined constraints work as expected...")
         self.test_1_run_with_storm()
-        ct, data = self.encode_multipart_formdata([("pmc","storm"),("sampler","ratfunc"),("sat","z3")], [])
+        ct, data = self.encode_multipart_formdata([("pmc", "storm"), ("sampler", "ratfunc"), ("sat", "z3")], [])
         response = self._sendData('/environment', data, ct)
         constraint = '[["0.25","0.25"],["0.25","0.50"],["0.50","0.25"],["0.50","0.50"]]'
         ct, data = self.encode_multipart_formdata([("constr-mode", "safe"), ("coordinates", constraint)], [])
