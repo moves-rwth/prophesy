@@ -202,13 +202,9 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         region_string = hyperrectangle.to_region_string(parameters.get_variables())
         logger.debug("Region string is {}".format(region_string))
         property_to_check = self.pctlformula
-        if safe:
-            rel = pc.Relation.GEQ
-        else:
-            rel = pc.Relation.LESS
-        hypothesis = "allsat"
+        property_to_check.bound = OperatorBound(pc.Relation.LESS, threshold)
+        hypothesis = "allviolated" if safe else "allsat"
 
-        property_to_check.bound = OperatorBound(rel, threshold)
         _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
@@ -246,9 +242,17 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                 if len(res_line) != 2:
                     raise ValueError("Unexpected content in result file")
                 if res_line[0] == "AllViolated":
-                    raise RuntimeError("Contradiction of hypothesis")
+                    if hypothesis == "allviolated":
+                        region_result = RegionCheckResult.Satisfied
+                    else:
+                        assert hypothesis == "allsat"
+                        raise RuntimeError("Contradiction of hypothesis")
                 elif res_line[0] == "AllSat":
-                    region_result = RegionCheckResult.Satisfied
+                    if hypothesis == "allsat":
+                        region_result = RegionCheckResult.Satisfied
+                    else:
+                        assert hypothesis == "allviolated"
+                        raise RuntimeError("Contradiction of hypothesis")
                 elif res_line[0] == "ExistsBoth":
                     raise RuntimeError("Unexpected outcome, something went wrong.")
                 elif res_line[0] == "Unknown":
