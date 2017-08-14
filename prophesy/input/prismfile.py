@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import tempfile
+from enum import Enum
 
 from prophesy.config import configuration
 from prophesy.util import ensure_dir_exists, check_filepath_for_reading
@@ -9,21 +10,53 @@ from prophesy.data.parameter import ParameterOrder, Parameter
 from prophesy.data import interval
 from prophesy.adapter.pycarl import Rational, Variable
 
+class ModelType(Enum):
+    DTMC = 0
+    MDP = 1
+    CTMC = 2
+    MA = 3
 
 class PrismFile:
-    """Wrapper for Prism file; extracts parameter names."""
+    """
+    Wrapper for Prism file; extracts parameter names.
+    
+    Rationale for not using stormpy bindings: Support for prism file should be given even without storm.
+    """
+
     def __init__(self, location):
         assert isinstance(location, str)
         check_filepath_for_reading(location)
         self._is_temp = False
         self.location = location
         self.parameters = ParameterOrder()
+        self.model_type = self._model_type()
         self._get_parameters()
+
 
     def __del__(self):
         if self._is_temp:
             os.unlink(self.location)
             self._is_temp = False
+
+    def contains_nondeterministic_model(self):
+        return self.model_type in [ModelType.MDP, ModelType.MA]
+
+    def _model_type(self):
+        with open(self.location, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("//"):
+                    continue
+                if line == "dtmc":
+                    return ModelType.DTMC
+                if line == "mdp":
+                    return ModelType.MDP
+                if line == "ctmc":
+                    return ModelType.CTMC
+                if line == "ma":
+                    return ModelType.MA
+            raise ValueError("Could not infer model type")
+
 
     def _get_parameters(self):
         with open(self.location, 'r') as f:
