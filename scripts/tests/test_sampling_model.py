@@ -1,7 +1,7 @@
 import os.path
 import pytest
 from requires import *
-from conftest import MODEL_FOLDER, current_time
+from conftest import EXAMPLE_FOLDER, current_time
 
 import sampling_model
 
@@ -11,10 +11,10 @@ ITERATIONS = 1
 target_file = "sampling_model_{}.samples".format(current_time)
 
 benchmarks = [
-    require_storm()(("brp", "brp_16-2", "property1", 0.9, "storm")),
-    require_prism()(("brp", "brp_16-2", "property1", 0.9, "prism")),
-    require_prism()(("brp", "brp_16-2", "property1", 0.98, "prism")),
-    require_stormpy()(("brp", "brp_16-2", "property1", 0.9, "stormpy")),
+    require_storm()(("brp", "brp", "N=16,MAX=2", "property1", 0.9, "storm")),
+    require_prism()(("brp", "brp", "N=16,MAX=2", "property1", 0.9, "prism")),
+    require_prism()(("brp", "brp", "N=16,MAX=2", "property1", 0.98, "prism")),
+    require_stormpy()(("brp", "brp", "N=16,MAX=2", "property1", 0.9, "stormpy")),
     #   ("brp", "brp_128-2", 0.9, True),
     #   ("brp", "brp_128-5", 0.9, True),
     #   ("brp", "brp_256-2", 0.9, True),
@@ -37,12 +37,14 @@ benchmarks = [
 ]
 
 
-@pytest.mark.parametrize("name,file,property,threshold,tool", benchmarks)
-def test_script(name, file, property, threshold, tool):
+@pytest.mark.parametrize("name,file,constants,property,threshold,tool", benchmarks)
+def test_script(name, file, constants, property, threshold, tool):
     command = ["--file",
-               os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+               "--constants",
+               constants,
                "--pctl-file",
-               os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, property)),
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
                "--samplingnr",
                str(SAMPLINGNR),
                "--iterations",

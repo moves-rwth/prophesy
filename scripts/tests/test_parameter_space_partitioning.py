@@ -1,13 +1,13 @@
 import os.path
 import pytest
 from requires import *
-from conftest import EXAMPLE_FOLDER, MODEL_FOLDER, current_time
+from conftest import EXAMPLE_FOLDER, current_time
 
 import parameter_space_partitioning
 
 benchmarks_smt = [
-    require_z3()(("kydie", "die1", "property1", "15/100", "z3", "quads")),
-    require_yices()(("kydie", "die1", "property1", "15/100", "yices", "quads"))
+    require_z3()(("kydie", "kydie", "property1", "15/100", "z3", "quads")),
+    require_yices()(("kydie", "kydie", "property1", "15/100", "yices", "quads"))
 
     #require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
@@ -58,9 +58,9 @@ def test_script_etr(name, file, propertyfile, threshold, tool, method):
 
     command = [
         "--model-file",
-        os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
         "--property-file",
-        os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
         "--rat-file",
         os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, file)),
         "--samples-file",
@@ -90,9 +90,9 @@ def test_script_pla(name, file, propertyfile, threshold, tool, method):
 
     command = [
         "--model-file",
-        os.path.join(MODEL_FOLDER, "{}/{}.pm".format(name, file)),
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
         "--property-file",
-        os.path.join(MODEL_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
         "--samples-file",
         os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, file)),
         "--{}".format(tool),
