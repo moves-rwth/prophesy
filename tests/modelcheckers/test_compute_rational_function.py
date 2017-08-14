@@ -17,8 +17,8 @@ tools = [
 @pytest.mark.parametrize("MCType,name", tools)
 def test_compute_rational_function(MCType, name):
     tool = MCType()
-    prism_file = PrismFile(get_example_path("pdtmc", "funny_defined", "fun.pm"))
-    pctl_file = PctlFile(get_example_path("pdtmc", "funny_defined", "property1.pctl"))
+    prism_file = PrismFile(get_example_path("funny_defined", "fun.pm"))
+    pctl_file = PctlFile(get_example_path("funny_defined", "property1.pctl"))
     tool.load_model_from_prismfile(prism_file)
     tool.set_pctl_formula(pctl_file.get(0))
 
@@ -33,8 +33,8 @@ def test_compute_rational_function(MCType, name):
 @pytest.mark.parametrize("MCType,name", tools)
 def test_get_parameter_constraints(MCType, name):
     tool = MCType()
-    prism_file = PrismFile(get_example_path("pdtmc", "funny_defined", "fun.pm"))
-    pctl_file = PctlFile(get_example_path("pdtmc", "funny_defined", "property1.pctl"))
+    prism_file = PrismFile(get_example_path("funny_defined", "fun.pm"))
+    pctl_file = PctlFile(get_example_path("funny_defined", "property1.pctl"))
     tool.load_model_from_prismfile(prism_file)
     tool.set_pctl_formula(pctl_file.get(0))
 
