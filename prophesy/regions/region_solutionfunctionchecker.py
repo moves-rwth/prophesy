@@ -82,7 +82,6 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             self._smt2interface.assert_constraint(rf1_constraint)
             self._smt2interface.assert_constraint(rf2_constraint)
         else:
-            self._smt2interface.assert_constraint(rf1_constraint)
             safe_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, self._safe_relation)
             bad_constraint = Constraint(pc.numerator(self._ratfunc) - thresholdVar, self._bad_relation)
 
