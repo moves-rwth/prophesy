@@ -16,6 +16,7 @@ from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.adapter.pycarl import Rational
 from prophesy.config import configuration
+from prophesy.data.property import OperatorDirection
 
 
 def _get_argparser():
@@ -74,6 +75,9 @@ def run(args=sys.argv[1:], interactive=True):
     property = pctl_file.get(cmdargs.pctl_index)
     if not property.bound.asks_for_exact_value():
         raise NotImplementedError("Only properties asking for the probability/reward '=?' are currently supported")
+    if prism_file.contains_nondeterministic_model():
+        if property.operator_direction == OperatorDirection.unspecified:
+            raise ValueError("For non-deterministic models, the operator direction should be specified.")
     tool.set_pctl_formula(property)
     sampling_interface = tool
 
