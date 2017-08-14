@@ -71,7 +71,10 @@ def run(args=sys.argv[1:], interactive=True):
         raise RuntimeError("No supported model checker defined")
 
     tool.load_model_from_prismfile(prism_file, constants)
-    tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
+    property = pctl_file.get(cmdargs.pctl_index)
+    if not property.bound.asks_for_exact_value():
+        raise NotImplementedError("Only properties asking for the probability/reward '=?' are currently supported")
+    tool.set_pctl_formula(property)
     sampling_interface = tool
 
     parameters = copy.deepcopy(prism_file.parameters)
