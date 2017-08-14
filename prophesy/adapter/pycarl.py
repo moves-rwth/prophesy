@@ -46,16 +46,16 @@ def parse(input):
 
 
 if CARL_WITH_CLN:
-    def convert_to(data):
+    def convert_to_storm_type(data):
         return pycarl.convert.convert_to_cln(data)
 
 
-    def convert_from(data):
+    def convert_from_storm_type(data):
         return pycarl.convert.convert_to_gmp(data)
 else:
-    def convert_to(data):
+    def convert_to_storm_type(data):
         return data
 
 
-    def convert_from(data):
+    def convert_from_storm_type(data):
         return data

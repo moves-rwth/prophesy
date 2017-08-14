@@ -120,12 +120,12 @@ class EtrRegionChecker(SmtRegionChecker):
                         if transition.value().is_constant():
                             value = pc.Polynomial(transition.value().constant_part())
                         else:
-                            denom = pc.denominator(pc.convert_from(transition.value()))
+                            denom = pc.denominator(pc.convert_from_storm_type(transition.value()))
                             if not denom.is_constant():
                                 raise RuntimeError("only polynomial constraints are supported right now.")
                             denom = denom.constant_part()
 
-                            value = pc.numerator(pc.convert_from(transition.value()))
+                            value = pc.numerator(pc.convert_from_storm_type(transition.value()))
                             value = value.polynomial() * (1 / denom)
 
                         if prob0.get(transition.column):
@@ -153,12 +153,12 @@ class EtrRegionChecker(SmtRegionChecker):
             #             if transition.value().is_constant():
             #                 value = pc.Polynomial(transition.value().constant_part())
             #             else:
-            #                 denom = pc.denominator(pc.convert_from(transition.value()))
+            #                 denom = pc.denominator(pc.convert_from_storm_type(transition.value()))
             #                 if not denom.is_constant():
             #                     raise RuntimeError("only polynomial constraints are supported right now.")
             #                 denom = denom.constant_part()
             #
-            #                 value = pc.numerator(pc.convert_from(transition.value()))
+            #                 value = pc.numerator(pc.convert_from_storm_type(transition.value()))
             #                 value = value.polynomial() * (1 / denom)
             #
             #             if prob0.get(transition.column):

@@ -154,7 +154,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         result = stormpy.model_checking(model, property)
         result = result.at(model.initial_states[0])
         # Convert to gmp
-        return pc.convert_from(result)
+        return pc.convert_from_storm_type(result)
 
     def get_parameter_constraints(self):
         if self._parameter_constraints is None or self._graph_preservation_constraints is None:
@@ -167,11 +167,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             # Convert formulas to gmp
             for formula in collector.wellformed_constraints:
                 assert formula.type == pc.FormulaType.CONSTRAINT
-                converted_formula = pc.Formula(pc.convert_from(formula.get_constraint()))
+                converted_formula = pc.Formula(pc.convert_from_storm_type(formula.get_constraint()))
                 self._parameter_constraints.append(converted_formula)
             for formula in collector.graph_preserving_constraints:
                 assert formula.type == pc.FormulaType.CONSTRAINT
-                converted_formula = pc.Formula(pc.convert_from(formula.get_constraint()))
+                converted_formula = pc.Formula(pc.convert_from_storm_type(formula.get_constraint()))
                 self._graph_preservation_constraints.append(converted_formula)
             logger.info("Stormpy call finished")
 
@@ -197,7 +197,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             # Set formula for PLA
             formula = self.pctlformula[0].raw_formula
             expression_manager = stormpy.ExpressionManager()
-            expression = expression_manager.create_rational(pc.convert_from(threshold))
+            expression = expression_manager.create_rational(pc.convert_from_storm_type(threshold))
             formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
             # Create PLA checker
             self._pla_checker = stormpy.pars.create_region_checker(self.get_model(), formula)
@@ -223,7 +223,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         model_instantiator = self.get_model_instantiator()
         for sample_point in samplepoints:
             # Instantiate point and check result
-            point = {parameter_mapping[parameter]: pc.convert_to(val) for parameter, val in sample_point.items()}
+            point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in sample_point.items()}
             instantiated_model = model_instantiator.instantiate(point)
             result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
             samples.add_result(InstantiationResult(sample_point, result))
