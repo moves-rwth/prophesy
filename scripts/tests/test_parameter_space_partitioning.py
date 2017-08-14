@@ -130,5 +130,7 @@ def test_script_pla(name, file, propertyfile, threshold, tool, method):
         END_CRITERIA,
         str(END_CRITERIA_VALUE),
         "--{}".format(method),
+        "--epsilon-pmc",
+        "0.001"
     ]
     parameter_space_partitioning.run(command, False)
