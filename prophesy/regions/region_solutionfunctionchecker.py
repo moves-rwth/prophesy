@@ -3,6 +3,7 @@ import prophesy.adapter.pycarl as pc
 from prophesy.adapter.pycarl import Constraint, Relation
 from prophesy.smt.smt import VariableDomain
 from prophesy.data.samples import ParameterInstantiation, InstantiationResult
+from prophesy.data.property import OperatorType
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         :param constants: 
         """
 
-        bounded_variables = False
+        lower_bounded_variables = True
+        upper_bounded_variables = False
         assert problem_description.solutionfunction is not None
         assert problem_description.parameters is not None
         self._ratfunc = problem_description.solutionfunction
@@ -59,10 +61,10 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             value = pc.denominator(self._ratfunc).evaluate(eval_dict)
             self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
             self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
-            if bounded_variables:
+            if upper_bounded_variables and problem_description.property.operator == OperatorType.probability:
                 self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(rf1Var) - rf2Var, pc.Relation.LESS))
             if value < 0:
-                if bounded_variables:
+                if lower_bounded_variables:
                     self._smt2interface.assert_constraint(pc.Constraint(rf1Var, pc.Relation.LESS, pc.Rational(0)))
                     self._smt2interface.assert_constraint(pc.Constraint(rf2Var, pc.Relation.LESS, pc.Rational(0)))
 
