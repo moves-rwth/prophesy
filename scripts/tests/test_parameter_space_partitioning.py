@@ -7,6 +7,7 @@ import parameter_space_partitioning
 
 benchmarks_smt = [
     require_z3()(("kydie", "kydie", "property1", "15/100", "z3", "quads")),
+    require_z3()(("brp", "brp_16-2", "property1", "85/100", "z3", "quads")),
     require_yices()(("kydie", "kydie", "property1", "15/100", "yices", "quads"))
 
     #require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
