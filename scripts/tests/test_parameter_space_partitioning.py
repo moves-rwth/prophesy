@@ -52,7 +52,33 @@ def test_script_sfsmt(name, file, propertyfile, threshold, tool, method):
     ]
     parameter_space_partitioning.run(command, False)
 
-@pytest.mark.parametrize("name,file,propertyfile,threshold,tool,method", benchmarks_smt)
+benchmarks_etr = [
+    require_z3()(("kydie", "kydie", "property1", "15/100", "z3", "quads")),
+    require_yices()(("kydie", "kydie", "property1", "15/100", "yices", "quads"))
+
+    #require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
+    # ("crowds", "crowds_3-5", 0.5, "z3"),
+    #  ("nand", "nand_10-1", 0.1, "z3", "quads"),
+    # ("crowds", "crowds_5-5", 0.5, "z3"),
+    # ("crowds", "crowds_10-5", 0.5, "z3"),
+    # ("nand", "nand_10-2", 0.8, "z3"),
+    # ("nand-reward", "nand_10-1", 0.8, "z3"),
+    # ("crowds", "crowds_15-5", 0.5, "z3"),
+    # ("nand", "nand_10-5", 0.7, "z3"),
+    # ("nand-reward", "nand_10-5", 0.7, "z3"),
+    # ("crowds", "crowds_20-5", 0.6, "z3"),
+    # ("nand", "nand_20-2", 0.3, "z3"),
+    # ("nand-reward", "nand_20-2", 0.4, "z3"),
+    #   ("nand", "nand_20-5", "z3"),
+    #   ("nand-reward", "nand_20-5", "z3"),
+    #   ("brp", "brp_128-2", "z3"),
+    #   ("brp", "brp_128-5", "z3"),
+    #   ("brp", "brp_256-2", "z3"),
+    #   ("brp", "brp_256-5", "z3"),
+]
+
+
+@pytest.mark.parametrize("name,file,propertyfile,threshold,tool,method", benchmarks_etr)
 def test_script_etr(name, file, propertyfile, threshold, tool, method):
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
