@@ -83,6 +83,8 @@ class EtrRegionChecker(SmtRegionChecker):
                 raise RuntimeError("Initial state is a prob0/prob1 state. Currently not supported")
         else:
             assert problem_description.property.operator == OperatorType.reward
+            reward_model = self._get_reward_model(model, problem_description)
+
             # TODO make sure that the property is less infinity.
             rew0 = self._find_rew0_states(self.model_explorer.pctlformula[0], model)
             for state in model.states:
@@ -138,38 +140,30 @@ class EtrRegionChecker(SmtRegionChecker):
                 state_constraint = pc.Constraint(state_equation, pc.Relation.EQ)
                 self._smt2interface.assert_constraint(state_constraint)
         else:
-            raise RuntimeError("Work in progress.")
-            # for state in model.states:
-            #     state_var = state_var_mapping.get(state.id)
-            #     if state_var is None:
-            #         continue
-            #     if _bounded_variables:
-            #         # if bounded variable constraints are to be added, do so.
-            #         self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
-            #     state_equation = -pc.Polynomial(state_var)
-            #     for action in state.actions:
-            #         for transition in action.transitions:
-            #             # obtain the transition value as a polynomial.
-            #             if transition.value().is_constant():
-            #                 value = pc.Polynomial(transition.value().constant_part())
-            #             else:
-            #                 denom = pc.denominator(pc.convert_from_storm_type(transition.value()))
-            #                 if not denom.is_constant():
-            #                     raise RuntimeError("only polynomial constraints are supported right now.")
-            #                 denom = denom.constant_part()
-            #
-            #                 value = pc.numerator(pc.convert_from_storm_type(transition.value()))
-            #                 value = value.polynomial() * (1 / denom)
-            #
-            #             if prob0.get(transition.column):
-            #                 continue
-            #             if prob1.get(transition.column):
-            #                 state_equation = state_equation + value
-            #                 continue
-            #             state_equation = state_equation + value * state_var_mapping.get(transition.column)
-            #     print(state_equation)
-            #     state_constraint = pc.Constraint(state_equation, pc.Relation.EQ)
-            #     self._smt2interface.assert_constraint(state_constraint)
+            for state in model.states:
+                state_var = state_var_mapping.get(state.id)
+                if state_var is None:
+                    continue
+                if _bounded_variables:
+                    # if bounded variable constraints are to be added, do so.
+                    self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
+                state_equation = -pc.RationalFunction(state_var) + (pc.convert_from_storm_type(reward_model.state_rewards[state.id].rational_function()))
+                for action in state.actions:
+                    for transition in action.transitions:
+                        # obtain the transition value as a polynomial.
+                        if transition.value().is_constant():
+                            value = pc.Polynomial(pc.convert_from_storm_type(transition.value().constant_part()))
+                        else:
+                            value = pc.convert_from_storm_type(transition.value()).rational_function()
+
+                        if rew0.get(transition.column):
+                            continue
+
+                        state_equation = state_equation + value * state_var_mapping.get(transition.column)
+                logger.debug(state_equation)
+                state_constraint = pc.Constraint(state_equation.numerator, pc.Relation.EQ)
+                self._smt2interface.assert_constraint(state_constraint)
+
 
     def _find_prob01_states(self, property, model):
         formula = property.raw_formula
@@ -189,6 +183,21 @@ class EtrRegionChecker(SmtRegionChecker):
         psi_states = psi_result.get_truth_values()
         (prob0, prob1) = sp.compute_prob01_states(model, phi_states, psi_states)
         return prob0, prob1
+
+    def _get_reward_model(self, model, problem_description):
+        model.reduce_to_state_based_rewards()
+        if problem_description.property.reward_name is not None:
+            reward_model = model.reward_models.at(problem_description.property.reward_name)
+        else:
+            if "" in model.reward_models:
+                reward_model = model.reward_models.at("")
+            else:
+                if len(model.reward_models) > 1:
+                    raise RuntimeError("Unclear reference to reward model. Please specify a name.")
+                reward_model = list(model.reward_models.values())[0]
+        assert not reward_model.has_state_action_rewards
+        assert not reward_model.has_transition_rewards
+        return reward_model
 
     def _find_rew0_states(self, property, model):
         formula = property.raw_formula
