@@ -69,7 +69,7 @@ class Constants(object):
         key_value_list = [(k,v.value) for k, v in self.constants.items()]
         if to_float:
             for i in range(len(key_value_list)):
-                if type(key_value_list[i][1]) is pc.Rational:
+                if isinstance(key_value_list[i][1], pc.Rational):
                     key_value_list[i] = (key_value_list[i][0], float(key_value_list[i][1]))
 
         return ",".join(["{}={}".format(k,v) for k,v in key_value_list])
