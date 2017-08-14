@@ -41,6 +41,8 @@ def run(args=sys.argv[1:], interactive=True):
     constants = parse_constants_string(cmdargs.constants)
 
     prism_file = PrismFile(cmdargs.file)
+    if prism_file.contains_nondeterministic_model():
+        raise NotImplementedError("Solution functions are not suppported for nondeterministic models")
     pctl_file = PctlFile(cmdargs.pctl_file)
 
     if cmdargs.storm:
