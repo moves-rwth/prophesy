@@ -103,7 +103,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Perform uniform sampling")
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
-        assert len(self.prismfile.parameters) - len(self.constants) == len(
+        assert len(self.prismfile.parameters) == len(
             parameters.get_variables()), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
         ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in
@@ -112,7 +112,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
         const_values_string = ",".join(
             ["{0}={1}".format(p, r) for (p, r) in zip(parameters.get_variables(), range_strings)])
-        constants_string = self.constants.to_key_value_string(to_float=True)
+        constants_string = self.constants.to_key_value_string()
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string
 
@@ -120,7 +120,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
         pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
-        args = [self.location, self.prismfile.location, pctlpath,
+        args = [self.location,
+                self.prismfile.location,
+                pctlpath,
                 "-const", const_values_string,
                 "-exportresults", resultpath]
         logger.info("Call prism")
@@ -147,7 +149,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         for sample_point in samplepoints:
             const_values_string = ",".join(
                 ["{0}={1}".format(parameter.variable, float(val)) for parameter, val in sample_point.items()])
-            constants_string = self.constants.to_key_value_string(to_float=True)
+            constants_string = self.constants.to_key_value_string()
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
 
