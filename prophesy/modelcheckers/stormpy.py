@@ -42,7 +42,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._parameter_mapping = None
         self._model_instantiator = None
         self._pla_checker = None
-        self._pla_formula = None
+        self._pla_threshold = None
 
     def name(self):
         return "stormpy"
@@ -58,8 +58,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             logger.debug("Load formula with respect to program.")
             self.pctlformula = stormpy.parse_properties_for_prism_program(str(formula), self._program)
         # Reset formula for PLA
-        self._pla_formula = None
-
+        self._pla_threshold = None
 
     def load_model_from_prismfile(self, prism_file, constants=Constants()):
         self.prismfile = prism_file
@@ -187,14 +186,20 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._model_instantiator = stormpy.pars.PDtmcInstantiator(self.get_model())
         return self._model_instantiator
 
-    def get_pla_checker(self, formula):
+    def get_pla_checker(self, threshold):
         """
         Return model checker for PLA.
-        :param formula: Formula to check.
+        :param threshold: Threshold in formula.
         :return: PLA model checker.
         """
-        if self._pla_checker is None or self._pla_formula != str(formula):
-            self._pla_formula = str(formula)
+        if self._pla_checker is None or self._pla_threshold != threshold:
+            self._pla_threshold = threshold
+            # Set formula for PLA
+            formula = self.pctlformula[0].raw_formula
+            expression_manager = stormpy.ExpressionManager()
+            expression = expression_manager.create_rational(pc.convert_from(threshold))
+            formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
+            # Create PLA checker
             self._pla_checker = stormpy.pars.create_region_checker(self.get_model(), formula)
         return self._pla_checker
 
@@ -229,15 +234,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         logger.info("Check region via stormpy")
 
-        # Set threshold and bound in formula
-        formula = self.pctlformula[0].raw_formula
-        expression_manager = stormpy.ExpressionManager()
-        expression = expression_manager.create_rational(pc.convert_from(threshold))
-        formula.set_bound(stormpy.logic.ComparisonType.GEQ if above_threshold else stormpy.logic.ComparisonType.LESS,
-                          expression)
-
         # Initialize PLA checker
-        pla_checker = self.get_pla_checker(formula)
+        pla_checker = self.get_pla_checker(threshold)
         model_parameters = self.get_model().collect_probability_parameters()
         # Set region
         region_string = hyperrectangle.to_region_string(parameters.get_variables())
@@ -245,20 +243,28 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         region = stormpy.pars.ParameterRegion(region_string, model_parameters)
         # Check via PLA
         logger.info("Call stormpy for PLA check")
-        result = pla_checker.check_region(region, stormpy.pars.RegionResultHypothesis.ALLSAT,
-                                          stormpy.pars.RegionResult.UNKNOWN, False)
+        hypothesis = stormpy.pars.RegionResultHypothesis.ALLVIOLATED if above_threshold else stormpy.pars.RegionResultHypothesis.ALLSAT
+        result = pla_checker.check_region(region, hypothesis, stormpy.pars.RegionResult.UNKNOWN, False)
         logger.info("Stormpy call finished successfully with result: {}".format(result))
 
-        if result == stormpy.pars.RegionResult.ALLVIOLATED:
-            raise RuntimeError("Contradiction of hypothesis")
-        elif result == stormpy.pars.RegionResult.ALLSAT:
-            region_result = RegionCheckResult.Satisfied
-        elif result == stormpy.pars.RegionResult.EXISTSBOTH:
-            raise RuntimeError("Unexpected outcome, something went wrong.")
+        if result == stormpy.pars.RegionResult.ALLSAT:
+            if hypothesis == stormpy.pars.RegionResultHypothesis.ALLSAT:
+                region_result = RegionCheckResult.Satisfied
+            else:
+                assert hypothesis == stormpy.pars.RegionResultHypothesis.ALLVIOLATED
+                raise RuntimeError("Contradiction of hypothesis")
+        elif result == stormpy.pars.RegionResult.ALLVIOLATED:
+            if hypothesis == stormpy.pars.RegionResultHypothesis.ALLVIOLATED:
+                region_result = RegionCheckResult.Satisfied
+            else:
+                assert hypothesis == stormpy.pars.RegionResultHypothesis.ALLSAT
+                raise RuntimeError("Contradiction of hypothesis")
         elif result == stormpy.pars.RegionResult.UNKNOWN:
             region_result = RegionCheckResult.unknown
+        elif result == stormpy.pars.RegionResult.EXISTSBOTH:
+            raise RuntimeError("Unexpected outcome, something went wrong.")
         elif result == stormpy.pars.RegionResult.CENTERSAT or result == stormpy.pars.RegionResult.CENTERVIOLATED:
-            logger.warning("Center sat is not expected.")
+            logger.warning("Center sat/violated is not expected.")
             region_result = RegionCheckResult.unknown
         else:
             raise RuntimeError("Unexpected result '{}'".format(result))
