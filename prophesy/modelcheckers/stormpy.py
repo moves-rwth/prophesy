@@ -223,7 +223,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         model_instantiator = self.get_model_instantiator()
         for sample_point in samplepoints:
             # Instantiate point and check result
-            point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in sample_point.items()}
+            point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
+                     sample_point.items()}
             instantiated_model = model_instantiator.instantiate(point)
             result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
             samples.add_result(InstantiationResult(sample_point, result))

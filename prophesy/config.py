@@ -19,7 +19,7 @@ class ProphesyConfig(Configuration):
 
     def __init__(self):
         super().__init__(os.path.join(os.path.dirname(
-                os.path.realpath(__file__)), "prophesy.cfg"))
+            os.path.realpath(__file__)), "prophesy.cfg"))
         self._init_tools()
 
     def is_module_available(self, module):
@@ -66,7 +66,7 @@ class ProphesyConfig(Configuration):
         if self.get_prism():
             self.ppmcs.add('prism')
             self.pmcs.add('prism')
-            #self.samplers.add('prism')
+            # self.samplers.add('prism')
 
         if self.get_param():
             self.ppmcs.add('param')
@@ -200,6 +200,7 @@ class ProphesyConfig(Configuration):
 
     def getSection(self, sec):
         return self.get_all()[sec]
+
 
 configuration = ProphesyConfig()
 

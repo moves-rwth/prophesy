@@ -14,7 +14,7 @@ from shapely.geometry.polygon import Polygon
 import numpy as np
 
 from prophesy.data.samples import InstantiationResultFlag
-from prophesy.data.hyperrectangle import  HyperRectangle
+from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.config import configuration
 
 logger = logging.getLogger(__name__)
@@ -36,13 +36,15 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
 
     _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
 
-
-    samples_non_defined = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if res.result == InstantiationResultFlag.NOT_WELLDEFINED]
-    samples_green = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result >= threshold]
+    samples_non_defined = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if
+                           res.result == InstantiationResultFlag.NOT_WELLDEFINED]
+    samples_green = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if
+                     res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result >= threshold]
     samples_red = [res.instantiation.get_point(parameters) for res in samples.instantiation_results()
-                     if res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result < threshold]
+                   if res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result < threshold]
 
-    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red, samples_black=samples_non_defined,
+    Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
+                      samples_black=samples_non_defined,
                       path_to_save=plot_path, display=False)
     logger.info("Samples rendered to {}".format(plot_path))
 
@@ -95,7 +97,7 @@ class Plot(object):
     @staticmethod
     def plot_results(parameters,
                      samples_green=[], samples_red=[], samples_blue=[], samples_black=[],
-                     poly_green=[], poly_red=[], poly_blue_crossed=[], poly_blue_dotted = [], poly_blue=[], poly_black=[],
+                     poly_green=[], poly_red=[], poly_blue_crossed=[], poly_blue_dotted=[], poly_blue=[], poly_black=[],
                      anchor_points=[], additional_arrows=[],
                      path_to_save=None, display=False):
         """
