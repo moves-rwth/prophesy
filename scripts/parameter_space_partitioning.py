@@ -16,6 +16,7 @@ from prophesy.input.prismfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
+from prophesy.data.constant import parse_constants_string, Constants
 from prophesy.util import open_file
 from prophesy.smt.isat import IsatSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
@@ -31,6 +32,7 @@ def _get_argparser():
 
     parser.add_argument('--rat-file', help='file containing rational function')
     parser.add_argument('--model-file', help='file containing the model')
+    parser.add_argument('--constants', type=str, help='string with constants for model')
     parser.add_argument('--property-file', help='file containing the property')
     parser.add_argument('--samples-file', help='file containing the sample points', required=True)
     parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination',
@@ -78,6 +80,7 @@ def run(args=sys.argv[1:], interactive=False):
     configuration.check_tools()
 
     problem_description = ProblemDescription()
+    constants = Constants()
 
     if cmdargs.rat_file:
         result = read_pstorm_result(cmdargs.rat_file)
@@ -96,6 +99,7 @@ def run(args=sys.argv[1:], interactive=False):
         problem_description.parameters = model_file.parameters
         problem_description.model = model_file
         problem_description.property = properties.get(0)
+        constants = parse_constants_string(cmdargs.constants)
 
     if cmdargs.epsilon_pmc:
         problem_description.parameters.make_intervals_closed(cmdargs.epsilon_pmc)
@@ -160,7 +164,7 @@ def run(args=sys.argv[1:], interactive=False):
         raise RuntimeError("No method for region checking selected.")
 
     logger.info("Generating regions")
-    checker.initialize(problem_description, threshold)
+    checker.initialize(problem_description, threshold, constants)
     if problem_description.welldefined_constraints is None:
         if mc is None:
             raise RuntimeError("If welldefinedness constraints are unknown, a model checker is required.")
