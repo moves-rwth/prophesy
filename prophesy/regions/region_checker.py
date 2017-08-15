@@ -47,6 +47,11 @@ class RegionChecker:
         :type parameters: ParameterOrder.
         """
         self.benchmark_output = []
+        self.support_nongraphpreserving = False
+
+
+    def supports_only_closed_regions(self):
+        return False
 
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):

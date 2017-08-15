@@ -11,7 +11,7 @@ class _AnnotatedRegion:
     """
     Named tuple holding the region and additional information
     """
-    def __init__(self, region, samples, safe=None, well_defined = WelldefinednessResult.Undecided, graph_preserving = None, closest_sample = None, closest_inverse_sample_distance = None):
+    def __init__(self, region, samples, safe=None, well_defined = WelldefinednessResult.Undecided, graph_preserving = WelldefinednessResult.Undecided, closest_sample = None, closest_inverse_sample_distance = None):
         self.region = region
         self.samples = samples
         self.safe = safe
@@ -33,6 +33,8 @@ class HyperRectangleRegions(RegionGenerator):
 
         # Setup initial region
         region = HyperRectangle(*self.parameters.get_variable_bounds())
+        if checker.supports_only_closed_regions():
+            region = region.close()
         regionsamples = []
 
         for instantiation, value in self.safe_samples:
@@ -106,6 +108,10 @@ class HyperRectangleRegions(RegionGenerator):
             self.parked_regions.append(region)
             return
 
+        if self.checker.supports_only_closed_regions():
+            region.region = region.region.close()
+
+        # TODO check graph preserving seperately.
         if region.well_defined == WelldefinednessResult.Undecided:
             logger.info("Check well-definedness for the region")
             solver = Z3CliSolver()
@@ -118,10 +124,10 @@ class HyperRectangleRegions(RegionGenerator):
                 return
             if wd_res == WelldefinednessResult.Welldefined:
                 region.well_defined = WelldefinednessResult.Welldefined
+                region.graph_preserving = WelldefinednessResult.Welldefined
 
         if region.well_defined == WelldefinednessResult.Welldefined:
             mixed = True
-            hypothesis_safe = True
             if len(region.samples) == 1:
                 hypothesis_safe = region.samples[0][1]
                 mixed = False
@@ -156,7 +162,7 @@ class HyperRectangleRegions(RegionGenerator):
                 if not newregion.contains(pt):
                     continue
                 newsamples.append((pt, safe))
-            self.check_region(_AnnotatedRegion(newregion, newsamples, well_defined=region.well_defined), depth + 1)
+            self.check_region(_AnnotatedRegion(newregion, newsamples, well_defined=region.well_defined, graph_preserving=region.graph_preserving), depth + 1)
 
     def fail_region(self, constraint, safe):
         # Split region and try again
@@ -166,12 +172,15 @@ class HyperRectangleRegions(RegionGenerator):
         self.regions = self.regions[1:]
         if regionelem.empty_checks == 1:
             dist = self._compute_closest_inverse_sample(not regionelem.safe, regionelem.region)
-            self.regions.insert(0, _AnnotatedRegion(regionelem.region,regionelem.samples, not regionelem.safe,  well_defined=regionelem.well_defined, closest_inverse_sample_distance=dist))
+            self.regions.insert(0, _AnnotatedRegion(regionelem.region,regionelem.samples, not regionelem.safe,  well_defined=regionelem.well_defined, graph_preserving=region.graph_preserving, closest_inverse_sample_distance=dist))
             self.regions[0].empty_checks = 2
         else:
             newelems = regionelem.region.split_in_every_dimension()
             for newregion in newelems:
+                if self.checker.supports_only_closed_regions:
+                    newregion = newregion.close()
                 newsamples = []
+
                 for pt, safe in regionelem.samples:
                     if not newregion.contains(pt):
                         continue
@@ -180,8 +189,9 @@ class HyperRectangleRegions(RegionGenerator):
                     hypothesis = self._guess_hypothesis(newregion)
                 else:
                     hypothesis = regionelem.safe
+
                 dist = self._compute_closest_inverse_sample(hypothesis, newregion)
-                self.regions.insert(0, _AnnotatedRegion(newregion, newsamples, hypothesis, well_defined=regionelem.well_defined, closest_inverse_sample_distance=dist))
+                self.regions.insert(0, _AnnotatedRegion(newregion, newsamples, hypothesis, well_defined=regionelem.well_defined, graph_preserving=regionelem.graph_preserving, closest_inverse_sample_distance=dist))
 
         self._sort_regions()
         region = self.regions[0]

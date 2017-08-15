@@ -24,9 +24,11 @@ class PlaRegionChecker(RegionChecker):
         self._checker.set_pctl_formula(problem_description.property)
         self.threshold = threshold
 
+    def supports_only_closed_regions(self):
+        return True
 
     def analyse_region(self, hyperrectangle, safe):
-        hyperrectangle = hyperrectangle.close()
+        assert hyperrectangle.is_closed()
         start = time.time()
         regions = self._checker.check_hyperrectangle(self._parameters, hyperrectangle, self.threshold, safe)
         duration = time.time() - start
