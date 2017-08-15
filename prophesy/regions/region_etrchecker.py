@@ -120,7 +120,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     for transition in action.transitions:
                         # obtain the transition value as a polynomial.
                         if transition.value().is_constant():
-                            value = pc.Polynomial(transition.value().constant_part())
+                            value = pc.Polynomial(pc.convert_from_storm_type(transition.value().constant_part()))
                         else:
                             denom = pc.denominator(pc.convert_from_storm_type(transition.value()))
                             if not denom.is_constant():
