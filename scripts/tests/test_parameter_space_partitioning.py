@@ -51,15 +51,15 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
         str(END_CRITERIA_VALUE),
         "--{}".format(method),
     ]
-    print(command)
     parameter_space_partitioning.run(command, False)
 
 
 benchmarks_etr = [
-    require_z3()(("kydie", "kydie", "", "property1", "15/100", "z3", "quads")),
-    require_yices()(("kydie", "kydie", "", "property1", "15/100", "yices", "quads"))
+    require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
+    # require_z3()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", "95/100", "z3", "quads")),
+    require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads"))
 
-    #require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
+    # require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
     #  ("nand", "nand_10-1", 0.1, "z3", "quads"),
     # ("crowds", "crowds_5-5", 0.5, "z3"),
@@ -81,8 +81,8 @@ benchmarks_etr = [
 ]
 
 
-@pytest.mark.parametrize("name,file,constants,propertyfile,threshold,tool,method", benchmarks_etr)
-def test_script_etr(name, file, constants, propertyfile, threshold, tool, method):
+@pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method", benchmarks_etr)
+def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, tool, method):
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
 
@@ -94,9 +94,9 @@ def test_script_etr(name, file, constants, propertyfile, threshold, tool, method
         "--property-file",
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
         "--rat-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, file)),
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, ratfile)),
         "--samples-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, file)),
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, ratfile)),
         "--{}".format(tool),
         "--threshold",
         str(threshold),
@@ -105,7 +105,6 @@ def test_script_etr(name, file, constants, propertyfile, threshold, tool, method
         str(END_CRITERIA_VALUE),
         "--{}".format(method),
     ]
-    print(command)
     parameter_space_partitioning.run(command, False)
 
 
