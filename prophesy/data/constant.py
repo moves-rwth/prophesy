@@ -24,10 +24,12 @@ class Constant(object):
         """
         return self.variable.name
 
+
 class Constants(object):
     """
     Container that holds constants for a model. 
     """
+
     def __init__(self):
         self.constants = dict()
 
@@ -66,13 +68,13 @@ class Constants(object):
         :param to_float: Should the constant value be casted into a float
         :return: A string of the format var1=val1,...,varn=valn
         """
-        key_value_list = [(k,v.value) for k, v in self.constants.items()]
+        key_value_list = [(k, v.value) for k, v in self.constants.items()]
         if to_float:
             for i in range(len(key_value_list)):
                 if isinstance(key_value_list[i][1], pc.Rational):
                     key_value_list[i] = (key_value_list[i][0], float(key_value_list[i][1]))
 
-        return ",".join(["{}={}".format(k,v) for k,v in key_value_list])
+        return ",".join(["{}={}".format(k, v) for k, v in key_value_list])
 
     def variables(self):
         """
@@ -97,7 +99,7 @@ def parse_constants_string(input_string):
     :return: 
     """
     result = Constants()
-    if input_string is None:
+    if input_string is None or input_string == "":
         return result
     defs = input_string.split(",")
     for constant_def in defs:
