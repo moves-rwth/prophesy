@@ -25,9 +25,9 @@ class PrismFile:
 
     def __init__(self, location):
         assert isinstance(location, str)
-        check_filepath_for_reading(location)
         self._is_temp = False
         self.location = location
+        check_filepath_for_reading(location)
         self.parameters = ParameterOrder()
         self.model_type = self._model_type()
         self._get_parameters()
