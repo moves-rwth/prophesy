@@ -69,6 +69,10 @@ def _get_argparser():
                         help="if set, uses this epsilon as an offset to the parameter values")
     graph_preservation_type.add_argument('--graph-preserving-pmc', action='store_true')
 
+    plot_group = parser.add_argument_group("Plotting")
+    plot_group.add_argument("--plot-every-n", type=int, default=10000000)
+    plot_group.add_argument("--plot-candidates", action="store_true", default=False)
+
     return parser
 
 
@@ -197,9 +201,9 @@ def run(args=sys.argv[1:], interactive=False):
 
     #TODO set plot frequency
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=1, plot_candidates=True)
+        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
     else:
-        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=1, plot_candidates=True)
+        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
 
     if interactive:
         open_file(generator.result_file)
