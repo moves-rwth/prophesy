@@ -232,6 +232,21 @@ class HyperRectangleRegions(RegionGenerator):
             return None
 
         region = self.regions[0]
+        if self.checker.supports_only_closed_regions():
+            while len(self.regions) > 0:
+                regions_opposite = self.accepted_regions_unsafe if region.safe else self.accepted_regions_safe
+                refuted = False
+                for r in regions_opposite:
+                    if r.region.non_empty_intersection(region.region):
+                        self.fail_region()
+                        region = self.regions[0]
+                        refuted = True
+                        break
+                if not refuted:
+                    break
+
+
+
         assert region.well_defined != WelldefinednessResult.Undecided
         return region.region, region.well_defined, region.safe
 
