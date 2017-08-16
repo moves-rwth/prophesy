@@ -164,7 +164,7 @@ class HyperRectangleRegions(RegionGenerator):
                 newsamples.append((pt, safe))
             self.check_region(_AnnotatedRegion(newregion, newsamples, well_defined=region.well_defined, graph_preserving=region.graph_preserving), depth + 1)
 
-    def fail_region(self, constraint, safe):
+    def fail_region(self):
         # Split region and try again
         regionelem = self.regions[0]
 
@@ -194,8 +194,6 @@ class HyperRectangleRegions(RegionGenerator):
                 self.regions.insert(0, _AnnotatedRegion(newregion, newsamples, hypothesis, well_defined=regionelem.well_defined, graph_preserving=regionelem.graph_preserving, closest_inverse_sample_distance=dist))
 
         self._sort_regions()
-        region = self.regions[0]
-        return region.region, safe
 
 
     def reject_region(self, constraint, safe, sample):

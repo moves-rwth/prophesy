@@ -271,5 +271,5 @@ class RegionGenerator:
             pass
 
         else:
-            result_update = self.fail_region(polygon, safe)
-            return checkresult, result_update
+            self.fail_region()
+            return RegionCheckResult.unknown, (polygon, safe)
