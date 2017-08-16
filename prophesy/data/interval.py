@@ -223,12 +223,20 @@ class Interval:
 
     def close(self):
         """
-        Make all bounds closed. Can not be called on unbounded intervals
+        Create an interval with all bounds closed. Can not be called on unbounded intervals
         
         :return: A new interval which has closed bounds instead.
         """
         assert self._left_value != -infinity and self._right_value != infinity
         return Interval(self._left_value, BoundType.closed, self._right_value, BoundType.closed)
+
+    def open(self):
+        """
+        Create an interval with all bounds open. 
+        
+        :return: A new interval which has open bounds instead
+        """
+        return Interval(self._left_value, BoundType.open, self._right_value, BoundType.open)
 
     def intersect(self, other):
         """

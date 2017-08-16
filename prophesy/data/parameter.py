@@ -89,5 +89,9 @@ class ParameterOrder(list):
         for p in self:
             p.interval = prophesy.data.interval.create_embedded_closed_interval(p.interval, epsilon)
 
+    def make_intervals_open(self):
+        for p in self:
+            p.interval = p.interval.open()
+
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))
