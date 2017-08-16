@@ -172,7 +172,7 @@ class HyperRectangleRegions(RegionGenerator):
         self.regions = self.regions[1:]
         if regionelem.empty_checks == 1:
             dist = self._compute_closest_inverse_sample(not regionelem.safe, regionelem.region)
-            self.regions.insert(0, _AnnotatedRegion(regionelem.region,regionelem.samples, not regionelem.safe,  well_defined=regionelem.well_defined, graph_preserving=region.graph_preserving, closest_inverse_sample_distance=dist))
+            self.regions.insert(0, _AnnotatedRegion(regionelem.region,regionelem.samples, not regionelem.safe,  well_defined=regionelem.well_defined, graph_preserving=regionelem.graph_preserving, closest_inverse_sample_distance=dist))
             self.regions[0].empty_checks = 2
         else:
             newelems = regionelem.region.split_in_every_dimension()
