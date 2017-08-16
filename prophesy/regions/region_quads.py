@@ -28,6 +28,8 @@ class HyperRectangleRegions(RegionGenerator):
 
         self.regions = []
         self.parked_regions = []
+        self.accepted_regions_safe = []
+        self.accepted_regions_unsafe = []
         # Number of consecutive recursive splits() maximum
         self.check_depth = 5
 
@@ -215,6 +217,10 @@ class HyperRectangleRegions(RegionGenerator):
 
     def accept_region(self):
         # Done with the region
+        if self.regions[0].safe:
+            self.accepted_regions_safe.append(self.regions[0])
+        else:
+            self.accepted_regions_unsafe.append(self.regions[0])
         self.regions = self.regions[1:]
 
     def ignore_region(self):
