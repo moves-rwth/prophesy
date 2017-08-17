@@ -1,0 +1,12 @@
+$Parameters: perr (0,1); prob1 (0,1)
+$Result: (+ (* 16 (* (* perr perr perr perr perr perr) (* prob1 prob1 prob1 prob1))) (* (- 16) (* (* perr perr perr perr perr perr) (* prob1 prob1))) (* 56 (* (* perr perr perr perr perr) (* prob1 prob1))) (* (- 72) (* (* perr perr perr perr) (* prob1 prob1))) (* (- 1) (* (* perr perr) (* prob1 prob1))) (* (- (/ 9 2)) (* perr (* prob1 prob1))) (* 13 (* (* perr perr) (* prob1 prob1 prob1 prob1))) (* (- 56) (* (* perr perr perr perr perr) (* prob1 prob1 prob1 prob1))) (* (- 44) (* (* perr perr perr) (* prob1 prob1 prob1 prob1))) (* 72 (* (* perr perr perr perr) (* prob1 prob1 prob1 prob1))) (* (- (/ 3 2)) (* perr (* prob1 prob1 prob1 prob1))) (* 36 (* (* perr perr perr) (* prob1 prob1))) perr (* (- (/ 19 2)) (* perr perr perr)) (* (/ 1 2) (* perr perr)) (* 4 (* perr perr perr perr perr perr)) (* (- 14) (* perr perr perr perr perr)) (* prob1 prob1) (* 19 (* perr perr perr perr)))
+$Well-formed Constraints:
+(<= (* (- 1) prob1) 0)
+(<= (* (- 1) perr) 0)
+(<= (+ prob1 (- 1)) 0)
+(<= (+ perr (- 1)) 0)
+$Graph-preserving Constraints:
+(not (= (+ prob1 (- 1)) 0))
+(not (= (+ perr (- 1)) 0))
+(not (= prob1 0))
+(not (= perr 0))
