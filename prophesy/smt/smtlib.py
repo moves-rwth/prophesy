@@ -2,6 +2,7 @@ import subprocess
 import functools
 import logging
 
+from prophesy.config import configuration
 from prophesy.smt.smt import SMTSolver, Answer, VariableDomain
 from prophesy.adapter.pycarl import Rational
 
@@ -17,7 +18,7 @@ def _smtfile_header():
     formula = "(set-logic QF_NRA)\n"
     formula += "(set-info :source |\n"
     formula += "Probabilistic verification" + "\n"
-    formula +=  "prophesy" + "\n"
+    formula += "prophesy" + "\n"
     formula += "|)\n"
     formula += "(set-info :smt-version 2.0)\n"
     formula += "(set-info :category \"industrial\")\n"
@@ -28,13 +29,14 @@ class SmtlibSolver(SMTSolver):
     """
     Abstract class for smt-lib based command line interfaces for SMT solvers.
     """
-    def __init__(self, location, memout=4000, timeout=100, incremental=True):
+
+    def __init__(self, location, memout=4000, timeout=configuration.get_smt_timeout(), incremental=True):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None
         self.string = self.formula
-        self.memout = memout # Mem limit in Mbyte
-        self.timeout = timeout#*1000 # Soft timeout in seconds
+        self.memout = memout  # Mem limit in Mbyte
+        self.timeout = timeout  # Soft timeout in seconds
         self.status = [""]
         self.exit_stored = True
         self.incremental = incremental
@@ -45,7 +47,7 @@ class SmtlibSolver(SMTSolver):
         stdin = self.process.stdin
         if stdin is not None:
             try:
-                logger.debug("Write %s",data)
+                logger.debug("Write %s", data)
                 stdin.write(data)
                 stdin.flush()
             except:
@@ -93,7 +95,8 @@ class SmtlibSolver(SMTSolver):
 
     def version(self):
         args = [self.location, "--version"]
-        p = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             universal_newlines=True)
         return p.communicate()[0].rstrip()
 
     def check(self):
@@ -155,7 +158,7 @@ class SmtlibSolver(SMTSolver):
             self.status.append("")
 
     def pop(self):
-        logger.debug("Pop [%s]: %s", len(self.status),  self.status[-1],)
+        logger.debug("Pop [%s]: %s", len(self.status), self.status[-1], )
         self.status.pop()
         s = "(pop)\n"
         self.string += s
@@ -214,7 +217,7 @@ class SmtlibSolver(SMTSolver):
         output = self._read_model()
         logger.debug("** model result:\t" + output)
         model = self._build_model(output)
-        #TODO why?
+        # TODO why?
         if not self.incremental:
             self.stop()
             self.run()
@@ -237,13 +240,13 @@ def parse_smt_expr(expr):
     (cmd, args) = parse_smt_command(expr)
     args = map(parse_smt_expr, args)
     if cmd == "+":
-        return functools.reduce(lambda x, y: x+y, args, 0)
+        return functools.reduce(lambda x, y: x + y, args, 0)
     elif cmd == "-":
-        return functools.reduce(lambda x, y: x-y, args, 0)
+        return functools.reduce(lambda x, y: x - y, args, 0)
     elif cmd == "*":
-        return functools.reduce(lambda x, y: x*y, args, 1)
+        return functools.reduce(lambda x, y: x * y, args, 1)
     elif cmd == "/":
-        return functools.reduce(lambda x, y: x/y, args)
+        return functools.reduce(lambda x, y: x / y, args)
     elif cmd == "true":
         return True
     elif cmd == "false":
