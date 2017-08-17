@@ -63,8 +63,15 @@ def _get_argparser():
     modelchecker_group.add_argument("--stormpy", action="store_true", help="Use stormpy")
 
     parser.add_argument('--bad-above-threshold', action='store_false', dest='safe_above_threshold', default=True)
-    parser.add_argument('--epsilon-pmc', type=pc.Rational,
+
+    graph_preservation_type = parser.add_mutually_exclusive_group(required=False)
+    graph_preservation_type.add_argument('--epsilon-pmc', type=pc.Rational,
                         help="if set, uses this epsilon as an offset to the parameter values")
+    graph_preservation_type.add_argument('--graph-preserving-pmc', action='store_true')
+
+    plot_group = parser.add_argument_group("Plotting")
+    plot_group.add_argument("--plot-every-n", type=int, default=10000000)
+    plot_group.add_argument("--plot-candidates", action="store_true", default=False)
 
     return parser
 
@@ -101,8 +108,14 @@ def run(args=sys.argv[1:], interactive=False):
         problem_description.property = properties.get(0)
         constants = parse_constants_string(cmdargs.constants)
 
-    if cmdargs.epsilon_pmc:
+    # TODO use better defaults for graph parameters
+    if cmdargs.graph_preserving_pmc:
+        problem_description.parameters.make_intervals_open()
+    elif cmdargs.epsilon_pmc:
+        # First, create the open interval
+        problem_description.parameters.make_intervals_open()
         problem_description.parameters.make_intervals_closed(cmdargs.epsilon_pmc)
+
 
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
@@ -113,7 +126,7 @@ def run(args=sys.argv[1:], interactive=False):
         # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
 
-    # TODO allow setting threshold via property
+    # TODO allow setting threshold via property:
     if cmdargs.threshold:
         threshold = cmdargs.threshold
     logger.debug("Threshold: {}".format(threshold))
@@ -188,9 +201,9 @@ def run(args=sys.argv[1:], interactive=False):
 
     #TODO set plot frequency
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=1, plot_candidates=True)
+        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
     else:
-        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=1, plot_candidates=True)
+        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
 
     if interactive:
         open_file(generator.result_file)

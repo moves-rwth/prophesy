@@ -28,6 +28,8 @@ class HyperRectangleRegions(RegionGenerator):
 
         self.regions = []
         self.parked_regions = []
+        self.accepted_regions_safe = []
+        self.accepted_regions_unsafe = []
         # Number of consecutive recursive splits() maximum
         self.check_depth = 5
 
@@ -164,7 +166,7 @@ class HyperRectangleRegions(RegionGenerator):
                 newsamples.append((pt, safe))
             self.check_region(_AnnotatedRegion(newregion, newsamples, well_defined=region.well_defined, graph_preserving=region.graph_preserving), depth + 1)
 
-    def fail_region(self, constraint, safe):
+    def fail_region(self):
         # Split region and try again
         regionelem = self.regions[0]
 
@@ -194,8 +196,6 @@ class HyperRectangleRegions(RegionGenerator):
                 self.regions.insert(0, _AnnotatedRegion(newregion, newsamples, hypothesis, well_defined=regionelem.well_defined, graph_preserving=regionelem.graph_preserving, closest_inverse_sample_distance=dist))
 
         self._sort_regions()
-        region = self.regions[0]
-        return region.region, safe
 
 
     def reject_region(self, constraint, safe, sample):
@@ -217,6 +217,10 @@ class HyperRectangleRegions(RegionGenerator):
 
     def accept_region(self):
         # Done with the region
+        if self.regions[0].safe:
+            self.accepted_regions_safe.append(self.regions[0])
+        else:
+            self.accepted_regions_unsafe.append(self.regions[0])
         self.regions = self.regions[1:]
 
     def ignore_region(self):
@@ -228,6 +232,21 @@ class HyperRectangleRegions(RegionGenerator):
             return None
 
         region = self.regions[0]
+        if self.checker.supports_only_closed_regions():
+            while len(self.regions) > 0:
+                regions_opposite = self.accepted_regions_unsafe if region.safe else self.accepted_regions_safe
+                refuted = False
+                for r in regions_opposite:
+                    if r.region.non_empty_intersection(region.region):
+                        self.fail_region()
+                        region = self.regions[0]
+                        refuted = True
+                        break
+                if not refuted:
+                    break
+
+
+
         assert region.well_defined != WelldefinednessResult.Undecided
         return region.region, region.well_defined, region.safe
 

@@ -95,7 +95,15 @@ class HyperRectangle(object):
         Computes the intersection
         :return:
         """
-        return HyperRectangle([i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
+        return HyperRectangle(*[i1.intersect(i2) for i1, i2 in zip(self.intervals, other.intervals)])
+
+    def non_empty_intersection(self, other):
+        """
+        
+        :return: 
+        """
+        # TODO can be made more efficient.
+        return not self.intersect(other).empty()
 
     def is_closed(self):
         """
