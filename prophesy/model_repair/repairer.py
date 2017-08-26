@@ -28,8 +28,10 @@ class ModelRepairer:
         self.modified_property.bound = OperatorBound(pc.Relation.EQ)
         self.modelchecker.set_pctl_formula(self.modified_property)
 
-        # FIXME
-        self.bounds = ([float(p.interval._left_value) for p in parameters], [float(p.interval._right_value) for p in parameters])
+        intervals = [p.interval for p in self.parameters]
+        left_bounds = [float(i.left_bound()) for i in intervals]
+        right_bounds = [float(i.right_bound()) for i in intervals]
+        self.bounds = (left_bounds, right_bounds)
 
         opts = {'num_particles': 20, 'max_iters': 50}
         self._pso = ParticleSwarmOptimizer(self._objective, self.bounds, obj_fct_is_vectorized=True, options=opts)
