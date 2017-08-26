@@ -16,120 +16,74 @@ procedure continues until some internal termination criterion is
 met.
 """
 
-import argparse
 import copy
-import sys
 
-from optimization.optimizers import ParticleSwarmOptimizer
+import click
 
 import prophesy.adapter.pycarl as pc
 from prophesy.config import configuration
 from prophesy.data.constant import parse_constants_string
-from prophesy.data.point import Point
-from prophesy.data.property import Property, OperatorBound, OperatorDirection
-from prophesy.data.samples import ParameterInstantiations
+from prophesy.data.property import OperatorBound
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.prismfile import PrismFile
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.model_repair.repairer import ModelRepairer
 
 
-def _parse_cli_args(args):
-    parser = argparse.ArgumentParser(prog="model_repair", description=__doc__.split('\n', 2)[1],
-                                     epilog=''.join(__doc__.split('\n', 3)[2:]))
-
-    parser.add_argument('--prism-file', help='parametric MC in Prism format', required=True)
-    parser.add_argument('--pctl-file', help='PCTL property file', required=True)
-    parser.add_argument('--pctl-index', help='index of PCTL property to be satisfied (if there are several)', default=0)
-    parser.add_argument('--cost-function', type=str, help='cost function to be minimized', default=None)
-    parser.add_argument('--constants', type=str, help=argparse.SUPPRESS)
-
-    solver_group = parser.add_mutually_exclusive_group(required=True)
-    solver_group.add_argument('--storm', action='store_true', help='use Storm via CLI')
-    solver_group.add_argument('--prism', action='store_true', help='use Prism via CLI')
-    solver_group.add_argument('--stormpy', action='store_true', help='use Storm via the stormpy Python API')
-
-    return parser.parse_args(args)
+mc_name_options = ['stormpy', 'storm', 'prism']
 
 
-def _get_selected_pmc(cmdargs):
+def _get_selected_pmc(mc_name):
+    assert mc_name in mc_name_options
+
+    configuration.check_tools()
     pmcs = configuration.getAvailableParametricMCs()
-    if cmdargs.storm:
-        if 'storm' not in pmcs:
-            raise RuntimeError("Storm location not configured.")
+    if mc_name not in pmcs:
+        raise RuntimeError("Model checker {} not configured!".format(mc_name))
+
+    if mc_name == 'storm':
         return StormModelChecker()
-    elif cmdargs.stormpy:
-        if 'stormpy' not in pmcs:
-            raise RuntimeError("Stormpy dependency not configured.")
+    elif mc_name == 'stormpy':
         # Do not import at top, as stormpy might not be available.
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
         return StormpyModelChecker()
-    elif cmdargs.prism:
-        if 'prism' not in pmcs:
-            raise RuntimeError("Prism location not configured.")
+    elif mc_name == 'prism':
         return PrismModelChecker()
-    else:
-        raise RuntimeError("No supported model checker defined")
 
 
-def run(args=sys.argv[1:]):
-    """TODO."""
-    cmdargs = _parse_cli_args(args)
-
-    configuration.check_tools()
-    tool = _get_selected_pmc(cmdargs)
-
-    prism_file = PrismFile(cmdargs.prism_file)
-    tool.load_model_from_prismfile(prism_file)
-
-    pctl_file = PctlFile(cmdargs.pctl_file)
-    pctl_property = pctl_file.get(cmdargs.pctl_index)
-
-    # TODO: what's needed to handle MDPs?
-    if pctl_property.bound.asks_for_exact_value():
-        raise ValueError("Bound must be one of <, <=, >, >=.")
-    # FIXME: document conversion / expected input
-    original_property_with_bound = pctl_property
-    modified_property = Property(pctl_property.operator, operator_direction=OperatorDirection.unspecified,
-                                 bound=OperatorBound(pc.Relation.EQ), pathformula=pctl_property.pathformula,
-                                 reward_name=None)
-
-
-    tool.set_pctl_formula(modified_property)
-
+def parse_parameters(prism_file, constants):
     parameters = copy.deepcopy(prism_file.parameters)
-    constants = parse_constants_string(cmdargs.constants)
     for const_variable in constants.variables():
         parameters.remove_variable(const_variable)
+    return parameters
+
+
+# TODO: cost function (as string? as parsed by sympy or something?)
+# TODO: what's needed to handle MDPs?
+@click.command()
+@click.option('--prism-file', help='parametric Markov chain in Prism file format', type=click.Path(exists=True),
+              default='../benchmarkfiles/brp/brp_16-2.pm', required=True)
+@click.option('--pctl-file', help='PCTL property file containing property (e.g., P<=0.95 [F "target"])',
+              type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True)
+@click.option('--pctl-index', help='index (0-based) of property in PCTL file', default=0, show_default=True)
+@click.option('--modelchecker', type=click.Choice(mc_name_options), default='stormpy', show_default=True)
+@click.option('--constants', help='additional constants string for the MC (rarely needed)', required=False)
+def model_repair(prism_file, pctl_file, pctl_index, modelchecker, constants):
+    prism_file = PrismFile(prism_file)
+    mc = _get_selected_pmc(modelchecker)
+    mc.load_model_from_prismfile(prism_file)
+
+    parameters = parse_parameters(prism_file, parse_constants_string(constants))
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
-    def sample(points):
-        rational_points = [Point(*(pc.Rational(c) for c in p)) for p in points]
-        sample_points = ParameterInstantiations.from_points(rational_points, parameters)
-        result = tool.perform_sampling(sample_points)
-        assert len(result) == len(points)  # FIXME numerically identical particles
-        return result
+    pctl_property = PctlFile(pctl_file).get(pctl_index)
 
-    def cost(params, value):
-        if value <= original_property_with_bound.bound.threshold:  # FIXME use Relation
-            return sum(params)  # FIXME
-        else:
-            return 1 - value + 5000  # FIXME
+    cost_fct = lambda point: (pc.Rational(0.6) - point.coordinates[0])**2 + (pc.Rational(0.7) - point.coordinates[1])**2
 
-    def objective(points):
-        sampling_result = sample(points)
-        return [cost(list(param_assignment.values()), v) for param_assignment, v in sampling_result]
-
-    bounds = ([float(p.interval._left_value) for p in parameters], [float(p.interval._right_value) for p in parameters])
-    opts = {'num_particles': 20, 'max_iters': 100}
-    pso = ParticleSwarmOptimizer(objective, bounds, obj_fct_is_vectorized=True, options=opts)
-
-    pso.optimize()
-    argmin = pso.swarm.positions[pso.swarm.current_best_index]
-    minimum = pso.swarm.scores[pso.swarm.current_best_index]
-    print(argmin, float(minimum))
-    print(float([v for k, v in sample([argmin])][0]))
+    mr = ModelRepairer(mc, parameters, pctl_property, cost_fct)
+    mr.repair()
 
 
 if __name__ == "__main__":
-    run()
+    model_repair()
