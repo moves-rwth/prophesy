@@ -67,6 +67,6 @@ class ModelRepairer:
             return abs(value - bound.threshold)
 
         if bound_is_satisfied(value, self.pctl_property.bound):
-            return self.cost_fct(point)
+            return float(self.cost_fct(parameter_instantiation))
         else:
-            return distance_to_bound(value, self.pctl_property.bound) + penalty
+            return float(distance_to_bound(value, self.pctl_property.bound) + penalty)
