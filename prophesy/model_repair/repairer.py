@@ -46,17 +46,15 @@ class ModelRepairer:
 
     def _objective(self, points):
         sampling_result = self._sample(points)
-        return [self.score(k.get_point(self.parameters), v) for k, v in sampling_result]
+        return [self.score(parameter_instantiation, value) for parameter_instantiation, value in sampling_result]
 
     def _sample(self, list_of_coords):
         rational_points = [coords_to_rational_point(coords) for coords in list_of_coords]
-        sample_points = ParameterInstantiations.from_points(rational_points, self.parameters)
-        result = self.modelchecker.perform_sampling(sample_points)
+        parameter_instantiations = ParameterInstantiations.from_points(rational_points, self.parameters)
+        results = self.modelchecker.perform_sampling(parameter_instantiations)
+        return [(p, results[p]) for p in parameter_instantiations]
 
-        assert len(result) == len(list_of_coords)  # FIXME numerically identical particles
-        return result
-
-    def score(self, point, value):
+    def score(self, parameter_instantiation, value):
         penalty = 10000
 
         def bound_is_satisfied(value, bound):

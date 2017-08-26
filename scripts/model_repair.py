@@ -23,7 +23,8 @@ import click
 import prophesy.adapter.pycarl as pc
 from prophesy.config import configuration
 from prophesy.data.constant import parse_constants_string
-from prophesy.data.property import OperatorBound
+from prophesy.data.point import Point
+from prophesy.data.samples import ParameterInstantiation
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.prismfile import PrismFile
 from prophesy.modelcheckers.prism import PrismModelChecker
@@ -79,9 +80,11 @@ def model_repair(prism_file, pctl_file, pctl_index, modelchecker, constants):
 
     pctl_property = PctlFile(pctl_file).get(pctl_index)
 
-    cost_fct = lambda point: (pc.Rational(0.6) - point.coordinates[0])**2 + (pc.Rational(0.7) - point.coordinates[1])**2
+    def cost_function(parameter_instantiation):
+        origin = ParameterInstantiation.from_point(Point(0.6, 0.7), parameters)
+        return origin.numerical_distance(parameter_instantiation)
 
-    mr = ModelRepairer(mc, parameters, pctl_property, cost_fct)
+    mr = ModelRepairer(mc, parameters, pctl_property, cost_function)
     mr.repair()
 
 
