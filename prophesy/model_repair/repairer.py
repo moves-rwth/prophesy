@@ -12,12 +12,16 @@ def coords_to_rational_point(coords):
     return Point(*(pc.Rational(component) for component in coords))
 
 
+def dummy_cost_function(*_, **__):
+    return 0
+
+
 class ModelRepairer:
-    def __init__(self, modelchecker, parameters, pctl_property, cost_fct):
+    def __init__(self, modelchecker, parameters, pctl_property, cost_fct=None):
         self.modelchecker = modelchecker  # with model already loaded, FIXME
         self.parameters = parameters
         self.pctl_property = pctl_property
-        self.cost_fct = cost_fct if cost_fct is not None else lambda *args, **kwargs: 0
+        self.cost_fct = cost_fct if cost_fct is not None else dummy_cost_function
 
         if pctl_property.bound.asks_for_exact_value():
             raise ValueError("Bound must be one of <, <=, >, >=.")
@@ -34,13 +38,12 @@ class ModelRepairer:
         self.bounds = (left_bounds, right_bounds)
 
         opts = {'num_particles': 20, 'max_iters': 50}
-        self._pso = ParticleSwarmOptimizer(self._objective, self.bounds, obj_fct_is_vectorized=True, options=opts)
+        self._optimizer = ParticleSwarmOptimizer(self._objective, self.bounds, obj_fct_is_vectorized=True, options=opts)
 
     def repair(self):
-        self._pso.optimize()
-        # FIXME API should hide swarm
-        argmin = self._pso.swarm.positions[self._pso.swarm.current_best_index]
-        minimum = self._pso.swarm.scores[self._pso.swarm.current_best_index]
+        self._optimizer.optimize()
+        argmin = self._optimizer.historic_best_position
+        minimum = self._optimizer.historic_best_score
         print(argmin, float(minimum))
         print(float([v for k, v in self._sample([argmin])][0]))
 
