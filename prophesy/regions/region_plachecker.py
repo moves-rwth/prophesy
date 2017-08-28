@@ -2,9 +2,11 @@ import time
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 
+
 class PlaRegionChecker(RegionChecker):
     def __init__(self, backend):
         """
+        Constructor.
         :param backend: 
         :type backend: ParametricModelChecker
         :param parameters: 

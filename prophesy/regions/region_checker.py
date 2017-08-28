@@ -3,7 +3,8 @@ from abc import ABCMeta, abstractmethod
 
 
 class ProblemDescription:
-    def __init__(self, solutionfunction=None, parameters=None, model=None, property=None, wd_constraints=None, gp_constraints=None):
+    def __init__(self, solutionfunction=None, parameters=None, model=None, property=None, wd_constraints=None,
+                 gp_constraints=None):
         """
         Constructor.
         :param solutionfunction: Rational function representing reachability probability.
@@ -23,7 +24,7 @@ class ProblemDescription:
 
 class RegionCheckResult(Enum):
     """
-    Result of region check (counterexample, satisfied, refined, unkown).
+    Result of region check (counterexample, satisfied, refined, unknown).
     """
     CounterExample = 0  #: The region does not satisfy the property; we found a counterexample
     Satisfied = 1  #: The region satisfies the property.
@@ -48,7 +49,6 @@ class RegionChecker:
         """
         self.benchmark_output = []
         self.support_nongraphpreserving = False
-
 
     def supports_only_closed_regions(self):
         return False

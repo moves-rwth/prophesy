@@ -7,13 +7,13 @@ from prophesy.data.constraint import region_from_polygon
 from abc import abstractmethod
 import prophesy.adapter.pycarl as pc
 
+
 class SmtRegionChecker(RegionChecker):
     def __init__(self, backend):
         """
+        Constructor.
         :param backend: Smt solver to check regions
         :type backend: SMTSolver
-        :param parameters: The parameters of the problem
-        :type parameters: ParameterOrder
         """
         super().__init__()
         self._smt2interface = backend
@@ -24,8 +24,6 @@ class SmtRegionChecker(RegionChecker):
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
         raise NotImplementedError("Calling an abstract method")
-
-
 
     @abstractmethod
     def _evaluate(self, smt_model):

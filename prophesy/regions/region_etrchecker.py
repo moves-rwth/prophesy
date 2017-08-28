@@ -18,7 +18,7 @@ class EtrRegionChecker(SmtRegionChecker):
 
     def __init__(self, backend):
         """
-        
+        Constructor.
         :param backend: 
         """
         super().__init__(backend)
@@ -98,7 +98,6 @@ class EtrRegionChecker(SmtRegionChecker):
             if initial_state_var is None:
                 raise RuntimeError("Initial state is a reward 0 state. Currently not supported")
 
-
         safe_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._safe_relation)
         bad_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._bad_relation)
         self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
@@ -147,7 +146,8 @@ class EtrRegionChecker(SmtRegionChecker):
                 if _bounded_variables:
                     # if bounded variable constraints are to be added, do so.
                     self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
-                state_equation = -pc.RationalFunction(state_var) + (pc.convert_from_storm_type(reward_model.state_rewards[state.id].rational_function()))
+                state_equation = -pc.RationalFunction(state_var) + (
+                    pc.convert_from_storm_type(reward_model.state_rewards[state.id].rational_function()))
                 for action in state.actions:
                     for transition in action.transitions:
                         # obtain the transition value as a polynomial.
@@ -163,7 +163,6 @@ class EtrRegionChecker(SmtRegionChecker):
                 logger.debug(state_equation)
                 state_constraint = pc.Constraint(state_equation.numerator, pc.Relation.EQ)
                 self._smt2interface.assert_constraint(state_constraint)
-
 
     def _find_prob01_states(self, property, model):
         formula = property.raw_formula

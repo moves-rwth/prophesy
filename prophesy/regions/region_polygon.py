@@ -10,6 +10,7 @@ class ConstraintPolygon(RegionGenerator):
     This generator is meant to be used via a user interface, as it cannot generate new polygons itself.
     Moreover, this generator is limited to 2 dimensions.
     """
+
     def __init__(self, samples, parameters, threshold, _smt2interface, wd_constraints, gp_constraints):
         if len(parameters) != 2:
             raise NotImplementedError
@@ -35,7 +36,7 @@ class ConstraintPolygon(RegionGenerator):
             poly = self.safe_polygons[0]
             self.safe_polygons = self.safe_polygons[1:]
             # TODO check that the polygons are indeed welldefined.
-            return poly,  WelldefinednessResult.Welldefined, True
+            return poly, WelldefinednessResult.Welldefined, True
         elif len(self.bad_polygons) > 0:
             poly = self.bad_polygons[0]
             self.bad_polygons = self.bad_polygons[1:]

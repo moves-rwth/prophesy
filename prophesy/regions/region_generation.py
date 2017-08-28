@@ -119,7 +119,6 @@ class RegionGenerator:
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
-
     def is_inside_polygon(self, point, polygon):
         # checks if the point lies inside the polygon
         return point.within(polygon) or point.touches(polygon)
@@ -194,7 +193,7 @@ class RegionGenerator:
         for result in self:
             res_status, data = result
             if res_status == WelldefinednessResult.Illdefined:
-                self.all_polys.append((data,WelldefinednessResult.Illdefined))
+                self.all_polys.append((data, WelldefinednessResult.Illdefined))
                 self.illdefined_polys.append(data)
             elif res_status == RegionCheckResult.Satisfied:
                 self.all_polys.append(data)
