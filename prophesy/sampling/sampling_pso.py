@@ -11,12 +11,12 @@ def coords_to_rational_point(coords):
 
 
 class ParticleSwarmSampleGenerator(SampleGenerator):
-    """Yields the particle positions for each PSO iteration."""
-    # FIXME but thats wrong, should return sampling_result
+    """Perform PSO yielding each iterations' samples (particle positions)."""
 
     def __init__(self, sampler, parameters, score_fct, pso_options=None):
         super().__init__(sampler, parameters)
         self.score_fct = score_fct
+        self.latest_sampling_result = None
 
         intervals = [p.interval for p in self.parameters]
         left_bounds = [float(i.left_bound()) for i in intervals]
@@ -28,21 +28,22 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         self._pso = ParticleSwarmOptimizer(self._objective, self.bounds, obj_fct_is_vectorized=True, options=pso_options)
         self._pso.initialize()
 
-    def _objective(self, points):
-        sampling_result = self._sample(points)
-        return [self.score_fct(parameter_instantiation, value) for parameter_instantiation, value in sampling_result]
-
-    def _sample(self, list_of_coords):
+    def _objective(self, list_of_coords):
         rational_points = [coords_to_rational_point(coords) for coords in list_of_coords]
         parameter_instantiations = ParameterInstantiations.from_points(rational_points, self.parameters)
+
         results = self.sampler.perform_sampling(parameter_instantiations)
-        return [(p, results[p]) for p in parameter_instantiations]
+        self.latest_sampling_result = results
+
+        result_as_ordered_list = [(p, results[p]) for p in parameter_instantiations]
+        return [self.score_fct(param_inst, value) for param_inst, value in result_as_ordered_list]
 
     def __iter__(self):
-        yield self._pso.positions  # initial spawn
-        while self._pso.stop():  # uh, yeah, I'll rename that
+        """Does what IterativeOptimizer.optimize does but yields stuff."""
+        yield self.latest_sampling_result  # initial spawn
+        while not self._pso.stop():
             self._pso.iteration += 1
             self._pso.iterate()
-            yield self._pso.positions
+            yield self.latest_sampling_result
         else:
             raise StopIteration
