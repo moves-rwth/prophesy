@@ -60,8 +60,13 @@ def parse_parameters(prism_file, constants):
     return parameters
 
 
-# TODO: cost function (as string? as parsed by sympy or something?)
-# TODO: what's needed to handle MDPs?
+# TODO:
+# * cost function (as string? as parsed by sympy or something?)
+#    * pycarl parser (prefix notation, see SMT lib solutionfunctionfile)
+# * what's needed to handle MDPs?
+# * hint / subsys analysis
+# * publish optim
+
 @click.command()
 @click.option('--prism-file', help='parametric Markov chain in Prism file format', type=click.Path(exists=True),
               default='../benchmarkfiles/brp/brp_16-2.pm', required=True)
