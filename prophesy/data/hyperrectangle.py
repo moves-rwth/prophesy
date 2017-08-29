@@ -21,16 +21,16 @@ class HyperRectangle(object):
         self.intervals = tuple(intervals)
 
     @classmethod
-    def from_extremal_points(cls, lowerpoint, upperpoint, boundtype):
+    def from_extremal_points(cls, point1, point2, boundtype):
         """
-        From a point containing all the lower boudnaries and a point containing all upper boundaries, construct a hyperrectangle
-        
-        :param lowerpoint: A point corresponding to the lower boundary
-        :param upperpoint: A point corresponding to the upper boundary
-        :param boundtype: BoundType to use as bounds for the resulting HyperRectangle
-        :return: HyperRectangle
+        Construct a hyperrectangle from two boundary points.
+        :param point1: The first point.
+        :param point2: The second point.
+        :param boundtype: BoundType to use as bounds for the resulting HyperRectangle.
+        :return: HyperRectangle.
         """
-        return cls(*[Interval(l, boundtype, r, boundtype) for l, r in zip(lowerpoint, upperpoint)])
+
+        return cls(*[Interval(min(l, r), boundtype, max(l, r), boundtype) for l, r in zip(point1, point2)])
 
     def dimension(self):
         return len(self.intervals)
