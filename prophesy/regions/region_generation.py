@@ -10,20 +10,30 @@ from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.output.plot import Plot
 from prophesy.util import ensure_dir_exists
 from prophesy.config import configuration
-from prophesy.exceptions.module_error import ModuleError
 
 from prophesy.regions.welldefinedness import WelldefinednessResult
+
+logger = logging.getLogger(__name__)
 
 
 class RegionGenerator:
     """
     A generator for regions. 
     This class acts as an iterable that generates new regions (or counterexamples),
-    until the search space is exhausted (which possibly never happens)\
+    until the search space is exhausted (which possibly never happens).
     """
     __metaclass__ = ABCMeta
 
     def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints):
+        """
+        Constructor.
+        :param samples: List of samples.
+        :param parameters: Parameters of the model.
+        :param threshold: Threshold.
+        :param checker: Region checker.
+        :param wd_constraints: Well-defined constraints.
+        :param gp_constraints: Graph-preserving constraints.
+        """
         self.safe_samples, self.bad_samples, self.illdefined_samples = samples.copy().split(threshold)
         self.parameters = parameters
         self.threshold = threshold
@@ -41,6 +51,7 @@ class RegionGenerator:
         self.wd_constraints = wd_constraints
         self.gp_constraints = gp_constraints
 
+        # Options for plotting.
         self._plot_candidates = False
         self.plot = len(self.parameters) <= 2
         self.first_pdf = True
@@ -72,12 +83,13 @@ class RegionGenerator:
 
     def _add_pdf(self, name):
         """
-        Adds pdf with name to result.pdf in tmp directory
+        Add PDF with name to result.pdf in tmp directory.
         """
-        # TODO Only do this if the option is installed.
         if not configuration.is_module_available("pypdf2"):
-            raise ModuleError(
-                "Module pypdf2 is needed for using the pdf export for regions. Maybe your config is oudated?")
+            logging.warning("Module 'PyPDF2' is not available. PDF export is not supported.")
+            return
+
+        # Load module as it is available
         from PyPDF2 import PdfFileMerger, PdfFileReader
 
         if self.first_pdf:
@@ -90,10 +102,19 @@ class RegionGenerator:
             merger.append(PdfFileReader(name, 'rb'))
             merger.write(self.result_file)
 
+    @abstractmethod
     def plot_candidate(self):
-        pass
+        """
+        Plot the current candidate.
+        """
+        raise NotImplementedError("Abstract parent method")
 
     def plot_results(self, *args, **kwargs):
+        """
+        Plot results.
+        :param args: Arguments.
+        :param kwargs: Arguments.
+        """
         if not self.plot:
             return
 
@@ -109,81 +130,94 @@ class RegionGenerator:
         samples_green = [res.instantiation.get_point(self.parameters) for res in
                          self.safe_samples.instantiation_results()]
         samples_red = [res.instantiation.get_point(self.parameters) for res in self.bad_samples.instantiation_results()]
+        samples_black = [res.instantiation.get_point(self.parameters) for res in
+                         self.illdefined_samples.instantiation_results()]
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
                           samples_green=samples_green,
                           samples_red=samples_red,
+                          samples_black=samples_black,
                           path_to_save=result_tmp_file,
                           *args, **kwargs)
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
-    def is_inside_polygon(self, point, polygon):
-        # checks if the point lies inside the polygon
-        return point.within(polygon) or point.touches(polygon)
+    # def is_inside_polygon(self, point, polygon):
+    #    # checks if the point lies inside the polygon
+    #    return point.within(polygon) or point.touches(polygon)
 
-    def intersects(self, polygon1, polygon2):
-        """checks if two polygons intersect, touching is okay"""
-        # TODO first check bounding boxes?
-        return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
+    # def intersects(self, polygon1, polygon2):
+    #    """checks if two polygons intersect, touching is okay"""
+    #    # TODO first check bounding boxes?
+    #    return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
 
-    @abstractmethod
-    def refine_with_intersections(self, polygon):
-        """Compute the intersections of the polygon with the existing ones
-        and refine it by getting the difference
-        returns the refined polygon"""
-        raise NotImplementedError("Abstract parent method")
+    # @abstractmethod
+    # def refine_with_intersections(self, polygon):
+    #    """Compute the intersections of the polygon with the existing ones
+    #    and refine it by getting the difference
+    #    returns the refined polygon"""
+    #    raise NotImplementedError("Abstract parent method")
+
+    @staticmethod
+    def _area(region):
+        """
+        Get area of given region.
+        :param region: Region.
+        :return: Area of region.
+        """
+        if isinstance(region, shapely.geometry.Polygon):
+            return region.area
+        if isinstance(region, HyperRectangle):
+            return region.size()
+        assert False
 
     @abstractmethod
     def next_region(self):
-        """Generate a new set of regions"""
+        """
+        Generate a new region.
+        :return Tuple (new region, well-definedness, safe/unsafe) or None if no next region exists.
+        """
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def fail_region(self, region, safe):
-        """Update current set of regions, usually to avoid mem or time out.
-        Returns same as next_constraint"""
+    def fail_region(self):
+        """
+        Called after a region could not be checked, usually due to memout or timeout.
+        Updates the current set of regions.
+        """
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def reject_region(self, region, safe, sample):
-        """Called for a constraint that is rejected (sample found).
-        
-        :param constraint: Polygon or HyperRectangle
-        :param safe: Boolean
-        :param sample: Sample
+    def reject_region(self, sample):
+        """
+        Called after a region is rejected (sample found).
+        :param sample: Sample acting as a counterexample for the constraint.
         """
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
     def ignore_region(self):
         """
-        Region is overall ill-defined, skip it
+        Called for a region which is overall ill-defined. Skip it.
         """
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
     def accept_region(self):
-        """Called for a constraint that is accepted"""
+        """
+        Called after a region is accepted.
+        """
         raise NotImplementedError("Abstract parent method")
 
-    def _area(self, pol):
-        if isinstance(pol, shapely.geometry.Polygon):
-            return pol.area
-        if isinstance(pol, HyperRectangle):
-            return pol.size()
-        assert False
-
     def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True):
-        """Iteratively generates new regions, heuristically, attempting to
-        find the largest safe or unsafe area
-        
-        :param max_iter: Number of regions to generate/check at most (not counting SMT failures),
-        -1 for unbounded
-        :param max_area: Maximal area that should be covered.
-        :param plot_every_n: How often should the plot be appended to the pdf.
-        :param plot_candidates: True, iff candidates should be plotted
+        """
+        Iteratively generate new regions, heuristically, attempting to find the largest safe or unsafe area.
+        :param max_iter: Number of regions to generate/check at most (not counting SMT failures), -1 for unbounded
+        :param max_area: Maximal area percentage that should be covered.
+        :param plot_every_n: How often should the plot be appended to the PDF.
+        :param plot_candidates: True, iff candidates should be plotted.
+        :return Tuple (safe regions, unsafe regions, samples)
         """
         if max_iter == 0:
             return self.safe_polys, self.bad_polys, self.new_samples
@@ -203,6 +237,7 @@ class RegionGenerator:
                 else:
                     self.bad_polys.append(poly)
             elif res_status == RegionCheckResult.CounterExample:
+                # Needs further checks
                 pass
             elif res_status == RegionCheckResult.Refined:
                 raise NotImplementedError("We have to record the refinement.")
@@ -213,7 +248,8 @@ class RegionGenerator:
             else:
                 assert False  # All options should be covered by switching if/else
 
-            area_sum = sum(self._area(poly) for poly, safe in self.all_polys)
+            # Check termination criteria
+            area_sum = sum(RegionGenerator._area(poly) for poly, safe in self.all_polys)
             if area_sum > max_area * self.max_area_sum:
                 break
 
@@ -222,7 +258,7 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if res_status != RegionCheckResult.unknown and len(self.all_polys) % plot_every_n == 0:
+            if res_status != RegionCheckResult.Unknown and len(self.all_polys) % plot_every_n == 0:
                 self.plot_results(display=False)
 
         # Plot the final outcome
@@ -233,16 +269,23 @@ class RegionGenerator:
 
         return self.safe_polys, self.bad_polys, self.new_samples
 
-    def _analyse_region(self, polygon, welldefined, safe):
+    def _analyse_region(self, region, welldefined, safe):
+        """
+        Analyse the given region.
+        :param region: Region.
+        :param welldefined: Flag iff the region is welldefined.
+        :param safe: Flag iff the region should be considered safe.
+        :return: Tuple (RegionCheckResult, (region/counterexample, safe))
+        """
         assert welldefined == WelldefinednessResult.Welldefined
-        checkresult, additional = self.checker.analyse_region(polygon, safe)
+        checkresult, additional = self.checker.analyse_region(region, safe)
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
             # TODO region might contain this info, why not use that.
             self.safe_samples = self.safe_samples.filter_instantiation(
-                lambda x: not polygon.contains(x.get_point(self.parameters)))
+                lambda x: not region.contains(x.get_point(self.parameters)))
             self.bad_samples = self.bad_samples.filter_instantiation(
-                lambda x: not polygon.contains(x.get_point(self.parameters)))
+                lambda x: not region.contains(x.get_point(self.parameters)))
 
             # TODO make the code above work with the polygons, as below.
             # for instantiation, _ in self.samples:
@@ -251,14 +294,14 @@ class RegionGenerator:
 
             # update everything
             self.accept_region()
-            return checkresult, (polygon, safe)
+            return checkresult, (region, safe)
         elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
             if additional.result >= self.threshold:
                 self.safe_samples.add_result(additional)
             else:
                 self.bad_samples.add_result(additional)
-            self.reject_region(polygon, safe, additional)
+            self.reject_region(additional)
             return checkresult, (additional, safe)
         elif checkresult == RegionCheckResult.Refined:
             # We refined the existing region.
@@ -272,4 +315,4 @@ class RegionGenerator:
 
         else:
             self.fail_region()
-            return RegionCheckResult.Unknown, (polygon, safe)
+            return RegionCheckResult.Unknown, (region, safe)

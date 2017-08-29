@@ -1,4 +1,5 @@
 import logging
+
 from prophesy.regions.region_generation import RegionGenerator
 from prophesy.regions.welldefinedness import check_welldefinedness, WelldefinednessResult
 from prophesy.data.hyperrectangle import HyperRectangle
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class _AnnotatedRegion:
     """
-    Named tuple holding the region and additional information
+    Named tuple holding the region and additional information.
     """
 
     def __init__(self, region, samples, safe=None, well_defined=WelldefinednessResult.Undecided,
@@ -26,6 +27,10 @@ class _AnnotatedRegion:
 
 
 class HyperRectangleRegions(RegionGenerator):
+    """
+    Region generation using hyperrectangles.
+    """
+
     def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints):
         super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints)
 
@@ -33,7 +38,7 @@ class HyperRectangleRegions(RegionGenerator):
         self.parked_regions = []
         self.accepted_regions_safe = []
         self.accepted_regions_unsafe = []
-        # Number of consecutive recursive splits() maximum
+        # Number of maximal consecutive recursive splits.
         self.check_depth = 5
 
         # Setup initial region
@@ -42,34 +47,46 @@ class HyperRectangleRegions(RegionGenerator):
             region = region.close()
         regionsamples = []
 
+        # Add all samples to region
         for instantiation, value in self.safe_samples:
-            if not region.contains(instantiation.get_point(parameters)):
-                continue
-            regionsamples.append((instantiation.get_point(parameters), True))
+            if region.contains(instantiation.get_point(parameters)):
+                regionsamples.append((instantiation.get_point(parameters), True))
         for instantiation, value in self.bad_samples:
-            if not region.contains(instantiation.get_point(parameters)):
-                continue
-            regionsamples.append((instantiation.get_point(parameters), False))
+            if region.contains(instantiation.get_point(parameters)):
+                regionsamples.append((instantiation.get_point(parameters), False))
 
+        # Check initial region
         self.check_region(_AnnotatedRegion(region, regionsamples))
         self._sort_regions()
 
     def _sort_regions_by_size(self, reverse=True):
+        """
+        Sort regions by size.
+        :param reverse: Flag indicating if order should be reversed.
+        """
         self.regions.sort(key=lambda x: x.region.size(), reverse=reverse)
 
     def _sort_regions(self):
+        """
+        Sort regions by size and closest inverse sample distance.
+        """
         self.regions.sort(key=lambda x: (x.well_defined != WelldefinednessResult.Illdefined, -x.region.size(),
                                          -x.closest_inverse_sample_distance if x.closest_inverse_sample_distance else 0))
 
     def plot_candidate(self):
-        boxes = []
-        boxes.append(self.regions[0].region)
+        boxes = [self.regions[0].region]
         if self.regions[0].safe:
             self.plot_results(poly_blue_dotted=boxes, display=False)
         else:
             self.plot_results(poly_blue_crossed=boxes, display=False)
 
     def _compute_closest_inverse_sample(self, hypothesis_safe, region):
+        """
+        Get sample clostest to the region center.
+        :param hypothesis_safe: Flag iff the region is considered safe.
+        :param region: Region.
+        :return: Closest sample to region center or None if no sample was found.
+        """
         if hypothesis_safe:
             inverse_samples = self.bad_samples
         else:
@@ -80,36 +97,45 @@ class HyperRectangleRegions(RegionGenerator):
         else:
             center = region.center()
             dist = None
-            for s in inverse_samples:
-                new_dist = s[0].get_point(self.parameters).distance(center)
+            for sample in inverse_samples:
+                new_dist = sample[0].get_point(self.parameters).distance(center)
                 if not dist or new_dist <= dist:
                     dist = new_dist
             return dist
 
     def _guess_hypothesis(self, region):
-        logger.debug("Guess hypothesis for region %s", str(region))
+        """
+        Get hypothesis for region according to closest sample.
+        :param region: Region.
+        :return: True iff the region hypothesis is safe.
+        """
+        logger.debug("Guess hypothesis for region {}".format(region))
         sublogger = logger.getChild("_guess_hypothesis")
         center = region.center()
-        sublogger.debug("Center is at %s", center)
+        sublogger.debug("Center is at {}".format(center))
         dist = None
-        for s in self.safe_samples:
-            new_dist = s[0].get_point(self.parameters).distance(center)
+        for sample in self.safe_samples:
+            new_dist = sample[0].get_point(self.parameters).distance(center)
             if not dist or new_dist <= dist:
-                sublogger.debug("Currently closest safe sample: %s", s[0])
+                sublogger.debug("Currently closest safe sample: {}".format(sample[0]))
                 dist = new_dist
-        for s in self.bad_samples:
-            new_dist = s[0].get_point(self.parameters).distance(center)
+        for sample in self.bad_samples:
+            new_dist = sample[0].get_point(self.parameters).distance(center)
             if new_dist < dist:
-                sublogger.debug("Currently closest bad sample  %s is closer than any safe sample", s[0])
+                sublogger.debug("Currently closest bad sample {} is closer than any safe sample".format(sample[0]))
                 return False
         return True
         # TODO Consider close regions for this.
 
     def check_region(self, region, depth=0):
-        """Check if given region can be assumed safe or bad based on
-        known samples. If samples are mixed, split the region and retry.
-        Resulting regions are added to self.regions"""
-        if depth == self.check_depth:
+        """
+        Check if the given region can be assumed safe or bad based on known samples.
+        If samples are mixed, split the region and retry.
+        Resulting regions are added to self.regions.
+        :param region: Region.
+        :param depth: Maximal depth for region refining.
+        """
+        if depth >= self.check_depth:
             self.parked_regions.append(region)
             return
 
@@ -164,9 +190,8 @@ class HyperRectangleRegions(RegionGenerator):
         for newregion in newelems:
             newsamples = []
             for pt, safe in region.samples:
-                if not newregion.contains(pt):
-                    continue
-                newsamples.append((pt, safe))
+                if newregion.contains(pt):
+                    newsamples.append((pt, safe))
             self.check_region(_AnnotatedRegion(newregion, newsamples, well_defined=region.well_defined,
                                                graph_preserving=region.graph_preserving), depth + 1)
 
@@ -207,15 +232,16 @@ class HyperRectangleRegions(RegionGenerator):
 
         self._sort_regions()
 
-    def reject_region(self, constraint, safe, sample):
-        # New sample, add it to current region, and check it
-        # Also remove failed region
-        self.regions[0].samples.append((sample.get_instantiation_point(self.parameters), not safe))
+    def reject_region(self, sample):
+        # New sample, add it to current region
+        self.regions[0].samples.append((sample.get_instantiation_point(self.parameters), not self.regions[0].safe))
+        # Check region
         self.check_region(self.regions[0])
+        # Also remove failed region
         self.regions = self.regions[1:]
         self._sort_regions()
 
-    def refine_region(self, new_regions, safe):
+    def refine_region(self, new_regions):
         """
         If a constraint could not be checked, but we know that only a subconstraint has to be checked afterwards.
         """
@@ -230,10 +256,11 @@ class HyperRectangleRegions(RegionGenerator):
             self.accepted_regions_safe.append(self.regions[0])
         else:
             self.accepted_regions_unsafe.append(self.regions[0])
+        # Remove from all regions
         self.regions = self.regions[1:]
 
     def ignore_region(self):
-        # Skip region
+        # Remove region
         self.regions = self.regions[1:]
 
     def next_region(self):

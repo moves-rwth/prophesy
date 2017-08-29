@@ -20,7 +20,7 @@ class ConstraintPolygon(RegionGenerator):
         self.safe_polygons = []
         self.bad_polygons = []
 
-    def fail_region(self, constraint, safe):
+    def fail_region(self):
         # TODO inform user
         # TODO: convex constraint might be split in triangles
         return None
@@ -28,7 +28,10 @@ class ConstraintPolygon(RegionGenerator):
     def accept_region(self):
         pass
 
-    def reject_region(self, constraint, safe, sample):
+    def reject_region(self, sample):
+        pass
+
+    def ignore_region(self):
         pass
 
     def next_region(self):
@@ -47,15 +50,12 @@ class ConstraintPolygon(RegionGenerator):
 
     def add_polygon(self, polygon, safe):
         """
-        Add new polygon
-        
-        :param polygon: 
-        :param safe: 
-        :return: 
+        Add new polygon.
+        :param polygon: Polygon.
+        :param safe: Flag iff the polygon should be considered safe.
         """
         assert len(polygon.exterior.coords) >= 3, "Must supply at least 3 points"
-        # Splitting the polygon immediately, the result may be smaller than
-        # what was input, but better than failure
+        # Splitting the polygon immediately, the result may be smaller than what was input, but better than failure
         polys = self._get_convex_poly(polygon)
         if safe:
             self.safe_polygons.extend(polys)
@@ -65,14 +65,22 @@ class ConstraintPolygon(RegionGenerator):
     def _get_convex_poly(self, complex_poly):
         """
         Makes polynomial convex.
-        :param complex_poly: 
-        :return: 
+        :param complex_poly: Polygon.
+        :return: List of convex polygons.
         """
         # CCW polygon
         ccw_poly = orient(complex_poly, 1.0)
         convex_poly = ccw_poly.convex_hull
-        # If concave (ie convex hull has less points), then split in triangles
+        # If concave (i.e., convex hull has less points), then split in triangles
         if len(list(ccw_poly.exterior.coords)) > len(list(convex_poly.exterior.coords)):
             return triangulate(complex_poly)
         else:
             return [complex_poly]
+
+    def plot_candidate(self):
+        if len(self.safe_polygons) > 0:
+            poly = self.safe_polygons[0]
+            self.plot_results(poly_blue_dotted=[poly], display=False)
+        elif len(self.bad_polygons) > 0:
+            poly = self.bad_polygons[0]
+            self.plot_results(poly_blue_crossed=[poly], display=False)
