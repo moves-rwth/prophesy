@@ -261,12 +261,12 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 assert hypothesis == stormpy.pars.RegionResultHypothesis.ALLSAT
                 raise RuntimeError("Contradiction of hypothesis")
         elif result == stormpy.pars.RegionResult.UNKNOWN:
-            region_result = RegionCheckResult.unknown
+            region_result = RegionCheckResult.Unknown
         elif result == stormpy.pars.RegionResult.EXISTSBOTH:
             raise RuntimeError("Unexpected outcome, something went wrong.")
         elif result == stormpy.pars.RegionResult.CENTERSAT or result == stormpy.pars.RegionResult.CENTERVIOLATED:
             logger.warning("Center sat/violated is not expected.")
-            region_result = RegionCheckResult.unknown
+            region_result = RegionCheckResult.Unknown
         else:
             raise RuntimeError("Unexpected result '{}'".format(result))
 

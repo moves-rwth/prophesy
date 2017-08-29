@@ -91,4 +91,4 @@ class SmtRegionChecker(RegionChecker):
             return RegionCheckResult.CounterExample, self._evaluate(smt_model)
         else:
             # SMT failed completely
-            return RegionCheckResult.unknown, None
+            return RegionCheckResult.Unknown, None

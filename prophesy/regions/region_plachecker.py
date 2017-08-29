@@ -50,7 +50,7 @@ class PlaRegionChecker(RegionChecker):
 
         if regions_result == RegionCheckResult.Satisfied:
             return RegionCheckResult.Satisfied, None
-        elif regions_result == RegionCheckResult.unknown:
-            return RegionCheckResult.unknown, None
+        elif regions_result == RegionCheckResult.Unknown:
+            return RegionCheckResult.Unknown, None
         else:
             raise ValueError("Pla is not expected to result other kind of results")

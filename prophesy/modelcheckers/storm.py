@@ -256,10 +256,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                 elif res_line[0] == "ExistsBoth":
                     raise RuntimeError("Unexpected outcome, something went wrong.")
                 elif res_line[0] == "Unknown":
-                    region_result = RegionCheckResult.unknown
+                    region_result = RegionCheckResult.Unknown
                 elif res_line[0] == "CenterSat" or res_line[0] == "CenterViolated":
                     logger.warning("Center sat is not expected.")
-                    region_result = RegionCheckResult.unknown
+                    region_result = RegionCheckResult.Unknown
 
                 else:
                     raise RuntimeError("Unexpected content '{}' in result file".format(res_line[0]))

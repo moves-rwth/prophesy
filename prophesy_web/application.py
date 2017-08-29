@@ -659,7 +659,7 @@ class ConstraintHandler(CegarHandler):
                 if socket is not None:
                     socket.send_samples({sample.pt:sample.val})
             else:
-                assert check_result is RegionCheckResult.unknown
+                assert check_result is RegionCheckResult.Unknown
                 print("Check result 'unknown' not considered.")
                 #TODO refine
                 pass

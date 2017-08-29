@@ -207,7 +207,8 @@ class RegionGenerator:
             elif res_status == RegionCheckResult.Refined:
                 raise NotImplementedError("We have to record the refinement.")
                 # self.all_polys.append()
-            elif res_status == RegionCheckResult.unknown:
+            elif res_status == RegionCheckResult.Unknown:
+                # Needs further checks
                 pass
             else:
                 assert False  # All options should be covered by switching if/else
@@ -271,4 +272,4 @@ class RegionGenerator:
 
         else:
             self.fail_region()
-            return RegionCheckResult.unknown, (polygon, safe)
+            return RegionCheckResult.Unknown, (polygon, safe)
