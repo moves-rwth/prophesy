@@ -1,8 +1,11 @@
 import logging
+import itertools
 
 from prophesy.regions.region_generation import RegionGenerator
 from prophesy.regions.welldefinedness import check_welldefinedness, WelldefinednessResult
 from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.interval import BoundType
+from prophesy.data.point import Point
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 
 logger = logging.getLogger(__name__)
@@ -127,6 +130,48 @@ class HyperRectangleRegions(RegionGenerator):
         return True
         # TODO Consider close regions for this.
 
+    @staticmethod
+    def split_by_growing_rectangles(region):
+        print("Split region {}".format(region.region))
+        result = []
+
+        # Get all anchor points
+        bounds = [(interv.left_bound(), interv.right_bound()) for interv in region.region.intervals]
+        anchor_points = [Point(*val) for val in itertools.product(*bounds)]
+        print("Anchor points: {}".format(", ".join(str(point) for point in anchor_points)))
+
+        best_candidate = None
+        for anchor in anchor_points:
+            hypothesis = region.safe
+            for anchor2, safe_anchor in region.samples:
+                print("Test anchor {} and sample {}".format(anchor, anchor2))
+                rectangle = HyperRectangle.from_extremal_points(anchor, anchor2, BoundType.closed)
+                assert rectangle is not None
+                if best_candidate is not None and rectangle.size() <= best_candidate[0]:
+                    # Larger candidate already known
+                    continue
+
+                # Check candidate
+                valid = True
+                for pt, safe in region.samples:
+                    if rectangle.contains(pt) and safe != safe_anchor:
+                        valid = False
+                        break
+                if valid:
+                    print("Found better rectangle: {}".format(rectangle))
+                    best_candidate = (rectangle.size(), anchor, anchor2)
+
+        assert best_candidate is not None
+
+        print("Candidate: {} for anchor {} and sample {}".format(best_candidate[0], best_candidate[1], best_candidate[2]))
+        # Construct hyperrectangles with all anchors and the sample point
+        for anchor in anchor_points:
+            new_rectangle = HyperRectangle.from_extremal_points(anchor, best_candidate[2], BoundType.closed)
+            result.append(new_rectangle)
+
+        print("New regions: \n\t{}".format("\n\t".join([str(region) for region in result])))
+        return result
+
     def check_region(self, region, depth=0):
         """
         Check if the given region can be assumed safe or bad based on known samples.
@@ -184,7 +229,8 @@ class HyperRectangleRegions(RegionGenerator):
 
         # Mixed region, split.
         # TODO better splits
-        newelems = region.region.split_in_every_dimension()
+        newelems = HyperRectangleRegions.split_by_growing_rectangles(region)
+        # newelems = region.region.split_in_every_dimension()
         if newelems is None:
             return None
         for newregion in newelems:
