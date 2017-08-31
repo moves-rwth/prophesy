@@ -142,7 +142,6 @@ class HyperRectangleRegions(RegionGenerator):
         :return: New regions after splitting.
         """
         logger.debug("Split region {}".format(region.region))
-        result = []
 
         # Get all anchor points
         bounds = [(interv.left_bound(), interv.right_bound()) for interv in region.region.intervals]
@@ -153,10 +152,11 @@ class HyperRectangleRegions(RegionGenerator):
             for anchor2, safe_anchor in region.samples:
                 rectangle = HyperRectangle.from_extremal_points(anchor, anchor2,
                                                                 BoundType.closed)  # TODO handle open intervals
-                if rectangle.size() >= region.region.size():
-                    # Original region
+                size = rectangle.size()
+                if size <= 0 or size >= region.region.size():
+                    # Rectangle too small or too large
                     continue
-                if best_candidate is not None and rectangle.size() <= best_candidate[0]:
+                if best_candidate is not None and size <= best_candidate[0]:
                     # Larger candidate already known
                     continue
 
@@ -168,12 +168,17 @@ class HyperRectangleRegions(RegionGenerator):
                         break
                 if valid:
                     # Found better candidate
-                    best_candidate = (rectangle.size(), anchor, anchor2)
+                    best_candidate = (size, anchor, anchor2)
 
-        assert best_candidate is not None
+        if best_candidate is None:
+            # No good sample inside the region found -> split uniformly
+            logger.debug("No candidate region found, split uniformly as fallback.")
+            return HyperRectangleRegions.split_uniformly_in_every_dimension(region)
+
         logger.debug(
             "Candidate: {} for anchor {} and sample {}".format(best_candidate[0], best_candidate[1], best_candidate[2]))
         # Construct hyperrectangle for each anchor and the sample point
+        result = []
         for anchor in anchor_points:
             new_rectangle = HyperRectangle.from_extremal_points(anchor, best_candidate[2], BoundType.closed)
             result.append(new_rectangle)
