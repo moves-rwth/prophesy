@@ -66,14 +66,14 @@ class RegionChecker:
 
     def print_info(self):
         i = 1
-        print("no.  result   time  tot. time   area  tot. area")
+        print("no.  result          time    tot. time  area   tot. area")
         total_sec = 0
         total_area = 0
         for benchmark in self.benchmark_output:
             total_sec = total_sec + benchmark[1]
             if benchmark[0] == RegionCheckResult.Satisfied:
                 total_area = total_area + benchmark[2]
-            print("{:3}   {:>6s}  {:5.2f}     {:6.2f}  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1],
+            print("{:3}  {:14s}  {:5.2f}s    {:6.2f}s  {:4.3f}      {:4.3f}".format(i, benchmark[0].name, benchmark[1],
                                                                                     total_sec, float(benchmark[2]),
                                                                                     float(total_area)))
             i = i + 1
