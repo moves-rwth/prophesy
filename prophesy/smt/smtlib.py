@@ -85,6 +85,7 @@ class SmtlibSolver(SMTSolver):
             else:
                 self.exit_stored = False
             self._write("(exit)\n")
+            self.process.terminate()
             self.process = None
         elif not self.exit_stored:
             self.string += "(exit)\n"
@@ -97,7 +98,9 @@ class SmtlibSolver(SMTSolver):
         args = [self.location, "--version"]
         p = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT,
                              universal_newlines=True)
-        return p.communicate()[0].rstrip()
+        version = p.communicate()[0].rstrip()
+        p.terminate()
+        return version
 
     def check(self):
         assert self.process is not None

@@ -159,7 +159,9 @@ def run_tool(args, quiet=False, outputfile=None):
     pipe = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     if quiet and outputfile is None:
-        return pipe.communicate()[0].decode(encoding='UTF-8')
+        result = pipe.communicate()[0].decode(encoding='UTF-8')
+        pipe.terminate()
+        return result
     else:
         for line in iter(pipe.stdout.readline, ""):
             if not line and pipe.poll() is not None:
