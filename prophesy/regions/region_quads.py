@@ -153,7 +153,9 @@ class HyperRectangleRegions(RegionGenerator):
             for anchor2, safe_anchor in region.samples:
                 rectangle = HyperRectangle.from_extremal_points(anchor, anchor2,
                                                                 BoundType.closed)  # TODO handle open intervals
-                assert rectangle is not None
+                if rectangle.size() >= region.region.size():
+                    # Original region
+                    continue
                 if best_candidate is not None and rectangle.size() <= best_candidate[0]:
                     # Larger candidate already known
                     continue
@@ -169,7 +171,6 @@ class HyperRectangleRegions(RegionGenerator):
                     best_candidate = (rectangle.size(), anchor, anchor2)
 
         assert best_candidate is not None
-
         logger.debug(
             "Candidate: {} for anchor {} and sample {}".format(best_candidate[0], best_candidate[1], best_candidate[2]))
         # Construct hyperrectangle for each anchor and the sample point
