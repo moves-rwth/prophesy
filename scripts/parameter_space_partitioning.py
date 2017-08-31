@@ -133,8 +133,6 @@ def run(args=sys.argv[1:], interactive=False):
 
     logger.debug("Setup Region Checker Interface")
 
-
-
     solver = None
     if cmdargs.z3:
         if 'z3' not in solvers:
@@ -164,7 +162,6 @@ def run(args=sys.argv[1:], interactive=False):
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
         mc = StormpyModelChecker()
 
-
     if cmdargs.etr:
         checker = EtrRegionChecker(solver)
     elif cmdargs.sfsmt:
@@ -189,17 +186,16 @@ def run(args=sys.argv[1:], interactive=False):
     arguments = samples, problem_description.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
 
     if cmdargs.rectangles:
-        raise NotImplementedError("Rectangles are currently not supported.")
+        generator = HyperRectangleRegions(*arguments, split_uniformly=False)
     elif cmdargs.quads:
-        generator = HyperRectangleRegions(*arguments)
+        generator = HyperRectangleRegions(*arguments, split_uniformly=True)
     elif cmdargs.poly:
-        generator = ConstraintPolygon(*arguments)
         # For testing
+        generator = ConstraintPolygon(*arguments)
     else:
         raise RuntimeError("No supported region type defined.")
 
-
-    #TODO set plot frequency
+    # TODO set plot frequency
     if cmdargs.iterations is not None:
         generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
     else:

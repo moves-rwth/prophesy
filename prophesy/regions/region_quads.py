@@ -34,7 +34,7 @@ class HyperRectangleRegions(RegionGenerator):
     Region generation using hyperrectangles.
     """
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints):
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False):
         super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints)
 
         self.regions = []
@@ -43,6 +43,10 @@ class HyperRectangleRegions(RegionGenerator):
         self.accepted_regions_unsafe = []
         # Number of maximal consecutive recursive splits.
         self.check_depth = 5
+        if split_uniformly:
+            self.split = HyperRectangleRegions.split_uniformly_in_every_dimension
+        else:
+            self.split = HyperRectangleRegions.split_by_growing_rectangles
 
         # Setup initial region
         region = HyperRectangle(*self.parameters.get_variable_bounds())
@@ -132,6 +136,11 @@ class HyperRectangleRegions(RegionGenerator):
 
     @staticmethod
     def split_by_growing_rectangles(region):
+        """
+        Split the region according to growing rectangles.
+        :param region: Region.
+        :return: New regions after splitting.
+        """
         print("Split region {}".format(region.region))
         result = []
 
@@ -163,7 +172,8 @@ class HyperRectangleRegions(RegionGenerator):
 
         assert best_candidate is not None
 
-        print("Candidate: {} for anchor {} and sample {}".format(best_candidate[0], best_candidate[1], best_candidate[2]))
+        print(
+            "Candidate: {} for anchor {} and sample {}".format(best_candidate[0], best_candidate[1], best_candidate[2]))
         # Construct hyperrectangles with all anchors and the sample point
         for anchor in anchor_points:
             new_rectangle = HyperRectangle.from_extremal_points(anchor, best_candidate[2], BoundType.closed)
@@ -171,6 +181,15 @@ class HyperRectangleRegions(RegionGenerator):
 
         print("New regions: \n\t{}".format("\n\t".join([str(region) for region in result])))
         return result
+
+    @staticmethod
+    def split_uniformly_in_every_dimension(region):
+        """
+        Split the region uniformly in every region.
+        :param region: Region.
+        :return: New regions after splitting.
+        """
+        return region.region.split_in_every_dimension()
 
     def check_region(self, region, depth=0):
         """
@@ -229,8 +248,7 @@ class HyperRectangleRegions(RegionGenerator):
 
         # Mixed region, split.
         # TODO better splits
-        newelems = HyperRectangleRegions.split_by_growing_rectangles(region)
-        # newelems = region.region.split_in_every_dimension()
+        newelems = self.split(region)
         if newelems is None:
             return None
         for newregion in newelems:
@@ -255,7 +273,7 @@ class HyperRectangleRegions(RegionGenerator):
                                                     closest_inverse_sample_distance=dist))
             self.regions[0].empty_checks = 2
         else:
-            newelems = regionelem.region.split_in_every_dimension()
+            newelems = self.split(regionelem)
             for newregion in newelems:
                 if self.checker.supports_only_closed_regions:
                     newregion = newregion.close()
