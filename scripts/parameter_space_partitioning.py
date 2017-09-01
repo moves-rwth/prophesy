@@ -182,7 +182,11 @@ def run(args=sys.argv[1:], interactive=False):
     if problem_description.welldefined_constraints is None:
         if mc is None:
             raise RuntimeError("If welldefinedness constraints are unknown, a model checker is required.")
-        # TODO ugly, as this relies on the checker to be initialised. Please refactor.
+        # TODO ugly, as the model checker needs to be initialized. Please refactor.
+        # initialize model checker
+        mc.load_model_from_prismfile(problem_description.model, constants)
+        mc.set_pctl_formula(problem_description.property)
+        # compute constraints
         wd, gp = mc.get_parameter_constraints()
         problem_description.welldefined_constraints = wd
         problem_description.graph_preserving_constraints = gp
