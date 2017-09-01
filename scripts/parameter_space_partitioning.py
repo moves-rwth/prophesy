@@ -116,12 +116,12 @@ def run(args=sys.argv[1:], interactive=False):
         problem_description.parameters.make_intervals_open()
         problem_description.parameters.make_intervals_closed(cmdargs.epsilon_pmc)
 
-
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
 
     logger.debug("Loading samples")
-    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file, problem_description.parameters)
+    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file,
+                                                                      problem_description.parameters)
     if problem_description.parameters != sample_parameters:
         # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
@@ -163,8 +163,12 @@ def run(args=sys.argv[1:], interactive=False):
         mc = StormpyModelChecker()
 
     if cmdargs.etr:
+        if solver is None:
+            raise RuntimeError("For ETR an SMT solver is required.")
         checker = EtrRegionChecker(solver)
     elif cmdargs.sfsmt:
+        if solver is None:
+            raise RuntimeError("For using the solution function an SMT solver is required.")
         checker = SolutionFunctionRegionChecker(solver)
     elif cmdargs.pla:
         if mc is None:
@@ -197,9 +201,11 @@ def run(args=sys.argv[1:], interactive=False):
 
     # TODO set plot frequency
     if cmdargs.iterations is not None:
-        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
+        generator.generate_constraints(max_iter=cmdargs.iterations, plot_every_n=cmdargs.plot_every_n,
+                                       plot_candidates=cmdargs.plot_candidates)
     else:
-        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=cmdargs.plot_every_n, plot_candidates=cmdargs.plot_candidates)
+        generator.generate_constraints(max_area=pc.Rational(cmdargs.area), plot_every_n=cmdargs.plot_every_n,
+                                       plot_candidates=cmdargs.plot_candidates)
 
     if interactive:
         open_file(generator.result_file)
