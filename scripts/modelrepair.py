@@ -29,14 +29,15 @@ from prophesy.input.pctlfile import PctlFile
 from prophesy.input.prismfile import PrismFile
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy.model_repair.repairer import ModelRepairer
+from prophesy.modelrepair.repairer import ModelRepairer
 
 
-mc_name_options = ['stormpy', 'storm', 'prism']
+MC_NAME_OPTIONS = ['stormpy', 'storm', 'prism']
 
 
 def _get_selected_pmc(mc_name):
-    assert mc_name in mc_name_options
+    """Return modelchecker instance for given name string."""
+    assert mc_name in MC_NAME_OPTIONS
 
     configuration.check_tools()
     pmcs = configuration.getAvailableParametricMCs()
@@ -54,6 +55,7 @@ def _get_selected_pmc(mc_name):
 
 
 def parse_parameters(prism_file, constants):
+    """Return actual (i.e., non-constant) parameters."""
     parameters = copy.deepcopy(prism_file.parameters)
     for const_variable in constants.variables():
         parameters.remove_variable(const_variable)
@@ -73,9 +75,17 @@ def parse_parameters(prism_file, constants):
 @click.option('--pctl-file', help='PCTL property file containing property (e.g., P<=0.95 [F "target"])',
               type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True)
 @click.option('--pctl-index', help='index (0-based) of property in PCTL file', default=0, show_default=True)
-@click.option('--modelchecker', type=click.Choice(mc_name_options), default='stormpy', show_default=True)
+@click.option('--modelchecker', type=click.Choice(MC_NAME_OPTIONS), default='stormpy', show_default=True)
 @click.option('--constants', help='additional constants string for the MC (rarely needed)', required=False)
 def model_repair(prism_file, pctl_file, pctl_index, modelchecker, constants):
+    """Find low-cost parameter valuation satisfying the PCTL property.
+
+    Given a parametric model and a PCTL property, a heuristic search
+    tries to find the lowest-cost parameter valuation for which the
+    property is satisfied.
+
+    The cost function is currently hardcoded (i.e., not a command-line
+    option)."""
     prism_file = PrismFile(prism_file)
     mc = _get_selected_pmc(modelchecker)
     mc.load_model_from_prismfile(prism_file)
@@ -86,11 +96,13 @@ def model_repair(prism_file, pctl_file, pctl_index, modelchecker, constants):
     pctl_property = PctlFile(pctl_file).get(pctl_index)
 
     def cost_function(parameter_instantiation):
+        """Return a cost (to be minimized) for a parameter valuation."""
+        # distance from some point, chosen just for demonstration
         origin = ParameterInstantiation.from_point(Point(0.6, 0.7), parameters)
         return origin.numerical_distance(parameter_instantiation)
 
-    mr = ModelRepairer(mc, parameters, pctl_property, cost_function)
-    mr.repair()
+    repairer = ModelRepairer(mc, parameters, pctl_property, cost_function)
+    repairer.repair()
 
 
 if __name__ == "__main__":
