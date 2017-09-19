@@ -1,5 +1,5 @@
 import prophesy.adapter.pycarl as pc
-from optimization.optimizers import ParticleSwarmOptimizer
+from heuristic_optimization.optimizers import ParticleSwarmOptimizer
 
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiations

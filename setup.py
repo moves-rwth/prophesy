@@ -62,7 +62,8 @@ setup(
     description="Prophesy - Parametric Probabilistic Model Checking",
     packages=["prophesy", "prophesy.smt", "prophesy.sampling", "prophesy.output", "prophesy.input",
               "prophesy.modelcheckers", "prophesy.data", "prophesy.regions", "prophesy.exceptions", "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0.1', 'shapely', 'numpy', 'matplotlib'],
+    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0.1', 'shapely',
+                      'numpy', 'matplotlib', 'heuristic_optimization'],
     tests_require=['pytest'],
     extras_require={
         'stormpy': ["stormpy"],
