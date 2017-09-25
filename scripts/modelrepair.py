@@ -82,6 +82,8 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 # TODO:
 # * what's needed to handle MDPs?
 # * hint / subsys analysis
+#     * allow providing hint to PSO
+#         * adapt modelrepairer
 # * cost fct:
 #     * ask how to input exponents
 #     * ask if the unpacking can be handled gracefully
