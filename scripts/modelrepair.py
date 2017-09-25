@@ -80,17 +80,18 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 
 
 # TODO:
+# * clean / lint / doc
+#     * mr script, repairer, pso sampler
 # * hint / subsys analysis
 #     * allow providing hint to PSO
 #         * adapt modelrepairer
 #     * look at the whole subsysgen stuff again
 #         * put ksp-SSG back
 #     * integrate full procedure
-# * clean / lint / doc
-#     * mr script, repairer, pso sampler
 # * cost fct:
 #     * ask how to input exponents
 #     * ask if the unpacking can be handled gracefully
+#     * decide on what API is more convenient and clean (Parameters, Variables, Points, raw point?)
 # * what's needed to handle MDPs?
 
 @click.command()
@@ -130,6 +131,7 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
         cost_function = pc.Polynomial(pc.parse("0"))
 
     # the unpacking in the cost fct is a bit awkward but required, because Parameter != Variable
+    # FIXME why not handle that in ModelRepairer?
     repairer = ModelRepairer(mc, parameters, pctl_property,
                              cost_fct=lambda instantiation: cost_function.evaluate({p.variable: v for p, v in
                                                                                     instantiation.items()}))

@@ -1,3 +1,13 @@
+"""Wraps PSO so that it conforms to the sample generator API.
+
+This means that the particle swarm is treated as a generator which
+internally performs the PSO iteration then yields the particles'
+positions / values as sampling result. When the PSO terminates,
+the generator is exhausted.
+
+Unfortunately this means that all this is essentially glue code.
+"""
+
 import prophesy.adapter.pycarl as pc
 from heuristic_optimization.optimizers import ParticleSwarmOptimizer
 from heuristic_optimization.util.position_initializers import clamped_gaussian_distribution
@@ -7,11 +17,13 @@ from prophesy.data.samples import ParameterInstantiations
 from prophesy.sampling.sample_generator import SampleGenerator
 
 
-def coords_to_rational_point(coords):
+def _coords_to_rational_point(coords):
     return Point(*(pc.Rational(component) for component in coords))
 
 
 class GuidedParticleSwarmOptimizer(ParticleSwarmOptimizer):
+    """PSO that accepts a hint and spawns particles close to it."""
+
     def _generate_initial_positions(self):
         return clamped_gaussian_distribution(self.options['num_particles'], mean_point=self.options['hint'],
                                              bounds=(self.lower_bound, self.upper_bound),
@@ -42,7 +54,8 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         self.pso.initialize()
 
     def _objective(self, list_of_coords):
-        rational_points = [coords_to_rational_point(coords) for coords in list_of_coords]
+        """Perform model checking on the MC instances, convert input/output."""
+        rational_points = [_coords_to_rational_point(coords) for coords in list_of_coords]
         parameter_instantiations = ParameterInstantiations.from_points(rational_points, self.parameters)
 
         results = self.sampler.perform_sampling(parameter_instantiations)
