@@ -29,14 +29,12 @@ class ModelRepairer:
 
     def repair(self):
         for _ in self.pso_sample_gen:
+            # we don't actually want to look at them, just let the PSO iterate
             pass
 
-        pass
-
-        argmin = self.pso_sample_gen._pso.historic_best_position
-        minimum = self.pso_sample_gen._pso.historic_best_score
+        argmin = self.pso_sample_gen.pso.historic_best_position
+        minimum = self.pso_sample_gen.pso.historic_best_score
         print(argmin, float(minimum))
-       #print(float([v for k, v in self._sample([argmin])][0]))
 
     def score(self, parameter_instantiation, value):
         penalty = 10000

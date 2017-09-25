@@ -25,8 +25,8 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
 
         if pso_options is None:
             pso_options = {'num_particles': 20, 'max_iters': 20}
-        self._pso = ParticleSwarmOptimizer(self._objective, self.bounds, obj_fct_is_vectorized=True, options=pso_options)
-        self._pso.initialize()
+        self.pso = ParticleSwarmOptimizer(self._objective, self.bounds, obj_fct_is_vectorized=True, options=pso_options)
+        self.pso.initialize()
 
     def _objective(self, list_of_coords):
         rational_points = [coords_to_rational_point(coords) for coords in list_of_coords]
@@ -41,9 +41,9 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
     def __iter__(self):
         """Does what IterativeOptimizer.optimize does but yields stuff."""
         yield self.latest_sampling_result  # initial spawn
-        while not self._pso.stop():
-            self._pso.iteration += 1
-            self._pso.iterate()
+        while not self.pso.stop():
+            self.pso.iteration += 1
+            self.pso.iterate()
             yield self.latest_sampling_result
         else:
             raise StopIteration
