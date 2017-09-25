@@ -11,7 +11,7 @@ def dummy_cost_function(*_, **__):
 
 
 class ModelRepairer:
-    def __init__(self, modelchecker, parameters, pctl_property, cost_fct=None):
+    def __init__(self, modelchecker, parameters, pctl_property, cost_fct=None, hint=None):
         # FIXME ensure modelchecker has model already loaded
         if pctl_property.bound.asks_for_exact_value():
             raise ValueError("Bound must be one of <, <=, >, >=.")
@@ -25,7 +25,7 @@ class ModelRepairer:
 
         self.cost_fct = cost_fct if cost_fct is not None else dummy_cost_function
 
-        self.pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score)
+        self.pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score, hint=hint)
 
     def repair(self):
         for _ in self.pso_sample_gen:

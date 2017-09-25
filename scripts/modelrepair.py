@@ -80,13 +80,18 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 
 
 # TODO:
-# * what's needed to handle MDPs?
 # * hint / subsys analysis
 #     * allow providing hint to PSO
 #         * adapt modelrepairer
+#     * look at the whole subsysgen stuff again
+#         * put ksp-SSG back
+#     * integrate full procedure
+# * clean / lint / doc
+#     * mr script, repairer, pso sampler
 # * cost fct:
 #     * ask how to input exponents
 #     * ask if the unpacking can be handled gracefully
+# * what's needed to handle MDPs?
 
 @click.command()
 @click.option('--prism-file', help='parametric Markov chain in Prism file format', type=click.Path(exists=True),
