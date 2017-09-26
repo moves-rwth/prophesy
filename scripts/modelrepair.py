@@ -14,6 +14,21 @@ If a cost threshold is specified, the procedure terminates as soon
 as it finds a repair that is at most this expensive. Otherwise, the
 procedure continues until some internal termination criterion is
 met.
+
+Todo:
+    * clean / lint / doc
+        * mr script, repairer, pso sampler
+    * hint / subsys analysis
+        * allow providing hint to PSO
+            * adapt modelrepairer
+        * look at the whole subsysgen stuff again
+            * put ksp-SSG back
+        * integrate full procedure
+    * cost fct:
+        * ask how to input exponents
+        * ask if the unpacking can be handled gracefully
+        * decide on what API is more convenient and clean (Parameters, Variables, Points, raw point?)
+    * what's needed to handle MDPs?
 """
 
 import copy
@@ -78,21 +93,6 @@ class PolynomialParamType(click.ParamType):
 
 POLYNOMIAL_TYPE = PolynomialParamType()
 
-
-# TODO:
-# * clean / lint / doc
-#     * mr script, repairer, pso sampler
-# * hint / subsys analysis
-#     * allow providing hint to PSO
-#         * adapt modelrepairer
-#     * look at the whole subsysgen stuff again
-#         * put ksp-SSG back
-#     * integrate full procedure
-# * cost fct:
-#     * ask how to input exponents
-#     * ask if the unpacking can be handled gracefully
-#     * decide on what API is more convenient and clean (Parameters, Variables, Points, raw point?)
-# * what's needed to handle MDPs?
 
 @click.command()
 @click.option('--prism-file', help='parametric Markov chain in Prism file format', type=click.Path(exists=True),
