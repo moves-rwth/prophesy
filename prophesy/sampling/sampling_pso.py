@@ -9,12 +9,12 @@ Unfortunately this means that all this is essentially glue code.
 """
 
 import prophesy.adapter.pycarl as pc
-from heuristic_optimization.optimizers import ParticleSwarmOptimizer
-from heuristic_optimization.util.position_initializers import clamped_gaussian_distribution
-
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiations
 from prophesy.sampling.sample_generator import SampleGenerator
+
+from heuristic_optimization.optimizers import ParticleSwarmOptimizer
+from heuristic_optimization.util.position_initializers import clamped_gaussian_distribution
 
 
 def _coords_to_rational_point(coords):
@@ -73,5 +73,4 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
             self.pso.iteration += 1
             self.pso.iterate()
             yield self.latest_sampling_result
-        else:
-            raise StopIteration
+        raise StopIteration

@@ -130,12 +130,9 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
     if cost_function is None:
         cost_function = pc.Polynomial(pc.parse("0"))
 
-    # the unpacking in the cost fct is a bit awkward but required, because Parameter != Variable
-    # FIXME why not handle that in ModelRepairer?
-    repairer = ModelRepairer(mc, parameters, pctl_property,
-                             cost_fct=lambda instantiation: cost_function.evaluate({p.variable: v for p, v in
-                                                                                    instantiation.items()}))
-    repairer.repair()
+    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=[0.7, 0.6])
+    result = repairer.repair()
+    print(result)
 
 
 if __name__ == "__main__":
