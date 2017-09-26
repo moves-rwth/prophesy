@@ -25,10 +25,12 @@ class GuidedParticleSwarmOptimizer(ParticleSwarmOptimizer):
     """PSO that accepts a hint and spawns particles close to it."""
 
     def _generate_initial_positions(self):
+        search_space_size = self.upper_bound - self.lower_bound
+        spread = max(search_space_size / 10)
+        # TODO: that magic constant should be configurable on a case-by-case basis
         return clamped_gaussian_distribution(self.options['num_particles'], mean_point=self.options['hint'],
                                              bounds=(self.lower_bound, self.upper_bound),
-                                             standard_deviation=0.1)  # FIXME: check if that number is reasonable
-        # ... actually that should depend on the size of the search space, so maybe it should actually be based on that
+                                             standard_deviation=spread)
 
 
 class ParticleSwarmSampleGenerator(SampleGenerator):
