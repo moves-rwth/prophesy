@@ -33,6 +33,8 @@ import click
 import prophesy.adapter.pycarl as pc
 from prophesy.config import configuration
 from prophesy.data.constant import parse_constants_string
+from prophesy.data.point import Point
+from prophesy.data.samples import ParameterInstantiation
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.prismfile import PrismFile
 from prophesy.modelcheckers.prism import PrismModelChecker
@@ -99,7 +101,9 @@ POLYNOMIAL_TYPE = PolynomialParamType()
               type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))', required=False)
 @click.option('--modelchecker', type=click.Choice(MC_NAME_OPTIONS), default='stormpy', show_default=True)
 @click.option('--constants', help='additional constants string for the MC (rarely needed)', required=False)
-def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker, constants):
+@click.option('--hint', help='PSO hint (~= starting point) [enclosed in quotes, separated by space;'
+                             ' order is determined by Prism file]', default='0.72 0.61')
+def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker, constants, hint):
     """Find low-cost parameter valuation satisfying the PCTL property.
 
     Given a parametric model and a PCTL property, a heuristic search
@@ -125,7 +129,13 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
     if cost_function is None:
         cost_function = pc.Polynomial(pc.parse("0"))
 
-    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=[0.7, 0.6])
+    if hint is not None:
+        hint_as_floats = [float(string) for string in hint.split()]
+        hint_as_param_inst = ParameterInstantiation.from_point(Point(*hint_as_floats).to_nice_rationals(), parameters)
+    else:
+        hint_as_param_inst = None
+
+    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=hint_as_param_inst)
     result = repairer.repair()
     print(result)
 

@@ -48,11 +48,14 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
 
         if pso_options is None:
             pso_options = {'num_particles': 20, 'max_iters': 20}
-        pso_options['hint'] = hint
 
-        PSO = GuidedParticleSwarmOptimizer if hint is not None else ParticleSwarmOptimizer
+        if hint is not None:
+            pso_options['hint'] = [float(rational) for rational in hint.get_point(parameters).coordinates]
+            pso = GuidedParticleSwarmOptimizer
+        else:
+            pso = ParticleSwarmOptimizer
 
-        self.pso = PSO(self._objective, self.bounds, obj_fct_is_vectorized=True, options=pso_options)
+        self.pso = pso(self._objective, self.bounds, obj_fct_is_vectorized=True, options=pso_options)
         self.pso.initialize()
 
     def _objective(self, list_of_coords):
