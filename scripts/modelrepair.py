@@ -16,13 +16,8 @@ procedure continues until some internal termination criterion is
 met.
 
 Todo:
-    * clean / lint / doc
-        * mr script, repairer, pso sampler
     * hint / subsys analysis
-        * allow providing hint to PSO
-            * adapt modelrepairer
-        * look at the whole subsysgen stuff again
-            * put ksp-SSG back
+        * put ksp-SSG back
         * integrate full procedure
     * cost fct:
         * ask how to input exponents

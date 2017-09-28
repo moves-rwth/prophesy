@@ -27,7 +27,7 @@ from scripts.modelrepair import parse_parameters
 @click.option('--parameter-values', help='values for the model\'s parameters [enclosed in quotes, separated by space;'
               ' order is determined by Prism file]', default='0.72 0.61')
 def find_shortest_paths(prism_file, pctl_file, pctl_index, parameter_values, k, target):
-    """Uses ShortestPathsGenerator to list the shortest paths in an MC.
+    """Use ShortestPathsGenerator to list the shortest paths in an MC.
 
     This script is not really intended for actual usage, but as a demo.
     Have a look at the source to see how to use Storm's

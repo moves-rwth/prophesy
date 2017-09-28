@@ -24,7 +24,7 @@ from scripts.modelrepair import parse_parameters
 @click.option('--parameter-values', help='values for the model\'s parameters [enclosed in quotes, separated by space;'
               ' order is determined by Prism file]', default='0.72 0.61')
 def modelcheck(prism_file, pctl_file, pctl_index, parameter_values):
-    """Uses Stormpy to instantiate and modelcheck a parametric model.
+    """Use Stormpy to instantiate and modelcheck a parametric model.
 
     This script is not really intended for actual usage, but as a demo.
     Have a look at the source to see how to use the Stormpy API.
