@@ -80,7 +80,7 @@ class PolynomialParamType(click.ParamType):
 
     def convert(self, value, param, ctx):
         """Try to parse with pycarl.parse()."""
-        if value is None:
+        if value is None or value is '':
             return None
         try:
             return pc.parse(value)
@@ -93,12 +93,15 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 
 @click.command()
 @click.option('--prism-file', help='parametric Markov chain in Prism file format', type=click.Path(exists=True),
-              default='../benchmarkfiles/brp/brp_16-2.pm', required=True)
+              default='../benchmarkfiles/brp/brp_16-2.pm', required=True, show_default=True)
 @click.option('--pctl-file', help='PCTL property file containing property (e.g., P<=0.95 [F "target"])',
-              type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True)
+              type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True,
+              show_default=True)
 @click.option('--pctl-index', help='index (0-based) of property in PCTL file', default=0, show_default=True)
-@click.option('--cost-function', help='polynomial cost function over the model\'s parameters in Pycarl prefix notation',
-              type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))')
+@click.option('--cost-function', help='polynomial cost function over the model\'s parameters in Pycarl prefix notation'
+                                      ' (the default servers as demo, suitable for BRP)',
+              type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))',
+              show_default=True)
 @click.option('--modelchecker', type=click.Choice(MC_NAME_OPTIONS), default='stormpy', show_default=True)
 @click.option('--constants', help='additional constants string over the model\'s parameters (rarely needed)')
 @click.option('--hint', help='PSO hint (~ starting point), enclosed in quotes, separated by space,'
@@ -114,7 +117,7 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
     omitted, the cost is not considered [but then this procedure makes
     little sense].
 
-    For demo purposes, the defaults currently show an example invocation
+    NOTE: For demo purposes, the defaults currently show an example invocation
     (rather than being "sensible" for general usage).
     """
     prism_file = PrismFile(prism_file)
@@ -126,7 +129,7 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
 
     pctl_property = PctlFile(pctl_file).get(pctl_index)
 
-    if cost_function is None:
+    if cost_function is None or cost_function is '':
         cost_function = pc.Polynomial(pc.parse("0"))
 
     if hint is not None:
