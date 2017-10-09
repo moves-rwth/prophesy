@@ -83,9 +83,11 @@ class PolynomialParamType(click.ParamType):
         if value is None or value is '':
             return None
         try:
-            return pc.parse(value)
+            possibly_not_polynomial = pc.parse(value)
+            definitely_a_polynomial = pc.Polynomial(possibly_not_polynomial)
+            return definitely_a_polynomial
         except pc.ParserError:
-            self.fail('%s cannot be parsed by pycarl' % value, param, ctx)
+            self.fail('%s cannot be parsed as Pycarl polynomial' % value, param, ctx)
 
 
 POLYNOMIAL_TYPE = PolynomialParamType()
