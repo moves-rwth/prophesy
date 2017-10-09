@@ -63,7 +63,7 @@ setup(
     packages=["prophesy", "prophesy.smt", "prophesy.sampling", "prophesy.output", "prophesy.input",
               "prophesy.modelcheckers", "prophesy.data", "prophesy.regions", "prophesy.exceptions", "prophesy_web"],
     install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0.1', 'shapely',
-                      'numpy', 'matplotlib', 'heuristic_optimization>=0.4.3,<0.5'],
+                      'numpy', 'matplotlib', 'heuristic_optimization>=0.4.3,<0.5', 'click'],
     tests_require=['pytest'],
     extras_require={
         'stormpy': ["stormpy"],
