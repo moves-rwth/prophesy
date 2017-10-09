@@ -97,12 +97,12 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 @click.option('--pctl-file', help='PCTL property file containing property (e.g., P<=0.95 [F "target"])',
               type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True)
 @click.option('--pctl-index', help='index (0-based) of property in PCTL file', default=0, show_default=True)
-@click.option('--cost-function', help='polynomial cost function over the model\'s parameters (pycarl prefix notation)',
-              type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))', required=False)
+@click.option('--cost-function', help='polynomial cost function over the model\'s parameters in Pycarl prefix notation',
+              type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))')
 @click.option('--modelchecker', type=click.Choice(MC_NAME_OPTIONS), default='stormpy', show_default=True)
-@click.option('--constants', help='additional constants string for the MC (rarely needed)', required=False)
-@click.option('--hint', help='PSO hint (~= starting point) [enclosed in quotes, separated by space;'
-                             ' order is determined by Prism file]', default='0.72 0.61')
+@click.option('--constants', help='additional constants string over the model\'s parameters (rarely needed)')
+@click.option('--hint', help='PSO hint (~ starting point), enclosed in quotes, separated by space,'
+                             ' parameter order is determined by Prism file (e.g., "0.7 0.6")')
 def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker, constants, hint):
     """Find low-cost parameter valuation satisfying the PCTL property.
 

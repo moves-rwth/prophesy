@@ -19,14 +19,16 @@ def dummy_cost_function(*_, **__):
 class ModelRepairer:
     """Performs model repair using PSO.
 
-    Optionally accepts a hint which serves as starting point.
+    Optionally accepts a hint which serves as starting point; in this case
+    the particles are spawned close to it (specifically a Gaussian
+    distribution centered around that point).
 
     Args:
         modelchecker: MC instance with model already loaded
         parameters: parameters of the model as required by Sampler
         pctl_property: property with inequality bound to be satisfied
         cost_fct: function that accepts dict of Variable -> Rational
-        hint: [FIXME e.g. [0.7, 0.6] -- should this be a Point?]
+        hint: ParameterInstantiation to be used as starting point
     """
 
     def __init__(self, modelchecker, parameters, pctl_property, cost_fct=None, hint=None):
