@@ -219,6 +219,6 @@ class EtrRegionChecker(SmtRegionChecker):
         samples = ParameterInstantiations()
         samples.append(sample)
         samples.parameters = self.parameters
-        value = self.model_explorer.perform_sampling(samples).get(sample)
+        value = self.model_explorer.perform_sampling(samples)[sample]
 
         return InstantiationResult(sample, value)

@@ -129,7 +129,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         return param_result
 
     def perform_sampling(self, samplepoints):
-        logger.info("Perform uniform sampling")
+        logger.info("Perform batch sampling")
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None:
