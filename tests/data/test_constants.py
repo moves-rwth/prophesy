@@ -11,4 +11,5 @@ def test_constants_parsing():
     constants = parse_constants_string("z=y,a=2")
     z_var = pc.Variable("z")
     assert constants.has_variable(z_var)
-    assert "z=y,a=2" == constants.to_key_value_string()
+    assert "a=2" in constants.to_key_value_string()
+    assert "z=y" in constants.to_key_value_string()
