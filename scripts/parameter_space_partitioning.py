@@ -13,7 +13,7 @@ from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
 from prophesy.regions.region_checker import ProblemDescription
 from prophesy.input.solutionfunctionfile import read_pstorm_result
-from prophesy.input.modelfile import PrismFile, DrnFile, open_model_file
+from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
@@ -24,6 +24,7 @@ from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.config import configuration
+from prophesy.data.samples import InstantiationResultDict
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ def _get_argparser():
     parser.add_argument('--model-file', help='file containing the model')
     parser.add_argument('--constants', type=str, help='string with constants for model')
     parser.add_argument('--property-file', help='file containing the property')
-    parser.add_argument('--samples-file', help='file containing the sample points', required=True)
+    parser.add_argument('--samples-file', help='file containing the sample points')
     parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination',
                         required=False)
     parser.add_argument('--threshold', help='gives the threshold', type=pc.Rational, required=True)
@@ -120,12 +121,15 @@ def run(args=sys.argv[1:], interactive=False):
     if not cmdargs.safe_above_threshold:
         Plot.flip_green_red = True
 
-    logger.debug("Loading samples")
-    sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file,
+    if cmdargs.samples_file:
+        logger.debug("Loading samples")
+        sample_parameters, samples_threshold, samples = read_samples_file(cmdargs.samples_file,
                                                                       problem_description.parameters)
-    if problem_description.parameters != sample_parameters:
-        # TODO
-        raise RuntimeError("Sampling and problem parameters are not equal")
+        if problem_description.parameters != sample_parameters:
+            # TODO
+            raise RuntimeError("Sampling and problem parameters are not equal")
+    else:
+        samples = InstantiationResultDict(parameters)
 
     # TODO allow setting threshold via property:
     if cmdargs.threshold:

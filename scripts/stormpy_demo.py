@@ -33,7 +33,7 @@ def modelcheck(prism_file, pctl_file, pctl_index, parameter_values):
     parameter_values = [float(string) for string in parameter_values.split()]
 
     mc = StormpyModelChecker()
-    mc.load_model_from_prismfile(model_file)
+    mc.load_model(model_file)
 
     parameters = parse_parameters(model_file, Constants())
 

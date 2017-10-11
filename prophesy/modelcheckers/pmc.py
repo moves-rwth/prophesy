@@ -3,7 +3,7 @@ from enum import Enum
 
 from prophesy.sampling.sampler import Sampler
 from prophesy.input.modelfile import PrismFile, DrnFile
-
+from prophesy.data.constant import Constants
 
 class BisimulationType(Enum):
     """
@@ -44,7 +44,7 @@ class ProbabilisticModelChecker(Sampler):
         """
         raise NotImplementedError("Abstract function called")
 
-    def load_model(self, model_description, constants):
+    def load_model(self, model_description, constants=Constants()):
         """
         
         :param model_description: 
@@ -57,11 +57,11 @@ class ProbabilisticModelChecker(Sampler):
             return self.load_model_from_prismfile(model_description, constants)
 
     @abstractmethod
-    def load_model_from_drn(self):
+    def load_model_from_drn(self, drnfile, constants=Constants()):
         raise NotImplementedError("Abstract function called")
 
     @abstractmethod
-    def load_model_from_prismfile(self, prismfile, constants):
+    def load_model_from_prismfile(self, prismfile, constants=Constants()):
         """
         Load model from given Prism file.
         :param prismfile: Prism file.
