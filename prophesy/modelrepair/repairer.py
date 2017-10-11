@@ -72,14 +72,10 @@ class ModelRepairer:
         """
         penalty = 10000
 
-        def bound_is_satisfied(value, bound):
-            assert bound.relation == pc.Relation.LEQ, "FIXME allow other relations"
-            return value <= bound.threshold
-
         def distance_to_bound(value, bound):
             return abs(value - bound.threshold)
 
-        if bound_is_satisfied(value, self.original_property.bound):
+        if self.original_property.bound.is_satisfied(value):
             # it is nice to be able to use carl Polynomials, but they evaluate
             # on Variable:Rational dicts, not ParameterInstantiation (!)
             # TODO: maybe subclass Parameter from pycarl.Variable

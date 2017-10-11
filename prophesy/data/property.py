@@ -51,6 +51,23 @@ class OperatorBound(object):
         """
         return self.threshold is None
 
+    def is_satisfied(self, value):
+        """Return true if value is within the bound."""
+        if self.relation == pc.Relation.LEQ:
+            return value <= self.threshold
+        elif self.relation == pc.Relation.GEQ:
+            return value >= self.threshold
+        elif self.relation == pc.Relation.LESS:
+            return value < self.threshold
+        elif self.relation == pc.Relation.GREATER:
+            return value > self.threshold
+        elif self.relation == pc.Relation.EQ:
+            return value == self.threshold
+        elif self.relation == pc.Relation.NEQ:
+            return value != self.threshold
+        else:
+            raise ValueError("This bound has a really weird Relation: {}".format(self.relation))
+
     def __str__(self):
         if self.asks_for_exact_value():
             return "=?"
