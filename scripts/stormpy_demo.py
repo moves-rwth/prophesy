@@ -10,7 +10,7 @@ from prophesy.data.constant import Constants
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations
 from prophesy.input.pctlfile import PctlFile
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import open_model_file
 from prophesy.modelcheckers.stormpy import StormpyModelChecker
 from scripts.modelrepair import parse_parameters
 
@@ -29,13 +29,13 @@ def modelcheck(prism_file, pctl_file, pctl_index, parameter_values):
     This script is not really intended for actual usage, but as a demo.
     Have a look at the source to see how to use the Stormpy API.
     """
-    prism_file = PrismFile(prism_file)
+    model_file = open_model_file(prism_file)
     parameter_values = [float(string) for string in parameter_values.split()]
 
     mc = StormpyModelChecker()
-    mc.load_model_from_prismfile(prism_file)
+    mc.load_model_from_prismfile(model_file)
 
-    parameters = parse_parameters(prism_file, Constants())
+    parameters = parse_parameters(model_file, Constants())
 
     pctl_property = PctlFile(pctl_file).get(pctl_index)
     mc.set_pctl_formula(pctl_property)

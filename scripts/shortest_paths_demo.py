@@ -42,13 +42,13 @@ def find_shortest_paths(prism_file, pctl_file, pctl_index, parameter_values, k, 
     """
     def get_model_instance(prism_file_path, pctl_file_path, pctl_index, parameter_values_string):
         # this stuff is just preparation, not really relevant
-        prism_file = PrismFile(prism_file_path)
+        model_file = open_model_file(prism_file_path)
         parameter_values = [float(string) for string in parameter_values_string.split()]
 
         mc = StormpyModelChecker()
-        mc.load_model_from_prismfile(prism_file)
+        mc.load_model(model_file)
 
-        parameters = parse_parameters(prism_file, Constants())
+        parameters = parse_parameters(model_file, Constants())
 
         pctl_property = PctlFile(pctl_file_path).get(pctl_index)
         mc.set_pctl_formula(pctl_property)

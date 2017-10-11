@@ -36,7 +36,7 @@ from prophesy.data.constant import parse_constants_string
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiation
 from prophesy.input.pctlfile import PctlFile
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import open_model_file
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelrepair.repairer import ModelRepairer
@@ -122,9 +122,9 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
     NOTE: For demo purposes, the defaults currently show an example invocation
     (rather than being "sensible" for general usage).
     """
-    prism_file = PrismFile(prism_file)
+    prism_file = open_model_file(prism_file)
     mc = _get_selected_pmc(modelchecker)
-    mc.load_model_from_prismfile(prism_file)
+    mc.load_model(prism_file)
 
     parameters = parse_parameters(prism_file, parse_constants_string(constants))
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
