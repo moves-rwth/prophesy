@@ -36,6 +36,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         self.pctlformula = ""
         self.prismfile = None
         self.constants = None
+        self.drnfile = None
 
     def name(self):
         return "storm"
@@ -58,8 +59,15 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         self.prismfile = prismfile
         self.constants = constants
 
+    def load_model_from_drn(self, drnfile, constants=Constants()):
+        self.drnfile = drnfile
+        self.constants = constants
+
+    def _has_model_set(self):
+        return not (self.prismfile is None and self.drnfile is None)
+
     def get_parameter_constraints(self):
-        if self.prismfile is None:
+        if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")  # TODO not strictly necessary
@@ -70,7 +78,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
 
         args = [self.parameter_location,
-                '--prism', self.prismfile.location,
                 '--prop', str(self.pctlformula),
                 '--parametric',
                 '--parametric:resultfile', resultfile,
@@ -78,6 +85,11 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if constants_string != "":
             args.append('-const')
             args.append(constants_string)
+
+        if self.drnfile:
+            args += ['-drn', self.drnfile.location]
+        elif self.prismfile:
+            args += ['--prism', self.prismfile.location]
 
         logger.info("Call storm")
         ret_code = run_tool(args, False)
@@ -95,7 +107,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")
-        if self.prismfile is None:
+        if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
@@ -105,7 +117,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
 
         args = [self.parameter_location,
-                '--prism', self.prismfile.location,
                 '--prop', str(self.pctlformula),
                 '--parametric',
                 '--parametric:resultfile', resultfile,
@@ -116,11 +127,15 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             args.append('-const')
             args.append(constants_string)
 
+        if self.drnfile:
+            args += ['-drn', self.drnfile.location]
+        elif self.prismfile:
+            args += ['--prism', self.prismfile.location]
+
         logger.info("Call storm")
         ret_code = run_tool(args, False)
         if ret_code != 0:
-            # TODO throw exception?
-            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+            raise RuntimeError("Storm crashed with return code %s.", ret_code)
         else:
             logger.info("Storm call finished successfully")
 
@@ -132,7 +147,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Perform batch sampling")
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")
-        if self.prismfile is None:
+        if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
@@ -148,10 +163,13 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
 
-            args = [self.main_location,
-                    '--prism', self.prismfile.location,
+            args = [self.parameter_location, # Parametric DRN not supported with main version.
                     '--prop', str(self.pctlformula),
                     "-const", const_values_string]
+            if self.drnfile:
+                args += ['-drn', self.drnfile.location]
+            elif self.prismfile:
+                args += ['--prism', self.prismfile.location]
             if self.bisimulation == BisimulationType.strong:
                 args.append('--bisimulation')
 
@@ -166,12 +184,16 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
             result = None
             with open(resultfile) as f:
+                result_in_next_line = False
                 for line in f:
+                    if result_in_next_line:
+                        result = pc.Rational(line)
+                        break
                     if "Substitution yielding negative" in line:
                         result = InstantiationResultFlag.NOT_WELLDEFINED
                         ret_code = 0
                         break
-                    match = re.search(r"Result (.*): (.*)", line)
+                    match = re.search(r"Result (.*):(.*)", line)
                     if match:
                         # Check for exact result
                         match_exact = re.search(r"(.*) \(approx. .*\)", match.group(2))
@@ -179,12 +201,16 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                             result = pc.Rational(match_exact.group(1))
                             break
                         else:
+                            if match.group(2).strip() == "":
+                                result_in_next_line = True
+                                continue
                             result = pc.Rational(match.group(2))
                             break
-            if result is None:
-                raise RuntimeError("Could not find result from storm in {}".format(resultfile))
             if ret_code != 0:
                 raise RuntimeError("Storm crashed.")
+            if result is None:
+                raise RuntimeError("Could not find result from storm in {}".format(resultfile))
+
 
             samples.add_result(InstantiationResult(sample_point, result))
             os.remove(resultfile)
@@ -196,7 +222,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")
-        if self.prismfile is None:
+        if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
 
         region_string = hyperrectangle.to_region_string(parameters.get_variables())
@@ -210,7 +236,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
 
         args = [self.parameter_location,
-                '--prism', self.prismfile.location,
                 '--prop', str(property_to_check),
                 '--region', region_string,
                 '--hypothesis', hypothesis,
@@ -222,6 +247,11 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if constants_string != "":
             args.append('-const')
             args.append(constants_string)
+
+        if self.drnfile:
+            args += ['-drn', self.drnfile.location]
+        elif self.prismfile:
+            args += ['--prism', self.prismfile.location]
 
         logger.info("Call storm")
         ret_code = run_tool(args, False)

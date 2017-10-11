@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 import logging
 
 from prophesy.data.constant import parse_constants_string
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.solutionfunctionfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
@@ -16,7 +16,7 @@ from prophesy.config import configuration
 def _get_argparser():
     parser = ArgumentParser(description='Transform a prism file to a rational function.')
 
-    parser.add_argument('--file', help='the input file containing the prism file', required=True)
+    parser.add_argument('--file', help='the input file containing the model', required=True)
     parser.add_argument('--pctl-file', help='a file with a pctl property', required=True)
     parser.add_argument('--pctl-index', help='the index for the pctl file', default=0)
     parser.add_argument('--result-file', help='resulting file', default="result.out")
@@ -39,9 +39,8 @@ def run(args=sys.argv[1:], interactive=True):
     configuration.check_tools()
     pmcs = configuration.getAvailableParametricMCs()
     constants = parse_constants_string(cmdargs.constants)
-
-    prism_file = PrismFile(cmdargs.file)
-    if prism_file.contains_nondeterministic_model():
+    model_file = open_model_file(cmdargs.file)
+    if model_file.contains_nondeterministic_model():
         raise NotImplementedError("Solution functions are not suppported for nondeterministic models")
     pctl_file = PctlFile(cmdargs.pctl_file)
 
@@ -62,21 +61,21 @@ def run(args=sys.argv[1:], interactive=True):
         raise RuntimeError("No supported model checker defined")
 
     logging.info("Compute the rational function using " + tool.name() + " "+ tool.version())
-    tool.load_model_from_prismfile(prism_file, constants)
+    tool.load_model(model_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
-    problem_parameters = [p for p in prism_file.parameters if not constants.has_variable(p.variable)]
+    problem_parameters = [p for p in model_file.parameters if not constants.has_variable(p.variable)]
     if problem_parameters != result.parameters:
         if len(problem_parameters) != len(result.parameters):
             raise ValueError(
-                "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
+                "Parameters in model '{}' and in result '{}' do not coincide.".format(model_file.parameters,
                                                                                       result.parameters))
         for p in problem_parameters:
             if p not in result.parameters:
                 raise ValueError(
                     "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
                                                                                           result.parameters))
-        result.parameters = prism_file.parameters
+        result.parameters = model_file.parameters
     write_pstorm_result(vars(cmdargs)["result_file"], result)
 
 

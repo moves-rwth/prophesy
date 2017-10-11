@@ -14,7 +14,7 @@ class PctlFile:
     def _parse(self):
         with open(self.location, 'r') as f:
             for line in f:
-                if line.startswith('#') or line.strip() == "":
+                if line.startswith('#') or line.startswith("//") or line.strip() == "":
                     pass
                 else:
 

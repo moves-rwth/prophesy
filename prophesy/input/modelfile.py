@@ -2,19 +2,67 @@ import os
 import re
 import shutil
 import tempfile
-from enum import Enum
+import logging
 
 from prophesy.config import configuration
 from prophesy.util import ensure_dir_exists, check_filepath_for_reading
 from prophesy.data.parameter import ParameterOrder, Parameter
+from prophesy.data.model_type import ModelType, model_is_nondeterministic
 from prophesy.data import interval
 from prophesy.adapter.pycarl import Rational, Variable
 
-class ModelType(Enum):
-    DTMC = 0
-    MDP = 1
-    CTMC = 2
-    MA = 3
+
+logger = logging.getLogger(__name__)
+
+def open_model_file(location):
+    _, file_extension = os.path.splitext(location)
+    if file_extension == ".drn":
+        logger.debug("Assume input is direct encoded")
+        return DrnFile(location)
+    else:
+        logger.debug("Assume input is a Prism File")
+        return PrismFile(location)
+
+class DrnFile:
+    def __init__(self, location):
+        self.location = location
+        check_filepath_for_reading(location)
+        self.model_type = self._get_model_type()
+        self.parameters = ParameterOrder()
+        self._get_parameters()
+
+
+    def contains_nondeterministic_model(self):
+        return model_is_nondeterministic(self.model_type)
+
+    def _get_model_type(self):
+        with open(self.location) as file:
+            for line in file:
+                if line.startswith("@type:"):
+                    if line[7:] == "dtmc":
+                        return ModelType.DTMC
+                    if line[7:] == "mdp":
+                        return ModelType.MDP
+
+
+    def _get_parameters(self):
+        with open(self.location) as file:
+            logger.debug("Searching for parameters parameters!")
+            nextLineHasParameters = False
+            for line in file:
+                print(line)
+                if nextLineHasParameters:
+                    parameter_names = line.split()
+                    logger.debug("Parameter names: %s", str(parameter_names))
+                    for par_name in parameter_names:
+                        # TODO change this in order to support variables for rewards.
+                        bound = interval.Interval(Rational(0), interval.BoundType.open, Rational(1),
+                                                  interval.BoundType.open)
+                        self.parameters.append(Parameter(Variable(par_name), bound))
+                    return
+                if line.startswith("@parameters"):
+                    logger.debug("Next line contains parameters!")
+                    nextLineHasParameters = True
 
 class PrismFile:
     """
@@ -39,7 +87,7 @@ class PrismFile:
             self._is_temp = False
 
     def contains_nondeterministic_model(self):
-        return self.model_type in [ModelType.MDP, ModelType.MA]
+        return model_is_nondeterministic(self.model_type)
 
     def _model_type(self):
         with open(self.location, 'r') as f:

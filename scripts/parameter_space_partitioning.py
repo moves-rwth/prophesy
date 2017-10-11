@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 import sys
 import logging
+import os
 
 import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
@@ -12,7 +13,7 @@ from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
 from prophesy.regions.region_checker import ProblemDescription
 from prophesy.input.solutionfunctionfile import read_pstorm_result
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import PrismFile, DrnFile, open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
@@ -97,7 +98,7 @@ def run(args=sys.argv[1:], interactive=False):
         problem_description.welldefined_constraints = result.welldefined_constraints
         problem_description.graph_preserving_constraints = result.graph_preservation_constraints
     if cmdargs.model_file:
-        model_file = PrismFile(cmdargs.model_file)
+        model_file = open_model_file(cmdargs.model_file)
         if not cmdargs.property_file:
             raise RuntimeError("Property file needed when model file is given.")
         properties = PctlFile(cmdargs.property_file)
@@ -184,7 +185,7 @@ def run(args=sys.argv[1:], interactive=False):
             raise RuntimeError("If welldefinedness constraints are unknown, a model checker is required.")
         # TODO ugly, as the model checker needs to be initialized. Please refactor.
         # initialize model checker
-        mc.load_model_from_prismfile(problem_description.model, constants)
+        mc.load_model(problem_description.model, constants)
         mc.set_pctl_formula(problem_description.property)
         # compute constraints
         wd, gp = mc.get_parameter_constraints()

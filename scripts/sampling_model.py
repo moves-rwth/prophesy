@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 import prophesy.adapter.pycarl as pc
 from prophesy.data.constant import parse_constants_string
 from prophesy.output.plot import plot_samples
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.samplefile import write_samples_file
 from prophesy.modelcheckers.prism import PrismModelChecker
@@ -51,7 +51,7 @@ def run(args=sys.argv[1:], interactive=True):
     threshold = Rational(cmdargs.threshold)
     constants = parse_constants_string(cmdargs.constants)
 
-    prism_file = PrismFile(cmdargs.file)
+    model_file = open_model_file(cmdargs.file)
     pctl_file = PctlFile(cmdargs.pctl_file)
 
     if cmdargs.storm:
@@ -71,17 +71,17 @@ def run(args=sys.argv[1:], interactive=True):
     else:
         raise RuntimeError("No supported model checker defined")
 
-    tool.load_model_from_prismfile(prism_file, constants)
+    tool.load_model(model_file, constants)
     property = pctl_file.get(cmdargs.pctl_index)
     if not property.bound.asks_for_exact_value():
         raise NotImplementedError("Only properties asking for the probability/reward '=?' are currently supported")
-    if prism_file.contains_nondeterministic_model():
+    if model_file.contains_nondeterministic_model():
         if property.operator_direction == OperatorDirection.unspecified:
             raise ValueError("For non-deterministic models, the operator direction should be specified.")
     tool.set_pctl_formula(property)
     sampling_interface = tool
 
-    parameters = copy.deepcopy(prism_file.parameters)
+    parameters = copy.deepcopy(model_file.parameters)
     for const_variable in constants.variables():
         parameters.remove_variable(const_variable)
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))

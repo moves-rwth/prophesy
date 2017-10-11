@@ -50,6 +50,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         self.prismfile = prismfile
         self.constants = constants
 
+    def load_model_from_drn(self, drnfile, constants=Constants()):
+        raise RuntimeError("Prism does not support DRN")
+
     def get_parameter_constraints(self):
         raise NotImplementedError("Generating constraints for parameters in prism is not implemented.")
 

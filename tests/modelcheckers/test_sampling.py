@@ -1,6 +1,6 @@
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.stormpy import StormpyModelChecker
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 import prophesy.adapter.pycarl as pc
 from prophesy.data.samples import ParameterInstantiations

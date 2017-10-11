@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 
 from prophesy.sampling.sampler import Sampler
+from prophesy.input.modelfile import PrismFile, DrnFile
 
 
 class BisimulationType(Enum):
@@ -41,6 +42,22 @@ class ProbabilisticModelChecker(Sampler):
         Set PCTL formula to check.
         :param formula: PCTL formula
         """
+        raise NotImplementedError("Abstract function called")
+
+    def load_model(self, model_description, constants):
+        """
+        
+        :param model_description: 
+        :param constants: 
+        :return: 
+        """
+        if isinstance(model_description, DrnFile):
+            return self.load_model_from_drn(model_description, constants)
+        elif isinstance(model_description, PrismFile):
+            return self.load_model_from_prismfile(model_description, constants)
+
+    @abstractmethod
+    def load_model_from_drn(self):
         raise NotImplementedError("Abstract function called")
 
     @abstractmethod

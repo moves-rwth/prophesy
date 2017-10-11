@@ -23,7 +23,7 @@ from shapely.geometry.polygon import Polygon
 
 from prophesy.input.solutionfunctionfile import read_param_result, read_pstorm_result, \
     write_pstorm_result
-from prophesy.input.prismfile import PrismFile
+from prophesy.input.modelfile import PrismFile
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.smt.isat import IsatSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
