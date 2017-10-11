@@ -30,6 +30,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             raise ModuleError(
                 "Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 
+        self.drnfile = None
         self.prismfile = None
         self.pctlformula = None
         self.constants = None
@@ -60,17 +61,30 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Reset formula for PLA
         self._pla_threshold = None
 
-    def load_model_from_prismfile(self, prism_file, constants=Constants()):
-        self.prismfile = prism_file
-        self.constants = constants
-        self._program = stormpy.parse_prism_program(self.prismfile.location)
-        # Reset stormpy objects
+    def _reset_internal(self):
+        self.drnfile = None
+        self.prismfile = None
+        self.constants = None
+        self._program = None
         self._model = None
         self._parameter_constraints = None
         self._graph_preservation_constraints = None
         self._parameter_mapping = None
         self._model_instantiator = None
         self._pla_checker = None
+
+    def load_model_from_drn(self, drnfile, constants=Constants()):
+        self._reset_internal()
+        self.drnfile = drnfile
+        self.constants = constants
+
+
+
+    def load_model_from_prismfile(self, prism_file, constants=Constants()):
+        self._reset_internal()
+        self.prismfile = prism_file
+        self.constants = constants
+        self._program = stormpy.parse_prism_program(self.prismfile.location)
 
         if not self._program.undefined_constants_are_graph_preserving:
             # Need to instantiate constants
@@ -105,19 +119,23 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if self._model is None:
             logger.info("Build model")
 
-            if self.prismfile is None:
-                raise NotEnoughInformationError("Prism model not set.")
+            if self.prismfile is None and self.drnfile is None:
+                raise NotEnoughInformationError("Model description not set.")
             if self.pctlformula is None:
                 raise NotEnoughInformationError("PCTL formula not set.")
-            if not self._program.undefined_constants_are_graph_preserving:
-                raise RuntimeError("Given model file still contains undefined constants")
 
-            if self.prismfile.nr_parameters() == 0:
-                assert not self._program.has_undefined_constants
-                self._model = stormpy.build_model(self._program, self.pctlformula)
-            else:
-                assert self._program.has_undefined_constants
-                self._model = stormpy.build_parametric_model(self._program, self.pctlformula)
+            if self.prismfile:
+                if not self._program.undefined_constants_are_graph_preserving:
+                    raise RuntimeError("Given model file still contains undefined constants")
+
+                if self.prismfile.nr_parameters() == 0:
+                    assert not self._program.has_undefined_constants
+                    self._model = stormpy.build_model(self._program, self.pctlformula)
+                else:
+                    assert self._program.has_undefined_constants
+                    self._model = stormpy.build_parametric_model(self._program, self.pctlformula)
+            elif self.drnfile:
+                self._model = stormpy.build_parametric_model_from_drn(self.drnfile.location)
 
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")

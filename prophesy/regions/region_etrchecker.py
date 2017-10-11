@@ -50,7 +50,7 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(badVar, VariableDomain.Bool)
         self._smt2interface.add_variable(thresholdVar, VariableDomain.Real)
 
-        self.model_explorer.load_model_from_prismfile(problem_description.model, constants)
+        self.model_explorer.load_model(problem_description.model, constants)
         self.model_explorer.set_pctl_formula(problem_description.property)
         model = self.model_explorer.get_model()
 
