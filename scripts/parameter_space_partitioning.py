@@ -93,8 +93,7 @@ def run(args=sys.argv[1:], interactive=False):
 
     if cmdargs.rat_file:
         result = read_pstorm_result(cmdargs.rat_file)
-        parameters = result.parameters
-        problem_description.parameters = parameters
+        problem_description.parameters = result.parameters
         problem_description.solutionfunction = result.ratfunc
         problem_description.welldefined_constraints = result.welldefined_constraints
         problem_description.graph_preserving_constraints = result.graph_preservation_constraints
@@ -103,7 +102,7 @@ def run(args=sys.argv[1:], interactive=False):
         if not cmdargs.property_file:
             raise RuntimeError("Property file needed when model file is given.")
         properties = PctlFile(cmdargs.property_file)
-        if cmdargs.rat_file and parameters != model_file.parameters:
+        if cmdargs.rat_file and problem_description.parameters != model_file.parameters:
             raise ValueError("Model file and solution function parameters do not coincide")
         problem_description.parameters = model_file.parameters
         problem_description.model = model_file
@@ -129,7 +128,7 @@ def run(args=sys.argv[1:], interactive=False):
             # TODO
             raise RuntimeError("Sampling and problem parameters are not equal")
     else:
-        samples = InstantiationResultDict(parameters)
+        samples = InstantiationResultDict(problem_description.parameters)
 
     # TODO allow setting threshold via property:
     if cmdargs.threshold:
