@@ -16,7 +16,7 @@ class PlaRegionChecker(RegionChecker):
         self._parameters = None
         self.threshold = None
 
-    def initialize(self, problem_description, threshold, constants=None):
+    def initialize(self, problem_description, constants=None):
         if not problem_description.model:
             raise ValueError("PLA requires the model to be present")
         if not problem_description.property:
@@ -24,7 +24,7 @@ class PlaRegionChecker(RegionChecker):
         self._checker.load_model_from_prismfile(problem_description.model, constants)
         self._parameters = problem_description.parameters
         self._checker.set_pctl_formula(problem_description.property)
-        self.threshold = threshold
+        self.threshold = problem_description.threshold
 
     def supports_only_closed_regions(self):
         return True

@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 class ProblemDescription:
     def __init__(self, solutionfunction=None, parameters=None, model=None, property=None, wd_constraints=None,
-                 gp_constraints=None):
+                 gp_constraints=None, threshold=None, samples=None):
         """
         Constructor.
         :param solutionfunction: Rational function representing reachability probability.
@@ -20,6 +20,8 @@ class ProblemDescription:
         self.property = property
         self.welldefined_constraints = wd_constraints
         self.graph_preserving_constraints = gp_constraints
+        self.samples = samples
+        self.threshold = threshold
 
 
 class RegionCheckResult(Enum):

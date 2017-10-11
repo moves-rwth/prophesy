@@ -23,16 +23,17 @@ class EtrRegionChecker(SmtRegionChecker):
         """
         super().__init__(backend)
         self.model_explorer = StormpyModelChecker()
+        self.fixed_threshold = True
 
-    def initialize(self, problem_description, threshold, constants=None):
+    def initialize(self, problem_description, constants=None, fixed_threshold = True):
         """
         
         :param problem_description: 
         :type problem_description: 
-        :param threshold: 
         :param constants: 
         :return: 
         """
+        self.fixed_threshold = fixed_threshold
         _bounded_variables = True  # Add bounds to all state variables.
 
         if problem_description.model is None:
@@ -40,7 +41,7 @@ class EtrRegionChecker(SmtRegionChecker):
 
         safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
         badVar = pc.Variable("__bad", pc.VariableType.BOOL)
-        thresholdVar = pc.Variable("T")
+        self._thresholdVar = pc.Variable("T")
 
         self.parameters = problem_description.parameters
         for par in self.parameters:
@@ -48,7 +49,7 @@ class EtrRegionChecker(SmtRegionChecker):
 
         self._smt2interface.add_variable(safeVar, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(thresholdVar, VariableDomain.Real)
+        self._smt2interface.add_variable(self._thresholdVar, VariableDomain.Real)
 
         self.model_explorer.load_model(problem_description.model, constants)
         self.model_explorer.set_pctl_formula(problem_description.property)
@@ -98,12 +99,12 @@ class EtrRegionChecker(SmtRegionChecker):
             if initial_state_var is None:
                 raise RuntimeError("Initial state is a reward 0 state. Currently not supported")
 
-        safe_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._safe_relation)
-        bad_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - thresholdVar, self._bad_relation)
+        safe_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._safe_relation)
+        bad_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._bad_relation)
         self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
-        threshold_constraint = pc.Constraint(pc.Polynomial(thresholdVar) - threshold, pc.Relation.EQ)
-        self._smt2interface.assert_constraint(threshold_constraint)
+        if self.fixed_threshold:
+            self._add_threshold_constraint(problem_description.threshold)
 
         if problem_description.property.operator == OperatorType.probability:
             for state in model.states:
@@ -163,6 +164,19 @@ class EtrRegionChecker(SmtRegionChecker):
                 logger.debug(state_equation)
                 state_constraint = pc.Constraint(state_equation.numerator, pc.Relation.EQ)
                 self._smt2interface.assert_constraint(state_constraint)
+
+    def change_threshold(self, new_threshold):
+        assert self.fixed_threshold is not True
+        #TODO check that the interface is at the level where we pushed the threshold.
+        self._smt2interface.pop()
+        self._smt2interface.push()
+        self._add_threshold_constraint(new_threshold)
+
+    def _add_threshold_constraint(self, threshold):
+        threshold_constraint = pc.Constraint(pc.Polynomial(self._thresholdVar) - threshold,
+                                             pc.Relation.EQ)
+        self._smt2interface.assert_constraint(threshold_constraint)
+
 
     def _find_prob01_states(self, property, model):
         formula = property.raw_formula
