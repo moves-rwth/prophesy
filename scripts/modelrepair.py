@@ -125,7 +125,7 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
     $ python modelrepair.py --prism-file ../benchmarkfiles/brp/brp_16-2.pm --pctl-string "P<=0.95 [F \\"target\\"]" --cost-function "(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))"
     """
     # '\b'? --> http://click.pocoo.org/5/documentation/#preventing-rewrapping
-    if pctl_file is not None and pctl_string:
+    if not (pctl_file is not None) ^ bool(pctl_string):
         raise ValueError('PCTL property must be specified by file xor direct input.')
 
     prism_file = open_model_file(prism_file)

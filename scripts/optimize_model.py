@@ -88,7 +88,7 @@ def model_optimization(direction, prism_file, pctl_file, pctl_index, pctl_string
     \b
     python optimize_model.py --prism-file ../benchmarkfiles/brp/brp_16-2.pm --pctl-string "P=? [F \"target\"]" --direction min
     """
-    if pctl_file is not None and pctl_string:
+    if not (pctl_file is not None) ^ bool(pctl_string):
         raise ValueError('PCTL property must be specified by file xor direct input.')
 
     prism_file = open_model_file(prism_file)
