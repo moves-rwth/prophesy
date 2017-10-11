@@ -50,7 +50,6 @@ class DrnFile:
             logger.debug("Searching for parameters parameters!")
             nextLineHasParameters = False
             for line in file:
-                print(line)
                 if nextLineHasParameters:
                     parameter_names = line.split()
                     logger.debug("Parameter names: %s", str(parameter_names))
