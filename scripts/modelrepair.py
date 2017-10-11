@@ -34,6 +34,7 @@ import prophesy.adapter.pycarl as pc
 from prophesy.config import configuration
 from prophesy.data.constant import parse_constants_string
 from prophesy.data.point import Point
+from prophesy.data.property import Property
 from prophesy.data.samples import ParameterInstantiation
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.modelfile import open_model_file
@@ -100,6 +101,7 @@ POLYNOMIAL_TYPE = PolynomialParamType()
               type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True,
               show_default=True)
 @click.option('--pctl-index', help='index (0-based) of property in PCTL file', default=0, show_default=True)
+@click.option('--pctl-string', help='direct entry of PCTL formula string (mutually exclusive with --pctl-file)')
 @click.option('--cost-function', help='polynomial cost function over the model\'s parameters in Pycarl prefix notation'
                                       ' (the default servers as demo, suitable for BRP)',
               type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))',
@@ -108,7 +110,7 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 @click.option('--constants', help='additional constants string over the model\'s parameters (rarely needed)')
 @click.option('--hint', help='PSO hint (~ starting point), enclosed in quotes, separated by space,'
                              ' parameter order is determined by Prism file (e.g., "0.7 0.6")')
-def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker, constants, hint):
+def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, modelchecker, constants, hint):
     """Find low-cost parameter valuation satisfying the PCTL property.
 
     Given a parametric model and a PCTL property, a heuristic search
@@ -122,6 +124,9 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
     NOTE: For demo purposes, the defaults currently show an example invocation
     (rather than being "sensible" for general usage).
     """
+    if pctl_file is not None and pctl_string:
+        raise ValueError('PCTL property must be specified by file xor direct input.')
+
     prism_file = open_model_file(prism_file)
     mc = _get_selected_pmc(modelchecker)
     mc.load_model(prism_file)
@@ -129,7 +134,7 @@ def model_repair(prism_file, pctl_file, pctl_index, cost_function, modelchecker,
     parameters = parse_parameters(prism_file, parse_constants_string(constants))
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
-    pctl_property = PctlFile(pctl_file).get(pctl_index)
+    pctl_property = Property.from_string(pctl_string) if pctl_string else PctlFile(pctl_file).get(pctl_index)
 
     if cost_function is None or cost_function is '':
         cost_function = pc.Polynomial(pc.parse("0"))
