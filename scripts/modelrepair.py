@@ -96,16 +96,14 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 
 @click.command()
 @click.option('--prism-file', help='parametric Markov chain in Prism file format', type=click.Path(exists=True),
-              default='../benchmarkfiles/brp/brp_16-2.pm', required=True, show_default=True)
-@click.option('--pctl-file', help='PCTL property file containing property (e.g., P<=0.95 [F "target"])',
-              type=click.Path(exists=True), default='../benchmarkfiles/brp/property_bound.pctl', required=True,
-              show_default=True)
+              required=True)
+@click.option('--pctl-file', help='PCTL property file containing property (e.g., P<=0.95 [F "target"];'
+                                  ' mutually exclusive with --pctl-string)',
+              type=click.Path(exists=True))
 @click.option('--pctl-index', help='index (0-based) of property in PCTL file', default=0, show_default=True)
 @click.option('--pctl-string', help='direct entry of PCTL formula string (mutually exclusive with --pctl-file)')
-@click.option('--cost-function', help='polynomial cost function over the model\'s parameters in Pycarl prefix notation'
-                                      ' (the default servers as demo, suitable for BRP)',
-              type=POLYNOMIAL_TYPE, default='(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))',
-              show_default=True)
+@click.option('--cost-function', help='polynomial cost function over the model\'s parameters in Pycarl prefix notation',
+              type=POLYNOMIAL_TYPE)
 @click.option('--modelchecker', type=click.Choice(MC_NAME_OPTIONS), default='stormpy', show_default=True)
 @click.option('--constants', help='additional constants string over the model\'s parameters (rarely needed)')
 @click.option('--hint', help='PSO hint (~ starting point), enclosed in quotes, separated by space,'
@@ -121,9 +119,12 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
     omitted, the cost is not considered [but then this procedure makes
     little sense].
 
-    NOTE: For demo purposes, the defaults currently show an example invocation
-    (rather than being "sensible" for general usage).
+    Example invocation:
+
+    \b
+    $ python modelrepair.py --prism-file ../benchmarkfiles/brp/brp_16-2.pm --pctl-string "P<=0.95 [F \\"target\\"]" --cost-function "(+ (* (- pK 0.6) (- pK 0.6)) (* (- pL 0.7) (- pL 0.7)))"
     """
+    # '\b'? --> http://click.pocoo.org/5/documentation/#preventing-rewrapping
     if pctl_file is not None and pctl_string:
         raise ValueError('PCTL property must be specified by file xor direct input.')
 
@@ -132,7 +133,7 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
     mc.load_model(prism_file)
 
     parameters = parse_parameters(prism_file, parse_constants_string(constants))
-    parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
+    parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000000)))
 
     pctl_property = Property.from_string(pctl_string) if pctl_string else PctlFile(pctl_file).get(pctl_index)
 
@@ -146,8 +147,10 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
         hint_as_param_inst = None
 
     repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=hint_as_param_inst)
-    result = repairer.repair()
-    print(result)
+    location, score = repairer.repair()
+    result_as_instantiation = ParameterInstantiation.from_point(Point(*location), parameters)
+    print("Best location {} with score {} \n".format(location, score))
+    print("Parameter instantiation object: {}".format(result_as_instantiation))
 
 
 if __name__ == "__main__":
