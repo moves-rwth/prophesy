@@ -24,6 +24,7 @@ class EtrRegionChecker(SmtRegionChecker):
         super().__init__(backend)
         self.model_explorer = StormpyModelChecker()
         self.fixed_threshold = True
+        self.threshold_set = False
 
     def initialize(self, problem_description, constants=None, fixed_threshold = True):
         """
@@ -36,6 +37,8 @@ class EtrRegionChecker(SmtRegionChecker):
         self.fixed_threshold = fixed_threshold
         _bounded_variables = True  # Add bounds to all state variables.
 
+        if self.fixed_threshold and not problem_description.threshold:
+            raise ValueError("ETR with fixed threshold needs a threshold")
         if problem_description.model is None:
             raise ValueError("ETR checker requires the model as part of the problem description")
 
@@ -168,9 +171,11 @@ class EtrRegionChecker(SmtRegionChecker):
     def change_threshold(self, new_threshold):
         assert self.fixed_threshold is not True
         #TODO check that the interface is at the level where we pushed the threshold.
-        self._smt2interface.pop()
+        if self.threshold_set:
+            self._smt2interface.pop()
         self._smt2interface.push()
         self._add_threshold_constraint(new_threshold)
+        self.threshold_set = True
 
     def _add_threshold_constraint(self, threshold):
         threshold_constraint = pc.Constraint(pc.Polynomial(self._thresholdVar) - threshold,

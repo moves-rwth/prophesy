@@ -19,7 +19,7 @@ from prophesy.data.samples import InstantiationResultDict
 
 logger = logging.getLogger(__name__)
 
-def init_solvers_and_problem(cmdargs):
+def init_solvers_and_problem(cmdargs, optimisation = False):
     solvers = configuration.getAvailableSMTSolvers()
     ppmcs = configuration.getAvailableParametricMCs()
     configuration.check_tools()
@@ -67,7 +67,7 @@ def init_solvers_and_problem(cmdargs):
         samples = InstantiationResultDict(problem_description.parameters)
 
     # TODO allow setting threshold via property:
-    if cmdargs.threshold:
+    if not optimisation and cmdargs.threshold:
         problem_description.threshold = cmdargs.threshold
     logger.debug("Threshold: {}".format(problem_description.threshold))
 
@@ -119,7 +119,7 @@ def init_solvers_and_problem(cmdargs):
         raise RuntimeError("No method for region checking selected.")
 
     logger.info("Generating regions")
-    checker.initialize(problem_description, constants)
+    checker.initialize(problem_description, constants, fixed_threshold=not optimisation)
     if problem_description.welldefined_constraints is None:
         if mc is None:
             raise RuntimeError("If welldefinedness constraints are unknown, a model checker is required.")

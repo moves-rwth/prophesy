@@ -15,8 +15,12 @@ class PlaRegionChecker(RegionChecker):
         self._checker = backend
         self._parameters = None
         self.threshold = None
+        self.fixed_threshold = True
 
-    def initialize(self, problem_description, constants=None):
+    def initialize(self, problem_description, constants=None, fixed_threshold=True):
+        self.fixed_threshold = fixed_threshold
+        if not self.fixed_threshold:
+            raise NotImplementedError("Variable thresholds are not supported at this time")
         if not problem_description.model:
             raise ValueError("PLA requires the model to be present")
         if not problem_description.property:
