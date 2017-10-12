@@ -214,9 +214,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._pla_threshold = threshold
             # Set formula for PLA
             formula = self.pctlformula[0].raw_formula
-            expression_manager = stormpy.ExpressionManager()
-            expression = expression_manager.create_rational(pc.convert_from_storm_type(threshold))
-            formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
+            if threshold is not None:
+                expression_manager = stormpy.ExpressionManager()
+                expression = expression_manager.create_rational(pc.convert_from_storm_type(threshold))
+                formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
             # Create PLA checker
             self._pla_checker = stormpy.pars.create_region_checker(self.get_model(), formula)
         return self._pla_checker
@@ -291,3 +292,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         region = HyperRectangle.from_region_string(region_string, parameters.get_variables())
         regions = [(region_result, region)]
         return regions
+
+    def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
+        pla_checker = self.get_pla_checker(None)
+        #TODO check direction
+        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), True)
+        assert result.is_constant()
+        return stormpy.convert_from_storm_type(result.constant_part())

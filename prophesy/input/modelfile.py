@@ -39,9 +39,9 @@ class DrnFile:
         with open(self.location) as file:
             for line in file:
                 if line.startswith("@type:"):
-                    if line[7:] == "dtmc":
+                    if line[7:] in ["dtmc", "DTMC"]:
                         return ModelType.DTMC
-                    if line[7:] == "mdp":
+                    if line[7:] in ["mdp", "MDP"]:
                         return ModelType.MDP
 
 

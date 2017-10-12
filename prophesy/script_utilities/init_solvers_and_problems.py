@@ -4,10 +4,10 @@ from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegi
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
 from prophesy.regions.region_checker import ProblemDescription
+from prophesy.optimisation.pla_region_optimiser import PlaRegionOptimiser
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
-from prophesy.output.plot import Plot
 from prophesy.input.samplefile import read_samples_file
 from prophesy.data.constant import parse_constants_string, Constants
 from prophesy.smt.isat import IsatSolver
@@ -53,8 +53,6 @@ def init_solvers_and_problem(cmdargs, optimisation = False):
         problem_description.parameters.make_intervals_open()
         problem_description.parameters.make_intervals_closed(cmdargs.epsilon_pmc)
 
-    if not cmdargs.safe_above_threshold:
-        Plot.flip_green_red = True
 
     if cmdargs.samples_file:
         logger.debug("Loading samples")
@@ -111,10 +109,14 @@ def init_solvers_and_problem(cmdargs, optimisation = False):
         if solver is None:
             raise RuntimeError("For using the solution function an SMT solver is required.")
         checker = SolutionFunctionRegionChecker(solver)
-    elif cmdargs.pla:
+    elif cmdargs.pla and not optimisation:
         if mc is None:
             raise RuntimeError("For PLA, a model checker is required.")
         checker = PlaRegionChecker(mc)
+    elif cmdargs.pla and optimisation:
+        if mc is None:
+            raise RuntimeError("For PLA, a model checker is required.")
+        checker = PlaRegionOptimiser(mc)
     else:
         raise RuntimeError("No method for region checking selected.")
 
@@ -132,4 +134,4 @@ def init_solvers_and_problem(cmdargs, optimisation = False):
         problem_description.welldefined_constraints = wd
         problem_description.graph_preserving_constraints = gp
 
-    return problem_description, checker, samples, solver
+    return problem_description, checker, samples, solver, mc

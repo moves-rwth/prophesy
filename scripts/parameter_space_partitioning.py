@@ -3,13 +3,13 @@
 from argparse import ArgumentParser
 import sys
 import logging
-import os
 
 import prophesy.adapter.pycarl as pc
 from prophesy.regions.region_polygon import ConstraintPolygon
 from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.script_utilities.init_solvers_and_problems import init_solvers_and_problem
 from prophesy.util import open_file
+from prophesy.output.plot import Plot
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,10 @@ def parse_cli_args(args):
 
 def run(args=sys.argv[1:], interactive=False):
     cmdargs = parse_cli_args(args)
-    problem_description, region_checker, samples, solver = init_solvers_and_problem(cmdargs)
+
+    problem_description, region_checker, samples, solver, mc = init_solvers_and_problem(cmdargs)
+    if not cmdargs.safe_above_threshold:
+        Plot.flip_green_red = True
 
     arguments = samples, problem_description.parameters, problem_description.threshold, region_checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints
 

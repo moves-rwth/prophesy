@@ -72,6 +72,11 @@ class HyperRectangle(object):
             result.append(HyperRectangle(*[splitted_intervals[i][x] for i, x in zip(range(0, self.dimension()), bits)]))
         return result
 
+    def split_in_single_dimension(self, dimension):
+        intervals_1 = [(interval.split()[0] if ind == dimension else interval) for ind, interval in enumerate(self.intervals)]
+        intervals_2 = [(interval.split()[1] if ind == dimension else interval) for ind, interval in enumerate(self.intervals)]
+        return [HyperRectangle(*intervals_1), HyperRectangle(*intervals_2)]
+
     def size(self):
         """
         :return: The size of the hyperrectangle
