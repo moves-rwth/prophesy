@@ -28,6 +28,7 @@ def obtain_version():
             raise RuntimeError("unable to find version in prophesy/_version.py")
     return verstr
 
+
 class Tox(TestCommand):
     """Custom command to execute the tests using tox
     """
@@ -45,9 +46,20 @@ class Tox(TestCommand):
 
 
 class ConfigBuild(build):
+    user_options = build.user_options + [
+        ('search-path=', None, 'Path to search for tools'),
+    ]
+
+    def initialize_options(self):
+        build.initialize_options(self)
+        self.search_path = None
+
+    def finalize_options(self):
+        build.finalize_options(self)
+
     def run(self):
         # Write config before executing setup, so cfg files are found
-        write_config.write_initial_config()
+        write_config.write_initial_config(self.search_path)
         build.run(self)
 
 
