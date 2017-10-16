@@ -72,7 +72,7 @@ class EarlyTerminatingParticleSwarmOptimizer(ParticleSwarmOptimizer):
             score_delta = self.historic_best_score - last_improvement_before_cutoff.score
             relative_score_delta = (score_delta / last_improvement_before_cutoff.score) / iterations_delta
 
-            print("# {}, #Δ {}, scoreΔ {}, rel.s.Δ {}".format(self.iteration, iterations_delta, score_delta, relative_score_delta))
+            #print("# {}, #Δ {}, scoreΔ {}, rel.s.Δ {}".format(self.iteration, iterations_delta, score_delta, relative_score_delta))
 
             return relative_score_delta > required_relative_progress  # remember that both values are negative
 
