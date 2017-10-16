@@ -16,6 +16,7 @@ from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.optimisation.heuristic_search import ModelOptimizer
 
 MC_NAME_OPTIONS = ['stormpy', 'storm', 'prism']
 
