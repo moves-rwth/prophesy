@@ -108,7 +108,10 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 @click.option('--constants', help='additional constants string over the model\'s parameters (rarely needed)')
 @click.option('--hint', help='PSO hint (~ starting point), enclosed in quotes, separated by space,'
                              ' parameter order is determined by Prism file (e.g., "0.7 0.6")')
-def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, modelchecker, constants, hint):
+@click.option('--pso-particles', help='number of PSO particles', default=20, show_default=True)
+@click.option('--pso-max-iterations', help='maximum number of PSO iterations', default=20, show_default=True)
+def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, modelchecker, constants, hint,
+                 pso_particles, pso_max_iterations):
     """Find low-cost parameter valuation satisfying the PCTL property.
 
     Given a parametric model and a PCTL property, a heuristic search
@@ -146,7 +149,9 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
     else:
         hint_as_param_inst = None
 
-    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=hint_as_param_inst)
+    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=hint_as_param_inst,
+                             pso_options={'num_particles': pso_particles, 'max_iters': pso_max_iterations})
+
     location, score = repairer.repair()
     result_as_instantiation = ParameterInstantiation.from_point(Point(*location), parameters)
     print("Best location {} with score {} \n".format(location, score))
