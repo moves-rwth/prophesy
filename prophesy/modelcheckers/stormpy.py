@@ -156,7 +156,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         """
         if self._parameter_mapping is None:
             self._parameter_mapping = {}
-            model_parameters = self.get_model().collect_probability_parameters()
+            model_parameters = self.get_model().collect_probability_parameters() | self.get_model().collect_reward_parameters()
             for parameter in prophesy_parameters:
                 param_string = str(parameter.variable)
                 model_param = next((var for var in model_parameters if str(var) == param_string), None)
@@ -251,8 +251,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         model_instantiator = self.get_model_instantiator()
         for sample_point in samplepoints:
             welldefined = True
-            if check_welldefined:
-                    welldefined = self._check_welldefined(sample_point)
+            #if check_welldefined:
+            #        welldefined = self._check_welldefined(sample_point)
             # Instantiate point and check result
             point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                      sample_point.items()}

@@ -16,6 +16,7 @@ from prophesy.regions.welldefinedness import SampleWelldefinedChecker
 from prophesy.smt.isat import IsatSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy.smt.YicesCli_solver import YicesCLISolver
+from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,8 @@ def _get_argparser():
     parser.add_argument('--log-calls', help='file where we print the smt2 calls', dest='logcallsdestination',
                         required=False)
 
+
+    parser.add_argument('--compute-bound', action="store_true", dest='bounding', help="Should we bound the optimal value by expensive computations")
     parser.add_argument('--iterations', dest='iterations', help='Number of regions to generate', type=int, default=10000)
     parser.add_argument('--gap', dest='gap', help='Gap between upper and lower bound', type=pc.Rational, default=pc.Rational("0.08"))
 
@@ -83,33 +86,36 @@ def run(args=sys.argv[1:], interactive=False):
 
     assert problem_description.property.operator_direction != OperatorDirection.unspecified
     optimal_dir = "max" if problem_description.property.operator_direction == OperatorDirection.max else "min"
-    print(optimal_dir)
     assert problem_description.welldefined_constraints is not None
     if mc:
         mc.set_welldefined_checker(SampleWelldefinedChecker(solver2, problem_description.parameters,problem_description.welldefined_constraints))
         optimizer = ModelOptimizer(mc, problem_description.parameters, problem_description.property, optimal_dir)
         _, val = optimizer.search()
         score = optimizer.score(None, val)
-        print(float(score))
+        print("RESULT: {}".format(float(score)))
     else:
-        score = pc.Rational(1000000000000) if optimal_dir == "min" else 0
+        optimizer = ModelOptimizer(RatFuncSampling(problem_description.parameters, problem_description.parameters), problem_description.parameters, problem_description.property, optimal_dir)
+        _, val = optimizer.search()
+        score = optimizer.score(None, val)
+        print("RESULT: {}".format(float(score)))
         #score = pc.Rational(200000000000000)
     #result_as_instantiation = ParameterInstantiation.from_point(Point(*location), problem_description.parameters)
 
-    if cmdargs.pla:
-        #TODO do not rely on internal member
-        optimiser = PlaSearchOptimisation(region_checker._checker, problem_description)
-    else:
-        optimiser = BinarySearchOptimisation(region_checker, problem_description)
-
-    if problem_description.property.operator_direction == OperatorDirection.max:
-        if problem_description.property.operator == OperatorType.reward:
-            bound = pc.inf
+    if cmdargs.bounding:
+        if cmdargs.pla:
+            #TODO do not rely on internal member
+            optimiser = PlaSearchOptimisation(region_checker._checker, problem_description)
         else:
-            bound = pc.Rational(1)
-    else:
-        bound = pc.Rational(0)
-    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score, bound=bound)
+            optimiser = BinarySearchOptimisation(region_checker, problem_description)
+
+        if problem_description.property.operator_direction == OperatorDirection.max:
+            if problem_description.property.operator == OperatorType.reward:
+                bound = pc.inf
+            else:
+                bound = pc.Rational(1)
+        else:
+            bound = pc.Rational(0)
+        optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score, bound=bound)
 
 
     if not cmdargs.storm and not cmdargs.stormpy:

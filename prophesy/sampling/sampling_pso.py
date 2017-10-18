@@ -113,7 +113,7 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         self.bounds = (left_bounds, right_bounds)
 
         if pso_options is None:
-            pso_options = {'num_particles': 20, 'max_iters': 70}
+            pso_options = {'num_particles': 60, 'max_iters': 400}
 
         if hint is not None:
             pso_options['hint'] = [float(rational) for rational in hint.get_point(parameters).coordinates]

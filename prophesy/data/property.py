@@ -1,5 +1,6 @@
 import prophesy.adapter.pycarl as pc
 from enum import Enum
+import re
 
 class OperatorType(Enum):
     """
@@ -137,6 +138,7 @@ class Property:
         :rtype: Property
         """
         input_string = input_string.strip()
+        input_string = re.sub("[\{].*[\}]", "", input_string)
         if input_string[:4] == "Pmin":
             input_string = input_string[4:]
             operator_direction = OperatorDirection.min
