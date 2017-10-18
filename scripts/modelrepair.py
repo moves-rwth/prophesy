@@ -108,7 +108,12 @@ POLYNOMIAL_TYPE = PolynomialParamType()
 @click.option('--constants', help='additional constants string over the model\'s parameters (rarely needed)')
 @click.option('--hint', help='PSO hint (~ starting point), enclosed in quotes, separated by space,'
                              ' parameter order is determined by Prism file (e.g., "0.7 0.6")')
-def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, modelchecker, constants, hint):
+@click.option('--pso-particles', help='number of PSO particles', default=20, show_default=True)
+@click.option('--pso-max-iterations', help='maximum number of PSO iterations', default=20, show_default=True)
+@click.option('--pso-required-progress', help='required relative score change per iteration (see help)', type=float)
+@click.option('--pso-required-progress-look-behind', help='number of iterations to consider (see help)', default=10)
+def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, modelchecker, constants, hint,
+                 pso_particles, pso_max_iterations, pso_required_progress, pso_required_progress_look_behind):
     """Find low-cost parameter valuation satisfying the PCTL property.
 
     Given a parametric model and a PCTL property, a heuristic search
@@ -118,6 +123,12 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
     The cost function must be parseable by pycarl's parser. If it is
     omitted, the cost is not considered [but then this procedure makes
     little sense].
+
+    PSO can be terminated early if the score stagnates. The progress is
+    given as a relative change per iteration (PSO_REQUIRED_PROGRESS).
+    E.g., -0.01 would require the score to drop by 1% per iteration on
+    average over the last PSO_REQUIRED_PROGRESS_LOOK_BEHIND iterations.
+    Note that 1% in very large in this context. Try something like -0.0001.
 
     Example invocation:
 
@@ -146,7 +157,15 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
     else:
         hint_as_param_inst = None
 
-    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=hint_as_param_inst)
+    pso_options = {
+        'num_particles': pso_particles,
+        'max_iters': pso_max_iterations,
+        'required_progress': pso_required_progress,
+        'required_progress_look_behind': pso_required_progress_look_behind,
+    }
+    repairer = ModelRepairer(mc, parameters, pctl_property, cost_fct=cost_function.evaluate, hint=hint_as_param_inst,
+                             pso_options=pso_options)
+
     location, score = repairer.repair()
     result_as_instantiation = ParameterInstantiation.from_point(Point(*location), parameters)
     print("Best location {} with score {} \n".format(location, score))

@@ -31,7 +31,7 @@ class ModelRepairer:
         hint: ParameterInstantiation to be used as starting point
     """
 
-    def __init__(self, modelchecker, parameters, pctl_property, cost_fct=None, hint=None):
+    def __init__(self, modelchecker, parameters, pctl_property, cost_fct=None, hint=None, pso_options=None):
         if pctl_property.bound.asks_for_exact_value():
             raise ValueError("Bound must be one of <, <=, >, >=.")
 
@@ -44,7 +44,8 @@ class ModelRepairer:
 
         self.cost_fct = cost_fct if cost_fct is not None else dummy_cost_function
 
-        self._pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score, hint=hint)
+        self._pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score, hint=hint,
+                                                            pso_options=pso_options)
 
     def repair(self):
         """Run PSO and return best result."""
