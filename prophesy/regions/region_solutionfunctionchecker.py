@@ -23,6 +23,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._ratfunc = None
         self.fixed_threshold = True
         self._thresholdVar = None
+        self.threshold_set = False
 
     def initialize(self, problem_description, constants=None, fixed_threshold = True):
         """
@@ -77,7 +78,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
                 safe_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._bad_relation)
                 bad_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._safe_relation)
             else:
-                if bounded_variables:
+                if lower_bounded_variables:
                     self._smt2interface.assert_constraint(pc.Constraint(rf1Var, pc.Relation.GREATER, pc.Rational(0)))
                     self._smt2interface.assert_constraint(pc.Constraint(rf2Var, pc.Relation.GREATER, pc.Rational(0)))
 
@@ -99,9 +100,11 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
     def change_threshold(self, new_threshold):
         assert self.fixed_threshold is not True
         #TODO check that the interface is at the level where we pushed the threshold.
-        self._smt2interface.pop()
+        if self.threshold_set:
+            self._smt2interface.pop()
         self._smt2interface.push()
         self._add_threshold_constraint(new_threshold)
+        self.threshold_set = True
 
     def _add_threshold_constraint(self, threshold):
         threshold_constraint = pc.Constraint(pc.Polynomial(self._thresholdVar) - threshold,

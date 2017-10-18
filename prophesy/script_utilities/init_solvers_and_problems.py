@@ -37,13 +37,14 @@ def init_solvers_and_problem(cmdargs, optimisation = False):
         model_file = open_model_file(cmdargs.model_file)
         if not cmdargs.property_file:
             raise RuntimeError("Property file needed when model file is given.")
-        properties = PctlFile(cmdargs.property_file)
         if cmdargs.rat_file and problem_description.parameters != model_file.parameters:
             raise ValueError("Model file and solution function parameters do not coincide")
         problem_description.parameters = model_file.parameters
         problem_description.model = model_file
-        problem_description.property = properties.get(0)
         constants = parse_constants_string(cmdargs.constants)
+    if cmdargs.property_file:
+        properties = PctlFile(cmdargs.property_file)
+        problem_description.property = properties.get(0)
 
     # TODO use better defaults for graph parameters
     if cmdargs.graph_preserving_pmc:

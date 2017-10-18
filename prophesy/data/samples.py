@@ -1,5 +1,6 @@
 from collections import OrderedDict, Set
 from enum import Enum
+import prophesy.adapter.pycarl as pc
 
 from prophesy.data.point import Point
 
@@ -71,6 +72,19 @@ class ParameterInstantiation(dict):
         for (val, var) in zip(pt, parameters):
             sp[var] = val
         return sp
+
+    def to_formula(self):
+        """Given list of variables, compute constraints
+
+        :param variables: Variables for each dimension
+        :return: A formula specifying the points inside the hyperrectangle
+        :rtype: pc.Constraint or pc.Formula
+        """
+        constraint = pc.Constraint(True)
+        for par in self.get_parameters():
+            constraint = constraint & pc.Constraint(pc.Polynomial(par.variable) - self[par], pc.Relation.EQ)
+        return constraint
+
 
     def __hash__(self):
         hsh = 0
@@ -160,6 +174,9 @@ class InstantiationResultDict:
 
     def __getitem__(self, instantiation):
         return self._values[instantiation]
+
+    def __setitem__(self, instantiation, value):
+        self._values[instantiation] = value
 
     def remove(self, instantiation):
         del self._values[instantiation]

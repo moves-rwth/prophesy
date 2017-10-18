@@ -12,6 +12,8 @@ class WelldefinednessResult(Enum):
     Illdefined = 2
 
 
+
+
 def check_welldefinedness(checker, parameters, region, constraints):
     """
 
@@ -47,3 +49,39 @@ def check_welldefinedness(checker, parameters, region, constraints):
         return WelldefinednessResult.Welldefined
     elif result == Answer.unknown:
         raise RuntimeError("Unknown answers for well-definedness-checks are currently not supported")
+
+
+class SampleWelldefinedChecker():
+    def __init__(self, checker, parameters, constraints):
+        """
+        
+        :param checker: 
+        :param parameters: 
+        :param constraints: 
+        """
+        self.checker = checker
+        self.parameters = parameters
+        self.contraints = constraints
+        for p in self.parameters:
+            self.checker.add_variable(p.variable)
+
+        for c in self.contraints:
+            self.checker.assert_constraint(c)
+
+    def check(self, sample):
+        logger.debug("Check %s", sample)
+        formula = sample.to_formula()
+        self.checker.push()
+        self.checker.assert_constraint(formula)
+        check_result = self.checker.check()
+        if check_result == Answer.sat:
+            result = WelldefinednessResult.Welldefined
+        elif check_result == Answer.unsat:
+            result = WelldefinednessResult.Illdefined
+        elif check_result == Answer.unknown:
+            raise RuntimeError("Unknown answers for well-definedness-checks are currently not supported")
+        self.checker.pop()
+
+        logger.debug("Checked %s, result: %s", sample, result)
+        return result
+

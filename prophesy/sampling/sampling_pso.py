@@ -47,7 +47,7 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         self.bounds = (left_bounds, right_bounds)
 
         if pso_options is None:
-            pso_options = {'num_particles': 20, 'max_iters': 20}
+            pso_options = {'num_particles': 20, 'max_iters': 70}
 
         if hint is not None:
             pso_options['hint'] = [float(rational) for rational in hint.get_point(parameters).coordinates]
@@ -63,7 +63,11 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         rational_points = [_coords_to_rational_point(coords) for coords in list_of_coords]
         parameter_instantiations = ParameterInstantiations.from_points(rational_points, self.parameters)
 
-        results = self.sampler.perform_sampling(parameter_instantiations)
+        results = self.sampler.perform_sampling(parameter_instantiations, False)
+
+        #for i, v in results:
+         #   print(results[i])
+
         self.latest_sampling_result = results
 
         result_as_ordered_list = [(p, results[p]) for p in parameter_instantiations]

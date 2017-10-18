@@ -10,6 +10,7 @@ from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.data.constant import Constants
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 from prophesy.regions.region_checker import RegionCheckResult
+from prophesy.regions.welldefinedness import  WelldefinednessResult
 from prophesy.data.hyperrectangle import HyperRectangle
 import prophesy.adapter.stormpy as stormpy
 import prophesy.adapter.pycarl as pc
@@ -35,6 +36,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctlformula = None
         self.constants = None
         self.bisimulation = stormpy.BisimulationType.STRONG
+        self._welldefined_checker = None
         # Storing objects of stormpy for incremental calls
         self._program = None
         self._model = None
@@ -72,6 +74,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._parameter_mapping = None
         self._model_instantiator = None
         self._pla_checker = None
+        self._welldefined_checker = None
+
+    def set_welldefined_checker(self, checker):
+        self._welldefined_checker = checker
 
     def load_model_from_drn(self, drnfile, constants=Constants()):
         self._reset_internal()
@@ -234,19 +240,29 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
-    def perform_sampling(self, samplepoints):
+    def _check_welldefined(self, samplepoint):
+        return self._welldefined_checker.check(samplepoint) == WelldefinednessResult.Welldefined
+
+    def perform_sampling(self, samplepoints, check_welldefined = False):
         # Perform sampling with model instantiator
         logger.info("Call stormpy for sampling")
         samples = InstantiationResultDict(samplepoints.parameters)
         parameter_mapping = self.get_parameter_mapping(samplepoints.parameters)
         model_instantiator = self.get_model_instantiator()
         for sample_point in samplepoints:
+            welldefined = True
+            if check_welldefined:
+                    welldefined = self._check_welldefined(sample_point)
             # Instantiate point and check result
             point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                      sample_point.items()}
-            instantiated_model = model_instantiator.instantiate(point)
-            result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
+            if welldefined:
+                instantiated_model = model_instantiator.instantiate(point)
+                result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
+            else:
+                result = None
             samples.add_result(InstantiationResult(sample_point, result))
+            logger.debug("Result: %s", result)
 
         logger.info("Sampling with stormpy successfully finished")
         return samples
@@ -295,8 +311,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
         pla_checker = self.get_pla_checker(None)
-        #TODO check direction
         region_string = hyperrectangle.to_region_string(parameters.get_variables())
-        result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), True)
+        result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
         assert result.is_constant()
         return stormpy.convert_from_storm_type(result.constant_part())

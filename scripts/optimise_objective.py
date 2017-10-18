@@ -10,8 +10,12 @@ from prophesy.optimisation.simple_binary_search import BinarySearchOptimisation
 from  prophesy.optimisation.pla_based_search import PlaSearchOptimisation
 from prophesy.script_utilities.init_solvers_and_problems import init_solvers_and_problem
 from prophesy.optimisation.heuristic_search import ModelOptimizer
-from prophesy.data.property import OperatorType
+from prophesy.data.property import OperatorType, OperatorDirection
 from prophesy.util import open_file
+from prophesy.regions.welldefinedness import SampleWelldefinedChecker
+from prophesy.smt.isat import IsatSolver
+from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.smt.YicesCli_solver import YicesCLISolver
 
 
 logger = logging.getLogger(__name__)
@@ -66,9 +70,30 @@ def run(args=sys.argv[1:], interactive=False):
     cmdargs = parse_cli_args(args)
     problem_description, region_checker, samples, solver, mc = init_solvers_and_problem(cmdargs, True)
 
-    optimizer = ModelOptimizer(mc, problem_description.parameters, problem_description.property, "max")
-    _, val = optimizer.search()
-    score = optimizer.score(None, val)
+    solver2 = None
+    if cmdargs.z3:
+        solver2 = Z3CliSolver()
+        solver2.run()
+    elif cmdargs.yices:
+        solver2 = YicesCLISolver()
+        solver2.run()
+    elif cmdargs.isat:
+        solver2 = IsatSolver()
+        solver2.run()
+
+    assert problem_description.property.operator_direction != OperatorDirection.unspecified
+    optimal_dir = "max" if problem_description.property.operator_direction == OperatorDirection.max else "min"
+    print(optimal_dir)
+    assert problem_description.welldefined_constraints is not None
+    if mc:
+        mc.set_welldefined_checker(SampleWelldefinedChecker(solver2, problem_description.parameters,problem_description.welldefined_constraints))
+        optimizer = ModelOptimizer(mc, problem_description.parameters, problem_description.property, optimal_dir)
+        _, val = optimizer.search()
+        score = optimizer.score(None, val)
+        print(float(score))
+    else:
+        score = pc.Rational(1000000000000) if optimal_dir == "min" else 0
+        #score = pc.Rational(200000000000000)
     #result_as_instantiation = ParameterInstantiation.from_point(Point(*location), problem_description.parameters)
 
     if cmdargs.pla:
@@ -77,11 +102,14 @@ def run(args=sys.argv[1:], interactive=False):
     else:
         optimiser = BinarySearchOptimisation(region_checker, problem_description)
 
-    if problem_description.property.operator ==  OperatorType.reward:
-        upper = pc.inf
+    if problem_description.property.operator_direction == OperatorDirection.max:
+        if problem_description.property.operator == OperatorType.reward:
+            bound = pc.inf
+        else:
+            bound = pc.Rational(1)
     else:
-        upper = pc.Rational(1)
-    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, lower=score, upper=upper)
+        bound = pc.Rational(0)
+    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score, bound=bound)
 
 
     if not cmdargs.storm and not cmdargs.stormpy:

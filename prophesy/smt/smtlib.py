@@ -109,14 +109,14 @@ class SmtlibSolver(SMTSolver):
             self._write("".join(self.status))
         s = "(check-sat)\n"
         self.string += s
-        logging.info("Call %s..", self.name())
+        logger.debug("Call %s..", self.name())
         self._write(s)
 
         for line in iter(self.process.stdout.readline, ""):
             if not line and self.process.poll() is not None:
                 break
             output = line.rstrip()
-            logger.info("SMT result:\t" + output)
+            logger.debug("SMT result:\t" + output)
             if output == "unsat":
                 if not self.incremental:
                     self.stop()
