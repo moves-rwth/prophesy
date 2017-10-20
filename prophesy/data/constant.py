@@ -1,7 +1,7 @@
 import prophesy.adapter.pycarl as pc
 
 
-class Constant(object):
+class Constant:
     """
     A variable and its constant value.
     """
@@ -25,7 +25,7 @@ class Constant(object):
         return self.variable.name
 
 
-class Constants(object):
+class Constants:
     """
     Container that holds constants for a model. 
     """

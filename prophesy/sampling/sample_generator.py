@@ -2,7 +2,7 @@ from prophesy.config import configuration
 from prophesy.data.samples import InstantiationResultDict
 
 
-class SampleGenerator(object):
+class SampleGenerator:
     """Class to generate samples given a sampler. SampleGenerator uses the
     iteration interface to do so.
     """

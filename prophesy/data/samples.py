@@ -98,7 +98,7 @@ class ParameterInstantiations(list):
         return res
 
 
-class InstantiationResult(object):
+class InstantiationResult:
     """Class to represent a single sample. Maps a point (tuple of
     pycarl.Rational) to a value (pycarl.Rational).
     """

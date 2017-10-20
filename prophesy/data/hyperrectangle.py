@@ -8,7 +8,7 @@ from prophesy.adapter.pycarl import inf
 import numpy as np
 
 
-class HyperRectangle(object):
+class HyperRectangle:
     """
     Defines a hyper-rectangle, that is the Cartisean product of intervals,
     i.e. the n-dimensional variant of a box.
