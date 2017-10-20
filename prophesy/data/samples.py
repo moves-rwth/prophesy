@@ -108,10 +108,11 @@ class InstantiationResult:
         """
         assert isinstance(instantiation, ParameterInstantiation)
         self.instantiation = instantiation
-        self.well_defined = True
-        if result == InstantiationResultFlag.NOT_WELLDEFINED:
-            self.well_defined = False
         self.result = result
+
+    @property
+    def well_defined(self):
+        return self.result != InstantiationResultFlag.NOT_WELLDEFINED
 
     def get_instantiation_point(self, parameters):
         """
