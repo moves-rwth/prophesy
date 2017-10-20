@@ -81,9 +81,9 @@ class ParameterInstantiation(dict):
 
 class ParameterInstantiations(list):
 
-    def __init__(self, *args):
+    def __init__(self, *args, parameters=None):
         super().__init__(*args)
-        self.parameters = None
+        self.parameters = parameters
 
     @classmethod
     def from_points(cls, pts, parameters):
@@ -93,9 +93,7 @@ class ParameterInstantiations(list):
         :param parameters: 
         :return: 
         """
-        res = cls([ParameterInstantiation.from_point(pt, parameters) for pt in pts])
-        res.parameters = parameters
-        return res
+        return cls([ParameterInstantiation.from_point(pt, parameters) for pt in pts], parameters=parameters)
 
 
 class InstantiationResult:
