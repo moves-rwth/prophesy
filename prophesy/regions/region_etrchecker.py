@@ -205,10 +205,10 @@ class EtrRegionChecker(SmtRegionChecker):
     def _get_reward_model(self, model, problem_description):
         model.reduce_to_state_based_rewards()
         if problem_description.property.reward_name is not None:
-            reward_model = model.reward_models.at(problem_description.property.reward_name)
+            reward_model = model.reward_models[problem_description.property.reward_name]
         else:
             if "" in model.reward_models:
-                reward_model = model.reward_models.at("")
+                reward_model = model.reward_models[""]
             else:
                 if len(model.reward_models) > 1:
                     raise RuntimeError("Unclear reference to reward model. Please specify a name.")
