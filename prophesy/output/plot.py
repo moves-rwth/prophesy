@@ -68,7 +68,7 @@ class Plot(object):
         :param kwargs:
         """
         if isinstance(poly, HyperRectangle):
-            verts = poly.np_vertices()
+            verts = np.array([np.array(list(map(float, v))) for v in poly.vertices()])
             tmp = np.array(verts[3])
             verts[3] = verts[2]
             verts[2] = tmp
