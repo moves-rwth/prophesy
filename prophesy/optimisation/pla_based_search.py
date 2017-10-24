@@ -1,8 +1,5 @@
 import logging
 import prophesy.adapter.pycarl as pc
-from prophesy.regions.region_checker import RegionCheckResult
-
-
 from prophesy.data.hyperrectangle import HyperRectangle
 
 logger = logging.getLogger(__name__)
@@ -28,11 +25,11 @@ class PlaSearchOptimisation():
             this_lvl_bound = pc.Rational(0) if  dir == "max" else pc.inf
             next_lvl_regions = []
             for region in regions:
-                result = self.pla_region_optimiser.bound_value_in_hyperrectangle(self.problem_description.parameters, region, False)
+                result = self.pla_region_optimiser.bound_value_in_hyperrectangle(self.problem_description.parameters, region, dir == "max")
                 this_lvl_bound = max(this_lvl_bound, result) if dir == "max" else min(this_lvl_bound, result)
                 if dir == "max" and result > realised + requested_gap:
                     next_lvl_regions = next_lvl_regions + region.split_in_single_dimension(iterations % len(self.problem_description.parameters))
-                if dir == "min" and result < realised + requested_gap:
+                if dir == "min" and result < realised - requested_gap:
                     next_lvl_regions = next_lvl_regions + region.split_in_single_dimension(iterations % len(self.problem_description.parameters))
 
             regions = [region.close() for region in next_lvl_regions]
@@ -46,6 +43,3 @@ class PlaSearchOptimisation():
 
 
             activity = [(act/1.5 + 1 if curr_refinement_index != ind else act/1.5 + change) for ind, act in enumerate(activity)]
-            print(activity)
-
-
