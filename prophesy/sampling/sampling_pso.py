@@ -73,7 +73,6 @@ class EarlyTerminatingParticleSwarmOptimizer(ParticleSwarmOptimizer):
             relative_score_delta = (score_delta / last_improvement_before_cutoff.score) / iterations_delta
 
             print("# {}, #Δ {}, scoreΔ {}, rel.s.Δ {}".format(self.iteration, iterations_delta, score_delta, relative_score_delta))
-
             return relative_score_delta > required_relative_progress  # remember that both values are negative
 
         if self.iteration >= self.options['max_iters']:
@@ -113,7 +112,11 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         self.bounds = (left_bounds, right_bounds)
 
         if pso_options is None:
-            pso_options = {'num_particles': 60, 'max_iters': 400}
+            pso_options = dict()
+            pso_options['num_particles'] = 100 if len(parameters) < 10 else (800 if len(parameters) > 40 else 400),
+            pso_options['max_iters'] = 600
+            pso_options['required_progress'] = pc.Rational('-0.01')
+            pso_options['required_progress_look_behind'] = 6 if len(parameters) < 40 else 8
 
         if hint is not None:
             pso_options['hint'] = [float(rational) for rational in hint.get_point(parameters).coordinates]
@@ -131,9 +134,6 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
 
         results = self.sampler.perform_sampling(parameter_instantiations, False)
 
-        #for i, v in results:
-         #   print(results[i])
-
         self.latest_sampling_result = results
 
         result_as_ordered_list = [(p, results[p]) for p in parameter_instantiations]
@@ -145,5 +145,6 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         while not self.pso.stop():
             self.pso.iteration += 1
             self.pso.iterate()
+            #print("{}: {}".format(self.pso.iteration, float(self.pso.historic_best_score)))
             yield self.latest_sampling_result
         raise StopIteration
