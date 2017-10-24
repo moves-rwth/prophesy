@@ -19,7 +19,7 @@ class Parameter(object):
         return self.variable.name
 
     def __hash__(self):
-        return hash(self.variable) ^ hash(self.interval)
+        return hash(self.variable)
 
     def __str__(self):
         return "{} {}".format(self.variable, self.interval)
