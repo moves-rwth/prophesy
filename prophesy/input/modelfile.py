@@ -48,6 +48,8 @@ class DrnFile:
                         return ModelType.DTMC
                     if line[7:] in ["mdp", "MDP"]:
                         return ModelType.MDP
+                    else:
+                        raise NotImplementedError("Support for other types than DTMC and MDPs is not implemented in the parser.")
 
     def _get_parameters(self):
         with open(self.location) as file:

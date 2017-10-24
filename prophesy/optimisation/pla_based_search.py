@@ -4,25 +4,26 @@ from prophesy.data.hyperrectangle import HyperRectangle
 
 logger = logging.getLogger(__name__)
 
+
 class PlaSearchOptimisation():
     def __init__(self, pla_region_optimiser, problem_description, use_counterexample = True):
         self.pla_region_optimiser = pla_region_optimiser
         self.problem_description = problem_description
         self.use_counterexample = use_counterexample
 
-    def search(self, requested_gap = pc.Rational("0.05"), max_iterations = 10, dir="max", realised=pc.Rational(0), bound = pc.Rational(1)):
+    def search(self, requested_gap = pc.Rational("0.05"), max_iterations=10, dir="max", realised=pc.Rational(0), bound=pc.Rational(1)):
         regions = [HyperRectangle(*self.problem_description.parameters.get_variable_bounds())]
         regions = [region.close() for region in regions]
         iterations = 0
 
         assert dir in ["min", "max"]
         logger.info("Interval [{},{}] (size: {}) ".format(realised, bound, bound-realised))
-        activity = [1.0 for i in self.problem_description.parameters]
+        activity = [1.0 for _ in self.problem_description.parameters]
         nr_regions = 1
         while requested_gap < abs(bound - realised) and max_iterations >= iterations:
-            curr_refinement_index =  min(range(len(activity)), key=activity.__getitem__)
+            curr_refinement_index = min(range(len(activity)), key=activity.__getitem__)
             iterations = iterations + 1
-            this_lvl_bound = pc.Rational(0) if  dir == "max" else pc.inf
+            this_lvl_bound = pc.Rational(0) if dir == "max" else pc.inf
             next_lvl_regions = []
             for region in regions:
                 result = self.pla_region_optimiser.bound_value_in_hyperrectangle(self.problem_description.parameters, region, dir == "max")

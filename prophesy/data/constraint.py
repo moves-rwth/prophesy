@@ -5,7 +5,6 @@ from shapely.geometry.polygon import LinearRing, Polygon, orient
 from prophesy.data.samples import ParameterInstantiation
 
 
-
 def region_from_polygon(polygon, variables):
         """Compute formula representing  polygon (Polygon, LineString or LinearRing)
         Area will be considered at the rhs (ccw) of line segments

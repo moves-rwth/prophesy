@@ -85,7 +85,6 @@ class ParameterInstantiation(dict):
             constraint = constraint & pc.Constraint(pc.Polynomial(par.variable) - self[par], pc.Relation.EQ)
         return constraint
 
-
     def __hash__(self):
         hsh = 0
         for v in self.values():
@@ -268,7 +267,6 @@ class InstantiationResultDict:
 
     def instantiations(self):
         return self._values.keys()
-
 
 
 def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
