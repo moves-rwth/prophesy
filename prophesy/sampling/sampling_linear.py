@@ -2,7 +2,7 @@ import math
 import logging
 
 from prophesy.sampling.sample_generator import SampleGenerator
-from prophesy.data.samples import weighed_interpolation, ParameterInstantiations, InstantiationResultDict, InstantiationResult
+from prophesy.data.samples import weighed_interpolation, InstantiationResultDict, InstantiationResult
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,7 @@ class LinearRefinement(SampleGenerator):
 
     def _compute_points(self, safe_samples, bad_samples):
         delta = self._min_dist()
-        new_points = ParameterInstantiations()
-        new_points.parameters = self.parameters
+        new_points = []
 
         # Offset the weight a little to balance the sample types
         if len(safe_samples) < len(bad_samples):

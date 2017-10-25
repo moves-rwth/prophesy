@@ -79,23 +79,6 @@ class ParameterInstantiation(dict):
         return hsh
 
 
-class ParameterInstantiations(list):
-
-    def __init__(self, *args, parameters=None):
-        super().__init__(*args)
-        self.parameters = parameters
-
-    @classmethod
-    def from_points(cls, pts, parameters):
-        """
-        
-        :param pts: 
-        :param parameters: 
-        :return: 
-        """
-        return cls([ParameterInstantiation.from_point(pt, parameters) for pt in pts], parameters=parameters)
-
-
 class InstantiationResult:
     """Class to represent a single sample. Maps a point (tuple of
     pycarl.Rational) to a value (pycarl.Rational).
