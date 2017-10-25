@@ -52,7 +52,8 @@ if configuration.is_module_available('stormpy'):
 logger = logging.getLogger("ProphesyWeb")
 
 def _jsonSamples(samples):
-    return [{"coordinate" : res.instantiation.get_point(samples.parameters).to_float().coordinates, "value" : float(res.result)} for res in samples.instantiation_results()]
+    return [{"coordinate": instantiation.get_point(samples.parameters).to_float().coordinates, "value": float(result)}
+            for instantiation, result in samples.items()]
 
 
 def _jsonPoly(polygon):
@@ -482,7 +483,7 @@ class PingRedis(CegarHandler):
 class Samples(CegarHandler):
     def get(self):
         result = self._getResultData(self._get_session('current_result', None))
-        flattenedsamples = _jsonSamples(self._get_session('samples', InstantiationResultDict(result.parameters)))
+        flattenedsamples = _jsonSamples(self._get_session('samples', InstantiationResultDict(parameters=result.parameters)))
         return self._json_ok(flattenedsamples)
 
     def post(self):
@@ -498,7 +499,7 @@ class Samples(CegarHandler):
         if coordinates is None:
             return self._json_error("Unable to read coordinates", 400)
         result = self._getResultData(self._get_session('current_result', None))
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters))
+        samples = self._get_session('samples', InstantiationResultDict(parameters=result.parameters))
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
         coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
@@ -529,15 +530,16 @@ class Samples(CegarHandler):
         parameters = result.parameters
         sampler = getSampler(self._get_session('sampler'), result)
         new_samples = sampler.perform_sampling([ParameterInstantiation({parameters[0]:x, parameters[1]:y})])
-        samples = self._get_session('samples', InstantiationResultDict())
+        samples = self._get_session('samples', InstantiationResultDict())  # FIXME
         samples.update(new_samples)
         return self._json_ok()
         # return _json_ok(_jsonSamples(samples))
         # TODO: redirect?
 
     def delete(self):
-        self._set_session("samples", InstantiationResultDict())
+        self._set_session("samples", InstantiationResultDict())  # FIXME
         return self._json_ok()
+
 
 class GenerateSamples(CegarHandler):
     def initialize(self, executor):
@@ -571,9 +573,8 @@ class GenerateSamples(CegarHandler):
 
         parameters = result.parameters
 
-
-        samples = self._get_session('samples', InstantiationResultDict(parameters))
-        new_samples = InstantiationResultDict(parameters)
+        samples = self._get_session('samples', InstantiationResultDict(parameters=parameters))
+        new_samples = InstantiationResultDict(parameters=parameters)
         sampling_interface = getSampler(self._get_session('sampler'), result)
         if generator_type == 'uniform':
             intervals = result.parameters.get_variable_bounds()
@@ -608,7 +609,7 @@ class ConstraintHandler(CegarHandler):
         if result is None:
             return self._json_error("Unable to load result data", 500)
 
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters))
+        samples = self._get_session('samples', InstantiationResultDict(parameters=result.parameters))
         threshold = self._get_session('threshold', Rational("1/2"))
 
         smt2interface = getSat(self._get_session('sat'))
@@ -645,7 +646,7 @@ class ConstraintHandler(CegarHandler):
         unsat = []
         result = self._getResultData(self._get_session('current_result', None))
 
-        new_samples = InstantiationResultDict(result.parameters)
+        new_samples = InstantiationResultDict(parameters=result.parameters)
         for result in generator:
             (check_result, data) = result
             if check_result is RegionCheckResult.Satisfied:
@@ -708,7 +709,7 @@ class Constraints(ConstraintHandler):
         result = self._getResultData(self._get_session('current_result', None))
         if result is None:
             return self._json_error("Unable to load result data", 500)
-        samples = self._get_session('samples', InstantiationResultDict(result.parameters))
+        samples = self._get_session('samples', InstantiationResultDict(parameters=result.parameters))
         constraints = self._get_session('regions', [])
 
         samples.update(new_samples)
@@ -745,7 +746,7 @@ class GenerateConstraints(ConstraintHandler):
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
 
-        samples = self._get_session('samples', InstantiationResultDict())
+        samples = self._get_session('samples', InstantiationResultDict())  # FIXME
         # Clear all regions, resumption not supported (yet)
         constraints = [] #self._get_session('regions', [])
 

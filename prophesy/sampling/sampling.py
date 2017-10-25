@@ -17,7 +17,7 @@ def uniform_samples(sampler, parameters, samples_per_dim):
     """
     # TODO simplify uniform sampling in a subregion.
     # TODO make sure that if uniform sampling is implemented for the sampler, that we use that one.
-    samples = InstantiationResultDict(parameters)
+    samples = InstantiationResultDict(parameters=parameters)
     uniform_generator = UniformSampleGenerator(sampler, parameters, samples, samples_per_dim)
 
     for new_samples in uniform_generator:

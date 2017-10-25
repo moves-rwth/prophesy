@@ -24,7 +24,7 @@ class RatFuncSampling(Sampler):
         :rtype: InstantiationResultDict
         """
 
-        samples = InstantiationResultDict(self.parameters)
+        samples = InstantiationResultDict(parameters=self.parameters)
         for sample_point in samplepoints:
             # TODO wrap the following in a function.
             #for var in self.ratfunc.gather_variables():
@@ -32,5 +32,5 @@ class RatFuncSampling(Sampler):
             logging.debug("....")
             res = self.ratfunc.evaluate(dict([(k.variable, v) for k,v in sample_point.items()]))
             logging.debug("={}".format(res))
-            samples.add_result(InstantiationResult(sample_point, res))
+            samples[sample_point] = res
         return samples

@@ -5,6 +5,7 @@ import logging
 import shapely.geometry
 from abc import ABCMeta, abstractmethod
 
+from prophesy.data.samples import InstantiationResultDict
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.output.plot import Plot
@@ -127,11 +128,9 @@ class RegionGenerator:
         kwargs['poly_black'] = poly_black + self.illdefined_polys
 
         # Split samples appropriately
-        samples_green = [res.instantiation.get_point(self.parameters) for res in
-                         self.safe_samples.instantiation_results()]
-        samples_red = [res.instantiation.get_point(self.parameters) for res in self.bad_samples.instantiation_results()]
-        samples_black = [res.instantiation.get_point(self.parameters) for res in
-                         self.illdefined_samples.instantiation_results()]
+        samples_green = [instantiation.get_point(self.parameters) for instantiation in self.safe_samples.keys()]
+        samples_red = [instantiation.get_point(self.parameters) for instantiation in self.bad_samples.keys()]
+        samples_black = [instantiation.get_point(self.parameters) for instantiation in self.illdefined_samples.keys()]
 
         _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
@@ -282,10 +281,8 @@ class RegionGenerator:
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
             # TODO region might contain this info, why not use that.
-            self.safe_samples = self.safe_samples.filter_instantiation(
-                lambda x: not region.contains(x.get_point(self.parameters)))
-            self.bad_samples = self.bad_samples.filter_instantiation(
-                lambda x: not region.contains(x.get_point(self.parameters)))
+            self.safe_samples = InstantiationResultDict({k: v for k, v in self.safe_samples.items() if not region.contains(k.get_point(self.parameters))}, parameters=self.parameters)
+            self.bad_samples = InstantiationResultDict({k: v for k, v in self.bad_samples.items() if not region.contains(k.get_point(self.parameters))}, parameters=self.parameters)
 
             # TODO make the code above work with the polygons, as below.
             # for instantiation, _ in self.samples:
@@ -298,9 +295,9 @@ class RegionGenerator:
         elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
             if additional.result >= self.threshold:
-                self.safe_samples.add_result(additional)
+                self.safe_samples[additional.instantiation] = additional.result
             else:
-                self.bad_samples.add_result(additional)
+                self.bad_samples[additional.instantiation] = additional.result
             self.reject_region(additional)
             return checkresult, (additional, safe)
         elif checkresult == RegionCheckResult.Refined:
