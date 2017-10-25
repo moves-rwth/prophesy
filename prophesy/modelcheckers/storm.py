@@ -4,15 +4,14 @@ import logging
 import re
 
 from prophesy.config import configuration
-from prophesy.data.parameter import Parameter
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 import prophesy.adapter.pycarl as pc
-from prophesy.data.property import Property, OperatorBound
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult, InstantiationResultFlag
+from prophesy.data.property import OperatorBound
+from prophesy.data.samples import InstantiationResultDict, InstantiationResultFlag
 from prophesy.data.constant import Constants
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
