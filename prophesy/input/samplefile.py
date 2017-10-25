@@ -82,7 +82,7 @@ def write_samples_file(parameters, samples, path):
     logger.info("Write samples to %s", path)
     vars = parameters.get_variables()
     with open(path, "w") as f:
-        f.write(" ".join(map(str, vars)) + "\n")
+        f.write(" ".join([v.name for v in vars]) + "\n")
         for res in samples.instantiation_results():
-            f.write("\t".join([str(c) for c in  res.instantiation.get_point(parameters).coordinates]))
+            f.write("\t".join([str(c) for c in res.instantiation.get_point(parameters).coordinates]))
             f.write("\t\t" + str(res.result) + "\n")

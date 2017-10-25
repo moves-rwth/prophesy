@@ -83,7 +83,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             args.append(constants_string)
         variables = self.prismfile.parameters.get_variables()
         args.append('-param')
-        args.append('{}'.format(','.join([str(var) for var in variables])))
+        args.append('{}'.format(','.join([var.name for var in variables])))
 
         logger.info("Call prism")
         ret_code = run_tool(args, False)
@@ -114,7 +114,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
         const_values_string = ",".join(
-            ["{0}={1}".format(p, r) for (p, r) in zip(parameters.get_variables(), range_strings)])
+            ["{0}={1}".format(v.name, r) for (v, r) in zip(parameters.get_variables(), range_strings)])
         constants_string = self.constants.to_key_value_string()
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string
@@ -151,7 +151,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         samples = InstantiationResultDict(samplepoints.parameters)
         for sample_point in samplepoints:
             const_values_string = ",".join(
-                ["{0}={1}".format(parameter.variable, float(val)) for parameter, val in sample_point.items()])
+                ["{0}={1}".format(parameter.variable.name, float(val)) for parameter, val in sample_point.items()])
             constants_string = self.constants.to_key_value_string()
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string

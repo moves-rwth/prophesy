@@ -50,9 +50,9 @@ class EtrRegionChecker(SmtRegionChecker):
         for par in self.parameters:
             self._smt2interface.add_variable(par.variable.name)
 
-        self._smt2interface.add_variable(safeVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(badVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(self._thresholdVar, VariableDomain.Real)
+        self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
         self.model_explorer.load_model(problem_description.model, constants)
         self.model_explorer.set_pctl_formula(problem_description.property)
@@ -79,7 +79,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
                 state_var_mapping[state.id] = stateVar
-                self._smt2interface.add_variable(stateVar, VariableDomain.Real)
+                self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
             if initial_state_var is None:
@@ -96,7 +96,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
                 state_var_mapping[state.id] = stateVar
-                self._smt2interface.add_variable(stateVar, VariableDomain.Real)
+                self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
             if initial_state_var is None:
