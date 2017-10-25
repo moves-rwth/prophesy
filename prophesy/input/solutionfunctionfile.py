@@ -11,7 +11,7 @@ from prophesy.adapter.pycarl import Constraint, Relation
 logger = logging.getLogger(__name__)
 
 
-class ParametricResult(object):
+class ParametricResult:
     """
     Stores the data that represent a property of a parametric model, which
     are its parameters, the solution function for the property

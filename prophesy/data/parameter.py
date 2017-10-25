@@ -1,7 +1,7 @@
 import prophesy.data.interval
 
 
-class Parameter(object):
+class Parameter:
     """Class representing a parameter, 
     which is a variable with an associated interval of allowable values.
     """

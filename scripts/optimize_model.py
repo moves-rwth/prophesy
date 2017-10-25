@@ -84,7 +84,7 @@ def model_optimization(direction, prism_file, pctl_file, pctl_index, pctl_string
     pctl_property = Property.from_string(pctl_string) if pctl_string else PctlFile(pctl_file).get(pctl_index)
 
     optimizer = ModelOptimizer(mc, parameters, pctl_property, direction)
-    location, score = optimizer.optimize()
+    location, score = optimizer.search()
     result_as_instantiation = ParameterInstantiation.from_point(Point(*location), parameters)
 
     mc_result = score if direction == 'min' else -score

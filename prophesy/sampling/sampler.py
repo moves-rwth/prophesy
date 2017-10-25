@@ -9,7 +9,7 @@ from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
 
 
-class Sampler(object):
+class Sampler:
     """
     Base class for performing sampling of given set of points
     """

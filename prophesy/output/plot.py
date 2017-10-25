@@ -51,7 +51,7 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
     return plot_path
 
 
-class Plot(object):
+class Plot:
     """
     Class handling plotting of samples and result boxes.
     """

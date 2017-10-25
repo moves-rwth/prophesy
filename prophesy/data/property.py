@@ -28,7 +28,7 @@ class OperatorDirection(Enum):
         else:
             return ""
 
-class OperatorBound(object):
+class OperatorBound:
     """
     Defines the operator bound. Can be left open to describe an operator bound which asks for the precise value. 
     """
