@@ -24,7 +24,7 @@ def test_perform_sampling(MCType, name):
     tool.load_model_from_prismfile(prism_file)
     tool.set_pctl_formula(pctl_file.get(0))
 
-    parameters = copy.deepcopy(prism_file.parameters)
+    parameters = copy.copy(prism_file.parameters)
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
     points = [(Point(pc.Rational(0.25), pc.Rational(0.5)))]

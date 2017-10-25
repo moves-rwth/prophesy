@@ -4,6 +4,7 @@ import logging
 import re
 
 from prophesy.config import configuration
+from prophesy.data.parameter import Parameter
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.regions.region_checker import RegionCheckResult
@@ -156,7 +157,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         def sample_single_point(parameter_instantiation):
             _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
-            const_values_string = ",".join(["{}={}".format(parameter.variable.name, val) for parameter, val in parameter_instantiation.items()])
+            const_values_string = ",".join(["{}={}".format(parameter.name, val) for parameter, val in parameter_instantiation.items()])
             constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string

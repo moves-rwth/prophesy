@@ -160,8 +160,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if pctl_path is None:
             pctl_path = write_string_to_tmpfile(str(self.pctlformula))
 
-        const_values_string = ",".join(["{}={}".format(parameter.variable.name, float(val))
-                                        for parameter, val in parameter_instantiation.items()])
+        const_values_string = ",".join(["{}={}".format(parameter.name, float(val)) for parameter, val in parameter_instantiation.items()])
         constants_string = self.constants.to_key_value_string()
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string

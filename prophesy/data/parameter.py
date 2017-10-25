@@ -1,34 +1,25 @@
+import prophesy.adapter.pycarl as pc
 import prophesy.data.interval
 
 
-class Parameter:
-    """Class representing a parameter, 
-    which is a variable with an associated interval of allowable values.
-    """
+class Parameter(pc.Variable):
+    """Variable with an associated interval of allowable values. """
 
     def __init__(self, variable, interval):
-        """
-        :param variable: pycarl.Variable
-        :param interval: Interval
-        """
-        self.variable = variable
+        super().__init__(variable.name, variable.type)
         self.interval = interval
 
-    @property
-    def name(self):
-        return self.variable.name
-
     def __hash__(self):
-        return hash(self.variable) ^ hash(self.interval)
+        return super().__hash__() ^ hash(self.interval)
 
     def __str__(self):
-        return "{} {}".format(self.variable, self.interval)
+        return "{} {}".format(super().__str__(), self.interval)
 
     def __eq__(self, other):
-        return self.variable == other.variable and self.interval == other.interval
+        return super().__eq__(other) and self.interval == other.interval
 
     def __repr__(self):
-        return "Parameter({!r}, {!r})".format(self.variable, self.interval)
+        return "Parameter({!r}, {!r})".format(super().__str__(), self.interval)
 
 
 class ParameterOrder(list):
@@ -43,7 +34,7 @@ class ParameterOrder(list):
         :return: The parameter with the given name
         :rtype: Parameter
         """
-        filtered = [p.variable for p in self if p.variable.name == name]
+        filtered = [p for p in self if p.name == name]
         if len(filtered) == 0:
             raise ValueError("Variable with name {} not found".format(name))
         elif len(filtered) > 2:
@@ -57,7 +48,7 @@ class ParameterOrder(list):
         :return: A list of variables ordered as the parameters
         :rtype: list(pycarl.Variable)
         """
-        return list([p.variable for p in self])
+        return [pc.Variable(p.name, p.type) for p in self]  # FIXME ugly
 
     def get_variable_bounds(self):
         """
@@ -76,7 +67,7 @@ class ParameterOrder(list):
         :return: 
         """
         for p in self:
-            if p.variable == variable:
+            if p.id == variable.id:  # FIXME better: custom __eq__ (if even needed? check.)
                 self.remove(p)
                 return
 

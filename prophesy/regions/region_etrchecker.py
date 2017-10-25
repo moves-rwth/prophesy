@@ -48,7 +48,7 @@ class EtrRegionChecker(SmtRegionChecker):
 
         self.parameters = problem_description.parameters
         for par in self.parameters:
-            self._smt2interface.add_variable(par.variable.name)
+            self._smt2interface.add_variable(par.name)
 
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
@@ -232,7 +232,7 @@ class EtrRegionChecker(SmtRegionChecker):
     def _evaluate(self, smt_model):
         sample = ParameterInstantiation()
         for par in self.parameters:
-            value = smt_model[par.variable.name]
+            value = smt_model[par.name]
             rational = pc.Rational(value)
             sample[par] = rational
         value = self.model_explorer.perform_sampling([sample])[sample]
