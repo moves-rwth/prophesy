@@ -57,7 +57,7 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
     try:
         parameter_space_partitioning.run(command, False)
     except NotImplementedError:
-        pass
+        pytest.xfail()
 
 
 benchmarks_etr = [
@@ -117,7 +117,7 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
     try:
         parameter_space_partitioning.run(command, False)
     except NotImplementedError:
-        pass
+        pytest.xfail()
 
 
 benchmarks_pla = [
