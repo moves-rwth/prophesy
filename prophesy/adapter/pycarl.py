@@ -19,6 +19,11 @@ if CARL_WITH_CLN:
     import pycarl.cln.formula
 
 Variable = pycarl.Variable
+
+def debuggable_str(self):
+    return "Hey, you can't rely on me! But anyway, I'm {}".format(self.name)
+
+Variable.__str__ = debuggable_str  # FIXME undo when done
 VariableType = pycarl.VariableType
 Integer = pycarl.gmp.Integer
 Rational = pycarl.gmp.Rational
