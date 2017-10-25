@@ -82,7 +82,7 @@ def run(args=sys.argv[1:], interactive=True):
     sampling_interface = tool
 
     parameters = copy.deepcopy(model_file.parameters)
-    for const_variable in constants.variables():
+    for const_variable in constants.keys():
         parameters.remove_variable(const_variable)
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
