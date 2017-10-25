@@ -23,10 +23,9 @@ class Parameter(pc.Variable):
 
 
 class ParameterOrder(list):
-    """Class to represent on ordered list of parameters
-    """
+    """Class to represent on ordered list of parameters."""
 
-    def get_variable(self, name):
+    def get_parameter(self, name):
         """
         Return the parameter with the given name.
         
