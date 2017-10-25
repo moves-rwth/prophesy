@@ -62,7 +62,7 @@ def init_solvers_and_problem(cmdargs, optimisation = False):
             # TODO
             raise RuntimeError("Sampling and problem parameters are not equal")
     else:
-        samples = InstantiationResultDict(problem_description.parameters)
+        samples = InstantiationResultDict(parameters=problem_description.parameters)
 
     # TODO allow setting threshold via property:
     if not optimisation and cmdargs.threshold:

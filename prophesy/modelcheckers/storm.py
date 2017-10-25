@@ -153,7 +153,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
 
-        samples = InstantiationResultDict(samplepoints.parameters)
+        samples = InstantiationResultDict(parameters=samplepoints.parameters)
         for sample_point in samplepoints:
             _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
@@ -211,8 +211,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             if result is None:
                 raise RuntimeError("Could not find result from storm in {}".format(resultfile))
 
-
-            samples.add_result(InstantiationResult(sample_point, result))
+            samples[sample_point] = result
             os.remove(resultfile)
 
         return samples

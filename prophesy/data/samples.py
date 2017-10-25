@@ -141,116 +141,75 @@ class InstantiationResult:
         return cls(ParameterInstantiation.from_point(pt, parameters), res)
 
 
-class InstantiationResultDict:
-    """
-    Maintains a set of instantiations with their results.
-    """
+class InstantiationResultDict(OrderedDict):
+    """Maintains a set of instantiations with their results."""
 
-    def __init__(self, parameters):
-        """
-        :param parameters: Parameters for the dictionary.
-        """
-        self._values = OrderedDict()
-        self.parameters = parameters
-        assert self._parameters_check()
+    def __init__(self, *args, parameters=None):
+        existing_dict, key_val_pairs = self._split_args_into_dict_and_pairs(args)
+        self.parameters = set(parameters if parameters is not None else self._deduce_parameters_from_args(existing_dict, key_val_pairs))
 
-    def has(self, instantiation):
-        return instantiation in self._values
+        for k, _ in existing_dict.items():
+            self._validate_key(k)
 
-    def __getitem__(self, instantiation):
-        return self._values[instantiation]
+        for k, _ in key_val_pairs:
+            self._validate_key(k)
 
-    def remove(self, instantiation):
-        del self._values[instantiation]
+        super().__init__(existing_dict, *key_val_pairs)
+
+    @staticmethod
+    def _split_args_into_dict_and_pairs(args):
+        if len(args) and hasattr(args[0], 'keys'):
+            # first argument is a dictionary/mapping,
+            # remaining (if any) need to be key-value pairs
+            existing_dict = args[0]
+            key_val_pairs = args[1:]
+        else:
+            existing_dict = {}
+            key_val_pairs = args
+        return existing_dict, key_val_pairs
+
+    @staticmethod
+    def _deduce_parameters_from_args(existing_dict, key_val_pairs):
+        if len(existing_dict):
+            return next(iter(existing_dict.keys())).get_parameters()
+        elif len(key_val_pairs):
+            return key_val_pairs[0][0].get_parameters()
+        else:
+            # I guess this could be implemented
+            raise ValueError("Empty InstantiationResultDict requires parameters to be initialized")
+
+    def _validate_key(self, key):
+        if key.get_parameters() != self.parameters:
+            raise ValueError("Parameter mismatch")
 
     def _parameters_check(self):
         """
-        
         :return: True if all variables are indeed set variables
         """
-        for p in self.parameters:
-            if p.variable.is_no_variable:
-                return False
-        return True
-
-    def __iter__(self):
-        return iter(self._values.items())
-
-    def update(self, other):
-        for k, v in other:
-            assert isinstance(k, ParameterInstantiation)
-            assert k.get_parameters() == set(self.parameters)
-            self._values[k] = v
-
-    def __len__(self):
-        return len(self._values)
-
-    def add_result(self, instantiation_result):
-        """
-        :param sample: Sample
-        """
-        assert isinstance(instantiation_result, InstantiationResult)
-        assert instantiation_result.instantiation.get_parameters() == set(self.parameters)
-        if instantiation_result.well_defined:
-            self._values[instantiation_result.instantiation] = instantiation_result.result
-        else:
-            self._values[instantiation_result.instantiation] = InstantiationResultFlag.NOT_WELLDEFINED
+        return all([not p.variable.is_no_variable for p in self.parameters])  # !!
 
     def split(self, threshold):
         """Split given samples into separated sample dictionaries, where the value
-        either >= or < threshold.
-        
-        :param samples: SampleDict
-        :type threshold: pycarl.Rational
-        :return: (SampleDict >=, SampleDict <, SampleDict illdefined)
+        is either >= or < threshold or ill-defined.
         """
-        above_threshold = InstantiationResultDict(self.parameters)
-        below_threshold = InstantiationResultDict(self.parameters)
-        illdefined = InstantiationResultDict(self.parameters)
-        for k, v in self._values.items():
+        above_threshold = InstantiationResultDict(parameters=self.parameters)
+        below_threshold = InstantiationResultDict(parameters=self.parameters)
+        illdefined = InstantiationResultDict(parameters=self.parameters)
+        for k, v in self.items():
             if v == InstantiationResultFlag.NOT_WELLDEFINED:
-                illdefined._values[k] = v
+                illdefined[k] = v
             elif v >= threshold:
-                above_threshold._values[k] = v
+                above_threshold[k] = v
             else:
-                below_threshold._values[k] = v
+                below_threshold[k] = v
         return above_threshold, below_threshold, illdefined
 
-    def filter_instantiation(self, filter_func):
-        filtered = InstantiationResultDict(self.parameters)
-        for k,v in self._values.items():
-            if filter_func(k):
-                filtered._values[k] = v
-        return filtered
-
-    def filter_value(self, filter_func):
-        """Returns samples for which filter_func returns true.
-        
-        :type samples: SampleDict
-        :param filter_func: callable to filter values, return True to keep sample
-        """
-        filtered = InstantiationResultDict(self.parameters)
-        for k, v in self._values.items():
-            if filter_func(v):
-                filtered._values[k] = v
-        return filtered
-
     def copy(self):
-        copied = InstantiationResultDict(self.parameters)
-        for k, v in self._values.items():
-            copied._values[k] = v
-        return copied
+        return InstantiationResultDict(self, parameters=self.parameters)
 
-    def instantiation_results(self):
-        """Returns Sample instances, as generator
-        """
-        for pt, val in self._values.items():
-            assert pt.get_parameters() == set(self.parameters)
-            yield InstantiationResult(pt, val)
-
-    def instantiations(self):
-        return self._values.keys()
-
+    def __setitem__(self, key, value, *args, **kwargs):
+        self._validate_key(key)
+        super().__setitem__(key, value, *args, **kwargs)
 
 
 def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):

@@ -32,5 +32,5 @@ def test_perform_sampling(MCType, name):
     assert len(sample_points) == 1
     result = tool.perform_sampling(sample_points)
     assert len(result) == 1
-    for instantiation, val in result:
+    for instantiation, val in result.items():
         assert val == pc.Rational(0.75)
