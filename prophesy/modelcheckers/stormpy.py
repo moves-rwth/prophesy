@@ -233,22 +233,23 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
-    def perform_sampling(self, samplepoints):
+    def perform_sampling(self, sample_points):
         # Perform sampling with model instantiator
         logger.info("Call stormpy for sampling")
-        samples = InstantiationResultDict(parameters=samplepoints.parameters)
-        parameter_mapping = self.get_parameter_mapping(samplepoints.parameters)
-        model_instantiator = self.get_model_instantiator()
-        for sample_point in samplepoints:
-            # Instantiate point and check result
-            point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
-                     sample_point.items()}
-            instantiated_model = model_instantiator.instantiate(point)
-            result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
-            samples[sample_point] = result
+        parameter_mapping = self.get_parameter_mapping(sample_points[0].get_parameters())
 
+        samples = InstantiationResultDict({p: self.sample_single_point(p, parameter_mapping) for p in sample_points})
         logger.info("Sampling with stormpy successfully finished")
         return samples
+
+    def sample_single_point(self, parameter_instantiation, parameter_mapping):
+        # Instantiate point and check result
+        model_instantiator = self.get_model_instantiator()
+        point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
+                 parameter_instantiation.items()}
+        instantiated_model = model_instantiator.instantiate(point)
+        result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
+        return result
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         logger.info("Check region via stormpy")

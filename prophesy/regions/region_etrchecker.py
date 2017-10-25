@@ -5,7 +5,7 @@ from prophesy.modelcheckers.stormpy import StormpyModelChecker
 import prophesy.adapter.stormpy as sp
 import prophesy.adapter.pycarl as pc
 from prophesy.smt.smt import VariableDomain
-from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations, InstantiationResult
+from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 from prophesy.data.property import Property, OperatorType
 
 logger = logging.getLogger(__name__)
@@ -235,9 +235,6 @@ class EtrRegionChecker(SmtRegionChecker):
             value = smt_model[par.variable.name]
             rational = pc.Rational(value)
             sample[par] = rational
-        samples = ParameterInstantiations()
-        samples.append(sample)
-        samples.parameters = self.parameters
-        value = self.model_explorer.perform_sampling(samples)[sample]
+        value = self.model_explorer.perform_sampling([sample])[sample]
 
         return InstantiationResult(sample, value)

@@ -143,7 +143,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         os.remove(resultfile)
         return param_result
 
-    def perform_sampling(self, samplepoints):
+    def perform_sampling(self, sample_points):
         logger.info("Perform batch sampling")
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")
@@ -153,12 +153,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         # create a temporary file for the result.
         ensure_dir_exists(configuration.get_intermediate_dir())
 
-        samples = InstantiationResultDict(parameters=samplepoints.parameters)
-        for sample_point in samplepoints:
+        def sample_single_point(parameter_instantiation):
             _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
-            const_values_string = ",".join(
-                ["{0}={1}".format(parameter.variable.name, val) for parameter, val in sample_point.items()])
+            const_values_string = ",".join(["{}={}".format(parameter.variable.name, val) for parameter, val in parameter_instantiation.items()])
             constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
@@ -211,8 +209,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             if result is None:
                 raise RuntimeError("Could not find result from storm in {}".format(resultfile))
 
-            samples[sample_point] = result
             os.remove(resultfile)
+            return result
+
+        samples = InstantiationResultDict({p: sample_single_point(p) for p in sample_points})
 
         return samples
 
