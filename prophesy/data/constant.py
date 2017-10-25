@@ -74,11 +74,7 @@ class Constants:
                 if isinstance(key_value_list[i][1], pc.Rational):
                     key_value_list[i] = (key_value_list[i][0], float(key_value_list[i][1]))
 
-        # FIXME ugly
-        def constant_value_or_variable_name(maybe_a_variable):
-            return maybe_a_variable.name if isinstance(maybe_a_variable, pc.Variable) else maybe_a_variable
-
-        return ",".join(["{}={}".format(k.name, constant_value_or_variable_name(v)) for k, v in key_value_list])
+        return ",".join(["{}={}".format(var.name, val.name if isinstance(val, pc.Variable) else val) for var, val in key_value_list])
 
     def variables(self):
         """
