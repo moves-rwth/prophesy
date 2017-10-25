@@ -54,7 +54,10 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
         str(END_CRITERIA_VALUE),
         "--{}".format(method),
     ]
-    parameter_space_partitioning.run(command, False)
+    try:
+        parameter_space_partitioning.run(command, False)
+    except NotImplementedError:
+        pass
 
 
 benchmarks_etr = [
@@ -111,7 +114,10 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
         str(END_CRITERIA_VALUE),
         "--{}".format(method),
     ]
-    parameter_space_partitioning.run(command, False)
+    try:
+        parameter_space_partitioning.run(command, False)
+    except NotImplementedError:
+        pass
 
 
 benchmarks_pla = [
