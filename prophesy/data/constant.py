@@ -69,10 +69,9 @@ class Constants:
         :return: A string of the format var1=val1,...,varn=valn
         """
         key_value_list = [(k, v.value) for k, v in self.constants.items()]
+
         if to_float:
-            for i in range(len(key_value_list)):
-                if isinstance(key_value_list[i][1], pc.Rational):
-                    key_value_list[i] = (key_value_list[i][0], float(key_value_list[i][1]))
+            key_value_list = [(var, float(val) if isinstance(val, pc.Rational) else val) for var, val in key_value_list]
 
         return ",".join(["{}={}".format(var.name, val.name if isinstance(val, pc.Variable) else val) for var, val in key_value_list])
 
