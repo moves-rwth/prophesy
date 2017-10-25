@@ -239,7 +239,7 @@ class HyperRectangle:
             raise ValueError("Region strings are only defined for closed intervals")
         var_strings = []
         for variable, interval in zip(variables, self.intervals):
-            var_strings.append("{}<={}<={}".format(interval.left_bound(), str(variable), interval.right_bound()))
+            var_strings.append("{}<={}<={}".format(interval.left_bound(), variable.name, interval.right_bound()))
         return ",".join(var_strings)
 
     @classmethod

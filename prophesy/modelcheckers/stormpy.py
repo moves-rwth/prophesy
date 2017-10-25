@@ -152,8 +152,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._parameter_mapping = {}
             model_parameters = self.get_model().collect_probability_parameters()
             for parameter in prophesy_parameters:
-                param_string = str(parameter.variable)
-                model_param = next((var for var in model_parameters if str(var) == param_string), None)
+                model_param = next((var for var in model_parameters if var.name == parameter.variable.name), None)
                 assert model_param is not None
                 self._parameter_mapping[parameter] = model_param
 

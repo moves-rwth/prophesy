@@ -158,7 +158,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
             const_values_string = ",".join(
-                ["{0}={1}".format(parameter.variable, val) for parameter, val in sample_point.items()])
+                ["{0}={1}".format(parameter.variable.name, val) for parameter, val in sample_point.items()])
             constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string

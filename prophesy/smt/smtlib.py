@@ -169,8 +169,13 @@ class SmtlibSolver(SMTSolver):
             self._write(s)
 
     def add_variable(self, symbol, domain=VariableDomain.Real):
+        """Declare variable as a constant function with given domain.
+
+        `symbol` must be a string, not a Variable object or similar.
+        """
+        assert isinstance(symbol, str)
         self.nr_variables += 1
-        s = "(declare-fun " + str(symbol) + " () " + domain.name + ")\n"
+        s = "(declare-fun " + symbol + " () " + domain.name + ")\n"
         self.string += s
         if self.incremental:
             self._write(s)

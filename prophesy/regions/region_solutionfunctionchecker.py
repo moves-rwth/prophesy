@@ -53,9 +53,9 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         rf1Var = pc.Variable("rf1")
         rf2Var = pc.Variable("rf2")
 
-        self._smt2interface.add_variable(safeVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(badVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(self._thresholdVar, VariableDomain.Real)
+        self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
         if pc.denominator(self._ratfunc) != 1:
             for constraint in problem_description.welldefined_constraints:
@@ -65,8 +65,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             sample = self._get_welldefined_point(problem_description.welldefined_constraints)
             eval_dict = dict([(k.variable, v) for k, v in sample.items()])
             value = pc.denominator(self._ratfunc).evaluate(eval_dict)
-            self._smt2interface.add_variable(rf1Var, VariableDomain.Real)
-            self._smt2interface.add_variable(rf2Var, VariableDomain.Real)
+            self._smt2interface.add_variable(rf1Var.name, VariableDomain.Real)
+            self._smt2interface.add_variable(rf2Var.name, VariableDomain.Real)
             if upper_bounded_variables and problem_description.property.operator == OperatorType.probability:
                 self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(rf1Var) - rf2Var, pc.Relation.LESS))
             if value < 0:
