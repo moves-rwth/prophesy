@@ -1,5 +1,8 @@
+import collections
+
 import prophesy.adapter.pycarl as pc
 import prophesy.data.interval
+from prophesy.data.samples import ParameterInstantiation
 
 
 class Parameter(pc.Variable):
@@ -68,3 +71,17 @@ class ParameterOrder(list):
 
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))
+
+    def instantiate(self, one_or_more_pointlikes):
+        def looks_like_list_of_points(a):
+            return isinstance(a, collections.Sequence) and isinstance(a[0], collections.Sized) and len(a[0]) == len(self)
+
+        def looks_like_a_single_point(a):
+            return isinstance(a, collections.Sized) and len(a) == len(self)
+
+        if looks_like_list_of_points(one_or_more_pointlikes):
+            return [ParameterInstantiation.from_point(p, self) for p in one_or_more_pointlikes]
+        elif looks_like_a_single_point(one_or_more_pointlikes):
+            return ParameterInstantiation.from_point(one_or_more_pointlikes, self)
+        else:
+            raise RuntimeError("Unexpected shape. This *may* be legitimate. See code and possibly add this case.")

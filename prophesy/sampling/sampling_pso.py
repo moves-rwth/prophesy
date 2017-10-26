@@ -12,7 +12,6 @@ from collections import namedtuple
 
 import prophesy.adapter.pycarl as pc
 from prophesy.data.point import Point
-from prophesy.data.samples import ParameterInstantiation
 from prophesy.sampling.sample_generator import SampleGenerator
 
 from heuristic_optimization.optimizers import ParticleSwarmOptimizer
@@ -127,7 +126,7 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
     def _objective(self, list_of_coords):
         """Perform model checking on the MC instances, convert input/output."""
         rational_points = [_coords_to_rational_point(coords) for coords in list_of_coords]
-        parameter_instantiations = [ParameterInstantiation.from_point(p, self.parameters) for p in rational_points]
+        parameter_instantiations = self.parameters.instantiate(rational_points)
 
         results = self.sampler.perform_sampling(parameter_instantiations)
         self.latest_sampling_result = results

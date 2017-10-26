@@ -503,7 +503,7 @@ class Samples(CegarHandler):
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
         coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
-        sample_points = [ParameterInstantiation.from_point(p, result.parameters) for p in coordinates]
+        sample_points = result.parameters.instantiate(coordinates)
         new_samples = sampling_interface.perform_sampling(sample_points)
         if socket is not None:
             socket.send_samples(new_samples)

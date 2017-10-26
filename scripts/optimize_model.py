@@ -9,9 +9,7 @@ import click
 import prophesy.adapter.pycarl as pc
 from prophesy.config import configuration
 from prophesy.data.constant import parse_constants_string
-from prophesy.data.point import Point
 from prophesy.data.property import Property
-from prophesy.data.samples import ParameterInstantiation
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.modelcheckers.prism import PrismModelChecker
@@ -83,7 +81,7 @@ def model_optimization(direction, prism_file, pctl_file, pctl_index, pctl_string
 
     optimizer = ModelOptimizer(mc, parameters, pctl_property, direction)
     location, score = optimizer.search()
-    result_as_instantiation = ParameterInstantiation.from_point(Point(*location), parameters)
+    result_as_instantiation = parameters.instantiate(location)
 
     mc_result = score if direction == 'min' else -score
     print("Best location {} with property value {:.6f} \n".format(location, float(mc_result)))

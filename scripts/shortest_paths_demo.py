@@ -9,7 +9,7 @@ from stormpy.utility.utility import ShortestPathsGenerator
 from prophesy.adapter.pycarl import convert_to_storm_type
 from prophesy.data.constant import Constants
 from prophesy.data.point import Point
-from prophesy.data.samples import ParameterInstantiation
+from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.modelcheckers.stormpy import StormpyModelChecker
 from scripts.modelrepair import parse_parameters
@@ -54,10 +54,9 @@ def find_shortest_paths(prism_file, pctl_file, pctl_index, parameter_values, k, 
 
         # various representations / containers
         point = Point(*parameter_values).to_nice_rationals()
-        parameter_instantiation = ParameterInstantiation.from_point(point, parameters)
-        parameter_instantiations = [parameter_instantiation]
+        parameter_instantiation = parameters.instantiate(point)
 
-        mc.perform_sampling(parameter_instantiations)
+        mc.perform_sampling([parameter_instantiation])
 
         parameter_mapping = mc.get_parameter_mapping(parameter_instantiation.get_parameters())
         storm_parameter_mapping = {parameter_mapping[parameter]: convert_to_storm_type(val) for parameter, val in parameter_instantiation.items()}

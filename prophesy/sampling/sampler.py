@@ -4,7 +4,6 @@ from numpy import linspace
 
 from prophesy.data.interval import BoundType
 from prophesy.config import configuration
-from prophesy.data.samples import ParameterInstantiation
 from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
 
@@ -42,7 +41,7 @@ class Sampler:
         all_points = itertools.product(*ranges)
         all_points = [Point(*coords) for coords in all_points]
 
-        sample_points = [ParameterInstantiation.from_point(p, parameters) for p in all_points]
+        sample_points = parameters.instantiate(all_points)
 
         return self.perform_sampling(sample_points)
 

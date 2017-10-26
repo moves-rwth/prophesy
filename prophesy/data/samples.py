@@ -1,4 +1,4 @@
-from collections import OrderedDict, Set
+from collections import OrderedDict
 from enum import Enum
 
 from prophesy.data.point import Point
@@ -67,10 +67,7 @@ class ParameterInstantiation(dict):
         :param pt: Point of pycarl.Rational
         :param parameters: ParameterOrder
         """
-        sp = cls()
-        for (val, var) in zip(pt, parameters):
-            sp[var] = val
-        return sp
+        return cls({param: val for param, val in zip(parameters, pt)})
 
     def __hash__(self):
         hsh = 0

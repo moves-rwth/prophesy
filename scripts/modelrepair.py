@@ -153,7 +153,7 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
 
     if hint is not None:
         hint_as_floats = [float(string) for string in hint.split()]
-        hint_as_param_inst = ParameterInstantiation.from_point(Point(*hint_as_floats).to_nice_rationals(), parameters)
+        hint_as_param_inst = parameters.instantiate(Point(*hint_as_floats).to_nice_rationals())
     else:
         hint_as_param_inst = None
 
@@ -167,7 +167,7 @@ def model_repair(prism_file, pctl_file, pctl_index, pctl_string, cost_function, 
                              pso_options=pso_options)
 
     location, score = repairer.repair()
-    result_as_instantiation = ParameterInstantiation.from_point(Point(*location), parameters)
+    result_as_instantiation = parameters.instantiate(location)
     print("Best location {} with score {} \n".format(location, score))
     print("Parameter instantiation object: {}".format(result_as_instantiation))
 
