@@ -16,7 +16,11 @@ class Parameter(pc.Variable):
         return "{} {}".format(super().__str__(), self.interval)
 
     def __eq__(self, other):
-        return super().__eq__(other) and self.interval == other.interval
+        return (
+            super().__eq__(other) and
+            hasattr(other, 'interval') and
+            self.interval == other.interval
+        )
 
     def __repr__(self):
         return "Parameter({!r}, {!r})".format(super().__str__(), self.interval)
@@ -66,7 +70,7 @@ class ParameterOrder(list):
         :return: 
         """
         for p in self:
-            if p.id == variable.id:  # FIXME better: custom __eq__ (if even needed? check.)
+            if super(Parameter, p).__eq__(variable):
                 self.remove(p)
                 return
 
