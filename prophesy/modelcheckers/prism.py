@@ -120,7 +120,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             const_values_string = const_values_string + "," + constants_string
 
         ensure_dir_exists(configuration.get_intermediate_dir())
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        fd, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        os.close(fd)
         pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
         args = [self.location,
@@ -145,8 +146,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
 
         ensure_dir_exists(configuration.get_intermediate_dir())
-        _, result_path = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        fd, result_path = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
         pctl_path = write_string_to_tmpfile(str(self.pctlformula))
+        os.close(fd)
 
         samples = InstantiationResultDict({s: self.sample_single_point(s, result_path, pctl_path) for s in samplepoints})
 
