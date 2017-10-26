@@ -30,13 +30,7 @@ class ParameterOrder(list):
     """Class to represent on ordered list of parameters."""
 
     def get_parameter(self, name):
-        """
-        Return the parameter with the given name.
-        
-        :param name: The name of the parameter
-        :return: The parameter with the given name
-        :rtype: Parameter
-        """
+        """Return the parameter with the given name."""
         filtered = [p for p in self if p.name == name]
         if len(filtered) == 0:
             raise ValueError("Variable with name {} not found".format(name))
@@ -44,14 +38,6 @@ class ParameterOrder(list):
             raise RuntimeError("Parameter list got several parameters with the same name")
         return filtered[0]
 
-    def get_variables(self):
-        """
-        Computes a list of variables corresponding to this ParameterOrder
-        
-        :return: A list of variables ordered as the parameters
-        :rtype: list(pycarl.Variable)
-        """
-        return [pc.Variable(p.name, p.type) for p in self]  # FIXME ugly
 
     def get_variable_bounds(self):
         """

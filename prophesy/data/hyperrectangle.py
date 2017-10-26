@@ -216,7 +216,6 @@ class HyperRectangle:
         :return: A formula specifying the points inside the hyperrectangle
         :rtype: pc.Constraint or pc.Formula
         """
-        # FIXME Parameter / Variable !5
         constraint = pc.Constraint(True)
         for variable, interval in zip(variables, self.intervals):
             if interval.left_bound != -inf:

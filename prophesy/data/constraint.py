@@ -42,7 +42,6 @@ def region_from_polygon(polygon, variables):
         poly = Polynomial(-Rational(c))
         for variable, coefficient in zip(variables, dvec):
             if coefficient != 0:
-                # FIXME Parameter / Variable !5
                 poly = poly + Polynomial(variable) * coefficient
 
     new_constraint = pc.Constraint(poly, pc.Relation.LEQ)

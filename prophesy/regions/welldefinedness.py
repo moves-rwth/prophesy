@@ -24,7 +24,7 @@ def check_welldefinedness(checker, parameters, region, constraints):
     """
     for p in parameters:
         checker.add_variable(p.name)
-    checker.assert_constraint(region.to_formula(parameters.get_variables()))
+    checker.assert_constraint(region.to_formula(parameters))
     welldefinedness = pc.Constraint(True)
     checker.push()
     for c in constraints:
