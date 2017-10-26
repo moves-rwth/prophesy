@@ -24,8 +24,8 @@ def test_compute_rational_function(MCType, name):
 
     result = tool.get_rational_function()
     parameters = result.parameters
-    assert parameters.get_variable("p")
-    assert parameters.get_variable("q")
+    assert parameters.get_parameter("p")
+    assert parameters.get_parameter("q")
     ratfunc = result.ratfunc
     assert "q+p" in str(ratfunc)
 

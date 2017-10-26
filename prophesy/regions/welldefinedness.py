@@ -22,9 +22,9 @@ def check_welldefinedness(checker, parameters, region, constraints):
     :rtype: WelldefinednessResult
     :return:
     """
-    for v in parameters.get_variables():
-        checker.add_variable(v.name)
-    checker.assert_constraint(region.to_formula(parameters.get_variables()))
+    for p in parameters:
+        checker.add_variable(p.name)
+    checker.assert_constraint(region.to_formula(parameters))
     welldefinedness = pc.Constraint(True)
     checker.push()
     for c in constraints:

@@ -10,8 +10,8 @@ from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.util import run_tool, ensure_dir_exists
 from prophesy.input.solutionfunctionfile import read_pstorm_result
 import prophesy.adapter.pycarl as pc
-from prophesy.data.property import Property, OperatorBound
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult, InstantiationResultFlag
+from prophesy.data.property import OperatorBound
+from prophesy.data.samples import InstantiationResultDict, InstantiationResultFlag
 from prophesy.data.constant import Constants
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
@@ -156,7 +156,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         def sample_single_point(parameter_instantiation):
             _, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
 
-            const_values_string = ",".join(["{}={}".format(parameter.variable.name, val) for parameter, val in parameter_instantiation.items()])
+            const_values_string = ",".join(["{}={}".format(parameter.name, val) for parameter, val in parameter_instantiation.items()])
             constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
@@ -224,7 +224,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
 
-        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
         property_to_check = self.pctlformula
         property_to_check.bound = OperatorBound(pc.Relation.LESS, threshold)
@@ -294,6 +294,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                     raise RuntimeError("Unexpected content '{}' in result file".format(res_line[0]))
 
                 region_string_out = res_line[1].strip()
-                region = HyperRectangle.from_region_string(region_string_out, parameters.get_variables())
+                region = HyperRectangle.from_region_string(region_string_out, parameters)
                 regions.append((region_result, region))
         return regions

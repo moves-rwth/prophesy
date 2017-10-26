@@ -1,7 +1,7 @@
 import logging
 
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult,  ParameterInstantiation, InstantiationResultFlag
-from prophesy.adapter.pycarl import Rational, Variable
+from prophesy.data.samples import InstantiationResultDict, ParameterInstantiation, InstantiationResultFlag
+from prophesy.adapter.pycarl import Rational
 from prophesy.data.point import Point
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def read_samples_file(path, parameters):
         start = 1
 
         for par_name, par in zip(parameter_names, parameters):
-            if par_name != par.variable.name:
+            if par_name != par.name:
                 raise ValueError("Parameter names {} do not coincide with given parameters {}".format(parameter_names, parameters))
 
         #Ignore thresholds
@@ -79,9 +79,8 @@ def read_samples_file(path, parameters):
 
 def write_samples_file(parameters, samples, path):
     logger.info("Write samples to %s", path)
-    vars = parameters.get_variables()
     with open(path, "w") as f:
-        f.write(" ".join([v.name for v in vars]) + "\n")
+        f.write(" ".join([p.name for p in parameters]) + "\n")
         for instantiation, result in samples.items():
             f.write("\t".join([str(c) for c in instantiation.get_point(parameters).coordinates]))
             f.write("\t\t" + str(result) + "\n")

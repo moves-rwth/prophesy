@@ -38,7 +38,7 @@ class ModelRepairer:
         # the original property specifies a bound, but the actual model
         # checking call is done with the "=?" operator to get the MC prob
         self.original_property = pctl_property
-        self.modified_property = copy.deepcopy(pctl_property)
+        self.modified_property = copy.copy(pctl_property)
         self.modified_property.bound = OperatorBound(pc.Relation.EQ)
         modelchecker.set_pctl_formula(self.modified_property)
 

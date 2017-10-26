@@ -14,7 +14,7 @@ class BinarySearchOptimisation():
         self.use_counterexample = use_counterexample
 
     def search(self, requested_gap = pc.Rational("0.001"), max_iterations = 10, lower = pc.Rational(0), upper = pc.Rational(1)):
-        region = HyperRectangle(*self.problem_description.parameters.get_variable_bounds())
+        region = HyperRectangle(*self.problem_description.parameters.get_parameter_bounds())
         if self.smt_checker.supports_only_closed_regions():
             region = region.close()
         iterations = 0

@@ -8,7 +8,7 @@ from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.data.constant import Constants
-from prophesy.data.samples import InstantiationResultDict, InstantiationResult
+from prophesy.data.samples import InstantiationResultDict
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 import prophesy.adapter.stormpy as stormpy
@@ -143,16 +143,16 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return self._model
 
     def get_parameter_mapping(self, prophesy_parameters):
-        """
-        Get a mapping from prophesy parameters to model parameters in stormpy.
-        :param prophesy_parameters: Parameters in prophesy.
-        :return: Mapping from prophesy parameters to model parameters.
-        """
+        """Get a mapping from prophesy parameters to model parameters in stormpy."""
+        def get_matching_model_parameter(model_parameters, variable_name):
+            """Return matching parameter or None."""
+            return next((v for v in model_parameters if v.name == variable_name), None)
+
         if self._parameter_mapping is None:
             self._parameter_mapping = {}
             model_parameters = self.get_model().collect_probability_parameters()
             for parameter in prophesy_parameters:
-                model_param = next((var for var in model_parameters if var.name == parameter.variable.name), None)
+                model_param = get_matching_model_parameter(model_parameters, parameter.name)
                 assert model_param is not None
                 self._parameter_mapping[parameter] = model_param
 
@@ -258,7 +258,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         pla_checker = self.get_pla_checker(threshold)
         model_parameters = self.get_model().collect_probability_parameters()
         # Set region
-        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
         region = stormpy.pars.ParameterRegion(region_string, model_parameters)
         # Check via PLA
@@ -289,14 +289,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         else:
             raise RuntimeError("Unexpected result '{}'".format(result))
 
-        region = HyperRectangle.from_region_string(region_string, parameters.get_variables())
+        region = HyperRectangle.from_region_string(region_string, parameters)
         regions = [(region_result, region)]
         return regions
 
     def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
         pla_checker = self.get_pla_checker(None)
         #TODO check direction
-        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        region_string = hyperrectangle.to_region_string(parameters)
         result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), True)
         assert result.is_constant()
         return stormpy.convert_from_storm_type(result.constant_part())
