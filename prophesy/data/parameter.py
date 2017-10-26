@@ -37,7 +37,7 @@ class ParameterOrder(list):
         filtered = [p for p in self if p.name == name]
         if len(filtered) == 0:
             raise ValueError("Variable with name {} not found".format(name))
-        elif len(filtered) > 2:
+        elif len(filtered) > 1:
             raise RuntimeError("Parameter list got several parameters with the same name")
         return filtered[0]
 
