@@ -73,6 +73,13 @@ class ParameterOrder(list):
         return "[{}]".format(", ".join(map(str, self)))
 
     def instantiate(self, one_or_more_pointlikes):
+        """Create ParameterInstantiation(s) from point-like objects.
+
+        Returns the same shape as the input, i.e., if the input is a single
+        point-like object (i.e., iterable, hopefully of numbers), returns a
+        single ParameterInstantiation; for a list of points, returns a list
+        of ParameterInstantiations.
+        """
         def looks_like_list_of_points(a):
             return isinstance(a, collections.Sequence) and isinstance(a[0], collections.Sized) and len(a[0]) == len(self)
 
