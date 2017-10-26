@@ -158,8 +158,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._parameter_mapping = {}
             model_parameters = self.get_model().collect_probability_parameters() | self.get_model().collect_reward_parameters()
             for parameter in prophesy_parameters:
-                param_string = str(parameter.variable)
-                model_param = next((var for var in model_parameters if str(var) == param_string), None)
+                model_param = next((var for var in model_parameters if var.name == parameter.variable.name), None)
                 assert model_param is not None
                 self._parameter_mapping[parameter] = model_param
 
@@ -240,32 +239,27 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
+
     def _check_welldefined(self, samplepoint):
         return self._welldefined_checker.check(samplepoint) == WelldefinednessResult.Welldefined
 
-    def perform_sampling(self, samplepoints, check_welldefined = False):
+
+    def perform_sampling(self, sample_points):
         # Perform sampling with model instantiator
         logger.info("Call stormpy for sampling")
-        samples = InstantiationResultDict(samplepoints.parameters)
-        parameter_mapping = self.get_parameter_mapping(samplepoints.parameters)
-        model_instantiator = self.get_model_instantiator()
-        for sample_point in samplepoints:
-            welldefined = True
-            #if check_welldefined:
-            #        welldefined = self._check_welldefined(sample_point)
-            # Instantiate point and check result
-            point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
-                     sample_point.items()}
-            if welldefined:
-                instantiated_model = model_instantiator.instantiate(point)
-                result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
-            else:
-                result = None
-            samples.add_result(InstantiationResult(sample_point, result))
-            logger.debug("Result: %s", result)
-
+        parameter_mapping = self.get_parameter_mapping(sample_points[0].get_parameters())
+        samples = InstantiationResultDict({p: self.sample_single_point(p, parameter_mapping) for p in sample_points})
         logger.info("Sampling with stormpy successfully finished")
         return samples
+
+    def sample_single_point(self, parameter_instantiation, parameter_mapping):
+        # Instantiate point and check result
+        model_instantiator = self.get_model_instantiator()
+        point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
+                 parameter_instantiation.items()}
+        instantiated_model = model_instantiator.instantiate(point)
+        result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
+        return result
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         logger.info("Check region via stormpy")

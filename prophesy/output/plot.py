@@ -36,12 +36,12 @@ def plot_samples(samples, parameters, safe_above_threshold, threshold):
 
     _, plot_path = tempfile.mkstemp(suffix=".pdf", prefix="sampling_", dir=configuration.get_plots_dir())
 
-    samples_non_defined = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if
-                           res.result == InstantiationResultFlag.NOT_WELLDEFINED]
-    samples_green = [res.instantiation.get_point(parameters) for res in samples.instantiation_results() if
-                     res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result >= threshold]
-    samples_red = [res.instantiation.get_point(parameters) for res in samples.instantiation_results()
-                   if res.result != InstantiationResultFlag.NOT_WELLDEFINED and res.result < threshold]
+    samples_non_defined = [instantiation.get_point(parameters) for instantiation, result in samples.items() if
+                           result == InstantiationResultFlag.NOT_WELLDEFINED]
+    samples_green = [instantiation.get_point(parameters) for instantiation, result in samples.items() if
+                     result != InstantiationResultFlag.NOT_WELLDEFINED and result >= threshold]
+    samples_red = [instantiation.get_point(parameters) for instantiation, result in samples.items()
+                   if result != InstantiationResultFlag.NOT_WELLDEFINED and result < threshold]
 
     Plot.plot_results(parameters=parameters, samples_green=samples_green, samples_red=samples_red,
                       samples_black=samples_non_defined,

@@ -5,7 +5,7 @@ from prophesy.modelcheckers.stormpy import StormpyModelChecker
 import prophesy.adapter.stormpy as sp
 import prophesy.adapter.pycarl as pc
 from prophesy.smt.smt import VariableDomain
-from prophesy.data.samples import ParameterInstantiation, ParameterInstantiations, InstantiationResult
+from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 from prophesy.data.property import Property, OperatorType
 
 logger = logging.getLogger(__name__)
@@ -50,9 +50,9 @@ class EtrRegionChecker(SmtRegionChecker):
         for par in self.parameters:
             self._smt2interface.add_variable(par.variable.name)
 
-        self._smt2interface.add_variable(safeVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(badVar, VariableDomain.Bool)
-        self._smt2interface.add_variable(self._thresholdVar, VariableDomain.Real)
+        self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
         self.model_explorer.load_model(problem_description.model, constants)
         self.model_explorer.set_pctl_formula(problem_description.property)
@@ -79,7 +79,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
                 state_var_mapping[state.id] = stateVar
-                self._smt2interface.add_variable(stateVar, VariableDomain.Real)
+                self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
             if initial_state_var is None:
@@ -96,7 +96,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
                 state_var_mapping[state.id] = stateVar
-                self._smt2interface.add_variable(stateVar, VariableDomain.Real)
+                self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
             if initial_state_var is None:
@@ -235,9 +235,6 @@ class EtrRegionChecker(SmtRegionChecker):
             value = smt_model[par.variable.name]
             rational = pc.Rational(value)
             sample[par] = rational
-        samples = ParameterInstantiations()
-        samples.append(sample)
-        samples.parameters = self.parameters
-        value = self.model_explorer.perform_sampling(samples)[sample]
+        value = self.model_explorer.perform_sampling([sample])[sample]
 
         return InstantiationResult(sample, value)

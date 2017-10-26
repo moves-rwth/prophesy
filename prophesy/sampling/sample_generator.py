@@ -16,5 +16,5 @@ class SampleGenerator:
         """
         self.sampler = sampler
         self.parameters = parameters
-        self.samples = samples.copy() if samples else InstantiationResultDict(parameters)
+        self.samples = samples.copy() if samples else InstantiationResultDict(parameters=parameters)
         self.distance = configuration.get_sampling_min_distance()

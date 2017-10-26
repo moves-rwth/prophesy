@@ -3,7 +3,7 @@ from prophesy.modelcheckers.stormpy import StormpyModelChecker
 from prophesy.input.modelfile import PrismFile
 from prophesy.input.pctlfile import PctlFile
 import prophesy.adapter.pycarl as pc
-from prophesy.data.samples import ParameterInstantiations
+from prophesy.data.samples import ParameterInstantiation
 from prophesy.data.point import Point
 
 from helpers.helper import get_example_path
@@ -28,9 +28,9 @@ def test_perform_sampling(MCType, name):
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
     points = [(Point(pc.Rational(0.25), pc.Rational(0.5)))]
-    sample_points = ParameterInstantiations.from_points(points, parameters)
+    sample_points = [ParameterInstantiation.from_point(p, parameters) for p in points]
     assert len(sample_points) == 1
     result = tool.perform_sampling(sample_points)
     assert len(result) == 1
-    for instantiation, val in result:
+    for instantiation, val in result.items():
         assert val == pc.Rational(0.75)

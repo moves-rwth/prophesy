@@ -2,7 +2,7 @@ import math
 import logging
 
 from prophesy.sampling.sample_generator import SampleGenerator
-from prophesy.data.samples import weighed_interpolation,  ParameterInstantiations
+from prophesy.data.samples import weighed_interpolation, InstantiationResultDict, InstantiationResult
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class LinearRefinement(SampleGenerator):
         logger.debug("Compute new points to sample.")
         if not self.first:
             # TODO: what should the distance be?
-            self.samples = self.samples.filter_value(lambda value: abs(value - self.threshold) * 800 > 1)
+            self.samples = InstantiationResultDict({k: v for k, v in self.samples.items() if abs(v - self.threshold) * 800 > 1})
         else:
             self.first = False
 
@@ -59,7 +59,7 @@ class LinearRefinement(SampleGenerator):
         """Check whether parameter instantiation p is too close to any other existing
         sample point."""
         i = 0
-        for sample_pt in self.samples.instantiations():
+        for sample_pt in self.samples.keys():
             d = p.numerical_distance(sample_pt)
             if 100 * d < 1:
                 return True
@@ -71,8 +71,7 @@ class LinearRefinement(SampleGenerator):
 
     def _compute_points(self, safe_samples, bad_samples):
         delta = self._min_dist()
-        new_points = ParameterInstantiations()
-        new_points.parameters = self.parameters
+        new_points = []
 
         # Offset the weight a little to balance the sample types
         if len(safe_samples) < len(bad_samples):
@@ -81,12 +80,14 @@ class LinearRefinement(SampleGenerator):
         else:
             fudge = -0.01
 
-        for safe_sample in safe_samples.instantiation_results():
-            for bad_sample in bad_samples.instantiation_results():
+        for safe_instantiation, safe_result in safe_samples.items():
+            for bad_instantiation, bad_result in bad_samples.items():
 
-                dist = safe_sample.instantiation.numerical_distance(bad_sample.instantiation)
+                dist = safe_instantiation.numerical_distance(bad_instantiation)
                 if 0.06 < dist < delta:
-                    point = weighed_interpolation(safe_sample, bad_sample, self.threshold, fudge)
+                    point = weighed_interpolation(InstantiationResult(safe_instantiation, safe_result),
+                                                  InstantiationResult(bad_instantiation, bad_result),
+                                                  self.threshold, fudge)
                     if point is not None and not self._is_too_close(point):
                         new_points.append(point)
         return new_points

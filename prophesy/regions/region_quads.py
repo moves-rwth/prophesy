@@ -55,10 +55,10 @@ class HyperRectangleRegions(RegionGenerator):
         regionsamples = []
 
         # Add all samples to region
-        for instantiation, value in self.safe_samples:
+        for instantiation, value in self.safe_samples.items():
             if region.contains(instantiation.get_point(parameters)):
                 regionsamples.append((instantiation.get_point(parameters), True))
-        for instantiation, value in self.bad_samples:
+        for instantiation, value in self.bad_samples.items():
             if region.contains(instantiation.get_point(parameters)):
                 regionsamples.append((instantiation.get_point(parameters), False))
 
@@ -104,7 +104,7 @@ class HyperRectangleRegions(RegionGenerator):
         else:
             center = region.center()
             dist = None
-            for sample in inverse_samples:
+            for sample in inverse_samples.items():
                 new_dist = sample[0].get_point(self.parameters).distance(center)
                 if not dist or new_dist <= dist:
                     dist = new_dist
@@ -121,12 +121,12 @@ class HyperRectangleRegions(RegionGenerator):
         center = region.center()
         sublogger.debug("Center is at {}".format(center))
         dist = None
-        for sample in self.safe_samples:
+        for sample in self.safe_samples.items():
             new_dist = sample[0].get_point(self.parameters).distance(center)
             if not dist or new_dist <= dist:
                 sublogger.debug("Currently closest safe sample: {}".format(sample[0]))
                 dist = new_dist
-        for sample in self.bad_samples:
+        for sample in self.bad_samples.items():
             new_dist = sample[0].get_point(self.parameters).distance(center)
             if new_dist < dist:
                 sublogger.debug("Currently closest bad sample {} is closer than any safe sample".format(sample[0]))

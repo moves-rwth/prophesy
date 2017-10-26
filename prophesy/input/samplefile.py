@@ -43,7 +43,7 @@ def read_samples_file(path, parameters):
             threshold = Rational(lines[1].split()[1])
             start += 1
 
-        samples = InstantiationResultDict(parameters)
+        samples = InstantiationResultDict(parameters=parameters)
         skip_next = False
         for i, line in enumerate(lines[start:]):
             if skip_next:
@@ -54,8 +54,7 @@ def read_samples_file(path, parameters):
                 # Prism reports that probs are negative:
                 if line.find("are negative") > 0:
                     coords = map(Rational, items[:len(parameter_names)])
-                    samples.add_result(
-                        InstantiationResult(ParameterInstantiation.from_point(Point(*coords), parameters), InstantiationResultFlag.NOT_WELLDEFINED))
+                    samples[ParameterInstantiation.from_point(Point(*coords), parameters)] = InstantiationResultFlag.NOT_WELLDEFINED
                     skip_next = True
                     continue
                 logger.error("Invalid input in %s on line %s: '%s'", path, str(i + start), line)
@@ -72,7 +71,7 @@ def read_samples_file(path, parameters):
             else:
                 value = Rational(items[-1])
             coords = map(Rational, items[:-1])
-            samples.add_result(InstantiationResult(ParameterInstantiation.from_point(Point(*coords), parameters), value))
+            samples[ParameterInstantiation.from_point(Point(*coords), parameters)] = value
 
     logger.debug("Parameters: %s", str(parameters))
     return parameters, threshold, samples
@@ -82,7 +81,7 @@ def write_samples_file(parameters, samples, path):
     logger.info("Write samples to %s", path)
     vars = parameters.get_variables()
     with open(path, "w") as f:
-        f.write(" ".join(map(str, vars)) + "\n")
-        for res in samples.instantiation_results():
-            f.write("\t".join([str(c) for c in  res.instantiation.get_point(parameters).coordinates]))
-            f.write("\t\t" + str(res.result) + "\n")
+        f.write(" ".join([v.name for v in vars]) + "\n")
+        for instantiation, result in samples.items():
+            f.write("\t".join([str(c) for c in instantiation.get_point(parameters).coordinates]))
+            f.write("\t\t" + str(result) + "\n")

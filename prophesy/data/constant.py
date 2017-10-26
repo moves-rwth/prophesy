@@ -1,94 +1,34 @@
 import prophesy.adapter.pycarl as pc
+from prophesy.data.parameter import Parameter
 
 
-class Constant:
-    """
-    A variable and its constant value.
-    """
+class Constants(dict):
+    """Container that holds constants for a model."""
 
-    def __init__(self, variable, value):
-        """
-        Initialise the constant
-        
-        :param variable:  pycarl.Variable which encodes the constant
-        :param value: expression for the value of the constant
-        """
-        self.variable = variable
-        self.value = value
-
-    @property
-    def name(self):
-        """
-        
-        :return: The name of the variable representing the constant 
-        """
-        return self.variable.name
-
-
-class Constants:
-    """
-    Container that holds constants for a model. 
-    """
-
-    def __init__(self):
-        self.constants = dict()
-
-    def has_variable(self, var):
-        """
-        Does the container contain a constant encoded by the given variable?
-        
-        :param var: The variable which might be contained.
-        :return: 
-        """
-        return var in self.constants
-
-    def get_constant(self, var):
-        """
-        Get the constant associated with the given variable 
-        
-        :param var: 
-        :return: 
-        """
-        return self.constants[var]
-
-    def add(self, constant):
-        """
-        Add a constant.
-        
-        :param constant: 
-        :return: 
-        """
-        self.constants[constant.variable] = constant
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def to_key_value_string(self, to_float=False):
-        """
-        Provides a key-value string from variable to constant value.
+        """Provides a key-value string from variable to constant value.
+
         The key-value string format can be immediately used for storm or prism.
         
         :param to_float: Should the constant value be casted into a float
         :return: A string of the format var1=val1,...,varn=valn
         """
-        key_value_list = [(k, v.value) for k, v in self.constants.items()]
+        key_value_list = list(self.items())
+
         if to_float:
-            for i in range(len(key_value_list)):
-                if isinstance(key_value_list[i][1], pc.Rational):
-                    key_value_list[i] = (key_value_list[i][0], float(key_value_list[i][1]))
+            key_value_list = [(var, float(val) if isinstance(val, pc.Rational) else val) for var, val in key_value_list]
 
-        return ",".join(["{}={}".format(k, v) for k, v in key_value_list])
+        return ",".join(["{}={}".format(var.name, val.name if isinstance(val, pc.Variable) else val) for var, val in key_value_list])
 
-    def variables(self):
-        """
-        The set of variables which represent the constants contained.
-        
-        :return: A iterable over the variables.
-        """
-        return self.constants.keys()
-
-    def __str__(self):
-        return str(self.constants)
-
-    def __len__(self):
-        return len(self.constants)
+    def __contains__(self, item):
+        # FIXME when Parameter is Variable
+        if isinstance(item, Parameter):
+            return any((v.name == item.name for v in self.keys()))
+        else:
+            return super().__contains__(item)
 
 
 def parse_constants_string(input_string):
@@ -106,6 +46,7 @@ def parse_constants_string(input_string):
         constant_and_def = constant_def.split("=")
         if len(constant_and_def) != 2:
             raise ValueError("Expected key-value pair, found {}".format(constant_def))
-        c = Constant(pc.Variable(constant_and_def[0]), pc.parse(constant_and_def[1]))
-        result.add(c)
+        var = pc.Variable(constant_and_def[0])
+        val = pc.parse(constant_and_def[1])
+        result[var] = val
     return result

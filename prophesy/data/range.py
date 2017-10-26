@@ -30,7 +30,7 @@ def create_range_from_interval(interval, nr_samples):
     return Range(interval.left_bound(), interval.right_bound(), (interval.width() / (nr_samples - 1)))
 
 
-def create_cartisean_product(ranges):
+def create_cartesian_product(ranges):
     """
     :param ranges: Iterable containing Range elements
     :return: An iterator for the Cartesian product of the ranges.
