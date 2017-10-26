@@ -577,7 +577,7 @@ class GenerateSamples(CegarHandler):
         new_samples = InstantiationResultDict(parameters=parameters)
         sampling_interface = getSampler(self._get_session('sampler'), result)
         if generator_type == 'uniform':
-            intervals = result.parameters.get_variable_bounds()
+            intervals = result.parameters.get_parameter_bounds()
             samples_generator = UniformSampleGenerator(sampling_interface, result.parameters, samples, iterations)
         elif generator_type == "linear":
             samples_generator = LinearRefinement(sampling_interface, result.parameters, samples, threshold)

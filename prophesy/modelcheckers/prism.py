@@ -108,7 +108,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         assert len(self.prismfile.parameters) == len(parameters), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
         ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in
-                  parameters.get_variable_bounds()]
+                  parameters.get_parameter_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
         const_values_string = ",".join(["{}={}".format(v.name, r) for v, r in zip(parameters, range_strings)])

@@ -83,7 +83,7 @@ def run(args=sys.argv[1:], interactive=True):
 
     parameters = copy.copy(model_file.parameters)
     for const_variable in constants.keys():
-        parameters.remove_variable(const_variable)
+        parameters.remove_parameter(const_variable)
     parameters.make_intervals_closed(pc.Rational(pc.Integer(1), pc.Integer(1000)))
 
     logging.info("Performing uniform sampling:")

@@ -38,25 +38,18 @@ class ParameterOrder(list):
             raise RuntimeError("Parameter list got several parameters with the same name")
         return filtered[0]
 
+    def get_parameter_bounds(self):
+        """Computes a list of bounds ordered according to this ParameterOrder.
 
-    def get_variable_bounds(self):
-        """
-        Computes a list of bounds ordered according to this ParameterOrder
-        
         :return: list of Interval
         :rtype: list(Interval)
         """
         return [p.interval for p in self]
 
-    def remove_variable(self, variable):
-        """
-        Remove parameter represented by a given variable
-        
-        :param variable: A variable whose associated parameter should be removed from the list.
-        :return: 
-        """
+    def remove_parameter(self, parameter):
+        """Remove parameter represented by a given variable."""
         for p in self:
-            if super(Parameter, p).__eq__(variable):
+            if p == parameter or type(parameter) == pc.Variable and super(Parameter, p).__eq__(parameter):
                 self.remove(p)
                 return
 
