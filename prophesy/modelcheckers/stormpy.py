@@ -258,7 +258,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         pla_checker = self.get_pla_checker(threshold)
         model_parameters = self.get_model().collect_probability_parameters()
         # Set region
-        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
         region = stormpy.pars.ParameterRegion(region_string, model_parameters)
         # Check via PLA
@@ -289,14 +289,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         else:
             raise RuntimeError("Unexpected result '{}'".format(result))
 
-        region = HyperRectangle.from_region_string(region_string, parameters.get_variables())
+        region = HyperRectangle.from_region_string(region_string, parameters)
         regions = [(region_result, region)]
         return regions
 
     def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
         pla_checker = self.get_pla_checker(None)
         #TODO check direction
-        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        region_string = hyperrectangle.to_region_string(parameters)
         result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), True)
         assert result.is_constant()
         return stormpy.convert_from_storm_type(result.constant_part())

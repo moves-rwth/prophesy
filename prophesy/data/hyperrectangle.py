@@ -216,6 +216,7 @@ class HyperRectangle:
         :return: A formula specifying the points inside the hyperrectangle
         :rtype: pc.Constraint or pc.Formula
         """
+        # FIXME Parameter / Variable !5
         constraint = pc.Constraint(True)
         for variable, interval in zip(variables, self.intervals):
             if interval.left_bound != -inf:
@@ -244,10 +245,8 @@ class HyperRectangle:
 
     @classmethod
     def from_region_string(cls, input_string, variables):
-        """
-        Constructs a hyperrectangle with dimensions according to the variable order.
-        :param input: 
-        :param variables: 
+        """Constructs a hyperrectangle with dimensions according to the variable order.
+
         :return: A HyperRectangle
         """
         interval_strings = input_string.split(",")

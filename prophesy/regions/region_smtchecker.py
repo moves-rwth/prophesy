@@ -51,7 +51,7 @@ class SmtRegionChecker(RegionChecker):
         smt_successful = False
         smt_model = None
 
-        variables = self.parameters.get_variables()
+        variables = self.parameters.get_variables()  # FIXME one of the few places where Variables are required
         if isinstance(polygon, HyperRectangle):
             constraint = polygon.to_formula(variables)
         else:

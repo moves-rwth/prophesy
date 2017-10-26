@@ -224,7 +224,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
 
-        region_string = hyperrectangle.to_region_string(parameters.get_variables())
+        region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
         property_to_check = self.pctlformula
         property_to_check.bound = OperatorBound(pc.Relation.LESS, threshold)
@@ -294,6 +294,6 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
                     raise RuntimeError("Unexpected content '{}' in result file".format(res_line[0]))
 
                 region_string_out = res_line[1].strip()
-                region = HyperRectangle.from_region_string(region_string_out, parameters.get_variables())
+                region = HyperRectangle.from_region_string(region_string_out, parameters)
                 regions.append((region_result, region))
         return regions

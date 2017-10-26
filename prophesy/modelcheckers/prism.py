@@ -81,9 +81,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if constants_string != "":
             args.append('-const')
             args.append(constants_string)
-        variables = self.prismfile.parameters.get_variables()
         args.append('-param')
-        args.append('{}'.format(','.join([var.name for var in variables])))
+        args.append('{}'.format(','.join([p.name for p in self.prismfile.parameters])))
 
         logger.info("Call prism")
         ret_code = run_tool(args, False)
@@ -106,15 +105,13 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         logger.info("Perform uniform sampling")
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
-        assert len(self.prismfile.parameters) == len(
-            parameters.get_variables()), "Number of intervals does not match number of parameters"
+        assert len(self.prismfile.parameters) == len(parameters), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
         ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in
                   parameters.get_variable_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
-        const_values_string = ",".join(
-            ["{0}={1}".format(v.name, r) for (v, r) in zip(parameters.get_variables(), range_strings)])
+        const_values_string = ",".join(["{}={}".format(v.name, r) for v, r in zip(parameters, range_strings)])
         constants_string = self.constants.to_key_value_string()
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string
