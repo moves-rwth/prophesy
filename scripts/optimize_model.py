@@ -42,7 +42,7 @@ def _get_selected_pmc(mc_name):
 
 def parse_parameters(prism_file, constants):
     """Return actual (i.e., non-constant) parameters."""
-    parameters = copy.copy(prism_file.parameters)  # this used to be deepcopy, but this works fine?
+    parameters = copy.copy(prism_file.parameters)
     for const_variable in constants.keys():
         parameters.remove_parameter(const_variable)
     return parameters
