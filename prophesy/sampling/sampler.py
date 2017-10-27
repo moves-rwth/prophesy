@@ -4,7 +4,6 @@ from numpy import linspace
 
 from prophesy.data.interval import BoundType
 from prophesy.config import configuration
-from prophesy.data.samples import ParameterInstantiation
 from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
 
@@ -34,7 +33,7 @@ class Sampler:
 
         # points evenly spaced over the interval, for each dimension
         ranges = []
-        for i in parameters.get_variable_bounds():
+        for i in parameters.get_parameter_bounds():
             minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + configuration.get_sampling_epsilon()
             maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - configuration.get_sampling_epsilon()
             ranges.append(map(Rational, linspace(float(minNum), float(maxNum), samples_per_dimension)))
@@ -42,7 +41,7 @@ class Sampler:
         all_points = itertools.product(*ranges)
         all_points = [Point(*coords) for coords in all_points]
 
-        sample_points = [ParameterInstantiation.from_point(p, parameters) for p in all_points]
+        sample_points = parameters.instantiate(all_points)
 
         return self.perform_sampling(sample_points)
 

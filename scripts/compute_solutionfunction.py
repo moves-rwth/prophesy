@@ -64,7 +64,7 @@ def run(args=sys.argv[1:], interactive=True):
     tool.load_model(model_file, constants)
     tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
     result = tool.get_rational_function()
-    problem_parameters = [p for p in model_file.parameters if p.variable not in constants]
+    problem_parameters = [p for p in model_file.parameters if p not in constants]
     if problem_parameters != result.parameters:
         if len(problem_parameters) != len(result.parameters):
             raise ValueError(

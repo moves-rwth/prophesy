@@ -11,8 +11,9 @@ class PlaSearchOptimisation():
         self.problem_description = problem_description
         self.use_counterexample = use_counterexample
 
-    def search(self, requested_gap = pc.Rational("0.05"), max_iterations=10, dir="max", realised=pc.Rational(0), bound=pc.Rational(1)):
-        regions = [HyperRectangle(*self.problem_description.parameters.get_variable_bounds())]
+    def search(self, requested_gap = pc.Rational("0.05"), max_iterations = 10, dir="max", lower=pc.Rational(0), upper = pc.Rational(1)):
+        regions = [HyperRectangle(*self.problem_description.parameters.get_parameter_bounds())]
+
         regions = [region.close() for region in regions]
         iterations = 0
 

@@ -49,7 +49,7 @@ class HyperRectangleRegions(RegionGenerator):
             self.split = HyperRectangleRegions.split_by_growing_rectangles
 
         # Setup initial region
-        region = HyperRectangle(*self.parameters.get_variable_bounds())
+        region = HyperRectangle(*self.parameters.get_parameter_bounds())
         if checker.supports_only_closed_regions():
             region = region.close()
         regionsamples = []

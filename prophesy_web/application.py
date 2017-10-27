@@ -503,7 +503,7 @@ class Samples(CegarHandler):
         socket = self._get_socket()
         sampling_interface = getSampler(self._get_session('sampler'), result)
         coordinates = [Point(Rational(x), Rational(y)) for x, y in coordinates]
-        sample_points = [ParameterInstantiation.from_point(p, result.parameters) for p in coordinates]
+        sample_points = result.parameters.instantiate(coordinates)
         new_samples = sampling_interface.perform_sampling(sample_points)
         if socket is not None:
             socket.send_samples(new_samples)
@@ -577,7 +577,7 @@ class GenerateSamples(CegarHandler):
         new_samples = InstantiationResultDict(parameters=parameters)
         sampling_interface = getSampler(self._get_session('sampler'), result)
         if generator_type == 'uniform':
-            intervals = result.parameters.get_variable_bounds()
+            intervals = result.parameters.get_parameter_bounds()
             samples_generator = UniformSampleGenerator(sampling_interface, result.parameters, samples, iterations)
         elif generator_type == "linear":
             samples_generator = LinearRefinement(sampling_interface, result.parameters, samples, threshold)

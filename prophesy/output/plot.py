@@ -199,8 +199,8 @@ class Plot:
 
             ax1.set_xlim([float(parameters[0].interval.left_bound()), float(parameters[0].interval.right_bound())])
             ax1.set_ylim([float(parameters[1].interval.left_bound()), float(parameters[1].interval.right_bound())])
-            ax1.set_xlabel(str(parameters[0].variable))
-            ax1.set_ylabel(str(parameters[1].variable))
+            ax1.set_xlabel(str(parameters[0].name))
+            ax1.set_ylabel(str(parameters[1].name))
             if path_to_save is not None:
                 pyplot.savefig(path_to_save, format="PDF")
             if display:

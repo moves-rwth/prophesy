@@ -16,7 +16,8 @@ class BinarySearchOptimisation():
             self.smt_checker._smt2interface.assert_constraint(c)
 
     def search(self, requested_gap = pc.Rational("0.001"), max_iterations = 10,  dir="max", realised = pc.Rational(0), bound = pc.Rational(1)):
-        region = HyperRectangle(*self.problem_description.parameters.get_variable_bounds())
+        region = HyperRectangle(*self.problem_description.parameters.get_parameter_bounds())
+
         if self.smt_checker.supports_only_closed_regions():
             region = region.close()
         iterations = 0

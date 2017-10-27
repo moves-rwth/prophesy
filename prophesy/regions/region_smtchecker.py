@@ -51,11 +51,10 @@ class SmtRegionChecker(RegionChecker):
         smt_successful = False
         smt_model = None
 
-        variables = self.parameters.get_variables()
         if isinstance(polygon, HyperRectangle):
-            constraint = polygon.to_formula(variables)
+            constraint = polygon.to_formula(self.parameters)
         else:
-            constraint = region_from_polygon(polygon, variables)
+            constraint = region_from_polygon(polygon, self.parameters)
 
         while not smt_successful:
             # check constraint with smt

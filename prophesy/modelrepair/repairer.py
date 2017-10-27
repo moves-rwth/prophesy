@@ -38,7 +38,7 @@ class ModelRepairer:
         # the original property specifies a bound, but the actual model
         # checking call is done with the "=?" operator to get the MC prob
         self.original_property = pctl_property
-        self.modified_property = copy.deepcopy(pctl_property)
+        self.modified_property = copy.copy(pctl_property)
         self.modified_property.bound = OperatorBound(pc.Relation.EQ)
         modelchecker.set_pctl_formula(self.modified_property)
 
@@ -77,10 +77,6 @@ class ModelRepairer:
             return abs(value - bound.threshold)
 
         if self.original_property.bound.is_satisfied(value):
-            # it is nice to be able to use carl Polynomials, but they evaluate
-            # on Variable:Rational dicts, not ParameterInstantiation (!)
-            # TODO: maybe subclass Parameter from pycarl.Variable
-            instantiation_as_dict = {p.variable: v for p, v in parameter_instantiation.items()}
-            return float(self.cost_fct(instantiation_as_dict))
+            return float(self.cost_fct(parameter_instantiation))
         else:
             return float(distance_to_bound(value, self.original_property.bound) + penalty)

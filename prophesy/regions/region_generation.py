@@ -39,7 +39,7 @@ class RegionGenerator:
         self.parameters = parameters
         self.threshold = threshold
 
-        self.max_area_sum = HyperRectangle(*self.parameters.get_variable_bounds()).size()
+        self.max_area_sum = HyperRectangle(*self.parameters.get_parameter_bounds()).size()
 
         self.checker = checker
 

@@ -46,7 +46,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self.parameters = problem_description.parameters
 
         for p in self.parameters:
-            self._smt2interface.add_variable(p.variable.name, VariableDomain.Real)
+            self._smt2interface.add_variable(p.name, VariableDomain.Real)
 
         safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
         badVar = pc.Variable("__bad", pc.VariableType.BOOL)
@@ -64,8 +64,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
                     raise RuntimeError("Non-linear well-definednessconstraints are not supported right now")
             # We do know now that the well-defined points are connected.
             sample = self._get_welldefined_point(problem_description.welldefined_constraints)
-            eval_dict = dict([(k.variable, v) for k, v in sample.items()])
-            value = pc.denominator(self._ratfunc).evaluate(eval_dict)
+            value = pc.denominator(self._ratfunc).evaluate(sample)
             self._smt2interface.add_variable(rf1Var.name, VariableDomain.Real)
             self._smt2interface.add_variable(rf2Var.name, VariableDomain.Real)
             if upper_bounded_variables and problem_description.property.operator == OperatorType.probability:
@@ -116,7 +115,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         extrasmt2 = type(self._smt2interface)()
         extrasmt2.run()
         for p in self.parameters:
-            extrasmt2.add_variable(p.variable.name, VariableDomain.Real)
+            extrasmt2.add_variable(p.name, VariableDomain.Real)
         for constraint in constraints:
             extrasmt2.assert_constraint(constraint)
         extrasmt2.check()
@@ -128,14 +127,13 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
     def _smt_model_to_sample(self, smt_model):
         sample = ParameterInstantiation()
         for par in self.parameters:
-            value = smt_model[par.variable.name]
+            value = smt_model[par.name]
             rational = pc.Rational(value)
             sample[par] = rational
         return sample
 
     def _evaluate(self, smt_model):
         sample = self._smt_model_to_sample(smt_model)
-        eval_dict = dict([(k.variable, v) for k, v in sample.items()])
-        value = self._ratfunc.evaluate(eval_dict)
+        value = self._ratfunc.evaluate(sample)
         logger.debug("Evaluation of sample yields {}".format(value))
         return InstantiationResult(sample, value)
