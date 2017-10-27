@@ -2,6 +2,7 @@ import os.path
 import pytest
 from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
+import click.testing
 
 import compute_solutionfunction
 
@@ -16,16 +17,18 @@ benchmarks = [
 
 @pytest.mark.parametrize("name,file,constants,property,tool", benchmarks)
 def test_script(name, file, constants, property, tool):
-    command = ["--file",
-               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+    command = ["--mc={}".format(tool),
+               "load_problem",
                "--constants",
                constants,
-               "--pctl-file",
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "--{}".format(tool),
-               '--result-file',
+               "compute_solution_function",
+               '--export',
                target_file
                ]
-    compute_solutionfunction.run(command, False)
+    runner = click.testing.CliRunner()
+    result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+    assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.remove(target_file)

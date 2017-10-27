@@ -1,83 +1,104 @@
 #!/usr/bin/env python3
-
-import sys
-from argparse import ArgumentParser
+import click
 import logging
 
 from prophesy.data.constant import parse_constants_string
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
+from prophesy.input.problem_description import ProblemDescription
 from prophesy.input.solutionfunctionfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.config import configuration
 
-
-def _get_argparser():
-    parser = ArgumentParser(description='Transform a prism file to a rational function.')
-
-    parser.add_argument('--file', help='the input file containing the model', required=True)
-    parser.add_argument('--pctl-file', help='a file with a pctl property', required=True)
-    parser.add_argument('--pctl-index', help='the index for the pctl file', default=0)
-    parser.add_argument('--result-file', help='resulting file', default="result.out")
-    parser.add_argument('--constants', type=str, help='string with constants')
-
-    solver_group = parser.add_mutually_exclusive_group(required=True)
-    solver_group.add_argument('--storm', action='store_true', help='use storm via cli')
-    solver_group.add_argument('--prism', action='store_true', help='use prism via cli')
-    solver_group.add_argument('--stormpy', action='store_true', help='use the python API')
-
-    return parser
+def select_mc(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(ConfigState)
+        state.mc = value
+        return value
+    return click.option("--mc", expose_value=False, type=click.Choice(["stormpy","storm","prism"]), default="stormpy", callback=callback)(f)
 
 
-def parse_cli_args(args):
-    return _get_argparser().parse_args(args)
+class ConfigState(object):
+    def __init__(self):
+        self.mc = None
+        self.problem_description = ProblemDescription()
+
+pass_state = click.make_pass_decorator(ConfigState, ensure=True)
 
 
-def run(args=sys.argv[1:], interactive=True):
-    cmdargs = parse_cli_args(args)
-    configuration.check_tools()
+@click.group(chain=True)
+@select_mc
+@pass_state
+def parameter_synthesis(config):
+    config.obj = ConfigState()
+    config.mc = make_modelchecker(config.mc)
+
+@parameter_synthesis.command()
+@click.argument('model-file')
+@click.argument('property-file')
+@click.option('--constants')
+@click.option('--pctl-index', default=0)
+@pass_state
+def load_problem(state, model_file, property_file, constants, pctl_index):
+    logging.info("Compute the rational function using " + state.mc.name() + " " + state.mc.version())
+
+    constants = parse_constants_string(constants)
+    click.echo(constants)
+    state.problem_description.model = open_model_file(model_file)
+    pctl_file = PctlFile(property_file)
+    state.problem_description.property = pctl_file.get(pctl_index)
+    state.problem_description.constants = constants
+
+
+
+@parameter_synthesis.command()
+@click.option('--export')
+@pass_state
+def compute_solution_function(state, export):
+    logging.info("Compute the rational function using " + state.mc.name() + " " + state.mc.version())
+    state.mc.load_model(state.problem_description.model, state.problem_description.constants)
+    state.mc.set_pctl_formula(state.problem_description.property)
+    result = state.mc.get_rational_function()
+    write_pstorm_result(export, result)
+
+    #
+    # problem_parameters = [p for p in model_file.parameters if p not in constants]
+    # if problem_parameters != result.parameters:
+    #     if len(problem_parameters) != len(result.parameters):
+    #         raise ValueError(
+    #             "Parameters in model '{}' and in result '{}' do not coincide.".format(model_file.parameters,
+    #                                                                                   result.parameters))
+    #     for p in problem_parameters:
+    #         if p not in result.parameters:
+    #             raise ValueError(
+    #                 "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
+    #                                                                                       result.parameters))
+    #     result.parameters = model_file.parameters
+
+
+
+
+def make_modelchecker(mc):
+   # configuration.check_tools()
     pmcs = configuration.getAvailableParametricMCs()
-    constants = parse_constants_string(cmdargs.constants)
-    model_file = open_model_file(cmdargs.file)
-    if model_file.contains_nondeterministic_model():
-        raise NotImplementedError("Solution functions are not suppported for nondeterministic models")
-    pctl_file = PctlFile(cmdargs.pctl_file)
-
-    if cmdargs.storm:
+    if mc == "storm":
         if 'storm' not in pmcs:
             raise RuntimeError("Storm location not configured.")
         tool = StormModelChecker()
-    elif cmdargs.prism:
+    elif mc == "prism":
         if 'prism' not in pmcs:
             raise RuntimeError("Prism location not configured.")
         tool = PrismModelChecker()
-    elif cmdargs.stormpy:
+    elif mc == "stormpy":
         if 'stormpy' not in pmcs:
             raise RuntimeError("Stormpy dependency not configured.")
         from prophesy.modelcheckers.stormpy import StormpyModelChecker
         tool = StormpyModelChecker()
     else:
         raise RuntimeError("No supported model checker defined")
-
-    logging.info("Compute the rational function using " + tool.name() + " "+ tool.version())
-    tool.load_model(model_file, constants)
-    tool.set_pctl_formula(pctl_file.get(cmdargs.pctl_index))
-    result = tool.get_rational_function()
-    problem_parameters = [p for p in model_file.parameters if p not in constants]
-    if problem_parameters != result.parameters:
-        if len(problem_parameters) != len(result.parameters):
-            raise ValueError(
-                "Parameters in model '{}' and in result '{}' do not coincide.".format(model_file.parameters,
-                                                                                      result.parameters))
-        for p in problem_parameters:
-            if p not in result.parameters:
-                raise ValueError(
-                    "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
-                                                                                          result.parameters))
-        result.parameters = model_file.parameters
-    write_pstorm_result(vars(cmdargs)["result_file"], result)
+    return tool
 
 
 if __name__ == "__main__":
-    run()
+    parameter_synthesis()
