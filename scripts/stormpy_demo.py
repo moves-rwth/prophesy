@@ -39,12 +39,10 @@ def modelcheck(prism_file, pctl_file, pctl_index, parameter_values):
     pctl_property = PctlFile(pctl_file).get(pctl_index)
     mc.set_pctl_formula(pctl_property)
 
-    # various representations / containers
     point = Point(*parameter_values).to_nice_rationals()
     parameter_instantiation = parameters.instantiate(point)
-    parameter_instantiations = [parameter_instantiation]
 
-    mc.perform_sampling(parameter_instantiations)
+    mc.perform_sampling([parameter_instantiation])
 
     # roughly same as stormpy.perform_sampling, but for single point
     def sample(parameter_instantiation):
