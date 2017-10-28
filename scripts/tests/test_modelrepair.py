@@ -1,20 +1,13 @@
 import os
-import random
 
 from click.testing import CliRunner
 import pytest
-import numpy as np
 
 from conftest import EXAMPLE_FOLDER
 from requires import require_stormpy
+from util import set_random_seeds
 
 from modelrepair import model_repair
-
-
-# TODO: extract to helper module
-def set_random_seeds(py_seed=42, np_seed=23):
-    random.seed(py_seed)
-    np.random.seed(np_seed)
 
 
 # these all do the essentially the same thing; just keeping this here for reference
@@ -35,6 +28,5 @@ def test_modelrepair(folder, file, pctl_property, cost_function, random_seeds, e
                                                '--pctl-string', pctl_property,
                                                '--cost-function', cost_function])
 
-    print(result.output)
     assert not result.exception
     assert "score " + expected_score[:10] in result.output

@@ -1,20 +1,13 @@
 import os
-import random
 
 from click.testing import CliRunner
 import pytest
-import numpy as np
 
 from conftest import EXAMPLE_FOLDER
 from requires import require_stormpy
+from util import set_random_seeds
 
 from optimize_model import model_optimization
-
-
-# TODO: extract to helper module
-def set_random_seeds(py_seed=42, np_seed=23):
-    random.seed(py_seed)
-    np.random.seed(np_seed)
 
 
 TEST_CASES = [
@@ -30,6 +23,5 @@ def test_optimize_model(folder, file, pctl_property, direction, random_seeds, so
                                                      '--pctl-string', pctl_property,
                                                      '--direction', direction])
 
-    print(result.output)
     assert not result.exception
     assert some_parameter_val in result.output
