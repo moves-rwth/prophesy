@@ -87,6 +87,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
 
     def load_model_from_prismfile(self, prism_file, constants=Constants()):
+        logger.debug("Load model from prism file")
         self._reset_internal()
         self.prismfile = prism_file
         self.constants = constants
@@ -166,19 +167,6 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             assert parameter in self._parameter_mapping
         return self._parameter_mapping
 
-    @staticmethod
-    def check_model(model, property):
-        """
-        Compute result of model checking.
-        :param model: Model.
-        :param property: Property.
-        :return: Result (as gmp type).
-        """
-        result = stormpy.model_checking(model, property)
-        result = result.at(model.initial_states[0])
-        # Convert to gmp
-        return pc.convert_from_storm_type(result)
-
     def get_parameter_constraints(self):
         if self._parameter_constraints is None or self._graph_preservation_constraints is None:
             # Collect constraints if not already there
@@ -230,7 +218,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def get_rational_function(self):
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = StormpyModelChecker.check_model(self.get_model(), self.pctlformula[0])
+        rational_function = pc.convert_from_storm_type(stormpy.model_checking(model, property).at(model.initial_states[0]))
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints

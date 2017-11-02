@@ -1,9 +1,12 @@
 import os.path
 import pytest
+import logging
 from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
+import click.testing
 
-import sampling_model
+import compute_solutionfunction
+logger = logging.getLogger(__name__)
 
 SAMPLINGNR = 3
 ITERATIONS = 1
@@ -36,25 +39,27 @@ benchmarks = [
     #   ("nand-reward", "nand_20-5", 0.5, True),
 ]
 
-
 @pytest.mark.parametrize("name,file,constants,property,threshold,tool", benchmarks)
 def test_script(name, file, constants, property, threshold, tool):
-    command = ["--file",
-               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+    command = ["--mc={}".format(tool),
+               "load_problem",
                "--constants",
                constants,
-               "--pctl-file",
+               "--threshold",
+               str(threshold),
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
+               "sample",
                "--samplingnr",
                str(SAMPLINGNR),
                "--iterations",
                str(ITERATIONS),
-               "--threshold",
-               str(threshold),
-               "--{}".format(tool),
-               '--samples-file',
+               '--export',
                target_file
                ]
-    sampling_model.run(command, False)
+    logger.debug("parameter_synthesis.py " + " ".join(command))
+    runner = click.testing.CliRunner()
+    result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+    assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.unlink(target_file)

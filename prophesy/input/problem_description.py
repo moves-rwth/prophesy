@@ -1,5 +1,5 @@
 class ProblemDescription:
-    def __init__(self, solutionfunction=None, parameters=None, model=None, property=None, wd_constraints=None,
+    def __init__(self, solution_function=None, parameters=None, model=None, property=None, wd_constraints=None,
                  gp_constraints=None, threshold=None, samples=None):
         """
         Constructor.
@@ -10,7 +10,7 @@ class ProblemDescription:
         :param wd_constraints: Constraints for well formedness.
         :param gp_constraints: Constraints for graph preservation.
         """
-        self.solutionfunction = solutionfunction
+        self.solution_function = solution_function
         self.parameters = parameters
         self.model = model
         self.property = property
