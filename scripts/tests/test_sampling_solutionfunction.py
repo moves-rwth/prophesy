@@ -1,9 +1,12 @@
 import os.path
+import logging
 import pytest
 from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
+import click
 
-import sampling_solutionfunction
+logger = logging.getLogger(__name__)
+import compute_solutionfunction
 
 SAMPLINGNR = 3
 ITERATIONS = 1
@@ -39,19 +42,23 @@ benchmarks = [
 
 @pytest.mark.parametrize("name,benchmark,threshold,safe_above", benchmarks)
 def test_script(name, benchmark, threshold, safe_above):
-    command = ["--rat-file",
+    command = ["load_solution_function",
+               "set_threshold",
+               str(threshold),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, benchmark)),
+               "sample",
                "--samplingnr",
                str(SAMPLINGNR),
                "--iterations",
                str(ITERATIONS),
-               "--threshold",
-               str(threshold),
-               "--samples-file",
-               target_file,
+               '--export',
+               target_file
                ]
-    if not safe_above:
-        command.append("--bad-above-threshold")
-    sampling_solutionfunction.run(command, False)
+    logger.debug("parameter_synthesis.py " + " ".join(command))
+    runner = click.testing.CliRunner()
+    result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+    assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.unlink(target_file)
+
+

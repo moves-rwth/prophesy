@@ -13,7 +13,10 @@ from prophesy.config import configuration
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.input.samplefile import write_samples_file
+from prophesy.input.solutionfunctionfile import read_pstorm_result
 import prophesy.adapter.pycarl as pc
+
+import compute_solutionfunction
 
 def select_mc(f):
     def callback(ctx, param, value):
@@ -31,6 +34,8 @@ class ConfigState(object):
 pass_state = click.make_pass_decorator(ConfigState, ensure=True)
 
 
+
+
 @click.group(chain=True)
 @select_mc
 @pass_state
@@ -44,17 +49,14 @@ def parameter_synthesis(config):
 @click.argument('property-file')
 @click.option('--constants')
 @click.option('--pctl-index', default=0)
-@click.option('--threshold', type=pc.Rational)
 @pass_state
-def load_problem(state, model_file, property_file, constants, pctl_index, threshold):
-    #logging.info("Compute the rational function using " + state.mc.name() + " " + state.mc.version())
+def load_problem(state, model_file, property_file, constants, pctl_index):
     constants = parse_constants_string(constants)
     click.echo(constants)
     state.problem_description.model = open_model_file(model_file)
     pctl_file = PctlFile(property_file)
     state.problem_description.property = pctl_file.get(pctl_index)
     state.problem_description.constants = constants
-    state.problem_description.threshold = threshold
     state.problem_description.parameters = state.problem_description.model.parameters
     if not state.problem_description.property.bound.asks_for_exact_value():
         raise NotImplementedError("Only properties asking for the probability/reward '=?' are currently supported")
@@ -63,10 +65,21 @@ def load_problem(state, model_file, property_file, constants, pctl_index, thresh
             raise ValueError("For non-deterministic models, the operator direction should be specified.")
 
 @parameter_synthesis.command()
-@click.argument('soluction-file')
+@click.argument('threshold', type=pc.Rational)
+@pass_state
+def set_threshold(state, threshold):
+    state.problem_description.threshold = threshold
+
+
+
+@parameter_synthesis.command()
+@click.argument('solution-file')
 @pass_state
 def load_solution_function(state, solution_file):
-    pass
+    result = read_pstorm_result(solution_file)
+    state.problem_description.solution_function = result.ratfunc
+    state.problem_description.welldefined_constraints = result.welldefined_constraints
+    state.problem_description.graph_preservation_constraints = result.graph_preservation_constraints
 
 @parameter_synthesis.command()
 @click.option('--export')
@@ -76,6 +89,9 @@ def compute_solution_function(state, export):
     state.mc.load_model(state.problem_description.model, state.problem_description.constants)
     state.mc.set_pctl_formula(state.problem_description.property)
     result = state.mc.get_rational_function()
+    state.problem_description.solution_function = result.ratfunc
+    state.problem_description.welldefined_constraints = result.welldefined_constraints
+    state.problem_description.graph_preservation_constraints = result.graph_preservation_constraints
     if export:
         write_pstorm_result(export, result)
     #
@@ -130,7 +146,7 @@ def sample(state, export, method, plot, samplingnr, iterations):
                                      state.problem_description.threshold)
 
     if export:
-        write_samples_file(result.parameters, refined_samples, export)
+        write_samples_file(state.problem_description.parameters, refined_samples, export)
 
     if plot:
         if len(result.parameters) <= 2:

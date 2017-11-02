@@ -218,7 +218,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def get_rational_function(self):
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = pc.convert_from_storm_type(stormpy.model_checking(model, property).at(model.initial_states[0]))
+        rational_function = pc.convert_from_storm_type(stormpy.model_checking(self.model, self.pctlformula[0]).at(model.initial_states[0]))
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
@@ -246,7 +246,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                  parameter_instantiation.items()}
         instantiated_model = model_instantiator.instantiate(point)
-        result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
+        result = pc.convert_from_storm_type(stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
         return result
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
