@@ -86,7 +86,7 @@ setup(
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
     scripts=[
-        'scripts/compute_solutionfunction.py',
+        'scripts/parameter_synthesis.py',
         'scripts/sampling_model.py',
         'scripts/sampling_solutionfunction.py',
         'scripts/parameter_space_partitioning.py',

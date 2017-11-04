@@ -6,7 +6,7 @@ from conftest import EXAMPLE_FOLDER, current_time
 import click.testing
 
 logger = logging.getLogger(__name__)
-import compute_solutionfunction
+import parameter_synthesis
 
 benchmarks_smt = [
     require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
@@ -62,7 +62,7 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
     logger.debug("parameter_synthesis.py " + " ".join(command))
     runner = click.testing.CliRunner()
     try:
-        result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+        result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     except NotImplementedError:
         pytest.xfail()
     assert result.exit_code == 0, result.output
@@ -128,7 +128,7 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
     logger.debug("parameter_synthesis.py " + " ".join(command))
     runner = click.testing.CliRunner()
     try:
-        result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+        result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     except NotImplementedError:
         pytest.xfail()
     assert result.exit_code == 0, result.output
@@ -177,7 +177,7 @@ def test_script_pla(name, file, constants, propertyfile, samplesfile, threshold,
     logger.debug("parameter_synthesis.py " + " ".join(command))
     runner = click.testing.CliRunner()
     try:
-        result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+        result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     except NotImplementedError:
         pytest.xfail()
     assert result.exit_code == 0, result.output

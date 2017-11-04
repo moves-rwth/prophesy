@@ -4,7 +4,7 @@ from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
 import click.testing
 
-import compute_solutionfunction
+import parameter_synthesis
 
 target_file = "compute_solutionfunction_{}.rat".format(current_time)
 
@@ -28,7 +28,7 @@ def test_script(name, file, constants, property, tool):
                target_file
                ]
     runner = click.testing.CliRunner()
-    result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+    result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.remove(target_file)

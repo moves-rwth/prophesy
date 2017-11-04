@@ -5,7 +5,7 @@ from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
 import click.testing
 
-import compute_solutionfunction
+import parameter_synthesis
 logger = logging.getLogger(__name__)
 
 SAMPLINGNR = 3
@@ -59,7 +59,7 @@ def test_script(name, file, constants, property, threshold, tool):
                ]
     logger.debug("parameter_synthesis.py " + " ".join(command))
     runner = click.testing.CliRunner()
-    result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+    result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.unlink(target_file)

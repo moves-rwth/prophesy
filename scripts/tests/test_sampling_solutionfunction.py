@@ -6,7 +6,7 @@ from conftest import EXAMPLE_FOLDER, current_time
 import click.testing
 
 logger = logging.getLogger(__name__)
-import compute_solutionfunction
+import parameter_synthesis
 
 SAMPLINGNR = 3
 ITERATIONS = 1
@@ -56,7 +56,7 @@ def test_script(name, benchmark, threshold, safe_above):
                ]
     logger.debug("parameter_synthesis.py " + " ".join(command))
     runner = click.testing.CliRunner()
-    result = runner.invoke(compute_solutionfunction.parameter_synthesis, command)
+    result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.unlink(target_file)
