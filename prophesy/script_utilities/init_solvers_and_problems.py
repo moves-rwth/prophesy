@@ -10,9 +10,7 @@ from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.samplefile import read_samples_file
 from prophesy.data.constant import parse_constants_string, Constants
-from prophesy.smt.isat import IsatSolver
-from prophesy.smt.Z3cli_solver import Z3CliSolver
-from prophesy.smt.YicesCli_solver import YicesCLISolver
+
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.config import configuration
 from prophesy.data.samples import InstantiationResultDict
@@ -27,24 +25,7 @@ def init_solvers_and_problem(cmdargs, optimisation = False):
     problem_description = ProblemDescription()
     constants = Constants()
 
-    if cmdargs.rat_file:
-        result = read_pstorm_result(cmdargs.rat_file)
-        problem_description.parameters = result.parameters
-        problem_description.solutionfunction = result.ratfunc
-        problem_description.welldefined_constraints = result.welldefined_constraints
-        problem_description.graph_preserving_constraints = result.graph_preservation_constraints
-    if cmdargs.model_file:
-        model_file = open_model_file(cmdargs.model_file)
-        if not cmdargs.property_file:
-            raise RuntimeError("Property file needed when model file is given.")
-        if cmdargs.rat_file and problem_description.parameters != model_file.parameters:
-            raise ValueError("Model file and solution function parameters do not coincide")
-        problem_description.parameters = model_file.parameters
-        problem_description.model = model_file
-        constants = parse_constants_string(cmdargs.constants)
-    if cmdargs.property_file:
-        properties = PctlFile(cmdargs.property_file)
-        problem_description.property = properties.get(0)
+
 
     # TODO use better defaults for graph parameters
     if cmdargs.graph_preserving_pmc:

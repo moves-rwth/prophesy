@@ -16,17 +16,17 @@ class EtrRegionChecker(SmtRegionChecker):
     Directly encodes the property in ETR. 
     """
 
-    def __init__(self, backend):
+    def __init__(self, backend, mc):
         """
         Constructor.
         :param backend: 
         """
         super().__init__(backend)
-        self.model_explorer = StormpyModelChecker()
+        self.model_explorer = mc
         self.fixed_threshold = True
         self.threshold_set = False
 
-    def initialize(self, problem_description, constants=None, fixed_threshold = True):
+    def initialize(self, problem_description, fixed_threshold = True):
         """
         
         :param problem_description: 
@@ -54,8 +54,6 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
-        self.model_explorer.load_model(problem_description.model, constants)
-        self.model_explorer.set_pctl_formula(problem_description.property)
         model = self.model_explorer.get_model()
 
         if model.model_type != sp.ModelType.DTMC:

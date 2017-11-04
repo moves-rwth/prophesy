@@ -3,7 +3,6 @@ import time
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.smt.smt import Answer
-from prophesy.data.constraint import region_from_polygon
 from abc import abstractmethod
 import prophesy.adapter.pycarl as pc
 
@@ -54,7 +53,7 @@ class SmtRegionChecker(RegionChecker):
         if isinstance(polygon, HyperRectangle):
             constraint = polygon.to_formula(self.parameters)
         else:
-            constraint = region_from_polygon(polygon, self.parameters)
+            raise RuntimeError("Unexpected type of region.")
 
         while not smt_successful:
             # check constraint with smt

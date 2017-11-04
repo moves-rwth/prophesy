@@ -31,18 +31,17 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
         :param problem_description: 
         :type problem_description: ProblemDescription
-        :param threshold: 
-        :param constants: 
+        :param threshold:
         """
 
         self.fixed_threshold = fixed_threshold
         lower_bounded_variables = True
         upper_bounded_variables = False
-        assert problem_description.solutionfunction is not None
+        assert problem_description.solution_function is not None
         assert problem_description.parameters is not None
         if self.fixed_threshold:
             assert problem_description.threshold is not None
-        self._ratfunc = problem_description.solutionfunction
+        self._ratfunc = problem_description.solution_function
         self.parameters = problem_description.parameters
 
         for p in self.parameters:

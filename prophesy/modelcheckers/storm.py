@@ -96,7 +96,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         ret_code = run_tool(args, False)
         if ret_code != 0:
             # TODO throw exception?
-            logger.warning("Return code %s after call with %s", ret_code, " ".join(args))
+            RuntimeError("Return code %s after call with %s", ret_code, " ".join(args))
         else:
             logger.info("Storm call finished successfully")
 

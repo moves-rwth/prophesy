@@ -12,11 +12,18 @@ from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.config import configuration
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.sampling.sampling import uniform_samples, refine_samples
-from prophesy.input.samplefile import write_samples_file
+from prophesy.input.samplefile import write_samples_file, read_samples_file
 from prophesy.input.solutionfunctionfile import read_pstorm_result
+from prophesy.smt.isat import IsatSolver
+from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.smt.YicesCli_solver import YicesCLISolver
+from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
+from prophesy.regions.region_etrchecker import EtrRegionChecker
+from prophesy.regions.region_plachecker import PlaRegionChecker
+
+from prophesy.regions.region_quads import HyperRectangleRegions
 import prophesy.adapter.pycarl as pc
 
-import compute_solutionfunction
 
 def select_mc(f):
     def callback(ctx, param, value):
@@ -25,10 +32,17 @@ def select_mc(f):
         return value
     return click.option("--mc", expose_value=False, type=click.Choice(["stormpy","storm","prism"]), default="stormpy", callback=callback)(f)
 
+def select_solver(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(ConfigState)
+        state.solver = value
+        return value
+    return click.option("--solver", expose_value=False, type=click.Choice(["z3","yices","isat"]), default="z3", callback=callback)(f)
 
 class ConfigState(object):
     def __init__(self):
         self.mc = None
+        self.solver = None
         self.problem_description = ProblemDescription()
 
 pass_state = click.make_pass_decorator(ConfigState, ensure=True)
@@ -38,10 +52,12 @@ pass_state = click.make_pass_decorator(ConfigState, ensure=True)
 
 @click.group(chain=True)
 @select_mc
+@select_solver
 @pass_state
 def parameter_synthesis(config):
     config.obj = ConfigState()
     config.mc = make_modelchecker(config.mc)
+    config.solver = make_solver(config.solver)
 
 
 @parameter_synthesis.command()
@@ -80,7 +96,7 @@ def load_solution_function(state, solution_file):
     state.problem_description.parameters = result.parameters
     state.problem_description.solution_function = result.ratfunc
     state.problem_description.welldefined_constraints = result.welldefined_constraints
-    state.problem_description.graph_preservation_constraints = result.graph_preservation_constraints
+    state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
 
 @parameter_synthesis.command()
 @click.option('--export')
@@ -92,7 +108,7 @@ def compute_solution_function(state, export):
     result = state.mc.get_rational_function()
     state.problem_description.solution_function = result.ratfunc
     state.problem_description.welldefined_constraints = result.welldefined_constraints
-    state.problem_description.graph_preservation_constraints = result.graph_preservation_constraints
+    state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
     if export:
         write_pstorm_result(export, result)
     #
@@ -159,6 +175,94 @@ def sample(state, export, method, plot, samplingnr, iterations):
             logging.info("Cannot plot, as dimension is too high!")
 
 
+@parameter_synthesis.command()
+@click.argument('samples-file')
+@pass_state
+def load_samples(state, samples_file):
+    sample_parameters, samples_threshold, samples = read_samples_file(samples_file,
+                                                                      state.problem_description.parameters)
+    if state.problem_description.parameters != sample_parameters:
+        # TODO
+        raise RuntimeError("Sampling and problem parameters are not equal")
+    state.problem_description.samples = samples
+
+@parameter_synthesis.command()
+@click.option("--plot-every-n")
+@click.option("--plot-candidates")
+@click.option("--flip-red-green")
+@pass_state
+def configure_plotting(state):
+    raise RuntimeError("Not yet (reimplemented)")
+
+
+@parameter_synthesis.command()
+@click.argument("verification-method")
+@click.argument("region-method")
+@click.option("--iterations", default=100)
+@click.option("--area", type=pc.Rational, default=1)
+@click.option("--epsilon", type=pc.Rational)
+#@click.option("--gp")
+@pass_state
+def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon):
+    if state.problem_description.samples is None:
+        state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
+
+    if verification_method in ["etr", "pla"] or state.problem_description.welldefined_constraints is None:
+        # TODO dont do this always (that is, if it has been loaded before..)
+        state.mc.load_model(state.problem_description.model, state.problem_description.constants)
+        state.mc.set_pctl_formula(state.problem_description.property)
+
+    #TODO only do this when gp is set
+    state.problem_description.parameters.make_intervals_open()
+
+    if epsilon:
+        # First, create the open interval
+        state.problem_description.parameters.make_intervals_open()
+        state.problem_description.parameters.make_intervals_closed(epsilon)
+
+
+    if state.problem_description.welldefined_constraints is None:
+        if state.mc is None:
+            raise RuntimeError("If welldefinedness constraints are unknown, a model checker is required.")
+
+        # initialize model checker
+        # compute constraints
+        wd, gp = state.mc.get_parameter_constraints()
+        state.problem_description.welldefined_constraints = wd
+        state.problem_description.graph_preserving_constraints = gp
+
+
+    if verification_method == "etr":
+        if state.solver is None:
+            raise RuntimeError("For ETR an SMT solver is required.")
+        checker = EtrRegionChecker(state.solver, state.mc)
+    elif verification_method == "sfsmt":
+        if state.solver is None:
+            raise RuntimeError("For using the solution function an SMT solver is required.")
+        checker = SolutionFunctionRegionChecker(state.solver)
+    elif verification_method == "pla":
+        if state.mc is None:
+            raise RuntimeError("For PLA, a model checker is required.")
+        checker = PlaRegionChecker(state.mc)
+    else:
+        raise RuntimeError("No method for region checking selected.")
+
+
+    logging.info("Generating regions")
+    checker.initialize(state.problem_description, fixed_threshold=True)
+
+    generator = HyperRectangleRegions(state.problem_description.samples,
+                                      state.problem_description.parameters,
+                                      state.problem_description.threshold,
+                                      checker,
+                                      state.problem_description.welldefined_constraints,
+                                      state.problem_description.graph_preserving_constraints,
+                                      split_uniformly=region_method == "quads")
+
+    generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
+                                       plot_candidates=False)
+
+
 def make_modelchecker(mc):
    # configuration.check_tools()
     pmcs = configuration.getAvailableParametricMCs()
@@ -179,6 +283,24 @@ def make_modelchecker(mc):
         raise RuntimeError("No supported model checker defined")
     return tool
 
+
+def make_solver(solver):
+    solvers = configuration.getAvailableSMTSolvers()
+
+    if solver == "z3":
+        if 'z3' not in solvers:
+            raise RuntimeError("Z3 location not configured.")
+        tool = Z3CliSolver()
+    elif solver == "yices":
+        if 'yices' not in solvers:
+            raise RuntimeError("Yices location not configured.")
+        tool = YicesCLISolver()
+    elif solver == "isat":
+        if 'isat' not in solvers:
+            raise RuntimeError("ISat location not configured.")
+        tool = IsatSolver()
+    tool.run()
+    return tool
 
 if __name__ == "__main__":
     parameter_synthesis()

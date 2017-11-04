@@ -25,7 +25,6 @@ class PlaRegionChecker(RegionChecker):
             raise ValueError("PLA requires the model to be present")
         if not problem_description.property:
             raise ValueError("PLA requires the property to be present")
-        self._checker.load_model(problem_description.model, constants)
         self._parameters = problem_description.parameters
         self._checker.set_pctl_formula(problem_description.property)
         self.threshold = problem_description.threshold
