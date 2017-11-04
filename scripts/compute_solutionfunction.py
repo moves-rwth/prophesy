@@ -77,6 +77,7 @@ def set_threshold(state, threshold):
 @pass_state
 def load_solution_function(state, solution_file):
     result = read_pstorm_result(solution_file)
+    state.problem_description.parameters = result.parameters
     state.problem_description.solution_function = result.ratfunc
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preservation_constraints = result.graph_preservation_constraints

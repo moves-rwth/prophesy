@@ -3,7 +3,7 @@ import logging
 import pytest
 from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
-import click
+import click.testing
 
 logger = logging.getLogger(__name__)
 import compute_solutionfunction
@@ -43,9 +43,9 @@ benchmarks = [
 @pytest.mark.parametrize("name,benchmark,threshold,safe_above", benchmarks)
 def test_script(name, benchmark, threshold, safe_above):
     command = ["load_solution_function",
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, benchmark)),
                "set_threshold",
                str(threshold),
-               os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, benchmark)),
                "sample",
                "--samplingnr",
                str(SAMPLINGNR),
