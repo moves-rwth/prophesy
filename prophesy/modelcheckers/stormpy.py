@@ -216,9 +216,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return self._pla_checker
 
     def get_rational_function(self):
+        self.get_model()
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = pc.convert_from_storm_type(stormpy.model_checking(self.model, self.pctlformula[0]).at(model.initial_states[0]))
+        rational_function = pc.convert_from_storm_type(stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0]))
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
