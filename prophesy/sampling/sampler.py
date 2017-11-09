@@ -46,7 +46,7 @@ class Sampler:
         return self.perform_sampling(sample_points)
 
     @abstractmethod
-    def perform_sampling(self, samplepoints):
+    def perform_sampling(self, samplepoints, ensure_welldefinedness = False):
         """
         Given some parameter instantiations, perform sampling on these instantiations.
         

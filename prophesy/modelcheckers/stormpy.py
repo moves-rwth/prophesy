@@ -228,12 +228,12 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
-
     def _check_welldefined(self, samplepoint):
         return self._welldefined_checker.check(samplepoint) == WelldefinednessResult.Welldefined
 
-
-    def perform_sampling(self, sample_points):
+    def perform_sampling(self, sample_points, surely_welldefined=False):
+        if not surely_welldefined:
+            logger.warning("Sampling assumes (without any checks) that the point is welldefined")
         # Perform sampling with model instantiator
         logger.info("Call stormpy for sampling")
         parameter_mapping = self.get_parameter_mapping(sample_points[0].get_parameters())

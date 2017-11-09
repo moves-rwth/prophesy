@@ -145,7 +145,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         os.remove(resultfile)
         return param_result
 
-    def perform_sampling(self, sample_points):
+    def perform_sampling(self, sample_points, surely_welldefined=False):
         logger.info("Perform batch sampling")
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")
@@ -164,7 +164,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
 
-            args = [self.parameter_location, # Parametric DRN not supported with main version.
+            args = [self.main_location, # Parametric DRN not supported with main version.
                     '--prop', str(self.pctlformula),
                     "-const", const_values_string]
             if self.drnfile:

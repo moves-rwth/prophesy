@@ -138,7 +138,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         os.remove(pctlpath)
         return samples
 
-    def perform_sampling(self, samplepoints):
+    def perform_sampling(self, samplepoints, surely_welldefined = False):
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
 

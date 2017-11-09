@@ -20,6 +20,11 @@ from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
+from prophesy.optimisation.heuristic_search import ModelOptimizer
+from prophesy.optimisation.simple_binary_search import BinarySearchOptimisation
+from  prophesy.optimisation.pla_based_search import PlaSearchOptimisation
+
+from prophesy.data.samples import InstantiationResultDict
 
 from prophesy.regions.region_quads import HyperRectangleRegions
 import prophesy.adapter.pycarl as pc
@@ -48,16 +53,22 @@ class ConfigState(object):
 pass_state = click.make_pass_decorator(ConfigState, ensure=True)
 
 
+def ensure_model_set(mc, model, constants, property):
+    mc.load_model(model, constants)
+    mc.set_pctl_formula(property)
 
 
 @click.group(chain=True)
 @select_mc
 @select_solver
+@click.option("--log-smt-calls")
 @pass_state
-def parameter_synthesis(config):
+def parameter_synthesis(config, log_smt_calls):
     config.obj = ConfigState()
     config.mc = make_modelchecker(config.mc)
     config.solver = make_solver(config.solver)
+    config.log_smt_calls = log_smt_calls
+    return config
 
 
 @parameter_synthesis.command()
@@ -79,12 +90,16 @@ def load_problem(state, model_file, property_file, constants, pctl_index):
     if state.problem_description.model.contains_nondeterministic_model():
         if state.problem_description.property.operator_direction == OperatorDirection.unspecified:
             raise ValueError("For non-deterministic models, the operator direction should be specified.")
+    ensure_model_set(state.mc, state.problem_description.model, state.problem_description.constants, state.problem_description.property)
+    return state
+
 
 @parameter_synthesis.command()
 @click.argument('threshold', type=pc.Rational)
 @pass_state
 def set_threshold(state, threshold):
     state.problem_description.threshold = threshold
+    return state
 
 
 
@@ -97,6 +112,7 @@ def load_solution_function(state, solution_file):
     state.problem_description.solution_function = result.ratfunc
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
+    return state
 
 @parameter_synthesis.command()
 @click.option('--export')
@@ -111,6 +127,7 @@ def compute_solution_function(state, export):
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
     if export:
         write_pstorm_result(export, result)
+    return state
     #
     # problem_parameters = [p for p in model_file.parameters if p not in constants]
     # if problem_parameters != result.parameters:
@@ -140,8 +157,8 @@ def sample(state, export, method, plot, samplingnr, iterations):
         sampling_interface = RatFuncSampling(state.problem_description.solution_function, state.problem_description.parameters)
     elif method == "modelchecking":
         sampling_interface = state.mc
-        state.mc.load_model(state.problem_description.model, state.problem_description.constants)
-        state.mc.set_pctl_formula(state.problem_description.property)
+
+
     else:
         if method != "auto":
             raise RuntimeError("Method is expected to be either 'evaluation', 'modelchecking' or 'auto'")
@@ -150,8 +167,8 @@ def sample(state, export, method, plot, samplingnr, iterations):
                                                  state.problem_description.parameters)
         else:
             sampling_interface = state.mc
-            state.mc.load_model(state.problem_description.model, state.problem_description.constants)
-            state.mc.set_pctl_formula(state.problem_description.property)
+
+
 
     logging.debug("Performing uniform sampling ")
     initial_samples = uniform_samples(sampling_interface, state.problem_description.parameters, samplingnr)
@@ -173,6 +190,7 @@ def sample(state, export, method, plot, samplingnr, iterations):
                 open_file(plot_path)
         else:
             logging.info("Cannot plot, as dimension is too high!")
+    return state
 
 
 @parameter_synthesis.command()
@@ -185,6 +203,7 @@ def load_samples(state, samples_file):
         # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
     state.problem_description.samples = samples
+    return state
 
 @parameter_synthesis.command()
 @click.option("--plot-every-n")
@@ -193,6 +212,75 @@ def load_samples(state, samples_file):
 @pass_state
 def configure_plotting(state):
     raise RuntimeError("Not yet (reimplemented)")
+
+
+@parameter_synthesis.command()
+@click.option("--store-as-threshold")
+@click.argument("dir", type=click.Choice(["min", "max"]))
+@pass_state
+def search_optimum(state, store_as_threshold, dir):
+    if state.problem_description.solution_function:
+        optimizer = ModelOptimizer(RatFuncSampling(state.problem_description.parameters, state.problem_description.parameters),
+                                   state.problem_description.parameters, state.problem_description.property, dir)
+        instance, val = optimizer.search()
+        score = optimizer.score(None, val)
+    else:
+        #mc.set_welldefined_checker(SampleWelldefinedChecker(solver2, problem_description.parameters,problem_description.welldefined_constraints))
+        optimizer = ModelOptimizer(state.mc, state.problem_description.parameters, state.problem_description.property, dir)
+        instance, val = optimizer.search()
+        score = optimizer.score(None, val)
+
+    if store_as_threshold:
+        state.problem_description.threshold = score
+    return state
+
+@parameter_synthesis.command()
+@click.argument("verification-method")
+@pass_state
+def prove_bound(state, verification_method):
+    if verification_method == "pla":
+        # TODO do not rely on internal member
+        optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
+    elif verification_method == "etr":
+        optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
+    elif verification_method == "sfsmt":
+        optimiser = BinarySearchOptimisation(EtrRegionChecker(state.solver, state.mc), state.problem_description)
+
+
+    if state.problem_description.property.operator_direction == OperatorDirection.max:
+        if state.problem_description.property.operator == OperatorType.reward:
+            bound = pc.inf
+        else:
+            bound = pc.Rational(1)
+    else:
+        bound = pc.Rational(0)
+    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score,
+                     bound=bound)
+    return state
+
+@parameter_synthesis.command()
+@click.argument("verification-method")
+@pass_state
+def find_and_prove_bound(state, verification_method):
+    if verification_method == "pla":
+        # TODO do not rely on internal member
+        optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
+    elif verification_method == "etr":
+        optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
+    elif verification_method == "sfsmt":
+        optimiser = BinarySearchOptimisation(EtrRegionChecker(state.solver, state.mc), state.problem_description)
+
+
+    if state.problem_description.property.operator_direction == OperatorDirection.max:
+        if state.problem_description.property.operator == OperatorType.reward:
+            bound = pc.inf
+        else:
+            bound = pc.Rational(1)
+    else:
+        bound = pc.Rational(0)
+    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score,
+                     bound=bound)
+    return state
 
 
 @parameter_synthesis.command()
@@ -261,7 +349,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
 
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
                                        plot_candidates=False)
-
+    return state
 
 def make_modelchecker(mc):
    # configuration.check_tools()
@@ -303,4 +391,8 @@ def make_solver(solver):
     return tool
 
 if __name__ == "__main__":
-    parameter_synthesis()
+    state = parameter_synthesis.main(standalone_mode=False)[0]
+    state.solver.stop()
+    if state.log_smt_calls:
+        state.solver.to_file(state.log_smt_calls)
+

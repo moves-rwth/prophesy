@@ -87,17 +87,7 @@ def run(args=sys.argv[1:], interactive=False):
     assert problem_description.property.operator_direction != OperatorDirection.unspecified
     optimal_dir = "max" if problem_description.property.operator_direction == OperatorDirection.max else "min"
     assert problem_description.welldefined_constraints is not None
-    if mc:
-        mc.set_welldefined_checker(SampleWelldefinedChecker(solver2, problem_description.parameters,problem_description.welldefined_constraints))
-        optimizer = ModelOptimizer(mc, problem_description.parameters, problem_description.property, optimal_dir)
-        _, val = optimizer.search()
-        score = optimizer.score(None, val)
-        print("RESULT: {}".format(float(score)))
-    else:
-        optimizer = ModelOptimizer(RatFuncSampling(problem_description.parameters, problem_description.parameters), problem_description.parameters, problem_description.property, optimal_dir)
-        _, val = optimizer.search()
-        score = optimizer.score(None, val)
-        print("RESULT: {}".format(float(score)))
+
         #score = pc.Rational(200000000000000)
     #result_as_instantiation = ParameterInstantiation.from_point(Point(*location), problem_description.parameters)
 
