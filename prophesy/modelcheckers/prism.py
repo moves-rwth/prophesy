@@ -107,7 +107,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
         assert len(self.prismfile.parameters) == len(parameters), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
-        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in
+        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension, configuration.get_sampling_epsilon()) for interval in
                   parameters.get_parameter_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
