@@ -131,6 +131,7 @@ class HyperRectangleRegions(RegionGenerator):
             if new_dist < dist:
                 sublogger.debug("Currently closest bad sample {} is closer than any safe sample".format(sample[0]))
                 return False
+        sublogger.debug("We have no samples available, assume safe for now.")
         return True
         # TODO Consider close regions for this.
 
@@ -264,6 +265,7 @@ class HyperRectangleRegions(RegionGenerator):
                                                graph_preserving=region.graph_preserving), depth + 1)
 
     def fail_region(self):
+        logger.debug("Failed checking the region")
         # Split region and try again
         regionelem = self.regions[0]
 
@@ -301,6 +303,7 @@ class HyperRectangleRegions(RegionGenerator):
         self._sort_regions()
 
     def reject_region(self, sample):
+        logger.debug("Reject region with %s as counter example", sample)
         # New sample, add it to current region
         self.regions[0].samples.append((sample.get_instantiation_point(self.parameters), not self.regions[0].safe))
         # Check region
@@ -319,6 +322,7 @@ class HyperRectangleRegions(RegionGenerator):
         self._sort_regions()
 
     def accept_region(self):
+        logger.debug("Accept region")
         # Done with the region
         if self.regions[0].safe:
             self.accepted_regions_safe.append(self.regions[0])
@@ -348,6 +352,6 @@ class HyperRectangleRegions(RegionGenerator):
                         break
                 if not refuted:
                     break
-
+        logger.debug("Consider %s as next region", region.region)
         assert region.well_defined != WelldefinednessResult.Undecided
         return region.region, region.well_defined, region.safe

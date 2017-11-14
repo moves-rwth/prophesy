@@ -1,10 +1,13 @@
 import time
+import logging
 
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.smt.smt import Answer
 from abc import abstractmethod
 import prophesy.adapter.pycarl as pc
+
+logger = logging.getLogger(__name__)
 
 
 class SmtRegionChecker(RegionChecker):
@@ -83,6 +86,7 @@ class SmtRegionChecker(RegionChecker):
                         smt_model = smt_context.get_model()
                     break
 
+        logger.debug("Check result is %s", checkresult)
         if checkresult == RegionCheckResult.Satisfied:
             return RegionCheckResult.Satisfied, None
         elif checkresult == RegionCheckResult.CounterExample:
