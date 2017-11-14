@@ -1,5 +1,6 @@
 from numpy import arange
 from itertools import product
+from prophesy.data.interval import BoundType
 
 
 class Range:
@@ -19,15 +20,16 @@ class Range:
         return list(arange(self.start, self.stop, self.step)) + [self.stop]
 
 
-def create_range_from_interval(interval, nr_samples):
+def create_range_from_interval(interval, nr_samples, epsilon=0):
     """
     Given closed interval [l,h], generate a Range with nr_sample
     steps in this interval
     """
     assert nr_samples > 1
     assert not interval.empty()
-    assert interval.is_closed()
-    return Range(interval.left_bound(), interval.right_bound(), (interval.width() / (nr_samples - 1)))
+    if epsilon==0:
+        assert interval.is_closed()
+    return Range(interval.left_bound() + epsilon if interval.left_bound_type() == BoundType.open else 0, interval.right_bound() - epsilon if interval.right_bound_type() == BoundType.open else 0, (interval.width() / (nr_samples - 1)))
 
 
 def create_cartesian_product(ranges):
