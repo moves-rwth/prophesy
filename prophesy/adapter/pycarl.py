@@ -33,6 +33,8 @@ Formula = pycarl.gmp.formula.Formula
 
 numerator = pycarl.gmp.numerator
 denominator = pycarl.gmp.denominator
+expand = pycarl.gmp.expand
+variable_with_name = pycarl.variable_with_name
 
 FormulaType = pycarl.formula.FormulaType
 

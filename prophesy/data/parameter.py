@@ -9,7 +9,7 @@ class Parameter(pc.Variable):
     """Variable with an associated interval of allowable values. """
 
     def __init__(self, variable, interval):
-        super().__init__(variable.name, variable.type)
+        super().__init__(variable)
         self.interval = interval
 
     def __hash__(self):
@@ -68,6 +68,20 @@ class ParameterOrder(list):
     def make_intervals_open(self):
         for p in self:
             p.interval = p.interval.open()
+
+    def update_variables(self, variables):
+        new_parameters = ParameterOrder()
+        for p in self:
+            found = False
+            for v in variables:
+                if p.name == v.name:
+                    new_parameters.append(Parameter(v, p.interval))
+                    found = True
+            if not found:
+                new_parameters.append(p)
+        self.clear()
+        for p in new_parameters:
+            self.append(p)
 
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))
