@@ -7,10 +7,12 @@ import click.testing
 
 logger = logging.getLogger(__name__)
 import parameter_synthesis
+import pycarl
 
 benchmarks_smt = [
     require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
     require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads")),
+    require_z3()(("brp", "brp", "K=16,MAX=2", "property1", "brp_16-2", "95/100", "z3", "quads")),
     require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads")),
     require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles")),
     require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles")),
@@ -66,6 +68,7 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
     except NotImplementedError:
         pytest.xfail()
     assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()
 
 
 
@@ -132,6 +135,7 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
     except NotImplementedError:
         pytest.xfail()
     assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()
 
 benchmarks_pla = [
     require_storm()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "quads")),
@@ -181,3 +185,4 @@ def test_script_pla(name, file, constants, propertyfile, samplesfile, threshold,
     except NotImplementedError:
         pytest.xfail()
     assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()
