@@ -88,6 +88,9 @@ class ParameterInstantiation(dict):
             hsh ^= hash(v)
         return hsh
 
+    def __str__(self):
+        return "{" + ";".join([k.name + ":" + str(v) for k,v in self.items()]) + "}"
+
 
 class InstantiationResult:
     """Class to represent a single sample. Maps a point (tuple of
