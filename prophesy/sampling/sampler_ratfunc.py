@@ -3,6 +3,7 @@ import logging
 from prophesy.sampling.sampler import Sampler
 from prophesy.data.samples import InstantiationResultDict, InstantiationResult
 
+logger = logging.getLogger(__name__)
 
 class RatFuncSampling(Sampler):
     """Simple sampler based on pycarl rational function"""
@@ -23,14 +24,12 @@ class RatFuncSampling(Sampler):
         :return: 
         :rtype: InstantiationResultDict
         """
-
+        logging.debug("Sample rational function")
         samples = InstantiationResultDict(parameters=self.parameters)
         for sample_point in samplepoints:
             # TODO wrap the following in a function.
             #for var in self.ratfunc.gather_variables():
             #    assert var in sample_point.get_parameters()
-            logging.debug("....")
             res = self.ratfunc.evaluate(sample_point)
-            logging.debug("={}".format(res))
             samples[sample_point] = res
         return samples

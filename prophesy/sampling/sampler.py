@@ -1,11 +1,15 @@
 import itertools
 from abc import abstractmethod
 from numpy import linspace
+import logging
+
 
 from prophesy.data.interval import BoundType
 from prophesy.config import configuration
 from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
+
+logger = logging.getLogger(__name__)
 
 
 class Sampler:
@@ -28,7 +32,8 @@ class Sampler:
         :param parameters: Parameters together with their region.
         :param samples_per_dimension: In how many points should the region be divided.
         """
-        if samples_per_dimension < 1:
+        logger.debug("Uniform sampling: Fallback to sampling list of samples")
+        if samples_per_dimension <= 1:
             raise RuntimeError("No. of samples per dimension must be >= 2")
 
         # points evenly spaced over the interval, for each dimension
