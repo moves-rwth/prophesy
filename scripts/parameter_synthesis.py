@@ -3,6 +3,7 @@ import click
 import logging
 
 from prophesy.data.constant import parse_constants_string
+from prophesy.data.parameter import Parameter
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.problem_description import ProblemDescription
@@ -85,6 +86,7 @@ def load_problem(state, model_file, property_file, constants, pctl_index):
     state.problem_description.property = pctl_file.get(pctl_index)
     state.problem_description.constants = constants
     state.problem_description.parameters = state.problem_description.model.parameters
+
     if not state.problem_description.property.bound.asks_for_exact_value():
         raise NotImplementedError("Only properties asking for the probability/reward '=?' are currently supported")
     if state.problem_description.model.contains_nondeterministic_model():
@@ -123,6 +125,8 @@ def compute_solution_function(state, export):
     state.mc.set_pctl_formula(state.problem_description.property)
     result = state.mc.get_rational_function()
     state.problem_description.solution_function = result.ratfunc
+    state.problem_description.parameters.update_variables(result.ratfunc.gather_variables())
+
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
     if export:
@@ -238,13 +242,15 @@ def search_optimum(state, store_as_threshold, dir):
 @click.argument("verification-method")
 @pass_state
 def prove_bound(state, verification_method):
+
     if verification_method == "pla":
-        # TODO do not rely on internal member
         optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
-    elif verification_method == "etr":
-        optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
+
     elif verification_method == "sfsmt":
-        optimiser = BinarySearchOptimisation(EtrRegionChecker(state.solver, state.mc), state.problem_description)
+        pass #TODO use region checker for this.
+        raise NotImplementedError("Pretty straightforward application of a region checker.")
+    elif verification_method == "etr":
+        raise NotImplementedError("Pretty straightforward application of a region checker.")
 
 
     if state.problem_description.property.operator_direction == OperatorDirection.max:
@@ -254,7 +260,7 @@ def prove_bound(state, verification_method):
             bound = pc.Rational(1)
     else:
         bound = pc.Rational(0)
-    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score,
+    optimiser.search(requested_gap=cmdargs.gap, max_iterations=1, dir=optimal_dir, realised=state.problem,
                      bound=bound)
     return state
 
@@ -263,8 +269,7 @@ def prove_bound(state, verification_method):
 @pass_state
 def find_and_prove_bound(state, verification_method):
     if verification_method == "pla":
-        # TODO do not rely on internal member
-        optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
+        raise RuntimeError("Currently, PLA can only be used to bound. We need to extend PlaSearchOptimisation")
     elif verification_method == "etr":
         optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
     elif verification_method == "sfsmt":
