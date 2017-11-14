@@ -41,7 +41,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         assert problem_description.parameters is not None
         if self.fixed_threshold:
             assert problem_description.threshold is not None
-        self._ratfunc = problem_description.solution_function
+        #TODO expanding might be a stupid idea.
+        self._ratfunc = pc.expand(problem_description.solution_function)
         self.parameters = problem_description.parameters
 
         for p in self.parameters:
@@ -57,6 +58,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
+        #TODO denominator unequal constant.
         if pc.denominator(self._ratfunc) != 1:
             for constraint in problem_description.welldefined_constraints:
                 if not constraint.lhs.total_degree <= 1 or constraint.relation == pc.Relation.NEQ:
@@ -87,8 +89,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             self._smt2interface.assert_constraint(rf1_constraint)
             self._smt2interface.assert_constraint(rf2_constraint)
         else:
-            safe_constraint = Constraint(pc.numerator(self._ratfunc) - self._thresholdVar, self._safe_relation)
-            bad_constraint = Constraint(pc.numerator(self._ratfunc) - self._thresholdVar, self._bad_relation)
+            safe_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._safe_relation)
+            bad_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._bad_relation)
 
         self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
@@ -132,7 +134,10 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         return sample
 
     def _evaluate(self, smt_model):
+        logger.debug("Evaluate model obtained by SMT solver")
         sample = self._smt_model_to_sample(smt_model)
+        logger.debug("Model is %s", sample)
+        print(self._ratfunc)
         value = self._ratfunc.evaluate(sample)
         logger.debug("Evaluation of sample yields {}".format(value))
         return InstantiationResult(sample, value)
