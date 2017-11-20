@@ -137,7 +137,6 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         logger.debug("Evaluate model obtained by SMT solver")
         sample = self._smt_model_to_sample(smt_model)
         logger.debug("Model is %s", sample)
-        print(self._ratfunc)
         value = self._ratfunc.evaluate(sample)
         logger.debug("Evaluation of sample yields {}".format(value))
         return InstantiationResult(sample, value)

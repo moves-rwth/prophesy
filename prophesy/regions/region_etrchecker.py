@@ -1,7 +1,6 @@
 import logging
 
 from prophesy.regions.region_smtchecker import SmtRegionChecker
-from prophesy.modelcheckers.stormpy import StormpyModelChecker
 import prophesy.adapter.stormpy as sp
 import prophesy.adapter.pycarl as pc
 from prophesy.smt.smt import VariableDomain
@@ -34,6 +33,18 @@ class EtrRegionChecker(SmtRegionChecker):
         :param constants: 
         :return: 
         """
+
+        model = self.model_explorer.get_model()
+
+        if model.model_type != sp.ModelType.DTMC:
+            raise RuntimeError("Only DTMCs are supported for now.")
+
+        if len(model.initial_states) > 1:
+            raise NotImplementedError("We only support models with a single initial state")
+        if len(model.initial_states) == 0:
+            raise RuntimeError("We only support models with an initial state.")
+
+        logger.info("Writing equation system to solver")
         self.fixed_threshold = fixed_threshold
         _bounded_variables = True  # Add bounds to all state variables.
 
@@ -53,16 +64,6 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
-
-        model = self.model_explorer.get_model()
-
-        if model.model_type != sp.ModelType.DTMC:
-            raise RuntimeError("Only DTMCs are supported for now.")
-
-        if len(model.initial_states) > 1:
-            raise NotImplementedError("We only support models with a single initial state")
-        if len(model.initial_states) == 0:
-            raise RuntimeError("We only support models with an initial state.")
 
         initial_state_var = None
         state_var_mapping = dict()

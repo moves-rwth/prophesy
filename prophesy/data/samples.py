@@ -136,6 +136,9 @@ class InstantiationResult:
         """
         return cls(ParameterInstantiation.from_point(pt, parameters), res)
 
+    def __str__(self):
+        return str(self.instantiation) + ": " + str(self.result)
+
 
 class InstantiationResultDict(OrderedDict):
     """Maintains a set of instantiations with their results."""

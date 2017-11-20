@@ -50,6 +50,7 @@ class SmtRegionChecker(RegionChecker):
         :param polygon: either HyperRectangle or shapely Polygon
         :param safe: Boolean to indicate if the region should be considered as safe or unsafe
         """
+        logger.info("Analyse region")
         smt_successful = False
         smt_model = None
 

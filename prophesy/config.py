@@ -202,7 +202,7 @@ class ProphesyConfig(Configuration):
         return self.get_all()[sec]
 
 
-configuration = ProphesyConfig()
+configuration = None
 
 logging.basicConfig(filename='prophesy.log', level=logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)

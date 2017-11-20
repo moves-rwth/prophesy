@@ -4,6 +4,7 @@ import logging
 
 from prophesy.data.constant import parse_constants_string
 from prophesy.data.parameter import Parameter
+from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.problem_description import ProblemDescription
@@ -24,6 +25,8 @@ from prophesy.regions.region_plachecker import PlaRegionChecker
 from prophesy.optimisation.heuristic_search import ModelOptimizer
 from prophesy.optimisation.simple_binary_search import BinarySearchOptimisation
 from  prophesy.optimisation.pla_based_search import PlaSearchOptimisation
+
+from prophesy.regions.region_checker import RegionCheckResult
 
 from prophesy.data.samples import InstantiationResultDict
 
@@ -64,11 +67,11 @@ def ensure_model_set(mc, model, constants, property):
 @select_solver
 @click.option("--log-smt-calls")
 @pass_state
-def parameter_synthesis(config, log_smt_calls):
-    config.obj = ConfigState()
-    config.mc = make_modelchecker(config.mc)
-    config.solver = make_solver(config.solver)
-    config.log_smt_calls = log_smt_calls
+def parameter_synthesis(state, log_smt_calls):
+    state.obj = ConfigState()
+    state.mc = make_modelchecker(state.mc)
+    state.solver = make_solver(state.solver)
+    state.log_smt_calls = log_smt_calls
     return config
 
 
@@ -219,10 +222,9 @@ def configure_plotting(state):
 
 
 @parameter_synthesis.command()
-@click.option("--store-as-threshold")
 @click.argument("dir", type=click.Choice(["min", "max"]))
 @pass_state
-def search_optimum(state, store_as_threshold, dir):
+def search_optimum(state, dir):
     if state.problem_description.solution_function:
         optimizer = ModelOptimizer(RatFuncSampling(state.problem_description.parameters, state.problem_description.parameters),
                                    state.problem_description.parameters, state.problem_description.property, dir)
@@ -234,58 +236,76 @@ def search_optimum(state, store_as_threshold, dir):
         instance, val = optimizer.search()
         score = optimizer.score(None, val)
 
-    if store_as_threshold:
-        state.problem_description.threshold = score
     return state
 
 @parameter_synthesis.command()
-@click.argument("verification-method")
+@click.argument("dir", type=click.Choice(["above", "below"]))
+@click.argument("method")
 @pass_state
-def prove_bound(state, verification_method):
+def find_feasible_instantiation(state, dir, method):
+    region = HyperRectangle(*state.problem_description.parameters.get_parameter_bounds())
+    if method == "sfsmt":
+        checker = SolutionFunctionRegionChecker(state.solver)
+    elif method == "etr":
+        checker = EtrRegionChecker(state.solver, state.mc)
+    checker.initialize(state.problem_description, fixed_threshold=True)
+    result, data = checker.analyse_region(region, dir == "below")
 
-    if verification_method == "pla":
-        optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
+    if result == RegionCheckResult.Satisfied:
+        print("No such point")
+    elif result ==RegionCheckResult.CounterExample:
+        print("Point found: {}".format(str(data.instantiation) + ": " + str(data.result) + "(approx. " + str(float(data.result)) + ")"))
 
-    elif verification_method == "sfsmt":
-        pass #TODO use region checker for this.
-        raise NotImplementedError("Pretty straightforward application of a region checker.")
-    elif verification_method == "etr":
-        raise NotImplementedError("Pretty straightforward application of a region checker.")
-
-
-    if state.problem_description.property.operator_direction == OperatorDirection.max:
-        if state.problem_description.property.operator == OperatorType.reward:
-            bound = pc.inf
-        else:
-            bound = pc.Rational(1)
-    else:
-        bound = pc.Rational(0)
-    optimiser.search(requested_gap=cmdargs.gap, max_iterations=1, dir=optimal_dir, realised=state.problem,
-                     bound=bound)
-    return state
-
-@parameter_synthesis.command()
-@click.argument("verification-method")
-@pass_state
-def find_and_prove_bound(state, verification_method):
-    if verification_method == "pla":
-        raise RuntimeError("Currently, PLA can only be used to bound. We need to extend PlaSearchOptimisation")
-    elif verification_method == "etr":
-        optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
-    elif verification_method == "sfsmt":
-        optimiser = BinarySearchOptimisation(EtrRegionChecker(state.solver, state.mc), state.problem_description)
-
-
-    if state.problem_description.property.operator_direction == OperatorDirection.max:
-        if state.problem_description.property.operator == OperatorType.reward:
-            bound = pc.inf
-        else:
-            bound = pc.Rational(1)
-    else:
-        bound = pc.Rational(0)
-    optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score,
-                     bound=bound)
-    return state
+#
+# @parameter_synthesis.command()
+# @click.argument("bound")
+# @click.argument("verification-method")
+# @pass_state
+# def prove_bound(state, bound, verification_method):
+#
+#     if verification_method == "pla":
+#         optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
+#
+#     elif verification_method == "sfsmt":
+#         pass #TODO use region checker for this.
+#         raise NotImplementedError("Pretty straightforward application of a region checker.")
+#     elif verification_method == "etr":
+#         raise NotImplementedError("Pretty straightforward application of a region checker.")
+#
+#
+#     if state.problem_description.property.operator_direction == OperatorDirection.max:
+#         if state.problem_description.property.operator == OperatorType.reward:
+#             bound = pc.inf
+#         else:
+#             bound = pc.Rational(1)
+#     else:
+#         bound = pc.Rational(0)
+#     optimiser.search(requested_gap=cmdargs.gap, max_iterations=1, dir=optimal_dir, realised=state.problem,
+#                      bound=bound)
+#     return state
+#
+# @parameter_synthesis.command()
+# @click.argument("verification-method")
+# @pass_state
+# def find_and_prove_bound(state, verification_method):
+#     if verification_method == "pla":
+#         raise RuntimeError("Currently, PLA can only be used to bound. We need to extend PlaSearchOptimisation")
+#     elif verification_method == "etr":
+#         optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
+#     elif verification_method == "sfsmt":
+#         optimiser = BinarySearchOptimisation(EtrRegionChecker(state.solver, state.mc), state.problem_description)
+#
+#
+#     if state.problem_description.property.operator_direction == OperatorDirection.max:
+#         if state.problem_description.property.operator == OperatorType.reward:
+#             bound = pc.inf
+#         else:
+#             bound = pc.Rational(1)
+#     else:
+#         bound = pc.Rational(0)
+#     optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score,
+#                      bound=bound)
+#     return state
 
 
 @parameter_synthesis.command()
