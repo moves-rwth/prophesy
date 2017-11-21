@@ -12,6 +12,7 @@ from prophesy.input.solutionfunctionfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.config import configuration
+import prophesy.config
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.input.samplefile import write_samples_file, read_samples_file
@@ -66,13 +67,18 @@ def ensure_model_set(mc, model, constants, property):
 @select_mc
 @select_solver
 @click.option("--log-smt-calls")
+@click.option("--config")
 @pass_state
-def parameter_synthesis(state, log_smt_calls):
+def parameter_synthesis(state, log_smt_calls, config):
     state.obj = ConfigState()
     state.mc = make_modelchecker(state.mc)
     state.solver = make_solver(state.solver)
     state.log_smt_calls = log_smt_calls
-    return config
+    if config:
+        prophesy.config.load_configuration(config)
+    else:
+        prophesy.config.load_configuration()
+    return state
 
 
 @parameter_synthesis.command()

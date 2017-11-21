@@ -115,7 +115,7 @@ def get_initial_config(config, search_path):
     config["smt"] = config_smt
 
 
-def write_initial_config(search_path):
+def write_initial_config(search_path = None):
     print("Write config with search path {}".format(search_path))
     config = configparser.ConfigParser()
     get_initial_config(config, search_path)

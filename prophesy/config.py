@@ -17,9 +17,8 @@ class ProphesyConfig(Configuration):
     DEPENDENCIES = "installed_deps"
     SMT = "smt"
 
-    def __init__(self):
-        super().__init__(os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "prophesy.cfg"))
+    def __init__(self, path_to_cfg):
+        super().__init__(path_to_cfg)
         self._init_tools()
 
     def is_module_available(self, module):
@@ -201,6 +200,13 @@ class ProphesyConfig(Configuration):
     def getSection(self, sec):
         return self.get_all()[sec]
 
+
+def load_configuration(path = None):
+    global configuration
+    if path is None:
+        configuration = ProphesyConfig(os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy.cfg"))
+    else:
+        configuration = ProphesyConfig(path)
 
 configuration = None
 
