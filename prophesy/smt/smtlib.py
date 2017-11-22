@@ -30,7 +30,7 @@ class SmtlibSolver(SMTSolver):
     Abstract class for smt-lib based command line interfaces for SMT solvers.
     """
 
-    def __init__(self, location, memout=4000, timeout=configuration.get_smt_timeout(), incremental=True):
+    def __init__(self, location, memout, timeout, incremental=True):
         self.location = location
         self.formula = _smtfile_header()
         self.process = None

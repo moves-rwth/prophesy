@@ -1,6 +1,4 @@
 import logging
-
-from prophesy.config import configuration
 from prophesy.smt.smtlib import SmtlibSolver, parse_smt_expr
 
 logger = logging.getLogger(__name__)
@@ -10,8 +8,18 @@ class YicesCLISolver(SmtlibSolver):
     """
     Yices 2 (cli) wrapper class
     """
-    def __init__(self, location=configuration.get_yices(), memout=4000, timeout=configuration.get_smt_timeout()):
-        super().__init__(location, memout, timeout, False)
+    def __init__(self, location=None, memout=None, timeout=None):
+        """
+        
+        :param location: If None, the configuration is queried.
+        :param memout: If None, the configuration is queried
+        :param timeout: If None, the configuration is queried
+        """
+        # Do not load before, configuration might change.
+        from prophesy.config import configuration
+        super().__init__(location if location is not None else configuration.get_yices(),
+                         memout if memout is not None else configuration.get_smt_memout(),
+                         timeout if timeout is not None else configuration.get_smt_timeout(), False)
 
     def name(self):
         return "Yices cli tool"

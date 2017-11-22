@@ -11,7 +11,6 @@ from prophesy.input.problem_description import ProblemDescription
 from prophesy.input.solutionfunctionfile import write_pstorm_result
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.modelcheckers.prism import PrismModelChecker
-from prophesy.config import configuration
 import prophesy.config
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.sampling.sampling import uniform_samples, refine_samples
@@ -71,13 +70,17 @@ def ensure_model_set(mc, model, constants, property):
 @pass_state
 def parameter_synthesis(state, log_smt_calls, config):
     state.obj = ConfigState()
-    state.mc = make_modelchecker(state.mc)
-    state.solver = make_solver(state.solver)
-    state.log_smt_calls = log_smt_calls
     if config:
         prophesy.config.load_configuration(config)
     else:
         prophesy.config.load_configuration()
+    from prophesy.config import configuration
+    logging.debug("Loaded configuration")
+    if configuration is None:
+        raise RuntimeError("Something went wrong during initialisation of the configuration")
+    state.mc = make_modelchecker(state.mc)
+    state.solver = make_solver(state.solver)
+    state.log_smt_calls = log_smt_calls
     return state
 
 
@@ -384,7 +387,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
 
 def make_modelchecker(mc):
    # configuration.check_tools()
-    pmcs = configuration.getAvailableParametricMCs()
+    pmcs = prophesy.config.configuration.getAvailableParametricMCs()
     if mc == "storm":
         if 'storm' not in pmcs:
             raise RuntimeError("Storm location not configured.")
@@ -404,7 +407,7 @@ def make_modelchecker(mc):
 
 
 def make_solver(solver):
-    solvers = configuration.getAvailableSMTSolvers()
+    solvers = prophesy.config.configuration.getAvailableSMTSolvers()
 
     if solver == "z3":
         if 'z3' not in solvers:

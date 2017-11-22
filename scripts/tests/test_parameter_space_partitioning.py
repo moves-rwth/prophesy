@@ -1,8 +1,8 @@
 import os.path
 import pytest
 import logging
-from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
+from requires import *
 import click.testing
 
 logger = logging.getLogger(__name__)

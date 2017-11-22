@@ -1,8 +1,9 @@
 import os.path
 import pytest
-from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
+from requires import *
 import click.testing
+import pycarl
 
 import parameter_synthesis
 
@@ -32,3 +33,4 @@ def test_script(name, file, constants, property, tool):
     assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.remove(target_file)
+    pycarl.clear_variable_pool()

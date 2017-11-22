@@ -1,6 +1,6 @@
 import logging
 
-from prophesy.config import configuration
+from prophesy.config import configuration, modules
 from prophesy.exceptions.module_error import ModuleError
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
@@ -27,7 +27,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         """
         Initialize and check if stormpy is available.
         """
-        if not configuration.is_module_available("stormpy"):
+        if not modules.is_module_available("stormpy"):
             raise ModuleError(
                 "Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 

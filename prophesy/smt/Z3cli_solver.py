@@ -1,4 +1,4 @@
-from prophesy.config import configuration
+
 from prophesy.smt.smtlib import SmtlibSolver, parse_smt_command, parse_smt_expr
 
 
@@ -6,8 +6,11 @@ class Z3CliSolver(SmtlibSolver):
     """
     TODO: support the soft timeout kill.
     """
-    def __init__(self, location=configuration.get_z3(), memout=4000, timeout=configuration.get_smt_timeout()):
-        super().__init__(location, memout, timeout, True)
+    def __init__(self, location=None, memout=None, timeout=None):
+        from prophesy.config import configuration
+        super().__init__(location if location is not None else configuration.get_z3(),
+                         memout if memout is not None else configuration.get_smt_memout(),
+                         timeout if timeout is not None else configuration.get_smt_timeout, True)
 
     def name(self):
         return "Z3 cli tool"

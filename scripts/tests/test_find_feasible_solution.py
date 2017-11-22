@@ -1,8 +1,8 @@
 import os.path
 import pytest
 import logging
-from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
+from requires import *
 import click.testing
 import pycarl
 
@@ -101,3 +101,4 @@ def test_script_etr(name, benchmark,property, threshold, dir):
     runner = click.testing.CliRunner()
     result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()

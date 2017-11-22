@@ -4,7 +4,7 @@
 
 import pytest
 
-from prophesy.config import configuration
+from prophesy.config import configuration, modules
 
 
 def require_prism(rational_function=False):
@@ -14,7 +14,7 @@ def require_prism(rational_function=False):
 
 
 def require_stormpy():
-    return pytest.mark.skipif(not configuration.has_stormpy(), reason="requires stormpy")
+    return pytest.mark.skipif(not modules.has_stormpy(), reason="requires stormpy")
 
 
 def require_storm():

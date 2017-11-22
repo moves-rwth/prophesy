@@ -21,12 +21,12 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
     Class wrapping the prism model checker CLI.
     """
 
-    def __init__(self, location=configuration.get_prism()):
+    def __init__(self, location=None):
         """
         Constructor
-        :param location: Path to prism binary.
+        :param location: Path to prism binary. If none, we query the configuration
         """
-        self.location = location
+        self.location = location if location is not None else configuration.get_prism()
         self.bisimulation = BisimulationType.strong
         self.pctlformula = None
         self.prismfile = None

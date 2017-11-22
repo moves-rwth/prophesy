@@ -24,14 +24,14 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
     Class wrapping the storm model checker CLI.
     """
 
-    def __init__(self, main_location=configuration.get_storm(), parameter_location=configuration.get_storm_pars()):
+    def __init__(self, main_location = None, parameter_location = None):
         """
         Constructor.
-        :param main_location: Path to main storm binary.
-        :param parameter_location: Path to storm-pars binary.
+        :param main_location: Path to main storm binary. If None, we query the configuration.
+        :param parameter_location: Path to storm-pars binary. If None, we query the configuaration
         """
-        self.main_location = main_location
-        self.parameter_location = parameter_location
+        self.main_location = main_location if main_location is not None else configuration.get_storm()
+        self.parameter_location = parameter_location if parameter_location is not None else configuration.get_storm_pars()
         self.bisimulation = BisimulationType.strong
         self.pctlformula = ""
         self.prismfile = None
