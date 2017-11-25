@@ -4,6 +4,7 @@ import logging
 from requires import *
 from conftest import EXAMPLE_FOLDER, current_time
 import click.testing
+import pycarl
 
 import parameter_synthesis
 logger = logging.getLogger(__name__)
@@ -63,3 +64,4 @@ def test_script(name, file, constants, property, threshold, tool):
     assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)
     os.unlink(target_file)
+    pycarl.clear_variable_pool()
