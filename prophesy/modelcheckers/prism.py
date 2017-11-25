@@ -2,7 +2,7 @@ import os
 import tempfile
 import logging
 
-from prophesy.config import configuration
+import prophesy.config
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.input.samplefile import read_samples_file
@@ -26,7 +26,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         Constructor
         :param location: Path to prism binary. If none, we query the configuration
         """
-        self.location = location if location is not None else configuration.get_prism()
+        self.location = location if location is not None else prophesy.config.configuration.get_prism()
         self.bisimulation = BisimulationType.strong
         self.pctlformula = None
         self.prismfile = None
@@ -65,8 +65,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.configuration.get_intermediate_dir())
+        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
 
         constants_string = self.constants.to_key_value_string()
 
@@ -116,8 +116,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string
 
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        fd, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
+        fd, resultpath = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         os.close(fd)
         pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
@@ -142,8 +142,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
 
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        fd, result_path = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
+        fd, result_path = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         pctl_path = write_string_to_tmpfile(str(self.pctlformula))
         os.close(fd)
 

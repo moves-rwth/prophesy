@@ -3,7 +3,7 @@ import tempfile
 import logging
 import re
 
-from prophesy.config import configuration
+import prophesy.config
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.regions.region_checker import RegionCheckResult
@@ -30,8 +30,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         :param main_location: Path to main storm binary. If None, we query the configuration.
         :param parameter_location: Path to storm-pars binary. If None, we query the configuaration
         """
-        self.main_location = main_location if main_location is not None else configuration.get_storm()
-        self.parameter_location = parameter_location if parameter_location is not None else configuration.get_storm_pars()
+        self.main_location = main_location if main_location is not None else prophesy.config.configuration.get_storm()
+        self.parameter_location = parameter_location if parameter_location is not None else prophesy.config.configuration.get_storm_pars()
         self.bisimulation = BisimulationType.strong
         self.pctlformula = ""
         self.prismfile = None
@@ -72,8 +72,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         if self.pctlformula is None:
             raise NotEnoughInformationError("pctl formula missing")  # TODO not strictly necessary
 
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
+        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         os.close(fd)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
@@ -112,8 +112,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
+        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         os.close(fd)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
@@ -153,10 +153,10 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(configuration.get_intermediate_dir())
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
 
         def sample_single_point(parameter_instantiation):
-            fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+            fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
             os.close(fd)
 
             const_values_string = ",".join(["{}={}".format(parameter.name, val) for parameter, val in parameter_instantiation.items()])
@@ -233,7 +233,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         property_to_check.bound = OperatorBound(pc.Relation.LESS, threshold)
         hypothesis = "allviolated" if safe else "allsat"
 
-        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         os.close(fd)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""

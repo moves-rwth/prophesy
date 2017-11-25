@@ -1,6 +1,6 @@
 import logging
 
-from prophesy.config import configuration, modules
+from prophesy.config import modules
 from prophesy.exceptions.module_error import ModuleError
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
