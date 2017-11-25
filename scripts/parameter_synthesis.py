@@ -67,8 +67,14 @@ def ensure_model_set(mc, model, constants, property):
 @select_solver
 @click.option("--log-smt-calls")
 @click.option("--config")
+@click.option("--logfile", default="prophesy.log")
 @pass_state
-def parameter_synthesis(state, log_smt_calls, config):
+def parameter_synthesis(state, log_smt_calls, config, logfile):
+    logging.basicConfig(filename=logfile, format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    logging.getLogger().addHandler(ch)
+    logging.debug("Loading configuration")
     state.obj = ConfigState()
     if config:
         prophesy.config.load_configuration(config)

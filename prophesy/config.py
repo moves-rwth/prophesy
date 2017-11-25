@@ -228,8 +228,3 @@ def load_configuration(path = None):
 configuration = None
 modules = ModulesConfig()
 
-logging.basicConfig(filename='prophesy.log', level=logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-logging.getLogger().addHandler(ch)
