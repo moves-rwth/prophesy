@@ -19,14 +19,21 @@ class Parameter(pc.Variable):
         return "{} {}".format(super().__str__(), self.interval)
 
     def __eq__(self, other):
-        return (
-            super().__eq__(other) and
-            hasattr(other, 'interval') and
-            self.interval == other.interval
-        )
+        assert hasattr(self, 'interval'), "This object somehow does not have an interval attached"
+        return super().__eq__(other) and hasattr(other, 'interval') and self.interval == other.interval
 
     def __repr__(self):
         return "Parameter({!r}, {!r})".format(super().__str__(), self.interval)
+
+    def __setstate__(self, state):
+        super().__setstate__(state[0])
+        self.interval = prophesy.data.interval.Interval.__new__(prophesy.data.interval.Interval)
+        self.interval.__dict__.update(state[1])
+
+
+    def __getstate__(self):
+        return (super().__getstate__(), self.interval.__dict__)
+
 
 
 class ParameterOrder(list):
