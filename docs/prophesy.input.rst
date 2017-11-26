@@ -4,6 +4,16 @@ prophesy.input package
 Input file handlers
 ----------------------------------
 
+
+prophesy.input.modelfile module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.input.modelfile
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 prophesy.input.pctlfile module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -12,10 +22,18 @@ prophesy.input.pctlfile module
     :undoc-members:
     :show-inheritance:
 
-prophesy.input.prismfile module
+prophesy.input.problem_description module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: prophesy.input.prismfile
+.. automodule:: prophesy.input.pctlfile
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+prophesy.input.samplefile module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.input.samplefile
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,12 +46,6 @@ prophesy.input.solutionfunctionfile module
     :undoc-members:
     :show-inheritance:
 
-prophesy.input.samplefile module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: prophesy.input.samplefile
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 
