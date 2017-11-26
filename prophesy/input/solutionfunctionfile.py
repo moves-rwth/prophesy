@@ -59,7 +59,9 @@ def read_pstorm_result(location, require_result=True):
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
-            var = pc.Variable(name_and_info[0].strip())
+            var = pc.variable_with_name(name_and_info[0].strip())
+            if var.is_no_variable:
+                var = pc.Variable(name_and_info[0].strip())
             if len(name_and_info) == 1:
                 bound = interval.Interval(pc.Rational(0), interval.BoundType.open,
                     pc.Rational(1), interval.BoundType.open)

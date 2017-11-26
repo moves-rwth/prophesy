@@ -145,7 +145,10 @@ class InstantiationResultDict(OrderedDict):
 
     def __init__(self, *args, parameters=None):
         existing_dict, key_val_pairs = self._split_args_into_dict_and_pairs(args)
-        self.parameters = set(parameters if parameters is not None else self._deduce_parameters_from_args(existing_dict, key_val_pairs))
+        if parameters is not None:
+            print(type(p) for p in parameters)
+        self.parameters = set(parameters) if parameters is not None else self._deduce_parameters_from_args(existing_dict, key_val_pairs)
+
 
         for k, _ in existing_dict.items():
             self._validate_key(k)
@@ -170,16 +173,22 @@ class InstantiationResultDict(OrderedDict):
     @staticmethod
     def _deduce_parameters_from_args(existing_dict, key_val_pairs):
         if len(existing_dict):
-            return next(iter(existing_dict.keys())).get_parameters()
+            return set(next(iter(existing_dict.keys())).get_parameters())
         elif len(key_val_pairs):
-            return key_val_pairs[0][0].get_parameters()
+            return set(key_val_pairs[0][0].get_parameters())
         else:
             # I guess this could be implemented
-            raise ValueError("Empty InstantiationResultDict requires parameters to be initialized")
+            return None
 
     def _validate_key(self, key):
+        if self.parameters is None:
+            self.parameters = set(key.get_parameters())
+        print([repr(p) for p in key.get_parameters()])
+
+        print([repr(p) for p in self.parameters])
         if key.get_parameters() != self.parameters:
             raise ValueError("Parameter mismatch")
+        print("DONE")
 
     def _parameters_check(self):
         """

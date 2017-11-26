@@ -1,4 +1,4 @@
-from prophesy.config import configuration
+import prophesy.config
 from prophesy.data.samples import InstantiationResultDict
 
 
@@ -17,4 +17,5 @@ class SampleGenerator:
         self.sampler = sampler
         self.parameters = parameters
         self.samples = samples.copy() if samples else InstantiationResultDict(parameters=parameters)
-        self.distance = configuration.get_sampling_min_distance()
+        assert prophesy.config is not None
+        self.distance = prophesy.config.configuration.get_sampling_min_distance()
