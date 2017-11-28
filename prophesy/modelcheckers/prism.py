@@ -65,7 +65,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(prophesy.configuration.get_intermediate_dir())
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
         file, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
 
         constants_string = self.constants.to_key_value_string()
@@ -107,7 +107,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
         assert len(self.prismfile.parameters) == len(parameters), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
-        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension, configuration.get_sampling_epsilon()) for interval in
+        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension, prophesy.config.configuration.get_sampling_epsilon()) for interval in
                   parameters.get_parameter_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
@@ -155,7 +155,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
     def sample_single_point(self, parameter_instantiation, result_path=None, pctl_path=None):
         if result_path is None:
-            _, result_path = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+            _, result_path = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         if pctl_path is None:
             pctl_path = write_string_to_tmpfile(str(self.pctlformula))
 
