@@ -46,6 +46,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._model_instantiator = None
         self._pla_checker = None
         self._pla_threshold = None
+        self._environment = stormpy.Environment()
 
     def name(self):
         return "stormpy"
@@ -212,7 +213,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 expression = expression_manager.create_rational(pc.convert_from_storm_type(threshold))
                 formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
             # Create PLA checker
-            self._pla_checker = stormpy.pars.create_region_checker(self.get_model(), formula)
+            self._pla_checker = stormpy.pars.create_region_checker(self._environment, self.get_model(), formula)
         return self._pla_checker
 
     def get_rational_function(self):
@@ -263,7 +264,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Check via PLA
         logger.info("Call stormpy for PLA check")
         hypothesis = stormpy.pars.RegionResultHypothesis.ALLVIOLATED if above_threshold else stormpy.pars.RegionResultHypothesis.ALLSAT
-        result = pla_checker.check_region(region, hypothesis, stormpy.pars.RegionResult.UNKNOWN, False)
+        result = pla_checker.check_region(self._environment, region, hypothesis, stormpy.pars.RegionResult.UNKNOWN, False)
         logger.info("Stormpy call finished successfully with result: {}".format(result))
 
         if result == stormpy.pars.RegionResult.ALLSAT:
