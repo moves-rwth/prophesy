@@ -10,7 +10,7 @@ from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.output.plot import Plot
 from prophesy.util import ensure_dir_exists
-from prophesy.config import configuration
+import prophesy.config
 
 from prophesy.regions.welldefinedness import WelldefinednessResult
 
@@ -56,8 +56,8 @@ class RegionGenerator:
         self._plot_candidates = False
         self.plot = len(self.parameters) <= 2
         self.first_pdf = True
-        ensure_dir_exists(configuration.get_plots_dir())
-        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=configuration.get_plots_dir())
+        ensure_dir_exists(prophesy.config.configuration.get_plots_dir())
+        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=prophesy.config.configuration.get_plots_dir())
 
     def __iter__(self):
         # Prime the generator
@@ -86,7 +86,7 @@ class RegionGenerator:
         """
         Add PDF with name to result.pdf in tmp directory.
         """
-        if not configuration.is_module_available("pypdf2"):
+        if not prophesy.config.modules.is_module_available("pypdf2"):
             logging.warning("Module 'PyPDF2' is not available. PDF export is not supported.")
             return
 
@@ -132,7 +132,7 @@ class RegionGenerator:
         samples_red = [instantiation.get_point(self.parameters) for instantiation in self.bad_samples.keys()]
         samples_black = [instantiation.get_point(self.parameters) for instantiation in self.illdefined_samples.keys()]
 
-        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
+        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=prophesy.config.configuration.get_plots_dir())
         Plot.plot_results(parameters=self.parameters,
                           samples_green=samples_green,
                           samples_red=samples_red,
@@ -165,8 +165,6 @@ class RegionGenerator:
         :param region: Region.
         :return: Area of region.
         """
-        if isinstance(region, shapely.geometry.Polygon):
-            return region.area
         if isinstance(region, HyperRectangle):
             return region.size()
         assert False

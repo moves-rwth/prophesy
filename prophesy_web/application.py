@@ -3,7 +3,7 @@ from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.data.point import Point
 from prophesy.data.samples import ParameterInstantiation, InstantiationResultDict
 from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
-from prophesy.regions.region_checker import RegionCheckResult, ProblemDescription
+from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 
 import tempfile
@@ -28,15 +28,16 @@ from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.smt.isat import IsatSolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 from prophesy.sampling.sampler_ratfunc import RatFuncSampling
+from prophesy.input.problem_description import ProblemDescription
 
 from prophesy.sampling.sampling_uniform import UniformSampleGenerator
 from prophesy.sampling.sampling_linear import LinearRefinement
 from prophesy.regions.region_quads import HyperRectangleRegions
-from prophesy.regions.region_polygon import ConstraintPolygon
 
 from prophesy.util import ensure_dir_exists
 
-from prophesy.config import configuration
+from prophesy.config import modules
+import prophesy.config
 from prophesy_web.config import configuration as web_configuration
 
 from concurrent.futures import ThreadPoolExecutor
@@ -45,7 +46,7 @@ from prophesy.adapter.pycarl  import Rational, ParserError
 
 default_results = {}
 
-if configuration.is_module_available('stormpy'):
+if modules.is_module_available('stormpy'):
     from prophesy.modelcheckers.stormpy import StormpyModelChecker
 
 
@@ -199,9 +200,12 @@ class InvalidateSession(CegarHandler):
 
 class Threshold(CegarHandler):
     def get(self):
+        logger.info("Threshold get")
         return self._json_ok(self._get_session('threshold', 0.5))
 
     def put(self):
+
+        logger.info("Threshold put")
         threshold = json_decode(self.request.body)
         threshold = float(threshold)
         self._set_session('threshold', Rational(threshold))
@@ -212,6 +216,7 @@ class Threshold(CegarHandler):
         return self._json_ok()
 
     def post(self):
+        logger.info("Threshold post")
         threshold = self.get_argument('threshold', None)
         threshold = float(threshold)
         self._set_session('threshold', Rational(threshold))
@@ -223,6 +228,8 @@ class Threshold(CegarHandler):
 
 class CurrentResult(CegarHandler):
     def get(self):
+
+        logger.info("CurrentResult get")
         self.setup_results()
         name = self._get_session('current_result', None)
         if name is None:
@@ -230,6 +237,8 @@ class CurrentResult(CegarHandler):
         return self._json_ok(name)
 
     def post(self):
+
+        logger.info("CurrentResult post")
         name = self.get_argument('name')
         results = self._get_session('result_files', {})
         if name in results:
@@ -246,6 +255,8 @@ class Environment(CegarHandler):
                          "sat"     : self._get_session("sat", next(iter(satSolvers), None))})
 
     def post(self):
+
+        logger.info("Environment post")
         pmc = self.get_argument('pmc')
         sampler = self.get_argument('sampler')
         sat = self.get_argument('sat')
@@ -345,7 +356,7 @@ class UploadFormula(CegarHandler):
 
 class UploadPctl(CegarHandler):
     def post(self):
-        print("Upload pctl ENTRY")
+        logger.info("UploadPctl post")
         upload_pctl = self.request.files["pctl-file"][0]
         if upload_pctl is None:
             return self._json_error("Missing PCTL file")
@@ -363,14 +374,16 @@ class UploadPctl(CegarHandler):
         return self._json_ok()
 
     def get(self):
+        logger.info("UploadPctl get")
         result = {}
         result["pctl"] = self._get_session("pctl-formulas", {})
         return self._json_ok(result)
 
 class RunPrism(CegarHandler):
     def post(self):
+        logger.info("RunPrism post")
         # Run the uploaded prism file with the chosen mctool
-        logger.info("RunPrism POST request")
+
 
         # Get the current prism file and save it temporarily
         prism_files = self._get_session("prism-files", {})
@@ -435,6 +448,7 @@ class RunPrism(CegarHandler):
 
 class UploadResult(CegarHandler):
     def post(self):
+        logger.info("Upload result post request")
         tool = self.get_argument('result-type')
         upload = self.request.files['result-file'][0]
         # Note: this is not the list of pmcCheckers, but of available result parsers
@@ -482,11 +496,13 @@ class PingRedis(CegarHandler):
 
 class Samples(CegarHandler):
     def get(self):
+        logger.debug("Samples get request")
         result = self._getResultData(self._get_session('current_result', None))
         flattenedsamples = _jsonSamples(self._get_session('samples', InstantiationResultDict(parameters=result.parameters)))
         return self._json_ok(flattenedsamples)
 
     def post(self):
+        logger.debug("Samples post request")
         #print(self.request.body)
         sampling_information = json_decode(self.request.body)
         #print(sampling_information)
@@ -516,27 +532,10 @@ class Samples(CegarHandler):
 
     def put(self):
         raise NotImplementedError("Unchecked code...")
-        coordinate = json_decode(self.request.body)
-        try:
-            x = Rational(coordinate[0])
-            y = Rational(coordinate[1])
-        except:
-            return self._json_error('Unable to parse coordinate', 400)
 
-        result = self._getResultData(self._get_session('current_result', None))
-        if result is None:
-            return self._json_error("Unable to load result data", 500)
-
-        parameters = result.parameters
-        sampler = getSampler(self._get_session('sampler'), result)
-        new_samples = sampler.perform_sampling([ParameterInstantiation({parameters[0]:x, parameters[1]:y})])
-        samples = self._get_session('samples', InstantiationResultDict())  # FIXME
-        samples.update(new_samples)
-        return self._json_ok()
-        # return _json_ok(_jsonSamples(samples))
-        # TODO: redirect?
 
     def delete(self):
+        raise NotImplementedError()
         self._set_session("samples", InstantiationResultDict())  # FIXME
         return self._json_ok()
 
@@ -547,6 +546,7 @@ class GenerateSamples(CegarHandler):
 
     @gen.coroutine
     def post(self):
+        logger.debug("GenerateSamples post request")
         iterations = int(self.get_argument('iterations'))
 
         if iterations < 0:
@@ -615,11 +615,12 @@ class ConstraintHandler(CegarHandler):
         smt2interface = getSat(self._get_session('sat'))
         smt2interface.run()
         problem_description = ProblemDescription()
-        problem_description.solutionfunction = result.ratfunc
+        problem_description.solution_function = result.ratfunc
         problem_description.parameters = result.parameters
+        problem_description.threshold = threshold
 
         checker = SolutionFunctionRegionChecker(smt2interface)
-        checker.initialize(problem_description,threshold)
+        checker.initialize(problem_description)
 
         if type == 'planes':
             return self._json_error("Planes generator was dropped in v2")
@@ -628,7 +629,8 @@ class ConstraintHandler(CegarHandler):
         elif type == 'quads':
             generator = HyperRectangleRegions(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
         elif type == 'poly':
-            generator = ConstraintPolygon(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
+            raise NotImplementedError("We do no longer support arbitrary polygons.")
+           # generator = ConstraintPolygon(samples, result.parameters, threshold, checker, problem_description.welldefined_constraints, problem_description.graph_preserving_constraints)
         else:
             return self._json_error("Bad generator")
         generator.plot = False
@@ -731,6 +733,7 @@ class GenerateConstraints(ConstraintHandler):
 
     @gen.coroutine
     def post(self):
+        logger.info("GenerateConstraints post")
         iterations = int(self.get_argument('iterations'))
         generator_type = self.get_argument('generator')
         if not generator_type in ['planes', 'rectangles', 'quads']:
@@ -746,6 +749,7 @@ class GenerateConstraints(ConstraintHandler):
         if len(new_samples) == 0 and len(unsat) == 0:
             return self._json_error("SMT solver did not return an answer")
 
+        raise NotImplementedError()
         samples = self._get_session('samples', InstantiationResultDict())  # FIXME
         # Clear all regions, resumption not supported (yet)
         constraints = [] #self._get_session('regions', [])
@@ -788,15 +792,14 @@ class CegarWebSocket(WebSocketHandler, SessionMixin):
 
 
 class Configuration(CegarHandler):
-
     # Handler for the Webconfiguartion interface
 
     # Reads the Configuratuion from the config-file
     def get(self, section=None, key=None):
         if section:
             if key:
-                return self._json_ok(configuration.get(section, key))
-        return self._json_ok(configuration.get_all())
+                return self._json_ok(prophesy.config.configuration.get(section, key))
+        return self._json_ok(prophesy.config.configuration.get_all())
 
     # Sets the given configuartions from the Webinterface (JSON)
     def put(self):
@@ -806,12 +809,13 @@ class Configuration(CegarHandler):
     def post(self, section=None, key=None):
         if section:
             if key:
-                configuration.set(section, key, str(self.get_argument("data")))
-                configuration.update_configuration_file()
+                prophesy.config.configuration.set(section, key, str(self.get_argument("data")))
+                prophesy.config.configuration.update_configuration_file()
                 return self._json_ok()
         return self._json_error()
 
 def initEnv():
+    from prophesy.config import configuration
     ensure_dir_exists(web_configuration.get_sessions_dir())
     ensure_dir_exists(web_configuration.get_results_dir())
     ensure_dir_exists(web_configuration.get_examples_dir())

@@ -1,20 +1,20 @@
 import os.path
 import pytest
-from conftest import EXAMPLE_FOLDER, current_time
+import logging
 from requires import *
+from conftest import EXAMPLE_FOLDER, current_time
 import click.testing
-import pycarl
 
 import parameter_synthesis
+logger = logging.getLogger(__name__)
 
-target_file = "compute_solutionfunction_{}.rat".format(current_time)
+
+target_file = "sampling_model_{}.samples".format(current_time)
 
 benchmarks = [
-    require_storm()(("brp", "brp", "N=16,MAX=2", "property1", "storm")),
-    require_prism(rational_function=True)(("brp", "brp", "N=16,MAX=2", "property1", "prism")),
-    require_stormpy()(("brp", "brp", "N=16,MAX=2", "property1", "stormpy")),
-]
+    require_stormpy()(("brp", "brp", "N=16,MAX=2", "property1", "stormpy"))
 
+]
 
 @pytest.mark.parametrize("name,file,constants,property,tool", benchmarks)
 def test_script(name, file, constants, property, tool):
@@ -24,13 +24,10 @@ def test_script(name, file, constants, property, tool):
                constants,
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "compute_solution_function",
-               '--export',
-               target_file
+               "search_optimum",
+                "max"
                ]
+    logger.debug("parameter_synthesis.py " + " ".join(command))
     runner = click.testing.CliRunner()
     result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
-    assert os.path.isfile(target_file)
-    os.remove(target_file)
-    pycarl.clear_variable_pool()

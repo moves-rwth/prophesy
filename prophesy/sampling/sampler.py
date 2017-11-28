@@ -1,11 +1,15 @@
 import itertools
 from abc import abstractmethod
 from numpy import linspace
+import logging
+
 
 from prophesy.data.interval import BoundType
-from prophesy.config import configuration
 from prophesy.data.point import Point
 from prophesy.adapter.pycarl import Rational
+import prophesy.config
+
+logger = logging.getLogger(__name__)
 
 
 class Sampler:
@@ -28,14 +32,15 @@ class Sampler:
         :param parameters: Parameters together with their region.
         :param samples_per_dimension: In how many points should the region be divided.
         """
-        if samples_per_dimension < 1:
+        logger.debug("Uniform sampling: Fallback to sampling list of samples")
+        if samples_per_dimension <= 1:
             raise RuntimeError("No. of samples per dimension must be >= 2")
 
         # points evenly spaced over the interval, for each dimension
         ranges = []
         for i in parameters.get_parameter_bounds():
-            minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + configuration.get_sampling_epsilon()
-            maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - configuration.get_sampling_epsilon()
+            minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + prophesy.config.configuration.get_sampling_epsilon()
+            maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - prophesy.config.configuration.get_sampling_epsilon()
             ranges.append(map(Rational, linspace(float(minNum), float(maxNum), samples_per_dimension)))
         # turned into grid via cartesian product
         all_points = itertools.product(*ranges)
@@ -46,7 +51,7 @@ class Sampler:
         return self.perform_sampling(sample_points)
 
     @abstractmethod
-    def perform_sampling(self, samplepoints):
+    def perform_sampling(self, samplepoints, ensure_welldefinedness = False):
         """
         Given some parameter instantiations, perform sampling on these instantiations.
         

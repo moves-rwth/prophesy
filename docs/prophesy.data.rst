@@ -37,6 +37,13 @@ prophesy.data.interval module
     :undoc-members:
     :show-inheritance:
 
+prophesy.data.model_type module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.data.model_type
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 prophesy.data.nice_approximation module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,6 +68,15 @@ prophesy.data.point module
     :members:
     :undoc-members:
     :show-inheritance:
+
+prophesy.data.property module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: prophesy.data.point
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 
 prophesy.data.range module

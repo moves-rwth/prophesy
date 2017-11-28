@@ -50,14 +50,5 @@ prophesy.regions.region_quads module
 
 
 
-prophesy.regions.region_polygon module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: prophesy.regions.region_polygon
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 
 

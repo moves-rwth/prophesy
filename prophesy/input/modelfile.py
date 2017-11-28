@@ -14,6 +14,7 @@ from prophesy.adapter.pycarl import Rational, Variable
 
 logger = logging.getLogger(__name__)
 
+
 def open_model_file(location):
     _, file_extension = os.path.splitext(location)
     if file_extension == ".drn":
@@ -23,14 +24,18 @@ def open_model_file(location):
         logger.debug("Assume input is a Prism File")
         return PrismFile(location)
 
+
 class DrnFile:
+    """
+    Wraps a DRN file.
+    """
+
     def __init__(self, location):
         self.location = location
         check_filepath_for_reading(location)
         self.model_type = self._get_model_type()
         self.parameters = ParameterOrder()
         self._get_parameters()
-
 
     def contains_nondeterministic_model(self):
         return model_is_nondeterministic(self.model_type)
@@ -43,14 +48,15 @@ class DrnFile:
                         return ModelType.DTMC
                     if line[7:] in ["mdp", "MDP"]:
                         return ModelType.MDP
-
+                    else:
+                        raise NotImplementedError("Support for other types than DTMC and MDPs is not implemented in the parser.")
 
     def _get_parameters(self):
         with open(self.location) as file:
             logger.debug("Searching for parameters parameters!")
-            nextLineHasParameters = False
+            next_line_has_parameters = False
             for line in file:
-                if nextLineHasParameters:
+                if next_line_has_parameters:
                     parameter_names = line.split()
                     logger.debug("Parameter names: %s", str(parameter_names))
                     for par_name in parameter_names:
@@ -61,13 +67,14 @@ class DrnFile:
                     return
                 if line.startswith("@parameters"):
                     logger.debug("Next line contains parameters!")
-                    nextLineHasParameters = True
+                    next_line_has_parameters = True
+
 
 class PrismFile:
     """
     Wrapper for Prism file; extracts parameter names.
     
-    Rationale for not using stormpy bindings: Support for prism file should be given even without storm.
+    Rationale for not using stormpy bindings: Support for prism file should be given even without stormpy.
     """
 
     def __init__(self, location):
@@ -78,7 +85,6 @@ class PrismFile:
         self.parameters = ParameterOrder()
         self.model_type = self._model_type()
         self._get_parameters()
-
 
     def __del__(self):
         if self._is_temp:
@@ -103,7 +109,6 @@ class PrismFile:
                 if line == "ma":
                     return ModelType.MA
             raise ValueError("Could not infer model type")
-
 
     def _get_parameters(self):
         with open(self.location, 'r') as f:

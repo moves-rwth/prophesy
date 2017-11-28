@@ -1,13 +1,18 @@
 import os.path
 import pytest
-from requires import *
+import logging
 from conftest import EXAMPLE_FOLDER, current_time
+from requires import *
+import click.testing
 
-import parameter_space_partitioning
+logger = logging.getLogger(__name__)
+import parameter_synthesis
+import pycarl
 
 benchmarks_smt = [
     require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
     require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads")),
+    require_z3()(("brp", "brp", "K=16,MAX=2", "property1", "brp_16-2", "95/100", "z3", "quads")),
     require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads")),
     require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles")),
     require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles")),
@@ -42,22 +47,29 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
     END_CRITERIA_VALUE = 0.30
 
     command = [
-        "--rat-file",
+        "--solver={}".format(tool),
+        "load_solution_function",
         os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, ratfile)),
-        "--samples-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, ratfile)),
-        "--{}".format(tool),
-        "--threshold",
+        "set_threshold",
         str(threshold),
-        "--sfsmt",
+        "load_samples",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, ratfile)),
+        "parameter_space_partitioning",
         END_CRITERIA,
         str(END_CRITERIA_VALUE),
-        "--{}".format(method),
+        "sfsmt",
+        method
     ]
+
+    logger.debug("parameter_synthesis.py " + " ".join(command))
+    runner = click.testing.CliRunner()
     try:
-        parameter_space_partitioning.run(command, False)
+        result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     except NotImplementedError:
         pytest.xfail()
+    assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()
+
 
 
 benchmarks_etr = [
@@ -90,35 +102,40 @@ benchmarks_etr = [
 ]
 
 
+
 @pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method", benchmarks_etr)
 def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, tool, method):
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
 
     command = [
-        "--model-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+        "--solver={}".format(tool),
+        "load_problem",
         "--constants",
         constants,
-        "--property-file",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
-        "--rat-file",
+        "load_solution_function",
         os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, ratfile)),
-        "--samples-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, ratfile)),
-        "--{}".format(tool),
-        "--threshold",
+        "set_threshold",
         str(threshold),
-        "--etr",
+        "load_samples",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, ratfile)),
+        "parameter_space_partitioning",
         END_CRITERIA,
         str(END_CRITERIA_VALUE),
-        "--{}".format(method),
+        "etr",
+        method
     ]
+
+    logger.debug("parameter_synthesis.py " + " ".join(command))
+    runner = click.testing.CliRunner()
     try:
-        parameter_space_partitioning.run(command, False)
+        result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     except NotImplementedError:
         pytest.xfail()
-
+    assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()
 
 benchmarks_pla = [
     require_storm()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "quads")),
@@ -133,29 +150,39 @@ benchmarks_pla = [
 ]
 
 
+
 @pytest.mark.parametrize("name,file,constants,propertyfile,samplesfile,threshold,tool,method", benchmarks_pla)
 def test_script_pla(name, file, constants, propertyfile, samplesfile, threshold, tool, method):
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
 
     command = [
-        "--model-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+        "--solver=z3",
+        "--mc={}".format(tool),
+        "load_problem",
         "--constants",
         constants,
-        "--property-file",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
-        "--samples-file",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, samplesfile)),
-        "--{}".format(tool),
-        "--pla",
-        "--threshold",
+        "set_threshold",
         str(threshold),
-        "--z3",
+        "load_samples",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}.samples".format(name, samplesfile)),
+        "parameter_space_partitioning",
+        "--epsilon",
+        "0.001",
         END_CRITERIA,
         str(END_CRITERIA_VALUE),
-        "--{}".format(method),
-        "--epsilon-pmc",
-        "0.001"
+        "pla",
+        method
     ]
-    parameter_space_partitioning.run(command, False)
+
+
+    logger.debug("parameter_synthesis.py " + " ".join(command))
+    runner = click.testing.CliRunner()
+    try:
+        result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
+    except NotImplementedError:
+        pytest.xfail()
+    assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()

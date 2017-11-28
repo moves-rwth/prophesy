@@ -1,7 +1,6 @@
 import logging
 
 from prophesy.regions.region_smtchecker import SmtRegionChecker
-from prophesy.modelcheckers.stormpy import StormpyModelChecker
 import prophesy.adapter.stormpy as sp
 import prophesy.adapter.pycarl as pc
 from prophesy.smt.smt import VariableDomain
@@ -16,17 +15,17 @@ class EtrRegionChecker(SmtRegionChecker):
     Directly encodes the property in ETR. 
     """
 
-    def __init__(self, backend):
+    def __init__(self, backend, mc):
         """
         Constructor.
         :param backend: 
         """
         super().__init__(backend)
-        self.model_explorer = StormpyModelChecker()
+        self.model_explorer = mc
         self.fixed_threshold = True
         self.threshold_set = False
 
-    def initialize(self, problem_description, constants=None, fixed_threshold = True):
+    def initialize(self, problem_description, fixed_threshold = True):
         """
         
         :param problem_description: 
@@ -34,6 +33,18 @@ class EtrRegionChecker(SmtRegionChecker):
         :param constants: 
         :return: 
         """
+
+        model = self.model_explorer.get_model()
+
+        if model.model_type != sp.ModelType.DTMC:
+            raise RuntimeError("Only DTMCs are supported for now.")
+
+        if len(model.initial_states) > 1:
+            raise NotImplementedError("We only support models with a single initial state")
+        if len(model.initial_states) == 0:
+            raise RuntimeError("We only support models with an initial state.")
+
+        logger.info("Writing equation system to solver")
         self.fixed_threshold = fixed_threshold
         _bounded_variables = True  # Add bounds to all state variables.
 
@@ -53,18 +64,6 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
-
-        self.model_explorer.load_model(problem_description.model, constants)
-        self.model_explorer.set_pctl_formula(problem_description.property)
-        model = self.model_explorer.get_model()
-
-        if model.model_type != sp.ModelType.DTMC:
-            raise RuntimeError("Only DTMCs are supported for now.")
-
-        if len(model.initial_states) > 1:
-            raise NotImplementedError("We only support models with a single initial state")
-        if len(model.initial_states) == 0:
-            raise RuntimeError("We only support models with an initial state.")
 
         initial_state_var = None
         state_var_mapping = dict()
@@ -205,10 +204,10 @@ class EtrRegionChecker(SmtRegionChecker):
     def _get_reward_model(self, model, problem_description):
         model.reduce_to_state_based_rewards()
         if problem_description.property.reward_name is not None:
-            reward_model = model.reward_models.at(problem_description.property.reward_name)
+            reward_model = model.reward_models[problem_description.property.reward_name]
         else:
             if "" in model.reward_models:
-                reward_model = model.reward_models.at("")
+                reward_model = model.reward_models[""]
             else:
                 if len(model.reward_models) > 1:
                     raise RuntimeError("Unclear reference to reward model. Please specify a name.")

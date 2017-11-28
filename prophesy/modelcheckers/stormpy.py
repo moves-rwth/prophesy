@@ -1,6 +1,6 @@
 import logging
 
-from prophesy.config import configuration
+from prophesy.config import modules
 from prophesy.exceptions.module_error import ModuleError
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
@@ -10,6 +10,7 @@ from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.data.constant import Constants
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.regions.region_checker import RegionCheckResult
+from prophesy.regions.welldefinedness import  WelldefinednessResult
 from prophesy.data.hyperrectangle import HyperRectangle
 import prophesy.adapter.stormpy as stormpy
 import prophesy.adapter.pycarl as pc
@@ -26,7 +27,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         """
         Initialize and check if stormpy is available.
         """
-        if not configuration.is_module_available("stormpy"):
+        if not modules.is_module_available("stormpy"):
             raise ModuleError(
                 "Module stormpy is needed for using the Python API for Storm. Maybe your config is outdated?")
 
@@ -35,6 +36,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctlformula = None
         self.constants = None
         self.bisimulation = stormpy.BisimulationType.STRONG
+        self._welldefined_checker = None
         # Storing objects of stormpy for incremental calls
         self._program = None
         self._model = None
@@ -72,6 +74,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._parameter_mapping = None
         self._model_instantiator = None
         self._pla_checker = None
+        self._welldefined_checker = None
+
+    def set_welldefined_checker(self, checker):
+        self._welldefined_checker = checker
 
     def load_model_from_drn(self, drnfile, constants=Constants()):
         self._reset_internal()
@@ -81,6 +87,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
 
     def load_model_from_prismfile(self, prism_file, constants=Constants()):
+        logger.debug("Load model from prism file")
         self._reset_internal()
         self.prismfile = prism_file
         self.constants = constants
@@ -150,7 +157,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
         if self._parameter_mapping is None:
             self._parameter_mapping = {}
-            model_parameters = self.get_model().collect_probability_parameters()
+            model_parameters = self.get_model().collect_probability_parameters() | self.get_model().collect_reward_parameters()
             for parameter in prophesy_parameters:
                 model_param = get_matching_model_parameter(model_parameters, parameter.name)
                 assert model_param is not None
@@ -159,19 +166,6 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         for parameter in prophesy_parameters:
             assert parameter in self._parameter_mapping
         return self._parameter_mapping
-
-    @staticmethod
-    def check_model(model, property):
-        """
-        Compute result of model checking.
-        :param model: Model.
-        :param property: Property.
-        :return: Result (as gmp type).
-        """
-        result = stormpy.model_checking(model, property)
-        result = result.at(model.initial_states[0])
-        # Convert to gmp
-        return pc.convert_from_storm_type(result)
 
     def get_parameter_constraints(self):
         if self._parameter_constraints is None or self._graph_preservation_constraints is None:
@@ -222,9 +216,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return self._pla_checker
 
     def get_rational_function(self):
+        self.get_model()
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = StormpyModelChecker.check_model(self.get_model(), self.pctlformula[0])
+        rational_function = pc.convert_from_storm_type(stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0]))
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
@@ -233,11 +228,15 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
                                 rational_function)
 
-    def perform_sampling(self, sample_points):
+    def _check_welldefined(self, samplepoint):
+        return self._welldefined_checker.check(samplepoint) == WelldefinednessResult.Welldefined
+
+    def perform_sampling(self, sample_points, surely_welldefined=False):
+        if not surely_welldefined:
+            logger.warning("Sampling assumes (without any checks) that the point is welldefined")
         # Perform sampling with model instantiator
         logger.info("Call stormpy for sampling")
         parameter_mapping = self.get_parameter_mapping(sample_points[0].get_parameters())
-
         samples = InstantiationResultDict({p: self.sample_single_point(p, parameter_mapping) for p in sample_points})
         logger.info("Sampling with stormpy successfully finished")
         return samples
@@ -248,7 +247,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                  parameter_instantiation.items()}
         instantiated_model = model_instantiator.instantiate(point)
-        result = StormpyModelChecker.check_model(instantiated_model, self.pctlformula[0])
+        result = pc.convert_from_storm_type(stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
         return result
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
@@ -295,8 +294,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
         pla_checker = self.get_pla_checker(None)
-        #TODO check direction
         region_string = hyperrectangle.to_region_string(parameters)
-        result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), True)
+        result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
         assert result.is_constant()
         return stormpy.convert_from_storm_type(result.constant_part())

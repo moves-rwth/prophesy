@@ -15,8 +15,12 @@ def _constraint_to_isat(constraint):
 
 
 class IsatSolver(SMTSolver):
-    def __init__(self, location=configuration.get_isat()):
-        self.location = location
+    def __init__(self, location):
+        """
+        
+        :param location: Path to Isat solver. If none, the configuration is queried.
+        """
+        self.location = location if location is not None else configuration.get_isat()
         self.declstack = [list()]
         self.constraintstack = [list()]
 

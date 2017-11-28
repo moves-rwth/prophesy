@@ -1,11 +1,13 @@
 import time
+import logging
 
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.smt.smt import Answer
-from prophesy.data.constraint import region_from_polygon
 from abc import abstractmethod
 import prophesy.adapter.pycarl as pc
+
+logger = logging.getLogger(__name__)
 
 
 class SmtRegionChecker(RegionChecker):
@@ -48,13 +50,14 @@ class SmtRegionChecker(RegionChecker):
         :param polygon: either HyperRectangle or shapely Polygon
         :param safe: Boolean to indicate if the region should be considered as safe or unsafe
         """
+        logger.info("Analyse region")
         smt_successful = False
         smt_model = None
 
         if isinstance(polygon, HyperRectangle):
             constraint = polygon.to_formula(self.parameters)
         else:
-            constraint = region_from_polygon(polygon, self.parameters)
+            raise RuntimeError("Unexpected type of region.")
 
         while not smt_successful:
             # check constraint with smt
@@ -84,6 +87,7 @@ class SmtRegionChecker(RegionChecker):
                         smt_model = smt_context.get_model()
                     break
 
+        logger.debug("Check result is %s", checkresult)
         if checkresult == RegionCheckResult.Satisfied:
             return RegionCheckResult.Satisfied, None
         elif checkresult == RegionCheckResult.CounterExample:

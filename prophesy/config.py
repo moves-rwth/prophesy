@@ -8,22 +8,32 @@ from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
 
 
+class ModulesConfig(Configuration):
+    DEPENDENCIES = "installed_deps"
+
+    def __init__(self):
+        super().__init__(os.path.join(os.path.dirname(os.path.realpath(__file__)), "dependencies.cfg"))
+
+
+    def is_module_available(self, module):
+        return self.get_boolean(ModulesConfig.DEPENDENCIES, module)
+
+    def has_stormpy(self):
+        return self.is_module_available("stormpy")
+
 class ProphesyConfig(Configuration):
     # section names
     DIRECTORIES = "directories"
     EXTERNAL_TOOLS = "external_tools"
     SAMPLING = "sampling"
     CONSTRAINTS = "constraints"
-    DEPENDENCIES = "installed_deps"
     SMT = "smt"
 
-    def __init__(self):
-        super().__init__(os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "prophesy.cfg"))
+    def __init__(self, path_to_cfg):
+        super().__init__(path_to_cfg)
         self._init_tools()
 
-    def is_module_available(self, module):
-        return self.get_boolean(ProphesyConfig.DEPENDENCIES, module)
+
 
     def getAvailableSMTSolvers(self):
         if len(self.smtsolvers) == 0:
@@ -80,7 +90,7 @@ class ProphesyConfig(Configuration):
         if self.get_isat():
             self.smtsolvers.add('isat')
 
-        if self.is_module_available("stormpy"):
+        if modules.has_stormpy():
             self.pmcs.add('stormpy')
             self.ppmcs.add('stormpy')
 
@@ -173,7 +183,7 @@ class ProphesyConfig(Configuration):
         return self.get_tool("isat")
 
     def has_stormpy(self):
-        return self.is_module_available("stormpy")
+        return modules.is_module_available("stormpy")
 
     def get_intermediate_dir(self):
         dir = self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
@@ -198,14 +208,23 @@ class ProphesyConfig(Configuration):
     def get_smt_timeout(self):
         return self.get_float(ProphesyConfig.SMT, "timeout")
 
+    def get_smt_memout(self):
+        return self.get_int(ProphesyConfig.SMT, "memout")
+
     def getSection(self, sec):
         return self.get_all()[sec]
 
 
-configuration = ProphesyConfig()
 
-logging.basicConfig(filename='prophesy.log', level=logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-logging.getLogger().addHandler(ch)
+
+def load_configuration(path = None):
+    global configuration
+    if path is None:
+        configuration = ProphesyConfig(os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy.cfg"))
+    else:
+        configuration = ProphesyConfig(path)
+
+
+configuration = None
+modules = ModulesConfig()
+

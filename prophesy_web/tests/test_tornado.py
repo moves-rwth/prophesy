@@ -10,12 +10,16 @@ import random
 # Check if a file really exists
 import os.path
 import shutil
+import logging
 from helpers.helper import get_example_path
+import pycarl
 
 # Get the prophesy configuration data
-from prophesy.config import configuration  # This imports the instantiated Object of 'ProphesyConfig'
 from prophesy_web.config import configuration as web_configuration
+import prophesy.config
 
+prophesy.config.load_configuration()
+logging.basicConfig(filename="prophesy_web_test.log", format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 @pytest.mark.skipif(not web_configuration.is_redis_running(), reason="requires running redis instance")
 class TestTornado(TornadoTestCase):
@@ -42,7 +46,7 @@ class TestTornado(TornadoTestCase):
     def test_directories(self):
         """ Checks if the directories of the config file exist. """
         print("Check if Configuration directories exist...")
-        section = configuration.getSection(configuration.DIRECTORIES)
+        section = prophesy.config.configuration.getSection(prophesy.config.configuration.DIRECTORIES)
         for directory in section:
             os.path.isdir(directory)
         print("DONE")
@@ -50,7 +54,7 @@ class TestTornado(TornadoTestCase):
     def test_executables(self):
         """ Checks if the executables exist"""
         print("Check Executables exist...")
-        section = configuration.getSection(configuration.EXTERNAL_TOOLS)
+        section = prophesy.config.configuration.getSection(prophesy.config.configuration.EXTERNAL_TOOLS)
         for tool in section:
             if not section[tool] == '':
                 assert (os.path.isfile(os.path.expanduser(section[tool])) == True) or (
@@ -81,8 +85,9 @@ class TestTornado(TornadoTestCase):
 
     @pytest.mark.incremental
     def test_0_storm_available(self):
+
         print("Check if StoRM is available...")
-        if configuration.get_storm() is None:
+        if prophesy.config.configuration.get_storm() is None:
             print("WARNING: Not all tests are correct. Storm was not found!!!")
             assert 0
         print("DONE")

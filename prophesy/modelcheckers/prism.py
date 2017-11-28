@@ -2,7 +2,7 @@ import os
 import tempfile
 import logging
 
-from prophesy.config import configuration
+import prophesy.config
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.input.samplefile import read_samples_file
@@ -21,12 +21,12 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
     Class wrapping the prism model checker CLI.
     """
 
-    def __init__(self, location=configuration.get_prism()):
+    def __init__(self, location=None):
         """
         Constructor
-        :param location: Path to prism binary.
+        :param location: Path to prism binary. If none, we query the configuration
         """
-        self.location = location
+        self.location = location if location is not None else prophesy.config.configuration.get_prism()
         self.bisimulation = BisimulationType.strong
         self.pctlformula = None
         self.prismfile = None
@@ -65,8 +65,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("model missing")
 
         # create a temporary file for the result.
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.configuration.get_intermediate_dir())
+        file, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
 
         constants_string = self.constants.to_key_value_string()
 
@@ -107,7 +107,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
         assert len(self.prismfile.parameters) == len(parameters), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
-        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension) for interval in
+        ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension, configuration.get_sampling_epsilon()) for interval in
                   parameters.get_parameter_bounds()]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
@@ -116,8 +116,9 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         if constants_string != "":
             const_values_string = const_values_string + "," + constants_string
 
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        _, resultpath = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
+        fd, resultpath = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+        os.close(fd)
         pctlpath = write_string_to_tmpfile(str(self.pctlformula))
 
         args = [self.location,
@@ -137,13 +138,14 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         os.remove(pctlpath)
         return samples
 
-    def perform_sampling(self, samplepoints):
+    def perform_sampling(self, samplepoints, surely_welldefined = False):
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
 
-        ensure_dir_exists(configuration.get_intermediate_dir())
-        _, result_path = tempfile.mkstemp(suffix=".txt", dir=configuration.get_intermediate_dir(), text=True)
+        ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
+        fd, result_path = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
         pctl_path = write_string_to_tmpfile(str(self.pctlformula))
+        os.close(fd)
 
         samples = InstantiationResultDict({s: self.sample_single_point(s, result_path, pctl_path) for s in samplepoints})
 

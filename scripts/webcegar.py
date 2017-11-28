@@ -3,6 +3,8 @@
 from argparse import ArgumentParser
 from tornado.ioloop import IOLoop
 
+import logging
+import prophesy.config
 from prophesy_web import config
 from prophesy_web.application import initEnv, make_app
 
@@ -19,6 +21,11 @@ def parse_cli_args():
 if __name__ == "__main__":
     cmdargs = parse_cli_args()
 
+    logging.basicConfig(filename="prophesy_web.log", format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    logging.getLogger().addHandler(ch)
+    prophesy.config.load_configuration()
     initEnv()
 
     app = make_app(cmdargs.server_host)

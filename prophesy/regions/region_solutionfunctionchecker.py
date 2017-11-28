@@ -23,6 +23,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._ratfunc = None
         self.fixed_threshold = True
         self._thresholdVar = None
+        self.threshold_set = False
 
     def initialize(self, problem_description, constants=None, fixed_threshold = True):
         """
@@ -30,18 +31,18 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
         :param problem_description: 
         :type problem_description: ProblemDescription
-        :param threshold: 
-        :param constants: 
+        :param threshold:
         """
 
         self.fixed_threshold = fixed_threshold
         lower_bounded_variables = True
         upper_bounded_variables = False
-        assert problem_description.solutionfunction is not None
+        assert problem_description.solution_function is not None
         assert problem_description.parameters is not None
         if self.fixed_threshold:
             assert problem_description.threshold is not None
-        self._ratfunc = problem_description.solutionfunction
+        #TODO expanding might be a stupid idea.
+        self._ratfunc = pc.expand(problem_description.solution_function)
         self.parameters = problem_description.parameters
 
         for p in self.parameters:
@@ -57,6 +58,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
+        #TODO denominator unequal constant.
         if pc.denominator(self._ratfunc) != 1:
             for constraint in problem_description.welldefined_constraints:
                 if not constraint.lhs.total_degree <= 1 or constraint.relation == pc.Relation.NEQ:
@@ -76,7 +78,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
                 safe_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._bad_relation)
                 bad_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._safe_relation)
             else:
-                if bounded_variables:
+                if lower_bounded_variables:
                     self._smt2interface.assert_constraint(pc.Constraint(rf1Var, pc.Relation.GREATER, pc.Rational(0)))
                     self._smt2interface.assert_constraint(pc.Constraint(rf2Var, pc.Relation.GREATER, pc.Rational(0)))
 
@@ -87,8 +89,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             self._smt2interface.assert_constraint(rf1_constraint)
             self._smt2interface.assert_constraint(rf2_constraint)
         else:
-            safe_constraint = Constraint(pc.numerator(self._ratfunc) - self._thresholdVar, self._safe_relation)
-            bad_constraint = Constraint(pc.numerator(self._ratfunc) - self._thresholdVar, self._bad_relation)
+            safe_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._safe_relation)
+            bad_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._bad_relation)
 
         self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
@@ -98,9 +100,11 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
     def change_threshold(self, new_threshold):
         assert self.fixed_threshold is not True
         #TODO check that the interface is at the level where we pushed the threshold.
-        self._smt2interface.pop()
+        if self.threshold_set:
+            self._smt2interface.pop()
         self._smt2interface.push()
         self._add_threshold_constraint(new_threshold)
+        self.threshold_set = True
 
     def _add_threshold_constraint(self, threshold):
         threshold_constraint = pc.Constraint(pc.Polynomial(self._thresholdVar) - threshold,
@@ -130,7 +134,9 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         return sample
 
     def _evaluate(self, smt_model):
+        logger.debug("Evaluate model obtained by SMT solver")
         sample = self._smt_model_to_sample(smt_model)
+        logger.debug("Model is %s", sample)
         value = self._ratfunc.evaluate(sample)
         logger.debug("Evaluation of sample yields {}".format(value))
         return InstantiationResult(sample, value)

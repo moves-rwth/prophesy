@@ -9,7 +9,7 @@ def test_constants_parsing():
     assert x_var in constants
     assert y_var in constants
     constants = parse_constants_string("z=y,a=2")
-    z_var = pc.Variable("z")
+    z_var = pc.variable_with_name("z")
     assert z_var in constants
     assert "a=2" in constants.to_key_value_string()
     assert "z=y" in constants.to_key_value_string()

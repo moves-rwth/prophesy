@@ -301,6 +301,12 @@ class Interval:
             self._right_bound_type)
 
     def setminus(self, other):
+        """
+        Compute the setminus of two rectangles
+        
+        :param other: 
+        :return: 
+        """
         intersectionInterval = self.intersect(other)
         if intersectionInterval.empty():
             return [self]

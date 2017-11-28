@@ -46,7 +46,9 @@ def parse_constants_string(input_string):
         constant_and_def = constant_def.split("=")
         if len(constant_and_def) != 2:
             raise ValueError("Expected key-value pair, found {}".format(constant_def))
-        var = pc.Variable(constant_and_def[0])
+        var = pc.variable_with_name(constant_and_def[0])
+        if var.is_no_variable:
+            var = pc.Variable(constant_and_def[0])
         val = pc.parse(constant_and_def[1])
         result[var] = val
     return result

@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from enum import Enum
+import prophesy.adapter.pycarl as pc
 
 from prophesy.data.point import Point
 
@@ -69,11 +70,26 @@ class ParameterInstantiation(dict):
         """
         return cls({param: val for param, val in zip(parameters, pt)})
 
+    def to_formula(self):
+        """Given list of variables, compute constraints
+
+        :param variables: Variables for each dimension
+        :return: A formula specifying the points inside the hyperrectangle
+        :rtype: pc.Constraint or pc.Formula
+        """
+        constraint = pc.Constraint(True)
+        for par in self.get_parameters():
+            constraint = constraint & pc.Constraint(pc.Polynomial(par.variable) - self[par], pc.Relation.EQ)
+        return constraint
+
     def __hash__(self):
         hsh = 0
         for v in self.values():
             hsh ^= hash(v)
         return hsh
+
+    def __str__(self):
+        return "{" + ";".join([k.name + ":" + str(v) for k,v in self.items()]) + "}"
 
 
 class InstantiationResult:
@@ -120,21 +136,27 @@ class InstantiationResult:
         """
         return cls(ParameterInstantiation.from_point(pt, parameters), res)
 
+    def __str__(self):
+        return str(self.instantiation) + ": " + str(self.result)
+
 
 class InstantiationResultDict(OrderedDict):
     """Maintains a set of instantiations with their results."""
 
     def __init__(self, *args, parameters=None):
         existing_dict, key_val_pairs = self._split_args_into_dict_and_pairs(args)
-        self.parameters = set(parameters if parameters is not None else self._deduce_parameters_from_args(existing_dict, key_val_pairs))
+        if parameters is not None:
+            print(type(p) for p in parameters)
+        self.parameters = set(parameters) if parameters is not None else self._deduce_parameters_from_args(existing_dict, key_val_pairs)
+
 
         for k, _ in existing_dict.items():
             self._validate_key(k)
 
         for k, _ in key_val_pairs:
             self._validate_key(k)
-
         super().__init__(existing_dict, *key_val_pairs)
+
 
     @staticmethod
     def _split_args_into_dict_and_pairs(args):
@@ -151,16 +173,22 @@ class InstantiationResultDict(OrderedDict):
     @staticmethod
     def _deduce_parameters_from_args(existing_dict, key_val_pairs):
         if len(existing_dict):
-            return next(iter(existing_dict.keys())).get_parameters()
+            return set(next(iter(existing_dict.keys())).get_parameters())
         elif len(key_val_pairs):
-            return key_val_pairs[0][0].get_parameters()
+            return set(key_val_pairs[0][0].get_parameters())
         else:
             # I guess this could be implemented
-            raise ValueError("Empty InstantiationResultDict requires parameters to be initialized")
+            return None
 
     def _validate_key(self, key):
+        if self.parameters is None:
+            self.parameters = set(key.get_parameters())
+        print([repr(p) for p in key.get_parameters()])
+
+        print([repr(p) for p in self.parameters])
         if key.get_parameters() != self.parameters:
             raise ValueError("Parameter mismatch")
+        print("DONE")
 
     def _parameters_check(self):
         """
@@ -190,7 +218,6 @@ class InstantiationResultDict(OrderedDict):
     def __setitem__(self, key, value, *args, **kwargs):
         self._validate_key(key)
         super().__setitem__(key, value, *args, **kwargs)
-
 
 def weighed_interpolation(sample1, sample2, threshold, fudge=0.0):
     """Interpolates between sample sample1 and sample2 to

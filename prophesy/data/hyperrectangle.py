@@ -4,9 +4,6 @@ import prophesy.adapter.pycarl as pc
 from prophesy.data.interval import BoundType
 from prophesy.adapter.pycarl import inf
 
-# TOOD remove numpy?
-import numpy as np
-
 
 class HyperRectangle:
     """
@@ -53,10 +50,6 @@ class HyperRectangle:
 
     def center(self):
         return Point(*[interval.center() for interval in self.intervals])
-
-    def np_vertices(self):
-        verts = self.vertices()
-        return np.array([np.array(list(map(float, v))) for v in verts])
 
     def split_in_every_dimension(self):
         """

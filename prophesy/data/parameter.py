@@ -9,24 +9,31 @@ class Parameter(pc.Variable):
     """Variable with an associated interval of allowable values. """
 
     def __init__(self, variable, interval):
-        super().__init__(variable.name, variable.type)
+        super().__init__(variable)
         self.interval = interval
 
     def __hash__(self):
-        return super().__hash__() ^ hash(self.interval)
+        return super().__hash__()
 
     def __str__(self):
         return "{} {}".format(super().__str__(), self.interval)
 
     def __eq__(self, other):
-        return (
-            super().__eq__(other) and
-            hasattr(other, 'interval') and
-            self.interval == other.interval
-        )
+        assert hasattr(self, 'interval'), "This object somehow does not have an interval attached"
+        return super().__eq__(other) and hasattr(other, 'interval') and self.interval == other.interval
 
     def __repr__(self):
         return "Parameter({!r}, {!r})".format(super().__str__(), self.interval)
+
+    def __setstate__(self, state):
+        super().__setstate__(state[0])
+        self.interval = prophesy.data.interval.Interval.__new__(prophesy.data.interval.Interval)
+        self.interval.__dict__.update(state[1])
+
+
+    def __getstate__(self):
+        return (super().__getstate__(), self.interval.__dict__)
+
 
 
 class ParameterOrder(list):
@@ -68,6 +75,20 @@ class ParameterOrder(list):
     def make_intervals_open(self):
         for p in self:
             p.interval = p.interval.open()
+
+    def update_variables(self, variables):
+        new_parameters = ParameterOrder()
+        for p in self:
+            found = False
+            for v in variables:
+                if p.name == v.name:
+                    new_parameters.append(Parameter(v, p.interval))
+                    found = True
+            if not found:
+                new_parameters.append(p)
+        self.clear()
+        for p in new_parameters:
+            self.append(p)
 
     def __str__(self):
         return "[{}]".format(", ".join(map(str, self)))
