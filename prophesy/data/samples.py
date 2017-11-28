@@ -145,8 +145,6 @@ class InstantiationResultDict(OrderedDict):
 
     def __init__(self, *args, parameters=None):
         existing_dict, key_val_pairs = self._split_args_into_dict_and_pairs(args)
-        if parameters is not None:
-            print(type(p) for p in parameters)
         self.parameters = set(parameters) if parameters is not None else self._deduce_parameters_from_args(existing_dict, key_val_pairs)
 
 
@@ -183,12 +181,9 @@ class InstantiationResultDict(OrderedDict):
     def _validate_key(self, key):
         if self.parameters is None:
             self.parameters = set(key.get_parameters())
-        print([repr(p) for p in key.get_parameters()])
 
-        print([repr(p) for p in self.parameters])
         if key.get_parameters() != self.parameters:
             raise ValueError("Parameter mismatch")
-        print("DONE")
 
     def _parameters_check(self):
         """
