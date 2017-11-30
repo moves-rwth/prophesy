@@ -271,6 +271,7 @@ def find_feasible_instantiation(state, dir, method):
     elif result ==RegionCheckResult.CounterExample:
         print("Point found: {}".format(str(data.instantiation) + ": " + str(data.result) + "(approx. " + str(float(data.result)) + ")"))
 
+
 #
 # @parameter_synthesis.command()
 # @click.argument("bound")

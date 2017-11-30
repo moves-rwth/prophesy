@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 import logging
-import shapely.geometry
+import time
 from abc import ABCMeta, abstractmethod
 
 from prophesy.data.samples import InstantiationResultDict
@@ -15,6 +15,15 @@ import prophesy.config
 from prophesy.regions.welldefinedness import WelldefinednessResult
 
 logger = logging.getLogger(__name__)
+
+
+class GenerationRecord:
+    def __init__(self):
+        self.
+        pass
+
+
+    def set_region(self):
 
 
 class RegionGenerator:
@@ -42,6 +51,7 @@ class RegionGenerator:
         self.max_area_sum = HyperRectangle(*self.parameters.get_parameter_bounds()).size()
 
         self.checker = checker
+        self.stats = None
 
         # Stores all regions as triple ([constraint], polygon representation, bad/safe)
         self.all_polys = []
@@ -67,13 +77,17 @@ class RegionGenerator:
         result_constraint = self.next_region()
         while result_constraint is not None:
             polygon, welldefined, area_safe = result_constraint
+            self.stats.next_iteration()
             if self._plot_candidates:
                 self.plot_candidate()
             if welldefined == WelldefinednessResult.Illdefined:
                 self.ignore_region()
                 yield WelldefinednessResult.Illdefined, polygon
             else:
+                start_time = time.time()
                 result = self._analyse_region(polygon, welldefined, area_safe)
+                duration = time.time() - start_time
+                self.stats.report_time(duration)
                 if result is None:
                     # End of generator
                     return
@@ -207,6 +221,23 @@ class RegionGenerator:
         """
         raise NotImplementedError("Abstract parent method")
 
+    def record_accepted(self, region, safe):
+        """
+        Record the accepted region.
+        
+        :return: 
+        """
+
+    def record_cex(self, region, safe):
+
+    def record_unknown(self, region, safe):
+
+    def record_illdefined(self):
+        raise NotImplementedError("This case needs to be considered as well.")
+
+
+
+
     def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True):
         """
         Iteratively generate new regions, heuristically, attempting to find the largest safe or unsafe area.
@@ -282,13 +313,9 @@ class RegionGenerator:
             self.safe_samples = InstantiationResultDict({k: v for k, v in self.safe_samples.items() if not region.contains(k.get_point(self.parameters))}, parameters=self.parameters)
             self.bad_samples = InstantiationResultDict({k: v for k, v in self.bad_samples.items() if not region.contains(k.get_point(self.parameters))}, parameters=self.parameters)
 
-            # TODO make the code above work with the polygons, as below.
-            # for instantiation, _ in self.samples:
-            #        if shapely.geometry.Point(*pt).within(polygon):
-            #            del self.samples[pt]
-
             # update everything
             self.accept_region()
+            self.record_accepted(region, safe)
             return checkresult, (region, safe)
         elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
@@ -297,6 +324,7 @@ class RegionGenerator:
             else:
                 self.bad_samples[additional.instantiation] = additional.result
             self.reject_region(additional)
+            self.record_rejected(region, safe)
             return checkresult, (additional, safe)
         elif checkresult == RegionCheckResult.Refined:
             # We refined the existing region.
@@ -310,4 +338,5 @@ class RegionGenerator:
 
         else:
             self.fail_region()
+            self.record_unknown(region, safe)
             return RegionCheckResult.Unknown, (region, safe)
