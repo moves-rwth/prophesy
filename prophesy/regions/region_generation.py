@@ -19,11 +19,25 @@ logger = logging.getLogger(__name__)
 
 class GenerationRecord:
     def __init__(self):
-        self.
-        pass
+        self._region = None
+        self._result = None
+        self._analysis_time = None
+        self._search_time = None
+        self._safe = None
 
+    def set_region(self, region, safe):
+        self._region = region
+        self._safe = safe
 
-    def set_region(self):
+    def set_result(self, result):
+        self._result = result
+
+    def set_anlalysis_time(self, time):
+        self._analysis_time = time
+
+    def set_search_candidate_time(self, time):
+        self._search_time = time
+
 
 
 class RegionGenerator:
@@ -51,7 +65,6 @@ class RegionGenerator:
         self.max_area_sum = HyperRectangle(*self.parameters.get_parameter_bounds()).size()
 
         self.checker = checker
-        self.stats = None
 
         # Stores all regions as triple ([constraint], polygon representation, bad/safe)
         self.all_polys = []
@@ -61,6 +74,9 @@ class RegionGenerator:
         self.new_samples = {}
         self.wd_constraints = wd_constraints
         self.gp_constraints = gp_constraints
+
+        self._records = []
+        self._iteration_timer = None
 
         # Options for plotting.
         self._plot_candidates = False
@@ -74,27 +90,19 @@ class RegionGenerator:
         return next(self)
 
     def __next__(self):
-        result_constraint = self.next_region()
-        while result_constraint is not None:
-            polygon, welldefined, area_safe = result_constraint
-            self.stats.next_iteration()
+        self.start_iteration()
+        region_info = self.next_region()
+        while region_info is not None:
+            polygon, welldefined, area_safe = region_info
             if self._plot_candidates:
                 self.plot_candidate()
-            if welldefined == WelldefinednessResult.Illdefined:
-                self.ignore_region()
-                yield WelldefinednessResult.Illdefined, polygon
-            else:
-                start_time = time.time()
-                result = self._analyse_region(polygon, welldefined, area_safe)
-                duration = time.time() - start_time
-                self.stats.report_time(duration)
-                if result is None:
-                    # End of generator
-                    return
-                yield result
 
+            yield self._analyse_region(polygon, welldefined, area_safe)
+            self.stop_iteration()
+            self.start_iteration()
             # get next constraint depending on algorithm
             result_constraint = self.next_region()
+
 
     def _add_pdf(self, name):
         """
@@ -156,32 +164,6 @@ class RegionGenerator:
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
-    # def is_inside_polygon(self, point, polygon):
-    #    # checks if the point lies inside the polygon
-    #    return point.within(polygon) or point.touches(polygon)
-
-    # def intersects(self, polygon1, polygon2):
-    #    """checks if two polygons intersect, touching is okay"""
-    #    # TODO first check bounding boxes?
-    #    return polygon1.intersects(polygon2) and not polygon1.touches(polygon2)
-
-    # @abstractmethod
-    # def refine_with_intersections(self, polygon):
-    #    """Compute the intersections of the polygon with the existing ones
-    #    and refine it by getting the difference
-    #    returns the refined polygon"""
-    #    raise NotImplementedError("Abstract parent method")
-
-    @staticmethod
-    def _area(region):
-        """
-        Get area of given region.
-        :param region: Region.
-        :return: Area of region.
-        """
-        if isinstance(region, HyperRectangle):
-            return region.size()
-        assert False
 
     @abstractmethod
     def next_region(self):
@@ -227,14 +209,41 @@ class RegionGenerator:
         
         :return: 
         """
+        self.all_polys.append(region)
+        if safe:
+            self.safe_polys.append(region)
+        else:
+            self.bad_polys.append(region)
 
-    def record_cex(self, region, safe):
+    def record_cex(self, additional):
+        """
+        :param additional: An additional sample.
+        :return: 
+        """
+        if additional.result >= self.threshold:
+            self.safe_samples[additional.instantiation] = additional.result
+        else:
+            self.bad_samples[additional.instantiation] = additional.result
 
     def record_unknown(self, region, safe):
+        self._records[-1].set_region(region, safe)
+        self._records[-1].set_result(RegionCheckResult.Unknown)
 
-    def record_illdefined(self):
-        raise NotImplementedError("This case needs to be considered as well.")
+    def record_illdefined(self, region):
+        self.all_polys.append((region, WelldefinednessResult.Illdefined))
+        self.illdefined_polys.append(region)
 
+        self._records[-1].set_result(WelldefinednessResult.Illdefined)
+
+    def start_iteration(self):
+        assert self._iteration_timer is None, "Previous iteration has not been stopped."
+
+        self._records.append(GenerationRecord())
+        self._iteration_timer = time.time()
+
+    def stop_iteration(self):
+        self._records[-1].set_time(time.time() - self._iteration_timer)
+        self._iteration_timer = None
 
 
 
@@ -253,31 +262,8 @@ class RegionGenerator:
         self._plot_candidates = plot_candidates
 
         for result in self:
-            res_status, data = result
-            if res_status == WelldefinednessResult.Illdefined:
-                self.all_polys.append((data, WelldefinednessResult.Illdefined))
-                self.illdefined_polys.append(data)
-            elif res_status == RegionCheckResult.Satisfied:
-                self.all_polys.append(data)
-                poly, safe = data
-                if safe:
-                    self.safe_polys.append(poly)
-                else:
-                    self.bad_polys.append(poly)
-            elif res_status == RegionCheckResult.CounterExample:
-                # Needs further checks
-                pass
-            elif res_status == RegionCheckResult.Refined:
-                raise NotImplementedError("We have to record the refinement.")
-                # self.all_polys.append()
-            elif res_status == RegionCheckResult.Unknown:
-                # Needs further checks
-                pass
-            else:
-                assert False  # All options should be covered by switching if/else
-
             # Check termination criteria
-            area_sum = sum(RegionGenerator._area(poly) for poly, safe in self.all_polys)
+            area_sum = sum(poly.size() for poly, safe in self.all_polys)
             if area_sum > max_area * self.max_area_sum:
                 break
 
@@ -305,6 +291,12 @@ class RegionGenerator:
         :param safe: Flag iff the region should be considered safe.
         :return: Tuple (RegionCheckResult, (region/counterexample, safe))
         """
+
+        if welldefined == WelldefinednessResult.Illdefined:
+            self.ignore_region()
+            self.record_illdefined(region)
+            return WelldefinednessResult.Illdefined, region
+
         assert welldefined == WelldefinednessResult.Welldefined
         checkresult, additional = self.checker.analyse_region(region, safe)
         if checkresult == RegionCheckResult.Satisfied:
@@ -319,10 +311,7 @@ class RegionGenerator:
             return checkresult, (region, safe)
         elif checkresult == RegionCheckResult.CounterExample:
             # add new point as counter example to existing regions
-            if additional.result >= self.threshold:
-                self.safe_samples[additional.instantiation] = additional.result
-            else:
-                self.bad_samples[additional.instantiation] = additional.result
+
             self.reject_region(additional)
             self.record_rejected(region, safe)
             return checkresult, (additional, safe)
@@ -340,3 +329,9 @@ class RegionGenerator:
             self.fail_region()
             self.record_unknown(region, safe)
             return RegionCheckResult.Unknown, (region, safe)
+
+
+
+
+
+
