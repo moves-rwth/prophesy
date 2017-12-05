@@ -84,6 +84,9 @@ class GenerationRecord:
     def iteration_time(self):
         return self._iteration_time
 
+    @property
+    def safe(self):
+        return self._safe
 
 class RegionGenerator:
     """
@@ -151,7 +154,7 @@ class RegionGenerator:
             self.start_iteration()
             # get next constraint depending on algorithm
             self.start_generation()
-            result_constraint = self.next_region()
+            region_info = self.next_region()
             self.stop_generation()
 
     def _add_pdf(self, name):
@@ -350,8 +353,8 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if result != RegionCheckResult.Unknown and len(self.all_polys) % plot_every_n == 0:
-                self.plot_results(display=False)
+            if result != RegionCheckResult.Unknown: #and len(self.all_polys) % plot_every_n == 0:
+                self.plot_results(display=True)
 
 
         # Plot the final outcome
@@ -368,7 +371,7 @@ class RegionGenerator:
         logging.debug("Write stats to %s (update == %s)", filename, str(update))
         with open(filename, 'a') as file:
             if not update or len(self._records) == 1:
-                file.write("\t".join(["N", "cons. area", "res", "gentime", "anatime", "ttime", "cov. area", "cumgentime", "cumanatime", "cumttime"]))
+                file.write("\t".join(["N", "cons. area", "res", "safe", "gentime", "anatime", "ttime", "cov. area", "cumgentime", "cumanatime", "cumttime"]))
                 file.write("\n")
             cov_area = 0.0
             cumulative_generation_time = 0.0
@@ -376,14 +379,11 @@ class RegionGenerator:
             cumulative_total_time = 0.0
             for idx, r in enumerate(self._records):
                 cov_area += float(r.covered_area)
-                print(r.generation_time)
-                print(r.analysis_time)
-                print(r.iteration_time)
                 cumulative_generation_time += r.generation_time
                 cumulative_analysis_time += r.analysis_time
                 cumulative_total_time += r.iteration_time
                 if not update or len(self._records) == idx + 1:
-                    file.write("\t".join([str(x) for x in [idx, r.region.size(), r.result, r.generation_time, r.analysis_time, r.iteration_time, cov_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time]]))
+                    file.write("\t".join([str(x) for x in [idx, r.region.size(), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time, cov_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time]]))
                     file.write("\n")
 
 
@@ -395,7 +395,7 @@ class RegionGenerator:
         :param safe: Flag iff the region should be considered safe.
         :return: Tuple (RegionCheckResult, (region/counterexample, safe))
         """
-
+        print(region)
         if welldefined == WelldefinednessResult.Illdefined:
             self.ignore_region()
             self.record_illdefined(region)
