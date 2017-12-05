@@ -330,9 +330,10 @@ def find_feasible_instantiation(state, dir, method):
 @click.option("--iterations", default=100)
 @click.option("--area", type=pc.Rational, default=1)
 @click.option("--epsilon", type=pc.Rational)
+@click.option("--stats", help="File to write synthesis stats to")
 #@click.option("--gp")
 @pass_state
-def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon):
+def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon, stats):
     if state.problem_description.samples is None:
         state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
 
@@ -389,7 +390,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
                                       split_uniformly=region_method == "quads")
 
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
-                                       plot_candidates=False)
+                                       plot_candidates=False, export_statistics=stats)
     return state
 
 def make_modelchecker(mc):
@@ -436,4 +437,9 @@ if __name__ == "__main__":
     state.solver.stop()
     if state.log_smt_calls:
         state.solver.to_file(state.log_smt_calls)
+    while len(logging.getLogger().handlers) > 0:
+        h = logging.getLogger().handlers[0]
+        logging.debug('Removing handler %s' % str(h))
+        logging.getLogger().removeHandler(h)
+        #logging.debug('%d more to go' % len(logging.getLogger().handlers))
 

@@ -23,6 +23,7 @@ class GenerationRecord:
         self._result = None
         self._analysis_time = None
         self._search_time = None
+        self._iteration_time = None
         self._safe = None
 
     def set_region(self, region, safe):
@@ -32,12 +33,56 @@ class GenerationRecord:
     def set_result(self, result):
         self._result = result
 
-    def set_anlalysis_time(self, time):
-        self._analysis_time = time
+    def start_analysis_timer(self):
+        assert self._analysis_time is None
+        self._analysis_time = time.time()
 
-    def set_search_candidate_time(self, time):
-        self._search_time = time
+    def start_generation_timer(self):
+        assert self._search_time is None
+        self._search_time = time.time()
 
+    def start_iteration_timer(self):
+        assert self._iteration_time is None
+        self._iteration_time = time.time()
+
+    def stop_analysis_timer(self):
+        assert self._analysis_time is not None
+        self._analysis_time = time.time() - self._analysis_time
+
+    def stop_generation_timer(self):
+        assert self._search_time is not None
+        self._search_time = time.time() - self._search_time
+
+    def stop_iteration_timer(self):
+        assert self._iteration_time is not None
+        self._iteration_time = time.time() - self._iteration_time
+
+    @property
+    def region(self):
+        return self._region
+
+    @property
+    def covered_area(self):
+        if self._result in [WelldefinednessResult.Illdefined, RegionCheckResult.Satisfied]:
+            return self._region.size()
+        else:
+            return 0.0
+
+    @property
+    def result(self):
+        return self._result
+
+    @property
+    def analysis_time(self):
+        return self._analysis_time
+
+    @property
+    def generation_time(self):
+        return self._search_time
+
+    @property
+    def iteration_time(self):
+        return self._iteration_time
 
 
 class RegionGenerator:
@@ -91,18 +136,23 @@ class RegionGenerator:
 
     def __next__(self):
         self.start_iteration()
+        self.start_generation()
         region_info = self.next_region()
+        self.stop_generation()
         while region_info is not None:
             polygon, welldefined, area_safe = region_info
             if self._plot_candidates:
                 self.plot_candidate()
-
-            yield self._analyse_region(polygon, welldefined, area_safe)
+            self.start_analysis()
+            res =  self._analyse_region(polygon, welldefined, area_safe)
+            self.stop_analysis()
             self.stop_iteration()
+            yield res
             self.start_iteration()
             # get next constraint depending on algorithm
+            self.start_generation()
             result_constraint = self.next_region()
-
+            self.stop_generation()
 
     def _add_pdf(self, name):
         """
@@ -209,45 +259,70 @@ class RegionGenerator:
         
         :return: 
         """
-        self.all_polys.append(region)
+        logger.info("Region accepted")
+
+        self.all_polys.append((region, RegionCheckResult.Satisfied))
         if safe:
             self.safe_polys.append(region)
         else:
             self.bad_polys.append(region)
+        self._records[-1].set_region(region, safe)
+        self._records[-1].set_result(RegionCheckResult.Satisfied)
 
-    def record_cex(self, additional):
+    def record_cex(self, region, safe, additional):
         """
         :param additional: An additional sample.
         :return: 
         """
+        logger.info("Counterexample found")
         if additional.result >= self.threshold:
             self.safe_samples[additional.instantiation] = additional.result
         else:
             self.bad_samples[additional.instantiation] = additional.result
 
+        self._records[-1].set_region(region, safe)
+        self._records[-1].set_result(RegionCheckResult.Unknown)
+
     def record_unknown(self, region, safe):
+        logger.info("No result found")
         self._records[-1].set_region(region, safe)
         self._records[-1].set_result(RegionCheckResult.Unknown)
 
     def record_illdefined(self, region):
+        logger.info("Region is illdefined")
         self.all_polys.append((region, WelldefinednessResult.Illdefined))
         self.illdefined_polys.append(region)
 
         self._records[-1].set_result(WelldefinednessResult.Illdefined)
 
     def start_iteration(self):
-        assert self._iteration_timer is None, "Previous iteration has not been stopped."
+        logger.info("Start next iteration")
 
         self._records.append(GenerationRecord())
-        self._iteration_timer = time.time()
+        self._records[-1].start_iteration_timer()
+
+    def start_analysis(self):
+        print("start analysis timer")
+        self._records[-1].start_analysis_timer()
+
+    def stop_analysis(self):
+        print("stop analysis timer")
+        self._records[-1].stop_analysis_timer()
+        print(self._records[-1].analysis_time)
+
+    def start_generation(self):
+        self._records[-1].start_generation_timer()
+
+    def stop_generation(self):
+        self._records[-1].stop_generation_timer()
 
     def stop_iteration(self):
-        self._records[-1].set_time(time.time() - self._iteration_timer)
-        self._iteration_timer = None
+        self._records[-1].stop_iteration_timer()
+        print(self._records[-1].iteration_time)
+        logger.info("Done with iteration: took %s", str(self._records[-1].iteration_time))
 
 
-
-    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True):
+    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True, export_statistics = None):
         """
         Iteratively generate new regions, heuristically, attempting to find the largest safe or unsafe area.
         :param max_iter: Number of regions to generate/check at most (not counting SMT failures), -1 for unbounded
@@ -261,7 +336,10 @@ class RegionGenerator:
 
         self._plot_candidates = plot_candidates
 
-        for result in self:
+        for result, additional_info in self:
+
+            if export_statistics:
+                self.export_stats(export_statistics, update=True)
             # Check termination criteria
             area_sum = sum(poly.size() for poly, safe in self.all_polys)
             if area_sum > max_area * self.max_area_sum:
@@ -272,16 +350,42 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if res_status != RegionCheckResult.Unknown and len(self.all_polys) % plot_every_n == 0:
+            if result != RegionCheckResult.Unknown and len(self.all_polys) % plot_every_n == 0:
                 self.plot_results(display=False)
+
 
         # Plot the final outcome
         if self.plot:
             self.plot_results(display=False)
             logging.info("Generation complete, plot located at {0}".format(self.result_file))
-        self.checker.print_info()
+
+
+
 
         return self.safe_polys, self.bad_polys, self.new_samples
+
+    def export_stats(self, filename, update=False):
+        logging.debug("Write stats to %s (update == %s)", filename, str(update))
+        with open(filename, 'a') as file:
+            if not update or len(self._records) == 1:
+                file.write("\t".join(["N", "cons. area", "res", "gentime", "anatime", "ttime", "cov. area", "cumgentime", "cumanatime", "cumttime"]))
+                file.write("\n")
+            cov_area = 0.0
+            cumulative_generation_time = 0.0
+            cumulative_analysis_time = 0.0
+            cumulative_total_time = 0.0
+            for idx, r in enumerate(self._records):
+                cov_area += float(r.covered_area)
+                print(r.generation_time)
+                print(r.analysis_time)
+                print(r.iteration_time)
+                cumulative_generation_time += r.generation_time
+                cumulative_analysis_time += r.analysis_time
+                cumulative_total_time += r.iteration_time
+                if not update or len(self._records) == idx + 1:
+                    file.write("\t".join([str(x) for x in [idx, r.region.size(), r.result, r.generation_time, r.analysis_time, r.iteration_time, cov_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time]]))
+                    file.write("\n")
+
 
     def _analyse_region(self, region, welldefined, safe):
         """
@@ -313,7 +417,7 @@ class RegionGenerator:
             # add new point as counter example to existing regions
 
             self.reject_region(additional)
-            self.record_rejected(region, safe)
+            self.record_cex(region, safe, additional)
             return checkresult, (additional, safe)
         elif checkresult == RegionCheckResult.Refined:
             # We refined the existing region.

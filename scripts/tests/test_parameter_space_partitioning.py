@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 import parameter_synthesis
 import pycarl
 
+
 benchmarks_smt = [
     require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
     require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads")),
