@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import click
 import logging
+import time
 
 from prophesy.data.constant import parse_constants_string
 from prophesy.data.parameter import Parameter
@@ -171,8 +172,9 @@ def compute_solution_function(state, export):
 @click.option('--plot')
 @click.option('--samplingnr', type=int, help='number of samples per dimension', default=4)
 @click.option('--iterations', type=int, help='number of sampling refinement iterations', default=0)
+@click.option('--stats', help="file to write sample stats to")
 @pass_state
-def sample(state, export, method, plot, samplingnr, iterations):
+def sample(state, export, method, plot, samplingnr, iterations, stats):
     logging.info("Compute samples..")
 
     if method == "evaluation":
@@ -190,19 +192,33 @@ def sample(state, export, method, plot, samplingnr, iterations):
         else:
             sampling_interface = state.mc
 
-
-
     logging.debug("Performing uniform sampling ")
+    uniform_sampling_time = time.time()
     initial_samples = uniform_samples(sampling_interface, state.problem_description.parameters, samplingnr)
     #logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
-
+    uniform_sampling_time = time.time() - uniform_sampling_time
+    nr_initial_samples = len(initial_samples)
+    nr_initial_samples_safe = len(initial_samples.split(state.problem_description.threshold)[0])
 
     logging.debug("Performing refined sampling ")
+    refine_sampling_time = time.time()
     refined_samples = refine_samples(sampling_interface, state.problem_description.parameters, initial_samples, iterations,
                                      state.problem_description.threshold)
+    refined_sampling_time = time.time() - refine_sampling_time
 
     if export:
         write_samples_file(state.problem_description.parameters, refined_samples, export)
+
+    if stats:
+        with open(stats, 'w') as file:
+            file.write("\t".join(["uniformsamples", "safesamplesinuniform", "ustime", "totalsamples", "safesamplesintotal", "refinetime"]))
+            file.write("\n")
+
+            file.write("\t".join([str(x) for x in [nr_initial_samples, nr_initial_samples_safe, uniform_sampling_time,
+                                                   len(refined_samples),
+                                                   len(refined_samples.split(state.problem_description.threshold)[0]),
+                                                   refined_sampling_time]]))
+
 
     if plot:
         if len(result.parameters) <= 2:
