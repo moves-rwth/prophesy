@@ -67,6 +67,7 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
         # create a temporary file for the result.
         ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
         file, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+        os.close(file)
 
         constants_string = self.constants.to_key_value_string()
 
@@ -155,7 +156,8 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
     def sample_single_point(self, parameter_instantiation, result_path=None, pctl_path=None):
         if result_path is None:
-            _, result_path = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+            fd, result_path = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+            os.close(fd)
         if pctl_path is None:
             pctl_path = write_string_to_tmpfile(str(self.pctlformula))
 

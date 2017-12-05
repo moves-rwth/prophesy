@@ -125,7 +125,8 @@ class PrismFile:
         if self._is_temp:
             return
         ensure_dir_exists(configuration.get_intermediate_dir())
-        _, tmpfile = tempfile.mkstemp(suffix=".pm", dir=configuration.get_intermediate_dir(), text=True)
+        fd, tmpfile = tempfile.mkstemp(suffix=".pm", dir=configuration.get_intermediate_dir(), text=True)
+        os.close(fd)
         try:
             shutil.copyfile(self.location, tmpfile)
             self.location = tmpfile
