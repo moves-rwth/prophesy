@@ -86,10 +86,8 @@ setup(
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
     scripts=[
+        'scripts/modelrepair.py',
         'scripts/parameter_synthesis.py',
-        'scripts/sampling_model.py',
-        'scripts/sampling_solutionfunction.py',
-        'scripts/parameter_space_partitioning.py',
         'scripts/webcegar.py'],
     cmdclass={
         'build': ConfigBuild,
