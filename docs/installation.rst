@@ -87,7 +87,9 @@ Step-by-step guide (minimal)
 
     * Write an initial config file::
 
-        $ python write_config.py
+        $ python setup.py build --searchpath PATH
+
+      The optional argument defines a search path, where to look for the tools (modelcheckers, SMT solvers, etc.).
 
     * Run setup.py, e.g.::
 
@@ -167,7 +169,9 @@ Step-by-step guide (full)
 
     * Write an initial config file::
 
-        $ python write_config.py
+        $ python setup.py build --searchpath PATH
+
+      The optional argument defines a search path, where to look for the tools (modelcheckers, SMT solvers, etc.).
 
     * Run setup.py, e.g.::
 
