@@ -60,8 +60,52 @@ def check_python_api(name):
     return spec is not None
 
 
+def get_initial_config(config, search_path):
+    # Setup paths
+    config_dirs = dict()
+    config_dirs["tmp"] = os.path.join(thisfilepath, "/", "tmp", "prophesy")
+    config_dirs["intermediate_files"] = os.path.join(
+        config_dirs["tmp"], "intermediate")
+    config_dirs["plots"] = os.path.join(config_dirs["tmp"], "plots")
+    config_dirs["custom_path"] = ""
+    config["directories"] = config_dirs
+
+    # Setup tool paths
+    config_tools = dict()
+    config_tools["z3"] = find_tool("z3", search_path)
+    config_tools["isat"] = find_tool("isat", search_path)
+    config_tools["yices"] = find_tool("yices-smt2", search_path)
+    config_tools["param"] = find_tool("param", search_path)
+    config_tools["storm"] = find_tool("storm", search_path)
+    config_tools["storm-pars"] = find_tool("storm-pars", search_path)
+    config_tools["prism"] = find_tool("prism", search_path)
+    config["external_tools"] = config_tools
+
+    # Setup sampling constants
+    config_sampling = dict()
+    config_sampling["distance"] = str(0.2)
+    config_sampling["sampling_threshold_new"] = str(50)
+    config["sampling"] = config_sampling
+
+    # Setup constraint constants
+    config_constraints = dict()
+    config["constraints"] = config_constraints
+
+    config_smt = dict()
+    config_smt["timeout"] = str(10)
+    config["smt"] = config_smt
+
+
+def get_initial_dependencies_config(config):
+    # Setup optional dependencies
+    config_deps = dict()
+    config_deps["stormpy"] = check_python_api("stormpy")
+    config_deps["pypdf2"] = check_python_api("PyPDF2")
+    config["installed_deps"] = config_deps
+
+
 def get_initial_web_config(config):
-    config_dirs = {}
+    config_dirs = dict()
     config_dirs["server_tmp"] = os.path.join(
         thisfilepath, "/", "tmp", "prophesy_web")
     config_dirs["web_sessions"] = os.path.join(
@@ -73,54 +117,19 @@ def get_initial_web_config(config):
     config["directories"] = config_dirs
 
 
-def get_initial_config(config, search_path):
-    # Setup paths
-    config_dirs = {}
-    config_dirs["tmp"] = os.path.join(thisfilepath, "/", "tmp", "prophesy")
-    config_dirs["intermediate_files"] = os.path.join(
-        config_dirs["tmp"], "intermediate")
-    config_dirs["plots"] = os.path.join(config_dirs["tmp"], "plots")
-    config_dirs["custom_path"] = ""
-    config["directories"] = config_dirs
-
-    # Setup tool paths
-    config_tools = {}
-    config_tools["z3"] = find_tool("z3", search_path)
-    config_tools["isat"] = find_tool("isat", search_path)
-    config_tools["yices"] = find_tool("yices-smt2", search_path)
-    config_tools["param"] = find_tool("param", search_path)
-    config_tools["storm"] = find_tool("storm", search_path)
-    config_tools["storm-pars"] = find_tool("storm-pars", search_path)
-    config_tools["prism"] = find_tool("prism", search_path)
-    config["external_tools"] = config_tools
-
-    # Setup optional dependencies
-    config_deps = {}
-    config_deps["stormpy"] = check_python_api("stormpy")
-    config_deps["pypdf2"] = check_python_api("PyPDF2")
-    config["installed_deps"] = config_deps
-
-    # Setup sampling constants
-    config_sampling = {}
-    config_sampling["distance"] = str(0.2)
-    config_sampling["sampling_threshold_new"] = str(50)
-    config["sampling"] = config_sampling
-
-    # Setup constraint constants
-    config_constraints = {}
-    config["constraints"] = config_constraints
-
-    config_smt = {}
-    config_smt["timeout"] = str(10)
-    config["smt"] = config_smt
-
-
-def write_initial_config(search_path = None):
+def write_initial_config(search_path=None):
     print("Write config with search path {}".format(search_path))
     config = configparser.ConfigParser()
     get_initial_config(config, search_path)
     path = os.path.join(thisfilepath, "prophesy", "prophesy.cfg")
     logging.info("Writing config to " + path)
+    with open(path, 'w') as configfile:
+        config.write(configfile)
+
+    config = configparser.ConfigParser()
+    get_initial_dependencies_config(config)
+    path = os.path.join(thisfilepath, "prophesy", "dependencies.cfg")
+    logging.info("Writing dependencies to " + path)
     with open(path, 'w') as configfile:
         config.write(configfile)
 
