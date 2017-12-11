@@ -4,9 +4,7 @@ import pycarl.gmp.formula
 import pycarl.formula
 import pycarl.convert
 
-from pycarl._config import CARL_PARSER, CARL_WITH_CLN
-
-if CARL_PARSER:
+if pycarl.has_parser():
     import pycarl.parse
     import pycarl.gmp.parse
 
@@ -14,7 +12,7 @@ if CARL_PARSER:
 else:
     ParserError = RuntimeError
 
-if CARL_WITH_CLN:
+if pycarl.has_cln():
     import pycarl.cln
     import pycarl.cln.formula
 
@@ -42,12 +40,12 @@ inf = pycarl.inf
 
 
 def parse(input):
-    if not CARL_PARSER:
+    if not pycarl.has_parser():
         raise ImportError("Parsing capabilities not available as pycarl was built without parsing support.")
     return pycarl.parse.deserialize(input, pycarl.gmp)
 
 
-if CARL_WITH_CLN:
+if pycarl.has_cln():
     def convert_to_storm_type(data):
         return pycarl.convert.convert_to_cln(data)
 
