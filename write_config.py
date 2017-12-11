@@ -93,6 +93,7 @@ def get_initial_config(config, search_path):
 
     config_smt = dict()
     config_smt["timeout"] = str(10)
+    config_smt["memout"] = str(100)
     config["smt"] = config_smt
 
 
