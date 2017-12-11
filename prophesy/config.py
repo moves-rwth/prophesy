@@ -14,12 +14,12 @@ class ModulesConfig(Configuration):
     def __init__(self):
         super().__init__(os.path.join(os.path.dirname(os.path.realpath(__file__)), "dependencies.cfg"))
 
-
     def is_module_available(self, module):
         return self.get_boolean(ModulesConfig.DEPENDENCIES, module)
 
     def has_stormpy(self):
         return self.is_module_available("stormpy")
+
 
 class ProphesyConfig(Configuration):
     # section names
@@ -32,8 +32,6 @@ class ProphesyConfig(Configuration):
     def __init__(self, path_to_cfg):
         super().__init__(path_to_cfg)
         self._init_tools()
-
-
 
     def getAvailableSMTSolvers(self):
         if len(self.smtsolvers) == 0:
@@ -106,14 +104,14 @@ class ProphesyConfig(Configuration):
             if not re.match(r"Storm ", output, re.MULTILINE):
                 raise ConfigurationError("Storm is not found at " + storm_loc)
 
-        storm_loc = self.get_storm_pars()
-        if storm_loc:
+        storm_pars_loc = self.get_storm_pars()
+        if storm_pars_loc:
             try:
-                output = util.run_tool([storm_loc, '--version'], True)
+                output = util.run_tool([storm_pars_loc, '--version'], True)
             except:
-                raise ConfigurationError("Storm-pars is not found at " + storm_loc)
+                raise ConfigurationError("Storm-pars is not found at " + storm_pars_loc)
             if not re.match(r"Storm-pars", output, re.MULTILINE):
-                raise ConfigurationError("Storm-pars is not found at " + storm_loc)
+                raise ConfigurationError("Storm-pars is not found at " + storm_pars_loc)
 
         prism_loc = self.get_prism()
         if prism_loc:
@@ -215,9 +213,7 @@ class ProphesyConfig(Configuration):
         return self.get_all()[sec]
 
 
-
-
-def load_configuration(path = None):
+def load_configuration(path=None):
     global configuration
     if path is None:
         configuration = ProphesyConfig(os.path.join(os.path.dirname(os.path.realpath(__file__)), "prophesy.cfg"))
@@ -227,4 +223,3 @@ def load_configuration(path = None):
 
 configuration = None
 modules = ModulesConfig()
-
