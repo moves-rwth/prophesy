@@ -134,7 +134,7 @@ class Plot:
             ax1.plot(samples_black, len(samples_black) * [1], "+", c='black')
 
             ax1.axes.get_yaxis().set_visible(False)
-            ax1.set_xlabel(str(parameters[0].variable))
+            ax1.set_xlabel(str(parameters[0].name))
             ax1.patch.set_visible(False)
             fig.patch.set_visible(False)
 
