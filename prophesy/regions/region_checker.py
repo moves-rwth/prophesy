@@ -11,6 +11,11 @@ class RegionCheckResult(Enum):
     Refined = 2  #: We don't know, we return a subregion which is still undecided. The remainder is satisfied.
     Unknown = 3  #: We don't know.
 
+    def __str__(self):
+        names = ["Cex", "Sat", "Ref", "Unk"]
+        assert self.value < len(names)
+        return names[self.value]
+
 
 class RegionChecker:
     """
