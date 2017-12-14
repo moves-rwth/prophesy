@@ -209,16 +209,18 @@ def sample(state, export, method, plot, samplingnr, iterations, stats):
     if export:
         write_samples_file(state.problem_description.parameters, refined_samples, export)
 
+    # Generate statistics
+    stat_header = "\t".join(
+        ["uniformsamples", "safesamplesinuniform", "ustime", "totalsamples", "safesamplesintotal", "refinetime"])
+    stat_output = "{}\t\t{}\t\t\t{:.2f}\t{}\t\t{}\t\t\t{:.2f}".format(nr_initial_samples, nr_initial_samples_safe,
+                                                          uniform_sampling_time, len(refined_samples), len(
+            refined_samples.split(state.problem_description.threshold)[0]), refined_sampling_time)
+    print(stat_header)
+    print(stat_output)
     if stats:
         with open(stats, 'w') as file:
-            file.write("\t".join(["uniformsamples", "safesamplesinuniform", "ustime", "totalsamples", "safesamplesintotal", "refinetime"]))
-            file.write("\n")
-
-            file.write("\t".join([str(x) for x in [nr_initial_samples, nr_initial_samples_safe, uniform_sampling_time,
-                                                   len(refined_samples),
-                                                   len(refined_samples.split(state.problem_description.threshold)[0]),
-                                                   refined_sampling_time]]))
-
+            file.write(stat_header + "\n")
+            file.write(stat_output + "\n")
 
     if plot:
         if len(result.parameters) <= 2:
