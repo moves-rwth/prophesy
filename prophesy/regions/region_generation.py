@@ -88,6 +88,7 @@ class GenerationRecord:
     def safe(self):
         return self._safe
 
+
 class RegionGenerator:
     """
     A generator for regions. 
@@ -131,7 +132,8 @@ class RegionGenerator:
         self.plot = len(self.parameters) <= 2
         self.first_pdf = True
         ensure_dir_exists(prophesy.config.configuration.get_plots_dir())
-        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_", dir=prophesy.config.configuration.get_plots_dir())
+        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_",
+                                               dir=prophesy.config.configuration.get_plots_dir())
 
     def __iter__(self):
         # Prime the generator
@@ -147,7 +149,7 @@ class RegionGenerator:
             if self._plot_candidates:
                 self.plot_candidate()
             self.start_analysis()
-            res =  self._analyse_region(polygon, welldefined, area_safe)
+            res = self._analyse_region(polygon, welldefined, area_safe)
             self.stop_analysis()
             self.stop_iteration()
             yield res
@@ -216,7 +218,6 @@ class RegionGenerator:
                           *args, **kwargs)
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
-
 
     @abstractmethod
     def next_region(self):
@@ -324,8 +325,8 @@ class RegionGenerator:
         print(self._records[-1].iteration_time)
         logger.info("Done with iteration: took %s", str(self._records[-1].iteration_time))
 
-
-    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True, export_statistics = None):
+    def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True,
+                             export_statistics=None):
         """
         Iteratively generate new regions, heuristically, attempting to find the largest safe or unsafe area.
         :param max_iter: Number of regions to generate/check at most (not counting SMT failures), -1 for unbounded
@@ -353,39 +354,51 @@ class RegionGenerator:
                 break
 
             # Plot intermediate result
-            if result != RegionCheckResult.Unknown: #and len(self.all_polys) % plot_every_n == 0:
+            if result != RegionCheckResult.Unknown:  # and len(self.all_polys) % plot_every_n == 0:
                 self.plot_results(display=True)
-
 
         # Plot the final outcome
         if self.plot:
             self.plot_results(display=False)
             logging.info("Generation complete, plot located at {0}".format(self.result_file))
 
-
-
+        # Print results
+        logging.info(self.generate_header())
+        logging.info(self.generate_stats(update=True))
 
         return self.safe_polys, self.bad_polys, self.new_samples
+
+    def generate_header(self):
+        return "\t".join(
+            ["N", "cons. area", "res", "safe", "gentime", "anatime", "ttime", "cov. area", "cumgentime",
+             "cumanatime", "cumttime"]) + "\n"
+
+    def generate_stats(self, update=False):
+        stats = ""
+
+        cov_area = 0.0
+        cumulative_generation_time = 0.0
+        cumulative_analysis_time = 0.0
+        cumulative_total_time = 0.0
+        for idx, r in enumerate(self._records):
+            cov_area += float(r.covered_area)
+            cumulative_generation_time += r.generation_time
+            cumulative_analysis_time += r.analysis_time
+            cumulative_total_time += r.iteration_time
+            if not update or len(self._records) == idx + 1:
+                stats += "\t".join([str(x) for x in
+                                    [idx, r.region.size(), r.result, r.safe, r.generation_time, r.analysis_time,
+                                     r.iteration_time, cov_area, cumulative_generation_time, cumulative_analysis_time,
+                                     cumulative_total_time]])
+                stats += "\n"
+        return stats
 
     def export_stats(self, filename, update=False):
         logging.debug("Write stats to %s (update == %s)", filename, str(update))
         with open(filename, 'a') as file:
             if not update or len(self._records) == 1:
-                file.write("\t".join(["N", "cons. area", "res", "safe", "gentime", "anatime", "ttime", "cov. area", "cumgentime", "cumanatime", "cumttime"]))
-                file.write("\n")
-            cov_area = 0.0
-            cumulative_generation_time = 0.0
-            cumulative_analysis_time = 0.0
-            cumulative_total_time = 0.0
-            for idx, r in enumerate(self._records):
-                cov_area += float(r.covered_area)
-                cumulative_generation_time += r.generation_time
-                cumulative_analysis_time += r.analysis_time
-                cumulative_total_time += r.iteration_time
-                if not update or len(self._records) == idx + 1:
-                    file.write("\t".join([str(x) for x in [idx, r.region.size(), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time, cov_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time]]))
-                    file.write("\n")
-
+                file.write(self.generate_header())
+            file.write(self.generate_stats(update))
 
     def _analyse_region(self, region, welldefined, safe):
         """
@@ -406,8 +419,12 @@ class RegionGenerator:
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
             # TODO region might contain this info, why not use that.
-            self.safe_samples = InstantiationResultDict({k: v for k, v in self.safe_samples.items() if not region.contains(k.get_point(self.parameters))}, parameters=self.parameters)
-            self.bad_samples = InstantiationResultDict({k: v for k, v in self.bad_samples.items() if not region.contains(k.get_point(self.parameters))}, parameters=self.parameters)
+            self.safe_samples = InstantiationResultDict(
+                {k: v for k, v in self.safe_samples.items() if not region.contains(k.get_point(self.parameters))},
+                parameters=self.parameters)
+            self.bad_samples = InstantiationResultDict(
+                {k: v for k, v in self.bad_samples.items() if not region.contains(k.get_point(self.parameters))},
+                parameters=self.parameters)
 
             # update everything
             self.accept_region()
@@ -433,9 +450,3 @@ class RegionGenerator:
             self.fail_region()
             self.record_unknown(region, safe)
             return RegionCheckResult.Unknown, (region, safe)
-
-
-
-
-
-
