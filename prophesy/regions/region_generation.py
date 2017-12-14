@@ -91,7 +91,7 @@ class GenerationRecord:
 
 class RegionGenerator:
     """
-    A generator for regions. 
+    A generator for regions.
     This class acts as an iterable that generates new regions (or counterexamples),
     until the search space is exhausted (which possibly never happens).
     """
@@ -260,8 +260,8 @@ class RegionGenerator:
     def record_accepted(self, region, safe):
         """
         Record the accepted region.
-        
-        :return: 
+
+        :return:
         """
         logger.info("Region accepted")
 
@@ -276,7 +276,7 @@ class RegionGenerator:
     def record_cex(self, region, safe, additional):
         """
         :param additional: An additional sample.
-        :return: 
+        :return:
         """
         logger.info("Counterexample found")
         if additional.result >= self.threshold:
@@ -371,7 +371,7 @@ class RegionGenerator:
     def generate_header(self):
         return "\t".join(
             ["N", "cons. area", "res", "safe", "gentime", "anatime", "ttime", "cov. area", "cumgentime",
-             "cumanatime", "cumttime"]) + "\n"
+             "cumanatime", "cumttime"])
 
     def generate_stats(self, update=False):
         stats = ""
@@ -386,18 +386,16 @@ class RegionGenerator:
             cumulative_analysis_time += r.analysis_time
             cumulative_total_time += r.iteration_time
             if not update or len(self._records) == idx + 1:
-                stats += "\t".join([str(x) for x in
-                                    [idx, r.region.size(), r.result, r.safe, r.generation_time, r.analysis_time,
-                                     r.iteration_time, cov_area, cumulative_generation_time, cumulative_analysis_time,
-                                     cumulative_total_time]])
-                stats += "\n"
+                stats += "{}\t{:.2f}\t\t{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\n".format(
+                    idx, float(r.region.size()), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time,
+                    cov_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time)
         return stats
 
     def export_stats(self, filename, update=False):
         logging.debug("Write stats to %s (update == %s)", filename, str(update))
         with open(filename, 'a') as file:
             if not update or len(self._records) == 1:
-                file.write(self.generate_header())
+                file.write(self.generate_header() + "\n")
             file.write(self.generate_stats(update))
 
     def _analyse_region(self, region, welldefined, safe):
