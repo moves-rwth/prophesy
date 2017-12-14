@@ -14,6 +14,7 @@ from prophesy.data.property import OperatorBound
 from prophesy.data.samples import InstantiationResultDict, InstantiationResultFlag
 from prophesy.data.constant import Constants
 from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.model_type import ModelType
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
     Class wrapping the storm model checker CLI.
     """
 
-    def __init__(self, main_location = None, parameter_location = None):
+    def __init__(self, main_location=None, parameter_location=None):
         """
         Constructor.
         :param main_location: Path to main storm binary. If None, we query the configuration.
@@ -73,7 +74,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("pctl formula missing")  # TODO not strictly necessary
 
         ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
-        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(),
+                                          text=True)
         os.close(fd)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
@@ -113,7 +115,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         # create a temporary file for the result.
         ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
-        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(),
+                                          text=True)
         os.close(fd)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
@@ -156,21 +159,25 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())
 
         def sample_single_point(parameter_instantiation):
-            fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+            fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(),
+                                              text=True)
             os.close(fd)
 
-            const_values_string = ",".join(["{}={}".format(parameter.name, val) for parameter, val in parameter_instantiation.items()])
+            const_values_string = ",".join(
+                ["{}={}".format(parameter.name, val) for parameter, val in parameter_instantiation.items()])
             constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""
             if constants_string != "":
                 const_values_string = const_values_string + "," + constants_string
 
-            args = [self.main_location, # Parametric DRN not supported with main version.
+            args = [self.main_location,  # Parametric DRN not supported with main version.
                     '--prop', str(self.pctlformula),
                     "-const", const_values_string]
             if self.drnfile:
                 args += ['-drn', self.drnfile.location]
             elif self.prismfile:
                 args += ['--prism', self.prismfile.location]
+                if self.prismfile.model_type == ModelType.CTMC:
+                    args += ['-pc']
             if self.bisimulation == BisimulationType.strong:
                 args.append('--bisimulation')
 
@@ -233,7 +240,8 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         property_to_check.bound = OperatorBound(pc.Relation.LESS, threshold)
         hypothesis = "allviolated" if safe else "allsat"
 
-        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(), text=True)
+        fd, resultfile = tempfile.mkstemp(suffix=".txt", dir=prophesy.config.configuration.get_intermediate_dir(),
+                                          text=True)
         os.close(fd)
 
         constants_string = self.constants.to_key_value_string(to_float=False) if self.constants else ""

@@ -10,8 +10,9 @@ from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.data.constant import Constants
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.regions.region_checker import RegionCheckResult
-from prophesy.regions.welldefinedness import  WelldefinednessResult
+from prophesy.regions.welldefinedness import WelldefinednessResult
 from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.model_type import ModelType
 import prophesy.adapter.stormpy as stormpy
 import prophesy.adapter.pycarl as pc
 
@@ -85,14 +86,13 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.drnfile = drnfile
         self.constants = constants
 
-
-
     def load_model_from_prismfile(self, prism_file, constants=Constants()):
         logger.debug("Load model from prism file")
         self._reset_internal()
         self.prismfile = prism_file
         self.constants = constants
-        self._program = stormpy.parse_prism_program(self.prismfile.location)
+        prismcompatibility = True if self.prismfile.model_type == ModelType.CTMC else False
+        self._program = stormpy.parse_prism_program(self.prismfile.location, prismcompatibility)
 
         if not self._program.undefined_constants_are_graph_preserving:
             # Need to instantiate constants
@@ -152,6 +152,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def get_parameter_mapping(self, prophesy_parameters):
         """Get a mapping from prophesy parameters to model parameters in stormpy."""
+
         def get_matching_model_parameter(model_parameters, variable_name):
             """Return matching parameter or None."""
             return next((v for v in model_parameters if v.name == variable_name), None)
@@ -220,7 +221,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.get_model()
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = pc.convert_from_storm_type(stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0]))
+        rational_function = pc.convert_from_storm_type(
+            stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0]))
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
@@ -248,7 +250,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                  parameter_instantiation.items()}
         instantiated_model = model_instantiator.instantiate(point)
-        result = pc.convert_from_storm_type(stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
+        result = pc.convert_from_storm_type(
+            stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
         return result
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
@@ -264,7 +267,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Check via PLA
         logger.info("Call stormpy for PLA check")
         hypothesis = stormpy.pars.RegionResultHypothesis.ALLVIOLATED if above_threshold else stormpy.pars.RegionResultHypothesis.ALLSAT
-        result = pla_checker.check_region(self._environment, region, hypothesis, stormpy.pars.RegionResult.UNKNOWN, False)
+        result = pla_checker.check_region(self._environment, region, hypothesis, stormpy.pars.RegionResult.UNKNOWN,
+                                          False)
         logger.info("Stormpy call finished successfully with result: {}".format(result))
 
         if result == stormpy.pars.RegionResult.ALLSAT:
@@ -296,6 +300,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
         pla_checker = self.get_pla_checker(None)
         region_string = hyperrectangle.to_region_string(parameters)
-        result = pla_checker.get_bound(stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
+        result = pla_checker.get_bound(
+            stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
         assert result.is_constant()
         return stormpy.convert_from_storm_type(result.constant_part())
