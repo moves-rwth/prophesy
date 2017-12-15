@@ -69,6 +69,13 @@ class GenerationRecord:
             return 0.0
 
     @property
+    def covered_safe_area(self):
+        if self._safe and self._result == RegionCheckResult.Satisfied:
+            return self._region.size()
+        else:
+            return 0.0
+
+    @property
     def result(self):
         return self._result
 
@@ -370,25 +377,28 @@ class RegionGenerator:
 
     def generate_header(self):
         return "\t".join(
-            ["N", "cons. area", "res", "safe", "gentime", "anatime", "ttime", "cov. area", "cumgentime",
-             "cumanatime", "cumttime"])
+            ["N", "cons. area", "res", "safe", "gentime", "anatime", "ttime", "cov. area", "cov. safe area",
+             "cumgentime", "cumanatime", "cumttime"])
 
     def generate_stats(self, update=False):
         stats = ""
 
         cov_area = 0.0
+        safe_area = 0.0
         cumulative_generation_time = 0.0
         cumulative_analysis_time = 0.0
         cumulative_total_time = 0.0
         for idx, r in enumerate(self._records):
             cov_area += float(r.covered_area)
+            safe_area += float(r.covered_safe_area)
             cumulative_generation_time += r.generation_time
             cumulative_analysis_time += r.analysis_time
             cumulative_total_time += r.iteration_time
+
             if not update or len(self._records) == idx + 1:
-                stats += "{}\t{:.2f}\t\t{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\n".format(
+                stats += "{}\t{:.2f}\t\t{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\n".format(
                     idx, float(r.region.size()), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time,
-                    cov_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time)
+                    cov_area, safe_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time)
         return stats
 
     def export_stats(self, filename, update=False):
