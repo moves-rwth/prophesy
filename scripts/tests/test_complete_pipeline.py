@@ -10,8 +10,13 @@ import parameter_synthesis
 import pycarl
 
 benchmarks_pipeline = [
-    require_storm()(require_z3()(("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "storm", "etr", "quads"))),
-    require_storm()(require_z3()(("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "stormpy", "etr", "quads"))),
+    pytest.mark.xfail()(
+        require_storm()(require_z3()(("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "storm", "etr", "quads")))),
+    require_stormpy()(require_z3()(("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "stormpy", "etr", "quads"))),
+    require_storm()(require_z3()(("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "storm", "pla", "quads"))),
+    require_stormpy()(require_z3()(("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "stormpy", "pla", "quads"))),
+
+    require_stormpy()(require_z3()(("herman", "herman3", "", "herman", 0.4, "z3", "stormpy", "pla", "quads"))),
 ]
 
 
