@@ -128,7 +128,7 @@ class HyperRectangleRegions(RegionGenerator):
                 dist = new_dist
         for sample in self.bad_samples.items():
             new_dist = sample[0].get_point(self.parameters).distance(center)
-            if new_dist < dist:
+            if not dist or new_dist < dist:
                 sublogger.debug("Currently closest bad sample {} is closer than any safe sample".format(sample[0]))
                 return False
         sublogger.debug("We have no samples available, assume safe for now.")
