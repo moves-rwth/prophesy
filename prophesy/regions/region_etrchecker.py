@@ -88,7 +88,7 @@ class EtrRegionChecker(SmtRegionChecker):
             assert problem_description.property.operator == OperatorType.reward
             reward_model = self._get_reward_model(model, problem_description)
 
-            # TODO make sure that the property is less infinity.
+
             rew0 = self._find_rew0_states(self.model_explorer.pctlformula[0], model)
             for state in model.states:
                 if rew0.get(state.id):

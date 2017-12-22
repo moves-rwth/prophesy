@@ -1,9 +1,12 @@
 Prophesy
 ========
 
-Prophesy is a tool set for parameter synthesis of parametric Markov models. 
+Prophesy is a tool set for parameter synthesis of parametric Markov models.
+It can work with a variety of backends.
 For more information, we refer to the docs.
 
+Please notice that prophesy is currently in early beta stage.
+In particular, the installation process is known to be error prone.
 
 Installation
 ------------
@@ -17,12 +20,12 @@ Authors
 -------
 Prophesy is mainly developed at RWTH Aachen University by:
 
-- Harold Bruintjes
 - Sebastian Junges
 - Matthias Volk
 
 and received notable contributions from:
 
+- Harold Bruintjes
 - Tom Janson
 - Lutz Klinkenberg
 

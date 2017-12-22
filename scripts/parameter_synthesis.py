@@ -277,20 +277,30 @@ def search_optimum(state, dir):
 @pass_state
 def find_feasible_instantiation(state, dir, method):
     region = HyperRectangle(*state.problem_description.parameters.get_parameter_bounds())
-    if method == "sfsmt":
-        checker = SolutionFunctionRegionChecker(state.solver)
-    elif method == "etr":
-        checker = EtrRegionChecker(state.solver, state.mc)
-    checker.initialize(state.problem_description, fixed_threshold=True)
-    result, data = checker.analyse_region(region, dir == "below")
 
-    if result == RegionCheckResult.Satisfied:
-        print("No such point")
-    elif result ==RegionCheckResult.CounterExample:
-        print("Point found: {}".format(str(data.instantiation) + ": " + str(data.result) + "(approx. " + str(float(data.result)) + ")"))
+    if method in ["sfsmt", "etr"]:
+
+        if method == "sfsmt":
+            checker = SolutionFunctionRegionChecker(state.solver)
+        elif method == "etr":
+            checker = EtrRegionChecker(state.solver, state.mc)
+
+        checker.initialize(state.problem_description, fixed_threshold=True)
+        result, data = checker.analyse_region(region, dir == "below")
+
+        if result == RegionCheckResult.Satisfied:
+            print("No such point")
+        elif result == RegionCheckResult.CounterExample:
+            print("Point found: {}".format(str(data.instantiation) + ": " + str(data.result) + "(approx. " + str(float(data.result)) + ")"))
+
+    elif method in ["pso"]:
+        optimizer = ModelOptimizer(state.mc, state.problem_description.parameters, state.problem_description.property,
+                                   dir)
+        optimizer.set_termination_value()
+        instance, val = optimizer.search()
+        score = optimizer.score(None, val)
 
 
-#
 # @parameter_synthesis.command()
 # @click.argument("bound")
 # @click.argument("verification-method")
