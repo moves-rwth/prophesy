@@ -272,11 +272,18 @@ def search_optimum(state, dir):
     return state
 
 @parameter_synthesis.command()
+@click.option("--stats")
+@click.option("--epsilon")
 @click.argument("dir", type=click.Choice(["above", "below"]))
 @click.argument("method")
 @pass_state
-def find_feasible_instantiation(state, dir, method):
+def find_feasible_instantiation(state, stats, epsilon, dir, method):
+    if method in ["pso"]:
+        # First, create the open interval
+        state.problem_description.parameters.make_intervals_open()
+        state.problem_description.parameters.make_intervals_closed(pc.Rational(0.001))
     region = HyperRectangle(*state.problem_description.parameters.get_parameter_bounds())
+
 
     if method in ["sfsmt", "etr"]:
 
@@ -291,14 +298,21 @@ def find_feasible_instantiation(state, dir, method):
         if result == RegionCheckResult.Satisfied:
             print("No such point")
         elif result == RegionCheckResult.CounterExample:
-            print("Point found: {}".format(str(data.instantiation) + ": " + str(data.result) + "(approx. " + str(float(data.result)) + ")"))
+            print("Point found: {}: {} (approx. {})".format(str(data.instantiation), str(data.result), float(data.result)))
 
     elif method in ["pso"]:
         optimizer = ModelOptimizer(state.mc, state.problem_description.parameters, state.problem_description.property,
-                                   dir)
-        optimizer.set_termination_value()
-        instance, val = optimizer.search()
-        score = optimizer.score(None, val)
+                                   "max" if dir == "above" else "min", region=region)
+        optimizer.set_termination_threshold(state.problem_description.threshold)
+        result = optimizer.search()
+        print(result.result)
+        print("Point found: {}: {} (approx. {})".format(str(result.instantiation), str(result.result), float(result.result)))
+
+    if stats:
+        with open(stats, 'w') as file:
+            file.write("model-building-time={}\n".format(state.mc.model_building_time))
+            file.write("nr-mc-calls={}\n".format(state.mc.nr_samples_checked))
+
 
 
 # @parameter_synthesis.command()

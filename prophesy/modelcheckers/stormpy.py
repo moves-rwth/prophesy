@@ -1,4 +1,5 @@
 import logging
+import time
 
 from prophesy.config import modules
 from prophesy.exceptions.module_error import ModuleError
@@ -37,6 +38,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctlformula = None
         self.constants = None
         self.bisimulation = stormpy.BisimulationType.STRONG
+        self._model_building_time = None
+        self._samples_checked = 0
         self._welldefined_checker = None
         # Storing objects of stormpy for incremental calls
         self._program = None
@@ -54,6 +57,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def version(self):
         return str(stormpy.info.Version.short)
+
+    @property
+    def model_building_time(self):
+        return self._model_building_time
+
+    @property
+    def nr_samples_checked(self):
+        return self._samples_checked
 
     def set_pctl_formula(self, formula):
         if self._program is None:
@@ -77,6 +88,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._model_instantiator = None
         self._pla_checker = None
         self._welldefined_checker = None
+
 
     def set_welldefined_checker(self, checker):
         self._welldefined_checker = checker
@@ -132,6 +144,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             if self.pctlformula is None:
                 raise NotEnoughInformationError("PCTL formula not set.")
 
+            start_time = time.time()
             if self.prismfile:
                 if not self._program.undefined_constants_are_graph_preserving:
                     raise RuntimeError("Given model file still contains undefined constants")
@@ -148,6 +161,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
+            self._model_building_time = time.time() - start_time
         return self._model
 
     def get_parameter_mapping(self, prophesy_parameters):
@@ -252,6 +266,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         instantiated_model = model_instantiator.instantiate(point)
         result = pc.convert_from_storm_type(
             stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
+        self._samples_checked += 1
         return result
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):

@@ -100,15 +100,20 @@ class GuidedParticleSwarmOptimizer(EarlyTerminatingParticleSwarmOptimizer):
 class ParticleSwarmSampleGenerator(SampleGenerator):
     """Perform PSO yielding each iterations' samples (particle positions)."""
 
-    def __init__(self, sampler, parameters, score_fct, hint=None, pso_options=None):
+    def __init__(self, sampler, parameters, score_fct, hint=None, pso_options=None, region=None):
         super().__init__(sampler, parameters)
         self.score_fct = score_fct
         self.latest_sampling_result = None
 
-        intervals = [p.interval for p in self.parameters]
+        if region is None:
+            intervals = [p.interval for p in self.parameters]
+        else:
+            intervals = region.intervals
+
         left_bounds = [float(i.left_bound()) for i in intervals]
         right_bounds = [float(i.right_bound()) for i in intervals]
         self.bounds = (left_bounds, right_bounds)
+
 
         if pso_options is None:
             pso_options = dict()
