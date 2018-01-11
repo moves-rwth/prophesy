@@ -24,6 +24,11 @@ class EtrRegionChecker(SmtRegionChecker):
         self.model_explorer = mc
         self.fixed_threshold = True
         self.threshold_set = False
+        self._encoding_timer = 0
+
+    @property
+    def encoding_timer(self):
+        return self.encoding_timer
 
     def initialize(self, problem_description, fixed_threshold = True):
         """
@@ -34,6 +39,10 @@ class EtrRegionChecker(SmtRegionChecker):
         :return: 
         """
 
+        if self.fixed_threshold and not problem_description.threshold:
+            raise ValueError("ETR with fixed threshold needs a threshold")
+        if problem_description.model is None:
+            raise ValueError("ETR checker requires the model as part of the problem description")
         model = self.model_explorer.get_model()
 
         if model.model_type != sp.ModelType.DTMC:
@@ -48,11 +57,7 @@ class EtrRegionChecker(SmtRegionChecker):
         self.fixed_threshold = fixed_threshold
         _bounded_variables = True  # Add bounds to all state variables.
 
-        if self.fixed_threshold and not problem_description.threshold:
-            raise ValueError("ETR with fixed threshold needs a threshold")
-        if problem_description.model is None:
-            raise ValueError("ETR checker requires the model as part of the problem description")
-
+        encoding_start = time.time()
         safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
         badVar = pc.Variable("__bad", pc.VariableType.BOOL)
         self._thresholdVar = pc.Variable("T")
@@ -166,6 +171,8 @@ class EtrRegionChecker(SmtRegionChecker):
                 logger.debug(state_equation)
                 state_constraint = pc.Constraint(state_equation.numerator, pc.Relation.EQ)
                 self._smt2interface.assert_constraint(state_constraint)
+        self.encoding_timer += time.time() - encoding_start
+
 
     def change_threshold(self, new_threshold):
         assert self.fixed_threshold is not True

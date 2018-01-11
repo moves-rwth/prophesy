@@ -12,7 +12,8 @@ class WelldefinednessResult(Enum):
     Illdefined = 2
 
 
-
+def is_welldefined(result):
+    return result == WelldefinednessResult.Welldefined
 
 def check_welldefinedness(checker, parameters, region, constraints):
     """

@@ -13,6 +13,7 @@ class ModelOptimizer:
         self._pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score, region=region)
         self._parameters = parameters
         self._threshold = None
+        self._iterations = 0
 
     def set_termination_threshold(self, threshold):
         self._threshold = threshold
@@ -22,9 +23,14 @@ class ModelOptimizer:
         # _ is parameter_instantiation, which we don't care about here
         return value if self._direction == 'min' else -value
 
+    @property
+    def iterations(self):
+        return self._iterations
+
     def search(self):
         """Run PSO and return best result."""
         for _ in self._pso_sample_gen:
+            self._iterations += 1
             if self._threshold is not None:
                 assert self._direction in ["max", "min"]
                 value = self.score(None, self._pso_sample_gen.pso.historic_best_score)

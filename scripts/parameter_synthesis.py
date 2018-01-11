@@ -1,39 +1,35 @@
 #!/usr/bin/env python3
-import click
 import logging
 import time
 
+import click
+import prophesy.adapter.pycarl as pc
+import prophesy.config
 from prophesy.data.constant import parse_constants_string
-from prophesy.data.parameter import Parameter
 from prophesy.data.hyperrectangle import HyperRectangle
+from prophesy.data.samples import InstantiationResultDict
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.problem_description import ProblemDescription
-from prophesy.input.solutionfunctionfile import write_pstorm_result
-from prophesy.modelcheckers.storm import StormModelChecker
-from prophesy.modelcheckers.prism import PrismModelChecker
-import prophesy.config
-from prophesy.sampling.sampler_ratfunc import RatFuncSampling
-from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.input.samplefile import write_samples_file, read_samples_file
 from prophesy.input.solutionfunctionfile import read_pstorm_result
-from prophesy.smt.isat import IsatSolver
-from prophesy.smt.Z3cli_solver import Z3CliSolver
-from prophesy.smt.YicesCli_solver import YicesCLISolver
-from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
+from prophesy.input.solutionfunctionfile import write_pstorm_result
+from prophesy.modelcheckers.prism import PrismModelChecker
+from prophesy.modelcheckers.storm import StormModelChecker
+from prophesy.optimisation.heuristic_search import ModelOptimizer
+from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
-from prophesy.optimisation.heuristic_search import ModelOptimizer
-from prophesy.optimisation.simple_binary_search import BinarySearchOptimisation
-from  prophesy.optimisation.pla_based_search import PlaSearchOptimisation
-
-from prophesy.regions.region_checker import RegionCheckResult
-
-from prophesy.data.samples import InstantiationResultDict
-
 from prophesy.regions.region_quads import HyperRectangleRegions
-import prophesy.adapter.pycarl as pc
-
+from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
+from prophesy.regions.welldefinedness import check_welldefinedness, is_welldefined
+from prophesy.sampling.sampler_ratfunc import RatFuncSampling
+from prophesy.sampling.sampling import uniform_samples, refine_samples
+from prophesy.smt.YicesCli_solver import YicesCLISolver
+from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.smt.isat import IsatSolver
+from prophesy.optimisation.qcqp import QcqpModelRepair
+from prophesy.modelcheckers.pmc import BisimulationType
 
 def select_mc(f):
     def callback(ctx, param, value):
@@ -54,6 +50,7 @@ class ConfigState(object):
         self.mc = None
         self.solver = None
         self.problem_description = ProblemDescription()
+        self.overall_start_time = None
 
 pass_state = click.make_pass_decorator(ConfigState, ensure=True)
 
@@ -77,6 +74,7 @@ def parameter_synthesis(state, log_smt_calls, config, logfile):
     logging.getLogger().addHandler(ch)
     logging.debug("Loading configuration")
     state.obj = ConfigState()
+    state.overall_start_time = time.time()
     if config:
         prophesy.config.load_configuration(config)
     else:
@@ -122,7 +120,17 @@ def set_threshold(state, threshold):
     state.problem_description.threshold = threshold
     return state
 
-
+@parameter_synthesis.command()
+@click.argument('bisimulation-type', type=click.Choice("none, strong, weak"))
+@pass_state
+def set_bisimulation(state, bisimulation_type):
+    if bisimulation_type == "strong":
+        btype = BisimulationType.strong
+    if bisimulation_type == "weak":
+        btype = BisimulationType.weak
+    if bisimulation_type == "none":
+        btype = BisimulationType.none
+    state.mc.set_bisimulation_type(btype)
 
 @parameter_synthesis.command()
 @click.argument('solution-file')
@@ -278,11 +286,18 @@ def search_optimum(state, dir):
 @click.argument("method")
 @pass_state
 def find_feasible_instantiation(state, stats, epsilon, dir, method):
+    start_time = time.time()
+    epsilon = 0.001
     if method in ["pso"]:
         # First, create the open interval
         state.problem_description.parameters.make_intervals_open()
-        state.problem_description.parameters.make_intervals_closed(pc.Rational(0.001))
+        state.problem_description.parameters.make_intervals_closed(pc.Rational(epsilon))
     region = HyperRectangle(*state.problem_description.parameters.get_parameter_bounds())
+
+    encoding_time = 0.0
+    solver_time = 0.0
+    iterations = 0
+
 
 
     if method in ["sfsmt", "etr"]:
@@ -294,25 +309,61 @@ def find_feasible_instantiation(state, stats, epsilon, dir, method):
 
         checker.initialize(state.problem_description, fixed_threshold=True)
         result, data = checker.analyse_region(region, dir == "below")
+        encoding_time = checker.encoding_timer
+        solver_time = checker.solver_timer
 
         if result == RegionCheckResult.Satisfied:
             print("No such point")
         elif result == RegionCheckResult.CounterExample:
             print("Point found: {}: {} (approx. {})".format(str(data.instantiation), str(data.result), float(data.result)))
 
+    if method in ["qcqp"]:
+        checker = QcqpModelRepair(state.mc)
+        checker.initialize(state.problem_description, epsilon)
+        result = checker.run(dir)
+        encoding_time = checker.encoding_timer
+        solver_time = checker.solver_time
+        iterations = checker.iterations
+        print("Point found: {}: {} (approx. {})".format(str(result.instantiation), str(result.result), float(result.result)))
+
     elif method in ["pso"]:
+        start_wd_check = time.time()
+        is_wd = is_welldefined(check_welldefinedness(state.solver, state.problem_description.parameters, region, state.mc.get_parameter_constraints()[1]))
+        solver_time = time.time() - start_wd_check
+        if not is_wd:
+            raise NotImplementedError("PSO is currently assumes the full region is well-defined")
         optimizer = ModelOptimizer(state.mc, state.problem_description.parameters, state.problem_description.property,
                                    "max" if dir == "above" else "min", region=region)
         optimizer.set_termination_threshold(state.problem_description.threshold)
         result = optimizer.search()
-        print(result.result)
+        iterations = optimizer.iterations
         print("Point found: {}: {} (approx. {})".format(str(result.instantiation), str(result.result), float(result.result)))
 
+    procedure_time = time.time() - start_time
+    total_time = time.time() - state.overall_start_time
+
+    print("This procedure took {}s (from start: {}s)".format(procedure_time, total_time))
     if stats:
         with open(stats, 'w') as file:
+            file.write("total-time={}\n".format(total_time))
+            file.write("procedure-time={}\n".format(procedure_time))
+            file.write("encoding-time={}\n".format(encoding_time))
+            file.write("solver-time={}\n".format(solver_time))
+            file.write("mc-time={}\n".format(state.mc.instantiated_model_checking_time))
+            file.write("iterations={}\n".format(iterations))
             file.write("model-building-time={}\n".format(state.mc.model_building_time))
             file.write("nr-mc-calls={}\n".format(state.mc.nr_samples_checked))
 
+@parameter_synthesis.command()
+@click.argument("destination")
+@pass_state
+def write_model_stats(state, destination):
+    with open(destination, 'w') as file:
+        file.write("states={}\n".format(state.mc.nr_states_before_bisim))
+        file.write("transitions={}\n".format(state.mc.nr_transitions_before_bisim))
+        file.write("nr-parameters={}\n".format(len(state.problem_description.parameters)))
+        file.write("states-after-simplification={}\n".format(state.mc.nr_states))
+        file.write("transitions-after-simplification={}\n".format(state.mc.nr_transitions))
 
 
 # @parameter_synthesis.command()

@@ -1,6 +1,5 @@
 from prophesy.adapter.pycarl import Polynomial, Rational
 import prophesy.adapter.pycarl as pc
-from shapely.geometry.polygon import LinearRing, Polygon, orient
 
 def region_from_polygon(polygon, variables):
     """Compute formula representing  polygon (Polygon, LineString or LinearRing).
@@ -11,6 +10,8 @@ def region_from_polygon(polygon, variables):
     :return: Formula s.t. points in polygon are satisfied.
     :rtype: pycarl.Formula or pycarl.Constraint
     """
+
+    from shapely.geometry.polygon import LinearRing, Polygon, orient
     if len(variables) > 2:
         raise ValueError("The method is only available for two dimensional polygons.")
 

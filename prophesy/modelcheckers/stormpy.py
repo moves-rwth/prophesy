@@ -39,8 +39,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.constants = None
         self.bisimulation = stormpy.BisimulationType.STRONG
         self._model_building_time = None
+        self._instantiated_model_checking_time = 0.0
         self._samples_checked = 0
         self._welldefined_checker = None
+        self._states_before_bisim = None
+        self._transitions_before_bisim = None
         # Storing objects of stormpy for incremental calls
         self._program = None
         self._model = None
@@ -66,6 +69,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def nr_samples_checked(self):
         return self._samples_checked
 
+    @property
+    def instantiated_model_checking_time(self):
+        return self._instantiated_model_checking_time
+
     def set_pctl_formula(self, formula):
         if self._program is None:
             logger.debug("Load formula without a program.")
@@ -88,7 +95,28 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._model_instantiator = None
         self._pla_checker = None
         self._welldefined_checker = None
+        self._states_before_bisim = None
+        self._transitions_before_bisim = None
 
+    @property
+    def nr_states_before_bisim(self):
+        self.get_model()
+        return self._states_before_bisim
+
+    @property
+    def nr_transitions_before_bisim(self):
+        self.get_model()
+        return self._transitions_before_bisim
+
+    @property
+    def nr_states(self):
+        self.get_model()
+        return self._model.nr_states
+
+    @property
+    def nr_transitions(self):
+        self.get_model()
+        return self._model.nr_transitions
 
     def set_welldefined_checker(self, checker):
         self._welldefined_checker = checker
@@ -158,6 +186,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             elif self.drnfile:
                 self._model = stormpy.build_parametric_model_from_drn(self.drnfile.location)
 
+            self._states_before_bisim = self._model.nr_states
+            self._transitions_before_bisim = self._model.nr_transitions
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
@@ -176,7 +206,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             model_parameters = self.get_model().collect_probability_parameters() | self.get_model().collect_reward_parameters()
             for parameter in prophesy_parameters:
                 model_param = get_matching_model_parameter(model_parameters, parameter.name)
-                assert model_param is not None
+                #assert model_param is not None
                 self._parameter_mapping[parameter] = model_param
 
         for parameter in prophesy_parameters:
@@ -260,12 +290,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def sample_single_point(self, parameter_instantiation, parameter_mapping):
         # Instantiate point and check result
+        start = time.time()
         model_instantiator = self.get_model_instantiator()
         point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
-                 parameter_instantiation.items()}
+                 parameter_instantiation.items() if parameter_mapping[parameter] is not None}
         instantiated_model = model_instantiator.instantiate(point)
         result = pc.convert_from_storm_type(
             stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
+        self._instantiated_model_checking_time += time.time() - start
         self._samples_checked += 1
         return result
 

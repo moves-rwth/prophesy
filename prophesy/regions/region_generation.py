@@ -8,7 +8,6 @@ from abc import ABCMeta, abstractmethod
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
-from prophesy.output.plot import Plot
 from prophesy.util import ensure_dir_exists
 import prophesy.config
 
@@ -202,6 +201,8 @@ class RegionGenerator:
         """
         if not self.plot:
             return
+
+        from prophesy.output.plot import Plot
 
         # Extend arguments
         poly_green = kwargs.get('poly_green', [])

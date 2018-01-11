@@ -22,6 +22,7 @@ class SmtRegionChecker(RegionChecker):
         self.parameters = None
         self._safe_relation = pc.Relation.GEQ
         self._bad_relation = pc.Relation.LESS
+        self._solver_timer = 0
 
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
@@ -36,6 +37,10 @@ class SmtRegionChecker(RegionChecker):
         :return: 
         """
         raise RuntimeError("Abstract method called")
+
+    @property
+    def solver_timer(self):
+        return self._solver_timer
 
     def analyse_region(self, polygon, safe):
         """
@@ -71,6 +76,7 @@ class SmtRegionChecker(RegionChecker):
                 start = time.time()
                 checkresult = smt_context.check()
                 duration = time.time() - start
+                self._solver_timer += duration
 
                 if checkresult == Answer.unsat:
                     checkresult = RegionCheckResult.Satisfied
