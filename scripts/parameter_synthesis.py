@@ -281,27 +281,31 @@ def search_optimum(state, dir):
 
 @parameter_synthesis.command()
 @click.option("--stats")
-@click.option("--epsilon")
+@click.option("--epsilon", type=float, default=0.001)
+@click.option("--qcqp-incremental", is_flag=True)
+@click.option("--qcqp-mc", type=click.Choice(["no", "result_only", "full"]))
+@click.option("--qcqp-handle-violation", type=click.Choice(["constrained", "minimisation"]))
+@click.option("--precompute-state-bounds", is_flag=True)
+@click.option("--precheck-welldefinedness", is_flag=True)
+@click.option("--qcqp-store-quadratic", is_flag=True)
 @click.argument("dir", type=click.Choice(["above", "below"]))
 @click.argument("method")
 @pass_state
-def find_feasible_instantiation(state, stats, epsilon, dir, method):
+def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc, qcqp_handle_violation, precompute_state_bounds, precheck_welldefinedness, qcqp_store_quadratic, dir, method):
     start_time = time.time()
-    epsilon = 0.001
-    if method in ["pso"]:
+    if epsilon > 0:
         # First, create the open interval
         state.problem_description.parameters.make_intervals_open()
         state.problem_description.parameters.make_intervals_closed(pc.Rational(epsilon))
+        # TODO it would be better to modify the model accordingly, but that might be hard to realise.
+        # The variable bounds generated here are not necessarily induced by graph-epsilons.
+        # However, for benchmarks we use, it is the same.
     region = HyperRectangle(*state.problem_description.parameters.get_parameter_bounds())
-
     encoding_time = 0.0
     solver_time = 0.0
     iterations = 0
 
-
-
     if method in ["sfsmt", "etr"]:
-
         if method == "sfsmt":
             checker = SolutionFunctionRegionChecker(state.solver)
         elif method == "etr":
@@ -318,9 +322,27 @@ def find_feasible_instantiation(state, stats, epsilon, dir, method):
             print("Point found: {}: {} (approx. {})".format(str(data.instantiation), str(data.result), float(data.result)))
 
     if method in ["qcqp"]:
+        if qcqp_mc is None:
+            qcqp_mc = "no"
+        if qcqp_handle_violation is None:
+            qcqp_handle_violation = "minimisation"
+        is_certainly_welldefined = False
+        if precheck_welldefinedness:
+            is_certainly_welldefined = is_welldefined(
+                check_welldefinedness(state.solver, state.problem_description.parameters, region,
+                                      state.mc.get_parameter_constraints()[1]))
+
         checker = QcqpModelRepair(state.mc)
-        checker.initialize(state.problem_description, epsilon)
-        result = checker.run(dir)
+        checker.initialize(state.problem_description, epsilon, incremental=qcqp_incremental, use_mc=qcqp_mc, handle_violation=qcqp_handle_violation, all_welldefined=is_certainly_welldefined, store_quadratic=qcqp_store_quadratic)
+        lower_state_bounds = None
+        upper_state_bounds = None
+        if precompute_state_bounds:
+            upper_state_bounds = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, True, all_states=True)
+            lower_state_bounds = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, False, all_states=True)
+
+        result = checker.run(dir, upper_state_var_bounds=upper_state_bounds, lower_state_var_bounds=lower_state_bounds)
+        if result.result > state.problem_description.threshold:
+            raise ValueError("Result does not match threshold")
         encoding_time = checker.encoding_timer
         solver_time = checker.solver_time
         iterations = checker.iterations
@@ -489,7 +511,6 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
     return state
 
 def make_modelchecker(mc):
-   # configuration.check_tools()
     pmcs = prophesy.config.configuration.getAvailableParametricMCs()
     if mc == "storm":
         if 'storm' not in pmcs:

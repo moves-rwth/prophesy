@@ -243,13 +243,16 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._model_instantiator = stormpy.pars.PDtmcInstantiator(self.get_model())
         return self._model_instantiator
 
-    def get_pla_checker(self, threshold):
+    def get_pla_checker(self, threshold, splitting_assistance = False, allow_simplifications=True):
         """
         Return model checker for PLA.
         :param threshold: Threshold in formula.
+        :param splitting_assistance: Should splitting assistance be turned on (induces a mild performance penalty)
+        :param allow_simplifications: Allow model simplifications in the checker (prevents using solutions for all states, induces an overhead on simplified models)
         :return: PLA model checker.
         """
         if self._pla_checker is None or self._pla_threshold != threshold:
+            #TODO what should we do if there is a PLA checker with the wrong settings.
             self._pla_threshold = threshold
             # Set formula for PLA
             formula = self.pctlformula[0].raw_formula
@@ -258,7 +261,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 expression = expression_manager.create_rational(pc.convert_from_storm_type(threshold))
                 formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
             # Create PLA checker
-            self._pla_checker = stormpy.pars.create_region_checker(self._environment, self.get_model(), formula)
+            if self.get_model().model_type == stormpy.storage.ModelType.DTMC:
+                self._pla_checker = stormpy.pars.DtmcParameterLiftingModelChecker()
+            elif self.get_model().model_type == stormpy.storage.ModelType.MDP:
+                self._pla_checker = stormpy.pars.MdpParameterLiftingModelChecker()
+            else:
+                #TODO implement transformation for MA/CTMC (Probably already somewhere else?)
+                return NotImplementedError("We have not implemented model transformation to DTMCs/MDPs yet")
+            self._pla_checker.specify(self._environment, self.get_model(), formula, splitting_assistance, allow_simplifications)
         return self._pla_checker
 
     def get_rational_function(self):
@@ -300,6 +310,20 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._instantiated_model_checking_time += time.time() - start
         self._samples_checked += 1
         return result
+
+    def mc_single_point(self, parameter_instantiation, parameter_mapping=None):
+        start = time.time()
+        if parameter_mapping is None:
+            parameter_mapping = self.get_parameter_mapping(parameter_instantiation.get_parameters())
+        model_instantiator = self.get_model_instantiator()
+        point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
+                 parameter_instantiation.items() if parameter_mapping[parameter] is not None}
+        instantiated_model = model_instantiator.instantiate(point)
+        result = stormpy.model_checking(instantiated_model, self.pctlformula[0])
+        self._instantiated_model_checking_time += time.time() - start
+        self._samples_checked += 1
+        return result
+
 
     def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
         logger.info("Check region via stormpy")
@@ -344,10 +368,25 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         regions = [(region_result, region)]
         return regions
 
-    def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction):
-        pla_checker = self.get_pla_checker(None)
+    def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction, all_states=False):
+        """
+        
+        :param parameters: The parameters
+        :param hyperrectangle: The hyperrectangle for the parameters
+        :param direction: 
+        :param all_states: Should the value be computed for all states
+        :return: 
+        """
+        # TODO support for exact PLA.
+        pla_checker = self.get_pla_checker(None, allow_simplifications=(not all_states))
         region_string = hyperrectangle.to_region_string(parameters)
-        result = pla_checker.get_bound(
-            stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
-        assert result.is_constant()
-        return stormpy.convert_from_storm_type(result.constant_part())
+        if all_states:
+            return pla_checker.get_bound_all_states(
+                self._environment,
+                stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()),
+                direction)
+        else:
+            result = pla_checker.get_bound(
+                stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
+            assert result.is_constant()
+            return stormpy.convert_from_storm_type(result.constant_part())
