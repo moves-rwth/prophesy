@@ -44,9 +44,10 @@ class DrnFile:
         with open(self.location) as file:
             for line in file:
                 if line.startswith("@type:"):
-                    if line[7:] in ["dtmc", "DTMC"]:
+                    print(line[7:11])
+                    if line[7:11] in ["dtmc", "DTMC"]:
                         return ModelType.DTMC
-                    if line[7:] in ["mdp", "MDP"]:
+                    if line[7:10] in ["mdp", "MDP"]:
                         return ModelType.MDP
                     else:
                         raise NotImplementedError("Support for other types than DTMC and MDPs is not implemented in the parser.")
