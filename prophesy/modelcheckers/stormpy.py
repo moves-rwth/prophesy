@@ -378,15 +378,19 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         :return: 
         """
         # TODO support for exact PLA.
+        logger.debug("Bound values: Obtain PLA checker")
         pla_checker = self.get_pla_checker(None, allow_simplifications=(not all_states))
+        mapping = self.get_parameter_mapping(parameters)
         region_string = hyperrectangle.to_region_string(parameters)
+        vars= self.get_model().collect_probability_parameters()
+        vars.update(self.get_model().collect_reward_parameters())
+        par_region = stormpy.pars.ParameterRegion(region_string, vars)
         if all_states:
+            logger.debug("Bound for all states")
             return pla_checker.get_bound_all_states(
-                self._environment,
-                stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()),
-                direction)
+                self._environment, par_region,direction)
         else:
-            result = pla_checker.get_bound(
-                stormpy.pars.ParameterRegion(region_string, self.get_model().collect_probability_parameters()), direction)
+            logger.debug("Bound for initial state")
+            result = pla_checker.get_bound(par_region, direction)
             assert result.is_constant()
             return stormpy.convert_from_storm_type(result.constant_part())
