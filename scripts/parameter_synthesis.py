@@ -5,6 +5,8 @@ import time
 import click
 import prophesy.adapter.pycarl as pc
 import prophesy.config
+import random
+import numpy
 from prophesy.data.constant import parse_constants_string
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.samples import InstantiationResultDict
@@ -54,6 +56,9 @@ class ConfigState(object):
 
 pass_state = click.make_pass_decorator(ConfigState, ensure=True)
 
+def set_random_seed(seed):
+    random.seed(seed)
+    numpy.random.seed(seed)
 
 def ensure_model_set(mc, model, constants, property):
     mc.load_model(model, constants)
@@ -68,6 +73,7 @@ def ensure_model_set(mc, model, constants, property):
 @click.option("--logfile", default="prophesy.log")
 @pass_state
 def parameter_synthesis(state, log_smt_calls, config, logfile):
+    set_random_seed(0)
     logging.basicConfig(filename=logfile, format='%(levelname)s:%(message)s', level=logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
@@ -119,6 +125,11 @@ def load_problem(state, model_file, property_file, constants, pctl_index):
 def set_threshold(state, threshold):
     state.problem_description.threshold = threshold
     return state
+
+@parameter_synthesis.command()
+@click.argument('seed', type=int)
+def random_seed(seed):
+    set_random_seed(seed)
 
 @parameter_synthesis.command()
 @click.argument('bisimulation-type', type=click.Choice("none, strong, weak"))
@@ -288,10 +299,11 @@ def search_optimum(state, dir):
 @click.option("--precompute-state-bounds", is_flag=True)
 @click.option("--precheck-welldefinedness", is_flag=True)
 @click.option("--qcqp-store-quadratic", is_flag=True)
+@click.option("--verbose", is_flag=True)
 @click.argument("dir", type=click.Choice(["above", "below"]))
 @click.argument("method")
 @pass_state
-def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc, qcqp_handle_violation, precompute_state_bounds, precheck_welldefinedness, qcqp_store_quadratic, dir, method):
+def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc, qcqp_handle_violation, precompute_state_bounds, precheck_welldefinedness, qcqp_store_quadratic, verbose, dir, method):
     start_time = time.time()
     if epsilon > 0:
         # First, create the open interval
@@ -333,7 +345,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
                                       state.mc.get_parameter_constraints()[1]))
 
         checker = QcqpModelRepair(state.mc)
-        checker.initialize(state.problem_description, epsilon, incremental=qcqp_incremental, use_mc=qcqp_mc, handle_violation=qcqp_handle_violation, all_welldefined=is_certainly_welldefined, store_quadratic=qcqp_store_quadratic)
+        checker.initialize(state.problem_description, epsilon, incremental=qcqp_incremental, use_mc=qcqp_mc, handle_violation=qcqp_handle_violation, all_welldefined=is_certainly_welldefined, store_quadratic=qcqp_store_quadratic, verbose=verbose)
         lower_state_bounds = None
         upper_state_bounds = None
         if precompute_state_bounds:
@@ -341,8 +353,11 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
             lower_state_bounds = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, False, all_states=True)
 
         result = checker.run(dir, upper_state_var_bounds=upper_state_bounds, lower_state_var_bounds=lower_state_bounds)
-        if result.result > state.problem_description.threshold:
+        if dir == "below" and result.result > state.problem_description.threshold:
             raise ValueError("Result does not match threshold")
+        if dir == "above" and result.result < state.problem_description.threshold:
+            raise ValueError("Result does not match threshold")
+
         encoding_time = checker.encoding_timer
         solver_time = checker.solver_time
         iterations = checker.iterations
