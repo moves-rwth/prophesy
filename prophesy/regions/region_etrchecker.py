@@ -1,4 +1,5 @@
 import logging
+import time
 
 from prophesy.regions.region_smtchecker import SmtRegionChecker
 import prophesy.adapter.stormpy as sp
@@ -28,7 +29,7 @@ class EtrRegionChecker(SmtRegionChecker):
 
     @property
     def encoding_timer(self):
-        return self.encoding_timer
+        return self._encoding_timer
 
     def initialize(self, problem_description, fixed_threshold = True):
         """
@@ -171,7 +172,7 @@ class EtrRegionChecker(SmtRegionChecker):
                 logger.debug(state_equation)
                 state_constraint = pc.Constraint(state_equation.numerator, pc.Relation.EQ)
                 self._smt2interface.assert_constraint(state_constraint)
-        self.encoding_timer += time.time() - encoding_start
+        self._encoding_timer += time.time() - encoding_start
 
 
     def change_threshold(self, new_threshold):
