@@ -15,7 +15,7 @@ class QcqpOptions():
     def __init__(self, mu, maxiter, graph_epsilon, silent, incremental, all_welldefined,
                  store_quadratic, mc_termination_check, intermediate_mc, minimise_violation):
         self.mu = 1.2
-        self.mu_multiplicator = 25
+        self.mu_multiplicator = 2
         self.maxiter = maxiter
         self.graph_epsilon = graph_epsilon
         self.silent = silent
@@ -233,18 +233,19 @@ class QcqpSolver():
     def _modelconstraints_reward(self, model, state):
         if not self._is_reward_property:
             return 0.0
-        reward_at_state =  self._reward_model.get_state_reward(int(state))
-        if reward_at_state.is_constant:
+        reward_at_state = self._reward_model.get_state_reward(int(state))
+        if reward_at_state.is_constant():
             return self._float_repr(reward_at_state.constant_part())
 
+
         cons = 0.0
-        assert reward_at_state.denominator.is_constant
+        assert reward_at_state.denominator.is_constant()
         den = self._float_repr(reward_at_state.denominator.constant_part())
+        assert den != 0
         for term in reward_at_state.numerator.polynomial():
             if not term.is_constant():
                 param_id = term.monomial[0][0].id
-
-                cons += self._paramVars[param_id] * self._float_repr(term.coeff) / den
+                cons += self._float_repr(term.coeff) * self._paramVars[param_id] / den
             else:
                 cons += self._float_repr(term.coeff) / den
         return cons
@@ -262,7 +263,7 @@ class QcqpSolver():
             # Cons=values constraints on the right hand side for a pdtmc
             # A flag for linear vs quadratic constraints
             q_part_cons = 0
-
+            assert l_part_cons == 0
             if not options.store_quadratic or not options.incremental:
                 l_part_cons += self._modelconstraints_reward(model, state)
             
@@ -422,7 +423,7 @@ class QcqpSolver():
                 objective += self._pVars[state]/self._mu
         else:
             for state in range(numstate):
-                objective -= self._pVars[state]
+               objective -= self._pVars[state]/self._mu
         self._encoding.setObjective(objective, GRB.MINIMIZE)
 
     def _violation_constraints(self, model, options):
@@ -595,6 +596,7 @@ class QcqpSolver():
                     else:
                         self._paraminit[param_id] = 0
             # Updates penalty parameter
+            self._mu *= options.mu_multiplicator
             if self._mu > 1e8:
                 self._mu = 1e8
 
