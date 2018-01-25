@@ -14,8 +14,8 @@ from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 class QcqpOptions():
     def __init__(self, mu, maxiter, graph_epsilon, silent, incremental, all_welldefined,
                  store_quadratic, mc_termination_check, intermediate_mc, minimise_violation):
-        self.mu = 1.2
-        self.mu_multiplicator = 2
+        self.mu = 5
+        self.mu_multiplicator = 3
         self.maxiter = maxiter
         self.graph_epsilon = graph_epsilon
         self.silent = silent
@@ -148,14 +148,13 @@ class QcqpSolver():
             else:
                 self._pVars = [self._encoding.addVar(lb=0, ub=1.0) for _ in range(numstate)]
         else:
-            assert False
             assert lower_state_bounds is not None
             assert upper_state_bounds is not None
             self._pVars = [self._encoding.addVar(lb=lower_state_bounds.at(state) if lower_state_bounds.at(state) < math.inf else 0.0, ub=upper_state_bounds.at(state)) for state in range(numstate)]
 
         self._tau = [self._encoding.addVar(lb=0) for _ in range(numstate)]
         self._tt = self._encoding.addVar(lb=0.0, name="TT")
-        self._paramVars = dict([[x.id, self._encoding.addVar(lb=0, ub=1.0)] for x, i in self._parameters.items()])
+        self._paramVars = dict([[x.id, self._encoding.addVar(lb=i.left_bound(), ub=i.right_bound())] for x, i in self._parameters.items()])
 
         # Updates the model for gurobi
         self._encoding.update()
@@ -415,8 +414,7 @@ class QcqpSolver():
                 # This minimizes sum of violation,
                 objective += self._tau[state]
         else:
-            assert False
-            objective += self._mu * self._tt
+            objective += self._tt
         #Maximize the probability of initial state
         if dir == "below":
             for state in range(numstate):
@@ -435,7 +433,6 @@ class QcqpSolver():
         :return: 
         """
         if not options.minimise_violation:
-            assert False
             for state in range(model.nr_states):
                 # This constraints minimizes the max of violation
                 self._encoding.addConstr(self._tau[state] <= self._tt)
@@ -722,7 +719,7 @@ class QcqpModelRepair():
             self._property_type = "probability"
 
         self._model = self._model_explorer.get_model()
-        self._qcqp_options = QcqpOptions(mu=0.05, maxiter=1000, graph_epsilon=epsilon, silent=not verbose, incremental=incremental, all_welldefined=all_welldefined,
+        self._qcqp_options = QcqpOptions(mu=0.05, maxiter=1000000, graph_epsilon=epsilon, silent=not verbose, incremental=incremental, all_welldefined=all_welldefined,
                                          store_quadratic=store_quadratic, mc_termination_check=(use_mc == "result_only"), intermediate_mc=(use_mc == "full"),
                                          minimise_violation=(handle_violation=="minimisation")
                                          )

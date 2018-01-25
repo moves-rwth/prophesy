@@ -118,7 +118,7 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         if pso_options is None:
             pso_options = dict()
             pso_options['num_particles'] = 100 if len(parameters) < 10 else 800 if len(parameters) > 40 else 400
-            pso_options['max_iters'] = 600
+            pso_options['max_iters'] = 60000
             pso_options['required_progress'] = pc.Rational('-0.01')
             pso_options['required_progress_look_behind'] = 6 if len(parameters) < 40 else 8
 

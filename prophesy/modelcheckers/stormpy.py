@@ -210,7 +210,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 self._parameter_mapping[parameter] = model_param
 
         for parameter in prophesy_parameters:
-            assert parameter in self._parameter_mapping
+            assert parameter in self._parameter_mapping, repr(parameter) + " not in  " + str(self._parameter_mapping)
         return self._parameter_mapping
 
     def get_parameter_constraints(self):
@@ -380,7 +380,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # TODO support for exact PLA.
         logger.debug("Bound values: Obtain PLA checker")
         pla_checker = self.get_pla_checker(None, allow_simplifications=(not all_states))
-        mapping = self.get_parameter_mapping(parameters)
+        #mapping = self.get_parameter_mapping(parameters)
         region_string = hyperrectangle.to_region_string(parameters)
         vars= self.get_model().collect_probability_parameters()
         vars.update(self.get_model().collect_reward_parameters())

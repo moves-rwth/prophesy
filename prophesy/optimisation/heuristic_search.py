@@ -10,7 +10,12 @@ class ModelOptimizer:
         self._direction = direction
         self.modelchecker = modelchecker
         modelchecker.set_pctl_formula(pctl_property)
-        self._pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score, region=region)
+
+        pso_options = dict()
+        pso_options['num_particles'] = 100 if len(parameters) < 10 else 800 if len(parameters) > 40 else 400
+        pso_options['max_iters'] = 100000
+        pso_options['required_progress_look_behind'] = 100000
+        self._pso_sample_gen = ParticleSwarmSampleGenerator(modelchecker, parameters, self.score, region=region, pso_options=pso_options)
         self._parameters = parameters
         self._threshold = None
         self._iterations = 0

@@ -292,7 +292,7 @@ def search_optimum(state, dir):
 
 @parameter_synthesis.command()
 @click.option("--stats")
-@click.option("--epsilon", type=float, default=0.001)
+@click.option("--epsilon", type=float, default=0.00001)
 @click.option("--qcqp-incremental", is_flag=True)
 @click.option("--qcqp-mc", type=click.Choice(["no", "result_only", "full"]))
 @click.option("--qcqp-handle-violation", type=click.Choice(["constrained", "minimisation"]))
@@ -353,10 +353,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
             lower_state_bounds = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, False, all_states=True)
 
         result = checker.run(dir, upper_state_var_bounds=upper_state_bounds, lower_state_var_bounds=lower_state_bounds)
-        if dir == "below" and result.result > state.problem_description.threshold:
-            raise ValueError("Result does not match threshold")
-        if dir == "above" and result.result < state.problem_description.threshold:
-            raise ValueError("Result does not match threshold")
+
 
         encoding_time = checker.encoding_timer
         solver_time = checker.solver_time
@@ -376,6 +373,10 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
         iterations = optimizer.iterations
         print("Point found: {}: {} (approx. {})".format(str(result.instantiation), str(result.result), float(result.result)))
 
+    if dir == "below" and result.result > state.problem_description.threshold:
+        raise ValueError("Result does not match threshold")
+    if dir == "above" and result.result < state.problem_description.threshold:
+        raise ValueError("Result does not match threshold")
     procedure_time = time.time() - start_time
     total_time = time.time() - state.overall_start_time
 
