@@ -63,6 +63,10 @@ class SMTSolver:
     def to_file(self, p):
         raise NotImplementedError
 
+    @abstractmethod
+    def fix_guards(self, guard, value):
+        raise NotImplementedError
+
     def __enter__(self):
         self.push()
         return self

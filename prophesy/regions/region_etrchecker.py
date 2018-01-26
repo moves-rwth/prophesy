@@ -31,7 +31,20 @@ class EtrRegionChecker(SmtRegionChecker):
     def encoding_timer(self):
         return self._encoding_timer
 
-    def initialize(self, problem_description, fixed_threshold = True):
+    def _add_state_constraint(self, equations, model_type):
+        if model_type == sp.ModelType.DTMC:
+            assert len(equations) == 1
+            state_constraint = pc.Constraint(equations[0], pc.Relation.EQ)
+            self._smt2interface.assert_constraint(state_constraint)
+
+        elif model_type == sp.ModelType.MDP:
+            for action_equation in equations:
+                safe_action_constraint = pc.Constraint(action_equation, self._safe_transition_relation)
+                self._smt2interface.assert_guarded_constraint("__safe", safe_action_constraint)
+                bad_action_constraint = pc.Constraint(action_equation, self._bad_transition_relation)
+                self._smt2interface.assert_guarded_constraint("__bad", bad_action_constraint)
+
+    def initialize(self, problem_description, fixed_threshold = True, fixed_direction = None):
         """
         
         :param problem_description: 
@@ -44,10 +57,11 @@ class EtrRegionChecker(SmtRegionChecker):
             raise ValueError("ETR with fixed threshold needs a threshold")
         if problem_description.model is None:
             raise ValueError("ETR checker requires the model as part of the problem description")
+        if fixed_direction is not None:
+            if fixed_direction not in ["safe", "bad"]:
+                raise ValueError("Direction can only be fixed to safe or bad")
+            self._fixed_direction = fixed_direction
         model = self.model_explorer.get_model()
-
-        if model.model_type != sp.ModelType.DTMC:
-            raise RuntimeError("Only DTMCs are supported for now.")
 
         if len(model.initial_states) > 1:
             raise NotImplementedError("We only support models with a single initial state")
@@ -70,6 +84,12 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
+
+        if self._fixed_direction is not None:
+            excluded_dir = "safe" if self._fixed_direction == "bad" else "bad"
+            # Notice that we have to flip the values, as we are checking all-quantification
+            self._smt2interface.fix_guard("__" + self._fixed_direction, False)
+            self._smt2interface.fix_guard("__" + excluded_dir, True)
 
         initial_state_var = None
         state_var_mapping = dict()
@@ -114,8 +134,12 @@ class EtrRegionChecker(SmtRegionChecker):
         if self.fixed_threshold:
             self._add_threshold_constraint(problem_description.threshold)
 
+        if model.model_type != sp.ModelType.DTMC:
+            raise RuntimeError("Only DTMCs are supported for now.")
+
         if problem_description.property.operator == OperatorType.probability:
             for state in model.states:
+                state_equations = []
                 state_var = state_var_mapping.get(state.id)
                 if state_var is None:
                     continue
@@ -125,7 +149,10 @@ class EtrRegionChecker(SmtRegionChecker):
                     self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.LESS, pc.Rational(1)))
                 state_equation = -pc.Polynomial(state_var)
                 for action in state.actions:
+                    action_equation = state_equation
                     for transition in action.transitions:
+                        if prob0.get(transition.column):
+                            continue
                         # obtain the transition value as a polynomial.
                         if transition.value().is_constant():
                             value = pc.Polynomial(pc.convert_from_storm_type(transition.value().constant_part()))
@@ -138,40 +165,61 @@ class EtrRegionChecker(SmtRegionChecker):
                             value = pc.numerator(pc.convert_from_storm_type(transition.value()))
                             value = value.polynomial() * (1 / denom)
 
-                        if prob0.get(transition.column):
-                            continue
+
                         if prob1.get(transition.column):
-                            state_equation = state_equation + value
+                            action_equation +=  value
                             continue
-                        state_equation = state_equation + value * state_var_mapping.get(transition.column)
-                logger.debug(state_equation)
-                state_constraint = pc.Constraint(state_equation, pc.Relation.EQ)
-                self._smt2interface.assert_constraint(state_constraint)
+                        action_equation +=  value * state_var_mapping.get(transition.column)
+                #logger.debug(state_equation)
+                    state_equations.append(action_equation)
+                self._add_state_constraint(state_equations, model.model_type)
+            #Nothing left to be done for the model.
         else:
             for state in model.states:
+                state_equations = []
                 state_var = state_var_mapping.get(state.id)
                 if state_var is None:
                     continue
                 if _bounded_variables:
                     # if bounded variable constraints are to be added, do so.
                     self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
-                state_equation = -pc.RationalFunction(state_var) + (
-                    pc.convert_from_storm_type(reward_model.state_rewards[state.id].rational_function()))
+                state_reward = pc.convert_from_storm_type(reward_model.state_rewards[state.id].rational_function())
+                if state_reward.is_constant():
+                    reward_value = state_reward.constant_part()
+                else:
+                    denom = pc.denominator(state_reward)
+                    if not denom.is_constant():
+                        raise RuntimeError("only polynomial constraints are supported right now.")
+                    denom = denom.constant_part()
+                    reward_value = pc.numerator(state_reward) * (1 / denom)
+                state_equation = -pc.Polynomial(state_var) + reward_value
+
+
+
                 for action in state.actions:
+                    action_equation = state_equation
                     for transition in action.transitions:
+
+                        if rew0.get(transition.column):
+                            continue
                         # obtain the transition value as a polynomial.
                         if transition.value().is_constant():
                             value = pc.Polynomial(pc.convert_from_storm_type(transition.value().constant_part()))
                         else:
-                            value = pc.convert_from_storm_type(transition.value()).rational_function()
+                            denom = pc.denominator(pc.convert_from_storm_type(transition.value()))
+                            if not denom.is_constant():
+                                raise RuntimeError("only polynomial constraints are supported right now.")
+                            denom = denom.constant_part()
 
-                        if rew0.get(transition.column):
-                            continue
+                            value = pc.numerator(pc.convert_from_storm_type(transition.value()))
+                            value = value.polynomial() * (1 / denom)
 
-                        state_equation = state_equation + value * state_var_mapping.get(transition.column)
-                logger.debug(state_equation)
-                state_constraint = pc.Constraint(state_equation.numerator, pc.Relation.EQ)
-                self._smt2interface.assert_constraint(state_constraint)
+                        action_equation += value * state_var_mapping.get(transition.column)
+                #logger.debug(state_equation)
+                    state_equations.append(action_equation)
+
+                self._add_state_constraint(state_equations, model.model_type)
+            #Nothing left to be one
         self._encoding_timer += time.time() - encoding_start
 
 

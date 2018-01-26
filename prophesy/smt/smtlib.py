@@ -41,6 +41,7 @@ class SmtlibSolver(SMTSolver):
         self.exit_stored = True
         self.incremental = incremental
         self.nr_variables = 0
+        self._fixed_guards = dict()
 
     def _write(self, data):
         # Function to write+flush stdin, which may close after issuing a command
@@ -189,7 +190,13 @@ class SmtlibSolver(SMTSolver):
         self.status[-1] += s
 
     def assert_guarded_constraint(self, guard, constraint):
-        s = "(assert (=> " + guard + " " + constraint.to_smt2() + " ))\n"
+        if guard in self._fixed_guards:
+            if self._fixed_guards[guard]:
+                s = "(assert " + constraint.to_smt2() + ")\n"
+            else:
+                return
+        else:
+            s = "(assert (=> " + guard + " " + constraint.to_smt2() + " ))\n"
         self.string += s
         if self.incremental:
             self._write(s)
@@ -204,6 +211,11 @@ class SmtlibSolver(SMTSolver):
         if self.incremental:
             self._write(s)
         self.status[-1] += s
+
+    def fix_guard(self, guard, value):
+        self.set_guard(guard, value)
+        assert guard not in self._fixed_guards
+        self._fixed_guards[guard] = value
 
     def _build_model(self, output):
         raise NotImplementedError("General case not implemented")

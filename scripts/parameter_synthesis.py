@@ -10,6 +10,7 @@ import numpy
 from prophesy.data.constant import parse_constants_string
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.samples import InstantiationResultDict
+from prophesy.data.property import OperatorDirection
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.problem_description import ProblemDescription
@@ -317,13 +318,22 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
     solver_time = 0.0
     iterations = 0
 
+    if state.problem_description.model.contains_nondeterministic_model():
+        if state.problem_description.property.operator_direction == OperatorDirection.min:
+            angelic = dir == "below"
+        elif state.problem_description.property.operator_direction == OperatorDirection.max:
+            angelic = dir == "above"
+
+        if angelic:
+            raise NotImplementedError("Angelic schedulers are not supported")
+
     if method in ["sfsmt", "etr"]:
         if method == "sfsmt":
             checker = SolutionFunctionRegionChecker(state.solver)
         elif method == "etr":
             checker = EtrRegionChecker(state.solver, state.mc)
 
-        checker.initialize(state.problem_description, fixed_threshold=True)
+        checker.initialize(state.problem_description, fixed_threshold=True, fixed_direction="safe" if dir == "below" else "bad")
         result, data = checker.analyse_region(region, dir == "below")
         encoding_time = checker.encoding_timer
         solver_time = checker.solver_timer
@@ -332,6 +342,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
             print("No such point")
         elif result == RegionCheckResult.CounterExample:
             print("Point found: {}: {} (approx. {})".format(str(data.instantiation), str(data.result), float(data.result)))
+            result = data
 
     if method in ["qcqp"]:
         if qcqp_mc is None:

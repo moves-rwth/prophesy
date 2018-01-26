@@ -24,6 +24,8 @@ class SmtRegionChecker(RegionChecker):
         self._bad_relation = pc.Relation.LESS
         self._solver_timer = 0
 
+        self._fixed_direction = None
+
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
         raise NotImplementedError("Calling an abstract method")
@@ -58,6 +60,7 @@ class SmtRegionChecker(RegionChecker):
         logger.info("Analyse region")
         smt_successful = False
         smt_model = None
+        assert self._fixed_direction is None or (safe and self._fixed_direction == "safe") or (not safe and self._fixed_direction == "bad")
 
         if isinstance(polygon, HyperRectangle):
             constraint = polygon.to_formula(self.parameters)
