@@ -188,6 +188,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
             self._states_before_bisim = self._model.nr_states
             self._transitions_before_bisim = self._model.nr_transitions
+
+            self._model.reduce_to_state_based_rewards()
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
@@ -240,7 +242,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         :return: Model instantiator.
         """
         if self._model_instantiator is None:
-            self._model_instantiator = stormpy.pars.PDtmcInstantiator(self.get_model())
+
+            if self.get_model().model_type == stormpy.storage.ModelType.DTMC:
+                self._model_instantiator = stormpy.pars.PDtmcInstantiator(self.get_model())
+            elif self.get_model().model_type == stormpy.storage.ModelType.MDP:
+                self._model_instantiator = stormpy.pars.PMdpInstantiator(self.get_model())
         return self._model_instantiator
 
     def get_pla_checker(self, threshold, splitting_assistance = False, allow_simplifications=True):
@@ -266,7 +272,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             elif self.get_model().model_type == stormpy.storage.ModelType.MDP:
                 self._pla_checker = stormpy.pars.MdpParameterLiftingModelChecker()
             else:
-                #TODO implement transformation for MA/CTMC (Probably already somewhere else?)
+                # TODO implement transformation for MA/CTMC (Probably already somewhere else?)
                 return NotImplementedError("We have not implemented model transformation to DTMCs/MDPs yet")
             self._pla_checker.specify(self._environment, self.get_model(), formula, splitting_assistance, allow_simplifications)
         return self._pla_checker
