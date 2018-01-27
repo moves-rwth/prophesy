@@ -95,7 +95,7 @@ class EtrRegionChecker(SmtRegionChecker):
         state_var_mapping = dict()
 
         if problem_description.property.operator == OperatorType.probability:
-            prob0, prob1 = self._find_prob01_states(self.model_explorer.pctlformula[0], model)
+            prob0, prob1 = self.model_explorer.prob01_states()
 
             for state in model.states:
                 if prob0.get(state.id):
@@ -237,25 +237,6 @@ class EtrRegionChecker(SmtRegionChecker):
                                              pc.Relation.EQ)
         self._smt2interface.assert_constraint(threshold_constraint)
 
-
-    def _find_prob01_states(self, property, model):
-        formula = property.raw_formula
-        assert type(formula) == sp.logic.ProbabilityOperator
-        path_formula = formula.subformula
-        if type(path_formula) == sp.logic.EventuallyFormula:
-            phi_formula = sp.logic.BooleanLiteralFormula(True)
-            psi_formula = path_formula.subformula
-        elif type(path_formula) == sp.logic.UntilFormula:
-            phi_formula = path_formula.subformula[0]
-            psi_formula = path_formula.subformula[1]
-        else:
-            raise ValueError("Property type not supported")
-        phi_result = sp.model_checking(model, phi_formula)
-        phi_states = phi_result.get_truth_values()
-        psi_result = sp.model_checking(model, psi_formula)
-        psi_states = psi_result.get_truth_values()
-        (prob0, prob1) = sp.compute_prob01_states(model, phi_states, psi_states)
-        return prob0, prob1
 
     def _get_reward_model(self, model, problem_description):
         model.reduce_to_state_based_rewards()

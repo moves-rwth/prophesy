@@ -400,3 +400,44 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             result = pla_checker.get_bound(par_region, direction)
             assert result.is_constant()
             return stormpy.convert_from_storm_type(result.constant_part())
+
+    def prob01_states(self):
+        model = self.get_model()
+        print(self.pctlformula[0].raw_formula.optimality_type)
+        formula = self.pctlformula[0].raw_formula
+        assert type(formula) == stormpy.logic.ProbabilityOperator
+        path_formula = formula.subformula
+        if type(path_formula) == stormpy.logic.EventuallyFormula:
+            phi_formula = stormpy.logic.BooleanLiteralFormula(True)
+            psi_formula = path_formula.subformula
+        elif type(path_formula) == stormpy.logic.UntilFormula:
+            phi_formula = path_formula.subformula[0]
+            psi_formula = path_formula.subformula[1]
+        else:
+            raise ValueError("Property type not supported")
+        phi_result = stormpy.model_checking(model, phi_formula)
+        phi_states = phi_result.get_truth_values()
+        psi_result = stormpy.model_checking(model, psi_formula)
+        psi_states = psi_result.get_truth_values()
+        if model.model_type == stormpy.storage.ModelType.DTMC:
+            (prob0, prob1) = stormpy.compute_prob01_states(model, phi_states, psi_states)
+        elif model.model_type == stormpy.storage.ModelType.MDP:
+            assert self.pctlformula[0].raw_formula.has_optimality_type
+            assert self.pctlformula[0].raw_formula.optimality_type in [stormpy.OptimizationDirection.Minimize, stormpy.OptimizationDirection.Maximize]
+            if self.pctlformula[0].raw_formula.optimality_type == stormpy.OptimizationDirection.Minimize:
+                (prob0, prob1) = stormpy.compute_prob01min_states(model, phi_states, psi_states)
+            else:
+                (prob0, prob1) = stormpy.compute_prob01max_states(model, phi_states, psi_states)
+        return prob0, prob1
+
+    def rew0_states(self):
+        formula = self.pctlformula[0].raw_formula
+        assert type(formula) == stormpy.logic.RewardOperator
+        path_formula = formula.subformula
+        if type(path_formula) == stormpy.logic.EventuallyFormula:
+            psi_formula = path_formula.subformula
+        else:
+            raise ValueError("Property type not supported")
+        psi_result = stormpy.model_checking(self.get_model(), psi_formula)
+        psi_states = psi_result.get_truth_values()
+        return psi_states

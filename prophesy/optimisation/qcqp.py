@@ -730,9 +730,9 @@ class QcqpModelRepair():
         self._variables = dict([[v,self._parameters.get_parameter(v.name).interval] for v in variables])
         self._threshold = problem_description.threshold
         if self._property_type == "probability":
-            (self._prob0, self._prob1) = get_prob01States(self._model, self._model_explorer.pctlformula[0])
+            (self._prob0, self._prob1) = self._model_explorer.prob01_states()
         elif self._property_type == "reward":
-            (self._prob0, self._prob1) = _find_rew0_states(self._model, self._model_explorer.pctlformula[0]), None
+            (self._prob0, self._prob1) = self._model_explorer.rew0_states(), None
 
     def _evaluate_result(self, param_values):
         parameter_assignments = dict([[x, param_values[x.id]] for x in self._variables])
@@ -768,34 +768,4 @@ class QcqpModelRepair():
         print("adding constraints = {}s".format(self._solver._auxtimer3))
         return InstantiationResult(sample, mc_res[sample])
 
-
-def _find_rew0_states(model, property):
-    formula = property.raw_formula
-    assert type(formula) == stormpy.logic.RewardOperator
-    path_formula = formula.subformula
-    if type(path_formula) == stormpy.logic.EventuallyFormula:
-        psi_formula = path_formula.subformula
-    else:
-        raise ValueError("Property type not supported")
-    psi_result = stormpy.model_checking(model, psi_formula)
-    psi_states = psi_result.get_truth_values()
-    return psi_states
-
-def get_prob01States(model, property):
-    path_formula = property.raw_formula.subformula
-    if type(path_formula) == stormpy.logic.EventuallyFormula:
-        phi_formula = stormpy.logic.BooleanLiteralFormula(True)
-        psi_formula = path_formula.subformula
-    elif type(path_formula) == stormpy.logic.UntilFormula:
-        phi_formula = path_formula.left_subformula
-        psi_formula = path_formula.right_subformula
-    else:
-        raise ValueError("Property type not supported")
-    phi_result = stormpy.model_checking(model, phi_formula)
-    phi_states = phi_result.get_truth_values()
-    psi_result = stormpy.model_checking(model, psi_formula)
-    psi_states = psi_result.get_truth_values()
-    (prob0, prob1) = stormpy.compute_prob01_states(model, phi_states, psi_states)
-    return prob0, prob1
-    # (prob0A, prob1E) = stormpy.compute_prob01max_states(model, phiStates, psiSta
 
