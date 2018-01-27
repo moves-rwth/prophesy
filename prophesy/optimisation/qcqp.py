@@ -45,6 +45,7 @@ class UnpackedTransition:
     def is_constant(self):
         return self.variable_dependent_numerator is None
 
+gurobi_status = {1: "not executed", 2: "solved", 3: "infeasible"}
 
 class QcqpSolver():
     def __init__(self, evaluator, mc_check):
@@ -121,6 +122,7 @@ class QcqpSolver():
             self._encoding.optimize()
         except GurobiError:
             raise RuntimeError("Gurobi throws an error")
+        print("Gurobi reports: " + gurobi_status[self._encoding.status] if self._encoding.status in gurobi_status else "Unknown")
         t3 = time.time()
         self.solver_timer += (t3 - start3)
         print("Solver time :" + str(t3 - start3))
