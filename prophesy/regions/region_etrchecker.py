@@ -26,6 +26,8 @@ class EtrRegionChecker(SmtRegionChecker):
         self.fixed_threshold = True
         self.threshold_set = False
         self._encoding_timer = 0
+        self._safe_transition_relation = pc.Relation.GEQ
+        self._bad_transition_relation = pc.Relation.LEQ
 
     @property
     def encoding_timer(self):
@@ -114,8 +116,7 @@ class EtrRegionChecker(SmtRegionChecker):
             assert problem_description.property.operator == OperatorType.reward
             reward_model = self._get_reward_model(model, problem_description)
 
-
-            rew0 = self._find_rew0_states(self.model_explorer.pctlformula[0], model)
+            rew0 = self.model_explorer.rew0_states()
             for state in model.states:
                 if rew0.get(state.id):
                     continue
@@ -133,9 +134,6 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
         if self.fixed_threshold:
             self._add_threshold_constraint(problem_description.threshold)
-
-        if model.model_type != sp.ModelType.DTMC:
-            raise RuntimeError("Only DTMCs are supported for now.")
 
         if problem_description.property.operator == OperatorType.probability:
             for state in model.states:
@@ -253,17 +251,6 @@ class EtrRegionChecker(SmtRegionChecker):
         assert not reward_model.has_transition_rewards
         return reward_model
 
-    def _find_rew0_states(self, property, model):
-        formula = property.raw_formula
-        assert type(formula) == sp.logic.RewardOperator
-        path_formula = formula.subformula
-        if type(path_formula) == sp.logic.EventuallyFormula:
-            psi_formula = path_formula.subformula
-        else:
-            raise ValueError("Property type not supported")
-        psi_result = sp.model_checking(model, psi_formula)
-        psi_states = psi_result.get_truth_values()
-        return psi_states
 
     def _evaluate(self, smt_model):
         sample = ParameterInstantiation()
