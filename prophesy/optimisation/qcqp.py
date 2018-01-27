@@ -105,12 +105,13 @@ class QcqpSolver():
     def _compute_states_and_transitions(self, model):
         self._states_and_transitions = []
         for row_group in range(model.nr_states):
-            self._states_and_transitions.append((row_group,[], 0))
+            self._states_and_transitions.append((row_group,[]))
             for row in range(model.transition_matrix.get_row_group_start(row_group),
                              model.transition_matrix.get_row_group_end(row_group)):
+                self._states_and_transitions[-1][1].append(([], 0))
                 for entry in model.transition_matrix.get_row(row):
                     if not self._check_prob0(entry.column):
-                        self._states_and_transitions[-1][1].append((self._make_unpacked_transition(entry.value()), entry.column))
+                        self._states_and_transitions[-1][1][-1][0].append((self._make_unpacked_transition(entry.value()), entry.column))
 
     def _solve_model(self):
         start3 = time.time()
@@ -258,67 +259,74 @@ class QcqpSolver():
         :param only_quadratic: 
         :return: 
         """
-        for state, entries, l_part_cons in self._states_and_transitions:
-            # Cons=values constraints on the right hand side for a pdtmc
-            # A flag for linear vs quadratic constraints
-            q_part_cons = 0
-            assert l_part_cons == 0
-            if not options.store_quadratic or not options.incremental:
-                l_part_cons += self._modelconstraints_reward(model, state)
-            
-            for value,column in entries:
-                l_cons, q_cons = self._modelconstraint_transition(state, (value,column), dir, only_quadratic and options.store_quadratic)
-                if q_cons is not None:
-                    q_part_cons += q_cons
+        for state, actions in self._states_and_transitions:
+            assert len(actions) == 1
+            for entries, l_part_cons in actions:
+                # Cons=values constraints on the right hand side for a pdtmc
+                # A flag for linear vs quadratic constraints
+                q_part_cons = 0
+                assert l_part_cons == 0
                 if not options.store_quadratic or not options.incremental:
-                    l_part_cons += l_cons
+                    l_part_cons += self._modelconstraints_reward(model, state)
 
-            # If the constraint is quadratic, add a penalty term to the constraints, otherwise dont add the term
-            if not isinstance(q_part_cons, int):
-                start_t = time.time()
-                if dir == "above":
-                    self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
-                else:
-                    self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
-                self._auxtimer3 += time.time() - start_t
+                for value,column in entries:
+                    l_cons, q_cons = self._modelconstraint_transition(state, (value,column), dir, only_quadratic and options.store_quadratic)
+                    if q_cons is not None:
+                        q_part_cons += q_cons
+                    if not options.store_quadratic or not options.incremental:
+                        l_part_cons += l_cons
 
-            elif not only_quadratic:
-                if dir == "above":
-                    self._encoding.addConstr(self._pVars[state] <= l_part_cons)
-                else:
-                    self._encoding.addConstr(self._pVars[state] >= l_part_cons)
+                # If the constraint is quadratic, add a penalty term to the constraints, otherwise dont add the term
+                if not isinstance(q_part_cons, int):
+                    start_t = time.time()
+                    if dir == "above":
+                        self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
+                    else:
+                        self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
+                    self._auxtimer3 += time.time() - start_t
+
+                elif not only_quadratic:
+                    if dir == "above":
+                        self._encoding.addConstr(self._pVars[state] <= l_part_cons)
+                    else:
+                        self._encoding.addConstr(self._pVars[state] >= l_part_cons)
 
 
     def _modelconstraints_store(self, model, dir, options):
         quadratic_states_and_transitions = []
-        for state, entries, _ in self._states_and_transitions:
-            # Cons=values constraints on the right hand side for a pdtmc
-            l_part_cons = 0
-            # A flag for linear vs quadratic constraints
-            q_part_cons = 0
+        for state, actions in self._states_and_transitions:
+            assert len(actions) == 1
+            quadratic_entries = []
+            for entries, _ in actions:
+                # Cons=values constraints on the right hand side for a pdtmc
+                l_part_cons = 0
+                # A flag for linear vs quadratic constraints
+                q_part_cons = 0
 
-            l_part_cons += self._modelconstraints_reward(model, state)
+                l_part_cons += self._modelconstraints_reward(model, state)
 
-            q_entries = []
-            for value, column in entries:
-                l_cons, q_cons = self._modelconstraint_transition(state, (value, column), dir)
-                if q_cons is not None:
-                    q_part_cons += q_cons
-                    q_entries.append((value, column))
-                l_part_cons += l_cons
-            # If the constraint is quadratic, add a penalty term to the constraints, otherwise dont add the term
-            if not isinstance(q_part_cons, int):
-                quadratic_states_and_transitions.append((state, q_entries, l_part_cons))
-                if dir == "above":
-                    self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
+                q_entries = []
+                for value, column in entries:
+                    l_cons, q_cons = self._modelconstraint_transition(state, (value, column), dir)
+                    if q_cons is not None:
+                        q_part_cons += q_cons
+                        q_entries.append((value, column))
+                    l_part_cons += l_cons
+                # If the constraint is quadratic, add a penalty term to the constraints, otherwise dont add the term
+                if not isinstance(q_part_cons, int):
+                    quadratic_entries.append((q_entries, l_part_cons))
+                    if dir == "above":
+                        self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
+                    else:
+                        self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
                 else:
-                    self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
-            else:
-                if dir == "above":
-                    self._encoding.addConstr(self._pVars[state] <= l_part_cons)
-                else:
-                    self._encoding.addConstr(self._pVars[state] >= l_part_cons)
-        print("{} vs {}".format(len(self._states_and_transitions), len(quadratic_states_and_transitions)))
+                    if dir == "above":
+                        self._encoding.addConstr(self._pVars[state] <= l_part_cons)
+                    else:
+                        self._encoding.addConstr(self._pVars[state] >= l_part_cons)
+            if len(quadratic_entries) > 0:
+                quadratic_states_and_transitions.append((state, quadratic_entries))
+        #print("{} vs {}".format(len(self._states_and_transitions), len(quadratic_states_and_transitions)))
         self._states_and_transitions = quadratic_states_and_transitions
 
     def _modelconstraint_transition(self, state, transition, dir, only_quadratic=False):
