@@ -602,7 +602,7 @@ class QcqpSolver():
                     else:
                         self._paraminit[param_id] = 0
             # Updates penalty parameter
-            self._mu *= (max(self._pinit) + 1)
+            self._mu += max(self._pinit)
             if self._mu > 1e8:
                 self._mu = 1e8
 
@@ -673,7 +673,7 @@ class QcqpSolver():
                     else:
                         self._paraminit[param_id] = 0
             # Updates penalty parameter
-            self._mu *= (max(self._pinit) + 1)
+            self._mu += max(self._pinit)
             if self._mu > 1e8:
                 self._mu = 1e8
 
