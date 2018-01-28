@@ -261,13 +261,14 @@ class QcqpSolver():
         :param only_quadratic: 
         :return: 
         """
+        assert not options.store_quadratic or only_quadratic
         for state, actions in self._states_and_transitions:
             assert len(actions) == 1
             for entries, l_part_cons in actions:
                 # Cons=values constraints on the right hand side for a pdtmc
                 # A flag for linear vs quadratic constraints
                 q_part_cons = 0
-                assert l_part_cons == 0
+                assert not isinstance(l_part_cons,int) or l_part_cons == 0
                 if not options.store_quadratic or not options.incremental:
                     l_part_cons += self._modelconstraints_reward(model, state)
 
@@ -280,12 +281,10 @@ class QcqpSolver():
 
                 # If the constraint is quadratic, add a penalty term to the constraints, otherwise dont add the term
                 if not isinstance(q_part_cons, int):
-                    start_t = time.time()
                     if dir == "above":
                         self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
                     else:
                         self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
-                    self._auxtimer3 += time.time() - start_t
 
                 elif not only_quadratic:
                     if dir == "above":
@@ -378,7 +377,7 @@ class QcqpSolver():
                 coeff = self._float_repr(t.coeff)
 
                 # Adds transitionvalue*parameter_variable to the constraint if the successor is prob1
-                if not only_quadratic and self._check_prob1(succ):
+                if self._check_prob1(succ):
                     l_cons += coeff * self._paramVars[param_id] * denom1
                 # Add the quadratic term to the constraints
                 else:
