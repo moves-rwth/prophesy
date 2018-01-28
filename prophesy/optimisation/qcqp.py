@@ -122,10 +122,14 @@ class QcqpSolver():
             self._encoding.optimize()
         except GurobiError:
             raise RuntimeError("Gurobi throws an error")
+
         print("Gurobi reports: " + gurobi_status[self._encoding.status] if self._encoding.status in gurobi_status else "Unknown")
         t3 = time.time()
         self.solver_timer += (t3 - start3)
         print("Solver time :" + str(t3 - start3))
+        if self._encoding.status == 13:
+            return False
+        return True
 
     def _numerator(self, transition_value):
         return transition_value.numerator.polynomial()
@@ -188,7 +192,6 @@ class QcqpSolver():
                 if len(model.reward_models) > 1:
                     raise RuntimeError("Unclear reference to reward model. Please specify a name.")
                 reward_model = list(model.reward_models.values())[0]
-        assert not reward_model.has_state_action_rewards
         assert not reward_model.has_transition_rewards
         return reward_model
 
@@ -233,19 +236,23 @@ class QcqpSolver():
                         self._encoding.addConstr(cons1 >= 0 + options.graph_epsilon)
                         self._encoding.addConstr(cons1 <= 1 - options.graph_epsilon)
 
-    def _modelconstraints_reward(self, model, state):
+    def _modelconstraints_reward(self, model, state, action):
         if not self._is_reward_property:
             return 0.0
-        reward_at_state = self._reward_model.get_state_reward(int(state))
-        if reward_at_state.is_constant():
-            return self._float_repr(reward_at_state.constant_part())
+        reward = pc.convert_to_storm_type(pc.Rational(0))
+        if self._reward_model.has_state_rewards:
+            reward += self._reward_model.get_state_reward(int(state))
+        if self._reward_model.has_state_action_rewards:
+            reward += self._reward_model.get_state_action_reward(model.transition_matrix.get_row_group_start(state) + action)
+        if reward.is_constant():
+            return self._float_repr(reward.constant_part())
 
 
         cons = 0.0
-        assert reward_at_state.denominator.is_constant()
-        den = self._float_repr(reward_at_state.denominator.constant_part())
+        assert reward.denominator.is_constant()
+        den = self._float_repr(reward.denominator.constant_part())
         assert den != 0
-        for term in reward_at_state.numerator.polynomial():
+        for term in reward.numerator.polynomial():
             if not term.is_constant():
                 param_id = term.monomial[0][0].id
                 cons += self._float_repr(term.coeff) * self._paramVars[param_id] / den
@@ -264,14 +271,14 @@ class QcqpSolver():
         """
         assert not options.store_quadratic or only_quadratic
         for state, actions in self._states_and_transitions:
-            assert len(actions) == 1
+            action = 0
             for entries, l_part_cons in actions:
                 # Cons=values constraints on the right hand side for a pdtmc
                 # A flag for linear vs quadratic constraints
                 q_part_cons = 0
                 assert not isinstance(l_part_cons,int) or l_part_cons == 0
                 if not options.store_quadratic or not options.incremental:
-                    l_part_cons += self._modelconstraints_reward(model, state)
+                    l_part_cons += self._modelconstraints_reward(model, state, action)
 
                 for value,column in entries:
                     l_cons, q_cons = self._modelconstraint_transition(state, (value,column), dir, only_quadratic and options.store_quadratic)
@@ -286,18 +293,20 @@ class QcqpSolver():
                         self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
                     else:
                         self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
+                       # print(q_part_cons)
 
                 elif not only_quadratic:
                     if dir == "above":
                         self._encoding.addConstr(self._pVars[state] <= l_part_cons)
                     else:
                         self._encoding.addConstr(self._pVars[state] >= l_part_cons)
+                action += 1
 
 
     def _modelconstraints_store(self, model, dir, options):
         quadratic_states_and_transitions = []
         for state, actions in self._states_and_transitions:
-            assert len(actions) == 1
+            action = 0
             quadratic_entries = []
             for entries, _ in actions:
                 # Cons=values constraints on the right hand side for a pdtmc
@@ -305,7 +314,7 @@ class QcqpSolver():
                 # A flag for linear vs quadratic constraints
                 q_part_cons = 0
 
-                l_part_cons += self._modelconstraints_reward(model, state)
+                l_part_cons += self._modelconstraints_reward(model, state, action)
 
                 q_entries = []
                 for value, column in entries:
@@ -326,8 +335,10 @@ class QcqpSolver():
                         self._encoding.addConstr(self._pVars[state] <= l_part_cons)
                     else:
                         self._encoding.addConstr(self._pVars[state] >= l_part_cons)
+                action += 1
             if len(quadratic_entries) > 0:
                 quadratic_states_and_transitions.append((state, quadratic_entries))
+                #print(quadratic_entries)
         #print("{} vs {}".format(len(self._states_and_transitions), len(quadratic_states_and_transitions)))
         self._states_and_transitions = quadratic_states_and_transitions
 
@@ -571,7 +582,7 @@ class QcqpSolver():
             self._modelconstraints(model, dir, options)
             # Constraint for initial state
             self.encoding_timer += time.time() - encoding_start
-            self._solve_model()
+            solved_properly = self._solve_model()
 
             # Prints the maximum violation
             maxx = 0
@@ -641,7 +652,7 @@ class QcqpSolver():
 
             self.encoding_timer += time.time() - encoding_start
 
-            self._solve_model()
+            solved_properly = self._solve_model()
 
             result, pvalues = self._mc(threshold, initstate, dir, options)
             if result is not None:

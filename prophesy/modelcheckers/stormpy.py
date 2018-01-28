@@ -411,8 +411,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             phi_formula = stormpy.logic.BooleanLiteralFormula(True)
             psi_formula = path_formula.subformula
         elif type(path_formula) == stormpy.logic.UntilFormula:
-            phi_formula = path_formula.subformula[0]
-            psi_formula = path_formula.subformula[1]
+            phi_formula = path_formula.left_subformula
+            psi_formula = path_formula.right_subformula
         else:
             raise ValueError("Property type not supported")
         phi_result = stormpy.model_checking(model, phi_formula)
