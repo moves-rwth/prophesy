@@ -554,6 +554,8 @@ class QcqpSolver():
 
         # The penalty parameter for constraint violation
         self._mu = options.mu
+        if property_type == "reward":
+            self._mu *= 100
         # Select which loop to start.
         if options.incremental:
             return self._incremental_loop(model, threshold, direction, options)
