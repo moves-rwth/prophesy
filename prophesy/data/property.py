@@ -137,8 +137,8 @@ class Property:
         :return: 
         :rtype: Property
         """
-        input_string = input_string.strip()
-        input_string = re.sub("[\{].*[\}]", "", input_string)
+        orig_input_string = input_string.strip()
+        input_string = re.sub("[\{].*[\}]", "", orig_input_string)
         if input_string[:4] == "Pmin":
             input_string = input_string[4:]
             operator_direction = OperatorDirection.min
@@ -167,18 +167,22 @@ class Property:
             ValueError("Expect property {} to start with P/Pmin/Pmax/R/Rmin/Rmax".format(input_string))
 
         reward_name = None
-        if operator_type == OperatorType.reward and input_string[0] == "{":
-            reward_name = input_string.split('}', 1)[0]
-            input_string = input_string.split('}', 1)[1]
 
+        if operator_type == OperatorType.reward and orig_input_string[1] == "{":
+            reward_name = orig_input_string[3:].split('}', 1)[0][:-1]
+
+        print(reward_name)
 
         operator_bound = OperatorBound.from_string(input_string.split(" ", 1)[0])
 
+
         input_string = input_string.split(" ",1)[1].strip()
+
+
 
         return cls(operator_type, operator_direction, reward_name, operator_bound, input_string)
 
     def __str__(self):
-        return str(self.operator) + (self.reward_name if self.reward_name else "") + str(self.operator_direction) + str(self.bound) + " " + self.pathformula
+        return str(self.operator) + ("{\"" + self.reward_name + "\"}" if self.reward_name else "") + str(self.operator_direction) + str(self.bound) + " " + self.pathformula
 
 
