@@ -142,6 +142,7 @@ class QcqpSolver():
 
         self._encoding = Model("qcp")
         self._encoding.setParam('OutputFlag', not options.silent)
+        self._encoding.setParam('Threads', 1)
         self._encoding.setParam(GRB.Param.BarHomogeneous, 1.0)
 
         # Initializing gurobi variables for parameters,lb=lowerbound, ub=upperbound
