@@ -14,8 +14,8 @@ from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 class QcqpOptions():
     def __init__(self, mu, maxiter, graph_epsilon, silent, incremental, all_welldefined,
                  store_quadratic, mc_termination_check, intermediate_mc, minimise_violation):
-        self.mu = 5
-        self.mu_multiplicator = 3
+        self.mu = 0.05
+        #self.mu_multiplicator = 10
         self.maxiter = maxiter
         self.graph_epsilon = graph_epsilon
         self.silent = silent
@@ -603,7 +603,7 @@ class QcqpSolver():
                     else:
                         self._paraminit[param_id] = 0
             # Updates penalty parameter
-            self._mu *= options.mu_multiplicator
+            self._mu *= (max(self._pinit) + 1)
             if self._mu > 1e8:
                 self._mu = 1e8
 
@@ -674,7 +674,7 @@ class QcqpSolver():
                     else:
                         self._paraminit[param_id] = 0
             # Updates penalty parameter
-            self._mu *= options.mu_multiplicator
+            self._mu *= (max(self._pinit) + 1)
             if self._mu > 1e8:
                 self._mu = 1e8
 
