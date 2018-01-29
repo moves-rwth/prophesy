@@ -317,6 +317,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
     encoding_time = 0.0
     solver_time = 0.0
     iterations = 0
+    result_found = False
 
     if state.problem_description.model.contains_nondeterministic_model():
         if state.problem_description.property.operator_direction == OperatorDirection.min:
@@ -343,6 +344,10 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
         elif result == RegionCheckResult.CounterExample:
             print("Point found: {}: {} (approx. {})".format(str(data.instantiation), str(data.result), float(data.result)))
             result = data
+            result_found = True
+        else:
+            raise RuntimeError("Region checker returns with {}".format(result))
+
 
     if method in ["qcqp"]:
         if qcqp_mc is None:
@@ -370,7 +375,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
         solver_time = checker.solver_time
         iterations = checker.iterations
         print("Point found: {}: {} (approx. {})".format(str(result.instantiation), str(result.result), float(result.result)))
-
+        result_found = True
     elif method in ["pso"]:
         start_wd_check = time.time()
         is_wd = is_welldefined(check_welldefinedness(state.solver, state.problem_description.parameters, region, state.mc.get_parameter_constraints()[1]))
@@ -383,11 +388,13 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
         result = optimizer.search()
         iterations = optimizer.iterations
         print("Point found: {}: {} (approx. {})".format(str(result.instantiation), str(result.result), float(result.result)))
+        result_found = True
 
-    if dir == "below" and result.result > state.problem_description.threshold:
-        raise ValueError("Result does not match threshold")
-    if dir == "above" and result.result < state.problem_description.threshold:
-        raise ValueError("Result does not match threshold")
+    if result_found:
+        if dir == "below" and result.result > state.problem_description.threshold:
+            raise ValueError("Result does not match threshold")
+        if dir == "above" and result.result < state.problem_description.threshold:
+            raise ValueError("Result does not match threshold")
     procedure_time = time.time() - start_time
     total_time = time.time() - state.overall_start_time
 
