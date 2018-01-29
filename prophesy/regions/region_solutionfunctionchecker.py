@@ -25,7 +25,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._thresholdVar = None
         self.threshold_set = False
 
-    def initialize(self, problem_description, constants=None, fixed_threshold = True):
+    def initialize(self, problem_description, constants=None, fixed_threshold = True, fixed_direction = None):
         """
         Initializes the smt solver to consider the problem at hand.
 
@@ -33,7 +33,10 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         :type problem_description: ProblemDescription
         :param threshold:
         """
-
+        if fixed_direction is not None:
+            if fixed_direction not in ["safe", "bad"]:
+                raise ValueError("Direction can only be fixed to safe or bad")
+            self._fixed_direction = fixed_direction
         self.fixed_threshold = fixed_threshold
         lower_bounded_variables = True
         upper_bounded_variables = False
@@ -53,6 +56,12 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._thresholdVar = pc.Variable("T")
         rf1Var = pc.Variable("rf1")
         rf2Var = pc.Variable("rf2")
+
+        if self._fixed_direction is not None:
+            excluded_dir = "safe" if self._fixed_direction == "bad" else "bad"
+            # Notice that we have to flip the values, as we are checking all-quantification
+            self._smt2interface.fix_guard("__" + self._fixed_direction, False)
+            self._smt2interface.fix_guard("__" + excluded_dir, True)
 
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
