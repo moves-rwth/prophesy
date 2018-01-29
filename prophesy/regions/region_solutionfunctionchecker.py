@@ -5,6 +5,7 @@ from prophesy.smt.smt import VariableDomain
 from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 from prophesy.data.property import OperatorType
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         assert problem_description.parameters is not None
         if self.fixed_threshold:
             assert problem_description.threshold is not None
+
+        encoding_start = time.time()
         #TODO expanding might be a stupid idea.
         self._ratfunc = pc.expand(problem_description.solution_function)
         self.parameters = problem_description.parameters
@@ -57,15 +60,18 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         rf1Var = pc.Variable("rf1")
         rf2Var = pc.Variable("rf2")
 
+
+
+        self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
+
+        #Fix direction after declaring variables
         if self._fixed_direction is not None:
             excluded_dir = "safe" if self._fixed_direction == "bad" else "bad"
             # Notice that we have to flip the values, as we are checking all-quantification
             self._smt2interface.fix_guard("__" + self._fixed_direction, False)
             self._smt2interface.fix_guard("__" + excluded_dir, True)
-
-        self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
-        self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
-        self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
         #TODO denominator unequal constant.
         if pc.denominator(self._ratfunc) != 1:
@@ -105,6 +111,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
         if self.fixed_threshold:
             self._add_threshold_constraint(problem_description.threshold)
+        self._encoding_timer += time.time() - encoding_start
 
     def change_threshold(self, new_threshold):
         assert self.fixed_threshold is not True

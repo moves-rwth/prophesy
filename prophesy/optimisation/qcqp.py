@@ -12,7 +12,7 @@ import prophesy.adapter.pycarl as pc
 from prophesy.data.samples import ParameterInstantiation, InstantiationResult
 
 class QcqpOptions():
-    def __init__(self, mu, maxiter, graph_epsilon, silent, incremental, all_welldefined,
+    def __init__(self, mu, maxiter, graph_epsilon, silent, incremental, all_welldefined, threshold_constraint,
                  store_quadratic, mc_termination_check, intermediate_mc, minimise_violation):
         self.mu = 0.05
         #self.mu_multiplicator = 10
@@ -21,6 +21,7 @@ class QcqpOptions():
         self.silent = silent
         self.incremental = incremental
         self.all_welldefined = all_welldefined
+        self.threshold_constraint = threshold_constraint
         self.store_quadratic = store_quadratic
         self.mc_termination_check = mc_termination_check
         self.intermediate_mc = intermediate_mc
@@ -478,6 +479,7 @@ class QcqpSolver():
                 return QcqpResult(self._pVars[initstate].x, param_values), None
         elif options.intermediate_mc:
             param_values = dict([[id, param_var.x] for id, param_var in self._paramVars.items()])
+            print(param_values)
             mc_results = self._mc_check(param_values)
             print(mc_results.at(initstate))
             if dir == "below" and mc_results.at(initstate) < threshold:
@@ -743,7 +745,7 @@ class QcqpModelRepair():
             self._property_type = "probability"
 
         self._model = self._model_explorer.get_model()
-        self._qcqp_options = QcqpOptions(mu=0.05, maxiter=1000000, graph_epsilon=epsilon, silent=not verbose, incremental=incremental, all_welldefined=all_welldefined,
+        self._qcqp_options = QcqpOptions(mu=0.05, maxiter=1000000, graph_epsilon=epsilon, silent=not verbose, incremental=incremental, all_welldefined=all_welldefined, threshold_constraint = False,
                                          store_quadratic=store_quadratic, mc_termination_check=(use_mc == "result_only"), intermediate_mc=(use_mc == "full"),
                                          minimise_violation=(handle_violation=="minimisation")
                                          )

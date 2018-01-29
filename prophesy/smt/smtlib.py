@@ -132,6 +132,7 @@ class SmtlibSolver(SMTSolver):
             elif output == '(error "out of memory")':
                 self.stop()
                 self.run()
+                logger.debug("Memory out with: {}".format(self.memout))
                 return Answer.memout
             elif output == "Killed":
                 self.stop()

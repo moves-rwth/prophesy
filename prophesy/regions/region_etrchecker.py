@@ -25,13 +25,9 @@ class EtrRegionChecker(SmtRegionChecker):
         self.model_explorer = mc
         self.fixed_threshold = True
         self.threshold_set = False
-        self._encoding_timer = 0
         self._safe_transition_relation = pc.Relation.GEQ
         self._bad_transition_relation = pc.Relation.LEQ
 
-    @property
-    def encoding_timer(self):
-        return self._encoding_timer
 
     def _add_state_constraint(self, equations, model_type):
         if model_type == sp.ModelType.DTMC:

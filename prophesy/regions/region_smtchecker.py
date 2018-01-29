@@ -24,7 +24,14 @@ class SmtRegionChecker(RegionChecker):
         self._bad_relation = pc.Relation.LESS
         self._solver_timer = 0
 
+        self._encoding_timer = 0
+
         self._fixed_direction = None
+
+
+    @property
+    def encoding_timer(self):
+        return self._encoding_timer
 
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
