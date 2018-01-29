@@ -479,7 +479,6 @@ class QcqpSolver():
                 return QcqpResult(self._pVars[initstate].x, param_values), None
         elif options.intermediate_mc:
             param_values = dict([[id, param_var.x] for id, param_var in self._paramVars.items()])
-            print(param_values)
             mc_results = self._mc_check(param_values)
             print(mc_results.at(initstate))
             if dir == "below" and mc_results.at(initstate) < threshold:
@@ -572,11 +571,12 @@ class QcqpSolver():
 
             self._create_encoding(model, options, self._lower_state_bounds, self._upper_state_bounds)
 
-            if dir == "above":
-                self._encoding.addConstr(self._pVars[initstate] >= threshold)
-            else:
-                self._encoding.addConstr(self._pVars[initstate] <= threshold)
-            self._set_objective(model, initstate, dir, options)
+            if options.threshold_constraint:
+                if dir == "above":
+                    self._encoding.addConstr(self._pVars[initstate] >= threshold)
+                else:
+                    self._encoding.addConstr(self._pVars[initstate] <= threshold)
+                self._set_objective(model, initstate, dir, options)
             self._violation_constraints(model, options)
             self._wdconstraints(model, options)
 
@@ -629,10 +629,11 @@ class QcqpSolver():
         encoding_start = time.time()
         self._create_encoding(model, options, self._lower_state_bounds, self._upper_state_bounds)
         # Constraint for initial state
-        if dir == "above":
-            self._encoding.addConstr(self._pVars[initstate] >= threshold)
-        else:
-            self._encoding.addConstr(self._pVars[initstate] <= threshold)
+        if options.threshold_constraint:
+            if dir == "above":
+                self._encoding.addConstr(self._pVars[initstate] >= threshold)
+            else:
+                self._encoding.addConstr(self._pVars[initstate] <= threshold)
         self._wdconstraints(model, options)
         self._violation_constraints(model, options)
 
