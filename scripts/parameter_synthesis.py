@@ -409,6 +409,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
             file.write("iterations={}\n".format(iterations))
             file.write("model-building-time={}\n".format(state.mc.model_building_time))
             file.write("nr-mc-calls={}\n".format(state.mc.nr_samples_checked))
+    return state
 
 @parameter_synthesis.command()
 @click.argument("destination")
@@ -420,6 +421,7 @@ def write_model_stats(state, destination):
         file.write("nr-parameters={}\n".format(len(state.problem_description.parameters)))
         file.write("states-after-simplification={}\n".format(state.mc.nr_states))
         file.write("transitions-after-simplification={}\n".format(state.mc.nr_transitions))
+    return state
 
 
 # @parameter_synthesis.command()
@@ -584,9 +586,10 @@ def make_solver(solver):
 
 if __name__ == "__main__":
     state = parameter_synthesis.main(standalone_mode=False)[0]
-    state.solver.stop()
-    if state.log_smt_calls:
-        state.solver.to_file(state.log_smt_calls)
+    if state is not None:
+        state.solver.stop()
+        if state.log_smt_calls:
+            state.solver.to_file(state.log_smt_calls)
     while len(logging.getLogger().handlers) > 0:
         h = logging.getLogger().handlers[0]
         logging.debug('Removing handler %s' % str(h))

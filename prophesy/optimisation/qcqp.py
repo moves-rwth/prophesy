@@ -292,7 +292,7 @@ class QcqpSolver():
                 # If the constraint is quadratic, add a penalty term to the constraints, otherwise dont add the term
                 if not isinstance(q_part_cons, int):
                     if dir == "above":
-                        self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
+                        self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons + self._tau[state])
                     else:
                         self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
                        # print(q_part_cons)
@@ -443,8 +443,7 @@ class QcqpSolver():
             for state in range(numstate):
                 objective += self._pVars[state]/self._mu
         else:
-            for state in range(numstate):
-               objective -= self._pVars[state]/self._mu
+           objective -= numstate*self._pVars[initstate]/self._mu
         self._encoding.setObjective(objective, GRB.MINIMIZE)
 
     def _violation_constraints(self, model, options):
@@ -576,7 +575,7 @@ class QcqpSolver():
                     self._encoding.addConstr(self._pVars[initstate] >= threshold)
                 else:
                     self._encoding.addConstr(self._pVars[initstate] <= threshold)
-                self._set_objective(model, initstate, dir, options)
+            self._set_objective(model, initstate, dir, options)
             self._violation_constraints(model, options)
             self._wdconstraints(model, options)
 
