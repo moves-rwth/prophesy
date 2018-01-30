@@ -227,7 +227,7 @@ class QcqpSolver():
                             # Adds the value of the transition
                             else:
                                 if t.tdeg > 1:
-                                    raise RuntimeError("We expect the term to be a single variable")
+                                    raise RuntimeError("We expect the term to be a single variable, {}".format(t))
                                 param_id = t.monomial[0][0].id
                                 coeff = float(t.coeff)
 
@@ -385,7 +385,7 @@ class QcqpSolver():
 
                 # If the transition term is a constant
                 assert not t.is_constant()
-                assert t.tdeg <= 1, "We expect the term to be a single variable"
+                assert t.tdeg <= 1, "We expect the term to be a single variable, {}".format(t)
                 param_id = t.monomial[0][0].id
 
                 coeff = self._float_repr(t.coeff)
