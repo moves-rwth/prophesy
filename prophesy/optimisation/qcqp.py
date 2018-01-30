@@ -329,7 +329,7 @@ class QcqpSolver():
                 if not isinstance(q_part_cons, int):
                     quadratic_entries.append((q_entries, l_part_cons))
                     if dir == "above":
-                        self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons - self._tau[state])
+                        self._encoding.addQConstr(self._pVars[state] <= l_part_cons + q_part_cons + self._tau[state])
                     else:
                         self._encoding.addQConstr(self._pVars[state] >= l_part_cons + q_part_cons - self._tau[state])
                 else:
@@ -403,18 +403,27 @@ class QcqpSolver():
                     check_t = time.time()
 
                     negative_case = (dir == "above" and coeff > 0) or (dir == "below" and coeff < 0)
-
+                    if dir == "above":
+                        if coeff > 0:
+                            q_cons += -coeff_times_denom * (0.5 * (pinit_succ) ** 2 -pinit_succ * statevar + pexpr)
+                            c = LinExpr([1.0, -1.0], [statevar, paramvar])
+                            q_cons += -coeff_times_denom * 0.5 * c * c
+                        else:
+                            q_cons += LinExpr(coeff_times_denom) * (0.5 * (pinit_succ) ** 2 - pinit_succ * statevar + pexpr)
+                            c = LinExpr([1.0, 1.0], [statevar, paramvar])
+                            q_cons += coeff_times_denom * 0.5 * c * c
 
                     # The bilinear terms are split into convex+concave terms, then the concave term is underapproximated by a affine term
                     # First term in the addition is the affine term, second term is the convex term
-                    if negative_case:
-                        q_cons += -coeff_times_denom * (0.5 * (pinit_succ) ** 2 -pinit_succ * statevar + pexpr)
-                        c = LinExpr([1.0, -1.0], [statevar, paramvar])
-                        q_cons += -coeff_times_denom * 0.5 * c * c
                     else:
-                        q_cons += LinExpr(coeff_times_denom) * (LinExpr(0.5 * (pinit_succ) ** 2) - pinit_succ * statevar + pexpr)
-                        c = LinExpr([1.0, 1.0], [statevar, paramvar])
-                        q_cons += coeff_times_denom * 0.5 * c * c
+                        if negative_case:
+                            q_cons += -coeff_times_denom * (0.5 * (pinit_succ) ** 2 -pinit_succ * statevar + pexpr)
+                            c = LinExpr([1.0, -1.0], [statevar, paramvar])
+                            q_cons += -coeff_times_denom * 0.5 * c * c
+                        else:
+                            q_cons += LinExpr(coeff_times_denom) * (0.5 * (pinit_succ) ** 2 - pinit_succ * statevar + pexpr)
+                            c = LinExpr([1.0, 1.0], [statevar, paramvar])
+                            q_cons += coeff_times_denom * 0.5 * c * c
                     self._auxtimer1 += time.time() - check_t
 
         self._auxtimer2 += time.time() - proc_start
@@ -621,6 +630,7 @@ class QcqpSolver():
             self._mu += max(self._pinit)
             if self._mu > 1e8:
                 self._mu = 1e8
+
 
     def _incremental_loop(self, model, threshold, dir, options):
         numstate = model.nr_states
