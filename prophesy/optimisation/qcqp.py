@@ -565,6 +565,7 @@ class QcqpSolver():
         self._mu = options.mu
         if property_type == "reward":
             self._mu *= 100
+
         # Select which loop to start.
         if options.incremental:
             return self._incremental_loop(model, threshold, direction, options)
@@ -668,6 +669,12 @@ class QcqpSolver():
             self.encoding_timer += time.time() - encoding_start
 
             solved_properly = self._solve_model()
+            if not solved_properly:
+                self._mu = options.mu
+                for param_id in self._paramVars.keys():
+                    self._paraminit[param_id] = (self._paraminit + 0.5) / 2
+                continue
+
 
             result, pvalues = self._mc(threshold, initstate, dir, options)
             if result is not None:
