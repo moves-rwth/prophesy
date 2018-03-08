@@ -672,7 +672,7 @@ class QcqpSolver():
             if not solved_properly:
                 self._mu = options.mu
                 for param_id in self._paramVars.keys():
-                    self._paraminit[param_id] = (self._paraminit + 0.5) / 2
+                    self._paraminit[param_id] = (self._paraminit[param_id] + 0.5) / 2
                 continue
 
 
