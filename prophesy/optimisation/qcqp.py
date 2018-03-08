@@ -668,7 +668,7 @@ class QcqpSolver():
 
             self.encoding_timer += time.time() - encoding_start
 
-            solved_properly = self._model()
+            solved_properly = self._solve_model()
             if not solved_properly:
                 self._mu = options.mu
                 for param_id in self._paramVars.keys():
