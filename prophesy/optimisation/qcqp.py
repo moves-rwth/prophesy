@@ -679,8 +679,6 @@ class QcqpSolver():
                 for param_id in self._paramVars.keys():
                     self._paraminit[param_id] = (self._paraminit[param_id] + 0.5) / 2
             else:
-
-
                 result, pvalues = self._mc(threshold, initstate, dir, options)
                 if result is not None:
                     return result
@@ -702,7 +700,6 @@ class QcqpSolver():
                 # Updates the probability values for next iteration
                 self._update_pinit(pvalues)
 
-    
                 # Updates the parameter values for next iteration
                 for param_id, param_var in self._paramVars.items():
                     if not isinstance(param_var, int):

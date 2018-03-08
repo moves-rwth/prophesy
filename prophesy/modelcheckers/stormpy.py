@@ -48,6 +48,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._program = None
         self._model = None
         self._parameter_constraints = None
+        self._parameter_mapping_inverse = None
         self._graph_preservation_constraints = None
         self._parameter_mapping = None
         self._model_instantiator = None
@@ -92,6 +93,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._parameter_constraints = None
         self._graph_preservation_constraints = None
         self._parameter_mapping = None
+        self._parameter_mapping_inverse = None
         self._model_instantiator = None
         self._pla_checker = None
         self._welldefined_checker = None
@@ -196,14 +198,23 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._model_building_time = time.time() - start_time
         return self._model
 
-    def get_parameter_mapping(self, prophesy_parameters):
-        """Get a mapping from prophesy parameters to model parameters in stormpy."""
+    def get_parameter_mapping(self, prophesy_parameters, from_storm = False):
+        """Get a mapping from prophesy parameters to model parameters in stormpy (or the other way around)."""
 
         def get_matching_model_parameter(model_parameters, variable_name):
             """Return matching parameter or None."""
             return next((v for v in model_parameters if v.name == variable_name), None)
 
-        if self._parameter_mapping is None:
+        if self._parameter_mapping_inverse is None and from_storm:
+            self._parameter_mapping_inverse = {}
+            model_parameters = self.get_model().collect_probability_parameters() | self.get_model().collect_reward_parameters()
+            for parameter in prophesy_parameters:
+                model_param = get_matching_model_parameter(model_parameters, parameter.name)
+                # assert model_param is not None
+                self._parameter_mapping_inverse[model_param] = parameter
+
+
+        if self._parameter_mapping is None and not from_storm:
             self._parameter_mapping = {}
             model_parameters = self.get_model().collect_probability_parameters() | self.get_model().collect_reward_parameters()
             for parameter in prophesy_parameters:
@@ -211,8 +222,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 #assert model_param is not None
                 self._parameter_mapping[parameter] = model_param
 
-        for parameter in prophesy_parameters:
-            assert parameter in self._parameter_mapping, repr(parameter) + " not in  " + str(self._parameter_mapping)
+            for parameter in prophesy_parameters:
+                assert parameter in self._parameter_mapping, repr(parameter) + " not in  " + str(self._parameter_mapping)
+
+        if from_storm:
+            return self._parameter_mapping_inverse
         return self._parameter_mapping
 
     def get_parameter_constraints(self):
@@ -374,7 +388,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         regions = [(region_result, region)]
         return regions
 
-    def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction, all_states=False):
+    def bound_value_in_hyperrectangle(self, parameters, hyperrectangle, direction, all_states=False, generate_split_estimates=False):
         """
         
         :param parameters: The parameters
@@ -385,8 +399,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         """
         # TODO support for exact PLA.
         logger.debug("Bound values: Obtain PLA checker")
-        pla_checker = self.get_pla_checker(None, allow_simplifications=(not all_states))
-        #mapping = self.get_parameter_mapping(parameters)
+        pla_checker = self.get_pla_checker(None, splitting_assistance=generate_split_estimates, allow_simplifications=(not all_states))
+        mapping = self.get_parameter_mapping(parameters, from_storm=True)
         region_string = hyperrectangle.to_region_string(parameters)
         vars= self.get_model().collect_probability_parameters()
         vars.update(self.get_model().collect_reward_parameters())
@@ -394,12 +408,12 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if all_states:
             logger.debug("Bound for all states")
             return pla_checker.get_bound_all_states(
-                self._environment, par_region,direction)
+                self._environment, par_region,direction), dict([[mapping[x].id, val] for x, val in pla_checker.get_split_suggestion().items()]) if generate_split_estimates else None
         else:
             logger.debug("Bound for initial state")
-            result = pla_checker.get_bound(par_region, direction)
+            result = pla_checker.get_bound(self._environment, par_region, direction)
             assert result.is_constant()
-            return stormpy.convert_from_storm_type(result.constant_part())
+            return stormpy.convert_from_storm_type(result.constant_part()), dict([[mapping[x].id, val] for x, val in pla_checker.get_split_suggestion().items()]) if generate_split_estimates else None
 
     def prob01_states(self):
         model = self.get_model()

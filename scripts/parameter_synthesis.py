@@ -10,7 +10,7 @@ import numpy
 from prophesy.data.constant import parse_constants_string
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.samples import InstantiationResultDict
-from prophesy.data.property import OperatorDirection
+from prophesy.data.property import OperatorDirection, OperatorType
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.problem_description import ProblemDescription
@@ -20,6 +20,7 @@ from prophesy.input.solutionfunctionfile import write_pstorm_result
 from prophesy.modelcheckers.prism import PrismModelChecker
 from prophesy.modelcheckers.storm import StormModelChecker
 from prophesy.optimisation.heuristic_search import ModelOptimizer
+from prophesy.optimisation.pla_based_search import PlaSearchOptimisation
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
@@ -365,8 +366,8 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
         lower_state_bounds = None
         upper_state_bounds = None
         if precompute_state_bounds:
-            upper_state_bounds = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, True, all_states=True)
-            lower_state_bounds = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, False, all_states=True)
+            upper_state_bounds, _ = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, True, all_states=True)
+            lower_state_bounds, _ = state.mc.bound_value_in_hyperrectangle(state.problem_description.parameters, region, False, all_states=True)
 
         result = checker.run(dir, upper_state_var_bounds=upper_state_bounds, lower_state_var_bounds=lower_state_bounds)
 
@@ -424,32 +425,40 @@ def write_model_stats(state, destination):
     return state
 
 
-# @parameter_synthesis.command()
-# @click.argument("bound")
-# @click.argument("verification-method")
-# @pass_state
-# def prove_bound(state, bound, verification_method):
-#
-#     if verification_method == "pla":
-#         optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
-#
-#     elif verification_method == "sfsmt":
-#         pass #TODO use region checker for this.
-#         raise NotImplementedError("Pretty straightforward application of a region checker.")
-#     elif verification_method == "etr":
-#         raise NotImplementedError("Pretty straightforward application of a region checker.")
-#
-#
-#     if state.problem_description.property.operator_direction == OperatorDirection.max:
-#         if state.problem_description.property.operator == OperatorType.reward:
-#             bound = pc.inf
-#         else:
-#             bound = pc.Rational(1)
-#     else:
-#         bound = pc.Rational(0)
-#     optimiser.search(requested_gap=cmdargs.gap, max_iterations=1, dir=optimal_dir, realised=state.problem,
-#                      bound=bound)
-#     return state
+@parameter_synthesis.command()
+@click.option("--epsilon", type=float, default=0.00001)
+@click.argument("verification-method")
+@click.argument("direction", type=click.Choice(["above", "below"]))
+@pass_state
+def prove_bound(state, epsilon, verification_method, direction):
+    if epsilon > 0:
+        # First, create the open interval
+        state.problem_description.parameters.make_intervals_open()
+        state.problem_description.parameters.make_intervals_closed(pc.Rational(epsilon))
+
+    if verification_method == "pla":
+        optimiser = PlaSearchOptimisation(state.mc, state.problem_description)
+
+    elif verification_method == "sfsmt":
+        pass #TODO use region checker for this.
+        raise NotImplementedError("Pretty straightforward application of a region checker.")
+    elif verification_method == "etr":
+        raise NotImplementedError("Pretty straightforward application of a region checker.")
+
+
+    if direction == "below":
+        if state.problem_description.property.operator == OperatorType.reward:
+            bound = pc.inf
+        else:
+            bound = pc.Rational(1)
+    else:
+        bound = pc.Rational(0)
+    result = optimiser.search(realised=state.problem_description.threshold, requested_gap=0, bound=bound, max_iterations=1000, dir="max" if direction == "below" else "min")
+    if result:
+        print("Success")
+    else:
+        raise ValueError("Could not prove bound")
+    return state
 #
 # @parameter_synthesis.command()
 # @click.argument("verification-method")
