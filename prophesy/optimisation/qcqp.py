@@ -165,6 +165,7 @@ class QcqpSolver():
         self._tau = [self._encoding.addVar(lb=0) for _ in range(numstate)]
         self._tt = self._encoding.addVar(lb=0.0, name="TT")
         self._paramVars = dict([[x.id, self._encoding.addVar(lb=i.left_bound(), ub=i.right_bound())] for x, i in self._parameters.items()])
+        self._parameter_bounds = dict([[x.id, [i.left_bound(), i.right_bound()]] for x, i in self._parameters.items()])
 
         # Updates the model for gurobi
         self._encoding.update()
@@ -468,6 +469,10 @@ class QcqpSolver():
                 # This constraints minimizes the max of violation
                 self._encoding.addConstr(self._tau[state] <= self._tt)
 
+    def _clamp_to_bounds(self, val, param_id):
+        return max(min(float(self._parameter_bounds[param_id][1]), val), float(self._parameter_bounds[param_id][0]))
+
+
     def _mc(self, threshold, initstate, dir, options):
         """
         Model checking based on the values found by QCQP
@@ -477,7 +482,7 @@ class QcqpSolver():
         :return: 
         """
         if options.mc_termination_check:
-            param_values = dict([[id, param_var.x] for id, param_var in self._paramVars.items()])
+            param_values = dict([[id, self._clamp_to_bounds(param_var.x, id)] for id, param_var in self._paramVars.items()])
             sample, eval_res = self._evaluate(param_values)
             print(float(eval_res[sample]))
 
@@ -486,7 +491,7 @@ class QcqpSolver():
             elif dir == "above" and float(eval_res[sample]) > threshold:
                 return QcqpResult(self._pVars[initstate].x, param_values), None
         elif options.intermediate_mc:
-            param_values = dict([[id, param_var.x] for id, param_var in self._paramVars.items()])
+            param_values = dict([[id, self._clamp_to_bounds(param_var.x, id)] for id, param_var in self._paramVars.items()])
             mc_results = self._mc_check(param_values)
             print(mc_results.at(initstate))
             if dir == "below" and mc_results.at(initstate) < threshold:
@@ -688,7 +693,7 @@ class QcqpSolver():
 
             if not options.silent:
                 print("Max vio :", maxx)
-                print("p =", self._pVars[initstate].x)
+                print("p = ", self._pVars[initstate].x)
 
             # Breaks if the violation is small and prints number of iterations and total time
             if abs(maxx) < 1e-8 and not options.mc_termination_check and not options.intermediate_mc:
