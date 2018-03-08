@@ -20,7 +20,7 @@ class PlaSearchOptimisation():
 
         param_id_to_index = dict([[p.id, i] for i, p in enumerate(self.problem_description.parameters)])
         index_to_param_id = dict([[i, p.id] for i, p in enumerate(self.problem_description.parameters)])
-        \assert dir in ["min", "max"]
+        assert dir in ["min", "max"]
         logger.info("Interval [{},{}] (size: {}) ".format(realised, bound, bound-realised))
         activity = [1.0 for _ in self.problem_description.parameters]
         nr_regions = 1
