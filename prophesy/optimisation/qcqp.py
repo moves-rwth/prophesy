@@ -678,43 +678,43 @@ class QcqpSolver():
                 self._mu = options.mu
                 for param_id in self._paramVars.keys():
                     self._paraminit[param_id] = (self._paraminit[param_id] + 0.5) / 2
-                continue
+            else:
 
 
-            result, pvalues = self._mc(threshold, initstate, dir, options)
-            if result is not None:
-                return result
-            # Prints the maximum violation
-            maxx = 0
-            for state in range(numstate):
-                val = self._tau[state].x
-                if val > maxx:
-                    maxx = val
+                result, pvalues = self._mc(threshold, initstate, dir, options)
+                if result is not None:
+                    return result
+                # Prints the maximum violation
+                maxx = 0
+                for state in range(numstate):
+                    val = self._tau[state].x
+                    if val > maxx:
+                        maxx = val
 
-            if not options.silent:
-                print("Max vio :", maxx)
-                print("p = ", self._pVars[initstate].x)
+                if not options.silent:
+                    print("Max vio :", maxx)
+                    print("p = ", self._pVars[initstate].x)
 
-            # Breaks if the violation is small and prints number of iterations and total time
-            if abs(maxx) < 1e-8 and not options.mc_termination_check and not options.intermediate_mc:
-                param_values = dict([[id, param_var.x] for id, param_var in self._paramVars.items()])
-                return QcqpResult(self._pVars[initstate].x, param_values)
-            # Updates the probability values for next iteration
-            self._update_pinit(pvalues)
+                # Breaks if the violation is small and prints number of iterations and total time
+                if abs(maxx) < 1e-8 and not options.mc_termination_check and not options.intermediate_mc:
+                    param_values = dict([[id, param_var.x] for id, param_var in self._paramVars.items()])
+                    return QcqpResult(self._pVars[initstate].x, param_values)
+                # Updates the probability values for next iteration
+                self._update_pinit(pvalues)
 
-
-            # Updates the parameter values for next iteration
-            for param_id, param_var in self._paramVars.items():
-                if not isinstance(param_var, int):
-                    if abs(param_var.x) > 1e-8:
-                        #  print pVar
-                        self._paraminit[param_id] = param_var.x
-                    else:
-                        self._paraminit[param_id] = 0
-            # Updates penalty parameter
-            self._mu += max(self._pinit)
-            if self._mu > 1e8:
-                self._mu = 1e8
+    
+                # Updates the parameter values for next iteration
+                for param_id, param_var in self._paramVars.items():
+                    if not isinstance(param_var, int):
+                        if abs(param_var.x) > 1e-8:
+                            #  print pVar
+                            self._paraminit[param_id] = param_var.x
+                        else:
+                            self._paraminit[param_id] = 0
+                # Updates penalty parameter
+                self._mu += max(self._pinit)
+                if self._mu > 1e8:
+                    self._mu = 1e8
 
             self._encoding.remove(self._encoding.getQConstrs())
             self._encoding.update()
