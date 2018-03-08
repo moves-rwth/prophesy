@@ -115,7 +115,7 @@ class QcqpSolver():
                     if not self._check_prob0(entry.column):
                         self._states_and_transitions[-1][1][-1][0].append((self._make_unpacked_transition(entry.value()), entry.column))
 
-    def _solve_model(self):solve
+    def _solve_model(self):
         start3 = time.time()
         # Solves the problem
         print('Solving...')
