@@ -115,7 +115,7 @@ class QcqpSolver():
                     if not self._check_prob0(entry.column):
                         self._states_and_transitions[-1][1][-1][0].append((self._make_unpacked_transition(entry.value()), entry.column))
 
-    def _solve_model(self):
+    def _solve_model(self):solve
         start3 = time.time()
         # Solves the problem
         print('Solving...')
@@ -124,11 +124,11 @@ class QcqpSolver():
         except GurobiError:
             raise RuntimeError("Gurobi throws an error")
 
-        print("Gurobi reports: " + gurobi_status[self._encoding.status] if self._encoding.status in gurobi_status else "Unknown")
+        print("Gurobi reports: " + gurobi_status[self._encoding.status] if self._encoding.status in gurobi_status else "Unknown (code: {})".format(self._encoding.status))
         t3 = time.time()
         self.solver_timer += (t3 - start3)
         print("Solver time :" + str(t3 - start3))
-        if self._encoding.status == 13:
+        if self._encoding.status != 2:
             return False
         return True
 
@@ -668,7 +668,7 @@ class QcqpSolver():
 
             self.encoding_timer += time.time() - encoding_start
 
-            solved_properly = self._solve_model()
+            solved_properly = self.__model()
             if not solved_properly:
                 self._mu = options.mu
                 for param_id in self._paramVars.keys():
