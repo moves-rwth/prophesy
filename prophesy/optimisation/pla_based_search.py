@@ -35,7 +35,7 @@ class PlaSearchOptimisation():
                 #print(estimates)
                 curr_refinement_index =iterations % len(self.problem_description.parameters)# max(estimates, key=lambda k: estimates[k])
                 #print([p.id for p in self.problem_description.parameters])
-                if iterations% 20 < 10 and estimates[index_to_param_id[curr_refinement_index]] == 0:
+                if iterations % 20 < 10 or estimates[index_to_param_id[curr_refinement_index]] == 0:
                     curr_refinement_index = param_id_to_index[max(estimates, key=lambda k: estimates[k])]
                 #print(curr_refinement_index)
                 #print(estimates)
