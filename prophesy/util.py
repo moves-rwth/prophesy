@@ -23,6 +23,7 @@ class Configuration:
         """
         self._config = configparser.ConfigParser()
         self._import_from_file(config_file)
+        self._file_path = config_file
         self.modified = False
 
     def _import_from_file(self, config_file):
@@ -43,11 +44,11 @@ class Configuration:
         :param key: Key.
         """
         if section not in self._config:
-            raise ConfigurationError("Cannot find section {}".format(section))
+            raise ConfigurationError("Cannot find section {} in file {}".format(section, self._file_path))
 
         if key not in self._config[section]:
             raise ConfigurationError(
-                "Cannot find key {} in section {}".format(key, section))
+                "Cannot find key {} in section {} in file {}".format(key, section, self._file_path))
 
     def get(self, section, key):
         """
