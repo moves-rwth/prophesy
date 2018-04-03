@@ -489,9 +489,10 @@ def prove_bound(state, epsilon, verification_method, direction):
 @click.option("--area", type=pc.Rational, default=1)
 @click.option("--epsilon", type=pc.Rational)
 @click.option("--stats", help="File to write synthesis stats to")
+@click.option("--plot", help="Should a plot be generated", is_flag=True)
 #@click.option("--gp")
 @pass_state
-def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon, stats):
+def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon, stats, plot):
     if state.problem_description.samples is None:
         state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
 
@@ -547,7 +548,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
                                       checker,
                                       state.problem_description.welldefined_constraints,
                                       state.problem_description.graph_preserving_constraints,
-                                      split_uniformly=region_method == "quads")
+                                      split_uniformly=region_method == "quads", generate_plots=plot)
 
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
                                        plot_candidates=False, export_statistics=stats)

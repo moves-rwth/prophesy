@@ -103,7 +103,7 @@ class RegionGenerator:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints):
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=False):
         """
         Constructor.
         :param samples: List of samples.
@@ -135,10 +135,14 @@ class RegionGenerator:
 
         # Options for plotting.
         self._plot_candidates = False
-        self.plot = len(self.parameters) <= 2
+        self.plot = generate_plot
+        if generate_plot and len(self.parameters) > 2:
+            logger.warning("Plotting for more than two dimensions not supported")
+            self.plot = False
         self.first_pdf = True
-        ensure_dir_exists(prophesy.config.configuration.get_plots_dir())
-        _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_",
+        if self.plot:
+            ensure_dir_exists(prophesy.config.configuration.get_plots_dir())
+            _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_",
                                                dir=prophesy.config.configuration.get_plots_dir())
 
     def __iter__(self):
@@ -199,6 +203,7 @@ class RegionGenerator:
         :param args: Arguments.
         :param kwargs: Arguments.
         """
+
         if not self.plot:
             return
 

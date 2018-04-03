@@ -34,8 +34,8 @@ class HyperRectangleRegions(RegionGenerator):
     Region generation using hyperrectangles.
     """
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False):
-        super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints)
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False):
+        super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=generate_plots)
 
         self.regions = []
         self.parked_regions = []
