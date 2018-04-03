@@ -282,13 +282,11 @@ def search_optimum(state, dir):
     if state.problem_description.solution_function:
         optimizer = ModelOptimizer(RatFuncSampling(state.problem_description.parameters, state.problem_description.parameters),
                                    state.problem_description.parameters, state.problem_description.property, dir)
-        instance, val = optimizer.search()
-        score = optimizer.score(None, val)
+        result = optimizer.search()
     else:
         #mc.set_welldefined_checker(SampleWelldefinedChecker(solver2, problem_description.parameters,problem_description.welldefined_constraints))
         optimizer = ModelOptimizer(state.mc, state.problem_description.parameters, state.problem_description.property, dir)
-        instance, val = optimizer.search()
-        score = optimizer.score(None, val)
+        result = optimizer.search()
 
     return state
 
@@ -320,7 +318,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
     iterations = 0
     result_found = False
 
-    if state.problem_description.model.contains_nondeterministic_model():
+    if state.problem_description.model and state.problem_description.model.contains_nondeterministic_model():
         if state.problem_description.property.operator_direction == OperatorDirection.min:
             angelic = dir == "below"
         elif state.problem_description.property.operator_direction == OperatorDirection.max:

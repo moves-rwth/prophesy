@@ -96,6 +96,16 @@ class GuidedParticleSwarmOptimizer(EarlyTerminatingParticleSwarmOptimizer):
                                              bounds=(self.lower_bound, self.upper_bound),
                                              standard_deviation=spread)
 
+def _bounds(region, parameters):
+    if region is None:
+        intervals = [p.interval for p in parameters]
+    else:
+        intervals = region.intervals
+
+    left_bounds = [float(i.left_bound()) for i in intervals]
+    right_bounds = [float(i.right_bound()) for i in intervals]
+    return (left_bounds, right_bounds)
+
 
 class ParticleSwarmSampleGenerator(SampleGenerator):
     """Perform PSO yielding each iterations' samples (particle positions)."""
@@ -105,14 +115,7 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
         self.score_fct = score_fct
         self.latest_sampling_result = None
 
-        if region is None:
-            intervals = [p.interval for p in self.parameters]
-        else:
-            intervals = region.intervals
-
-        left_bounds = [float(i.left_bound()) for i in intervals]
-        right_bounds = [float(i.right_bound()) for i in intervals]
-        self.bounds = (left_bounds, right_bounds)
+        self.bounds = _bounds(region, parameters)
 
 
         if pso_options is None:
