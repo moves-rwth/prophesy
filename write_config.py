@@ -102,6 +102,7 @@ def get_initial_dependencies_config(config):
     config_deps = dict()
     config_deps["stormpy"] = check_python_api("stormpy")
     config_deps["pypdf2"] = check_python_api("PyPDF2")
+    config_deps["gurobipy"] = check_python_api("gurobipy")
     config["installed_deps"] = config_deps
 
 
