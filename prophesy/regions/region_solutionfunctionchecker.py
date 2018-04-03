@@ -76,7 +76,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         #TODO denominator unequal constant.
         if pc.denominator(self._ratfunc) != 1:
             for constraint in problem_description.welldefined_constraints:
-                if not constraint.get_constraint().lhs.total_degree <= 1 or constraint.get_constraint().relation == pc.Relation.NEQ:
+                if not constraint.lhs.total_degree <= 1 or constraint.relation == pc.Relation.NEQ:
                     raise RuntimeError("Non-linear well-definednessconstraints are not supported right now")
             # We do know now that the well-defined points are connected.
             sample = self._get_welldefined_point(problem_description.welldefined_constraints)
