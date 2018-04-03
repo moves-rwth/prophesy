@@ -24,6 +24,8 @@ def require_storm():
 def require_z3():
     return pytest.mark.skipif(not configuration.get_z3(), reason="requires z3")
 
-
 def require_yices():
     return pytest.mark.skipif(not configuration.get_yices(), reason="requires yices")
+
+def require_gurobipy():
+    return pytest.mark.skipif(not configuration.has_gurobipy(), reason="requires gurobipy")

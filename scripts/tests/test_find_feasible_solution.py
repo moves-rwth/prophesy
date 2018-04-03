@@ -86,6 +86,7 @@ benchmarks = [
     #   ("nand-reward", "nand_20-5", 0.5, True),
 ]
 
+@require_stormpy()
 @pytest.mark.parametrize("name,benchmark,property,threshold,dir", benchmarks)
 def test_script_etr(name, benchmark,property, threshold, dir):
     command = ["load_problem",
@@ -102,3 +103,28 @@ def test_script_etr(name, benchmark,property, threshold, dir):
     result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
     pycarl.clear_variable_pool()
+
+@require_stormpy()
+@require_gurobipy()
+@pytest.mark.parametrize("name,benchmark,property,threshold,dir", benchmarks)
+def test_script_qcqp(name, benchmark,property, threshold, dir):
+    command = ["load_problem",
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, benchmark)),
+               os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
+               "set_threshold",
+               str(threshold),
+               "find_feasible_instantiation",
+               "--qcqp-incremental",
+               "--qcqp-store-quadratic",
+               "--qcqp-handle-violation", "minimisation",
+               "--qcqp-mc", "full",
+               "--precheck-welldefinedness",
+               dir,
+                "qcqp"
+               ]
+    logger.debug("parameter_synthesis.py " + " ".join(command))
+    runner = click.testing.CliRunner()
+    result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
+    assert result.exit_code == 0, result.output
+    pycarl.clear_variable_pool()
+

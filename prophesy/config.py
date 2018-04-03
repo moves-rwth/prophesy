@@ -183,6 +183,9 @@ class ProphesyConfig(Configuration):
     def has_stormpy(self):
         return modules.is_module_available("stormpy")
 
+    def has_gurobipy(self):
+        return modules.is_module_available("gurobipy")
+
     def get_intermediate_dir(self):
         dir = self.get(ProphesyConfig.DIRECTORIES, "intermediate_files")
         util.ensure_dir_exists(dir)

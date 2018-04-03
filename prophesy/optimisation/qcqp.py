@@ -1,15 +1,18 @@
 from __future__ import division
-import stormpy
-import stormpy.core
-import stormpy.logic
-import stormpy.pars
+
+
 import time
 import math
-from gurobipy import *
-from prophesy.data.property import OperatorType
 
+from prophesy.data.property import OperatorType
 import prophesy.adapter.pycarl as pc
+import prophesy.adapter.stormpy as stormpy
+from prophesy.adapter.gurobipy import *
 from prophesy.data.samples import ParameterInstantiation, InstantiationResult
+
+import  logging
+logger = logging.getLogger(__name__)
+
 
 class QcqpOptions():
     def __init__(self, mu, maxiter, graph_epsilon, silent, incremental, all_welldefined, threshold_constraint,
@@ -78,6 +81,9 @@ class QcqpSolver():
         self._property_type = None
         self._lower_state_bounds = None
         self._upper_state_bounds = None
+        if not modules.is_module_available("gurobipy"):
+            raise RuntimeError("Using QCQP requires gurobi-python.")
+
 
     def _check_prob0(self, state):
         return self._prob0E.get(state)
@@ -124,10 +130,10 @@ class QcqpSolver():
         except GurobiError:
             raise RuntimeError("Gurobi throws an error")
 
-        print("Gurobi reports: " + gurobi_status[self._encoding.status] if self._encoding.status in gurobi_status else "Unknown (code: {})".format(self._encoding.status))
+        logger.debug("Gurobi reports: " + gurobi_status[self._encoding.status] if self._encoding.status in gurobi_status else "Unknown (code: {})".format(self._encoding.status))
         t3 = time.time()
         self.solver_timer += (t3 - start3)
-        print("Solver time :" + str(t3 - start3))
+        logger.debug("Solver time :" + str(t3 - start3))
         if self._encoding.status != 2:
             return False
         return True
@@ -484,7 +490,6 @@ class QcqpSolver():
         if options.mc_termination_check:
             param_values = dict([[id, self._clamp_to_bounds(param_var.x, id)] for id, param_var in self._paramVars.items()])
             sample, eval_res = self._evaluate(param_values)
-            print(float(eval_res[sample]))
 
             if dir == "below" and float(eval_res[sample]) < threshold:
                 return QcqpResult(self._pVars[initstate].x, param_values), None
@@ -493,7 +498,6 @@ class QcqpSolver():
         elif options.intermediate_mc:
             param_values = dict([[id, self._clamp_to_bounds(param_var.x, id)] for id, param_var in self._paramVars.items()])
             mc_results = self._mc_check(param_values)
-            print(mc_results.at(initstate))
             if dir == "below" and mc_results.at(initstate) < threshold:
                 return QcqpResult(self._pVars[initstate].x, param_values), None
             elif dir == "above" and mc_results.at(initstate) > threshold:
