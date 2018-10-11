@@ -417,7 +417,6 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def prob01_states(self):
         model = self.get_model()
-        print(self.pctlformula[0].raw_formula.optimality_type)
         formula = self.pctlformula[0].raw_formula
         assert type(formula) == stormpy.logic.ProbabilityOperator
         path_formula = formula.subformula
