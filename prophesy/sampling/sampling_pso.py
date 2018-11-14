@@ -154,4 +154,4 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
             self.pso.iterate()
             #print("{}: {}".format(self.pso.iteration, float(self.pso.historic_best_score)))
             yield self.latest_sampling_result
-        raise StopIteration
+        return
