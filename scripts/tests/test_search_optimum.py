@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 target_file = "sampling_model_{}.samples".format(current_time)
 
 benchmarks = [
-    require_stormpy()(("brp", "brp", "N=16,MAX=2", "property1", "stormpy"))
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "stormpy", marks=[require_stormpy()])
 
 ]
 

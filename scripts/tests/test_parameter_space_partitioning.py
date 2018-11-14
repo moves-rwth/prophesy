@@ -11,13 +11,13 @@ import pycarl
 
 
 benchmarks_smt = [
-    require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
-    require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads")),
-    require_z3()(("brp", "brp", "K=16,MAX=2", "property1", "brp_16-2", "95/100", "z3", "quads")),
-    require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads")),
-    require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles")),
-    require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles")),
-    require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "rectangles")),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads", marks=[require_z3()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads", marks=[require_z3()]),
+    pytest.param("brp", "brp", "K=16,MAX=2", "property1", "brp_16-2", "95/100", "z3", "quads", marks=[require_z3()]),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads", marks=[require_yices()]),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles", marks=[require_z3()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles", marks=[require_z3()]),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "rectangles", marks=[require_yices()]),
 
     # require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
@@ -74,12 +74,12 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
 
 
 benchmarks_etr = [
-    require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads")),
-    require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads")),
-    require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads")),
-    require_z3()(("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles")),
-    require_z3()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles")),
-    require_yices()(("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "rectangles")),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads", marks=[require_z3()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads", marks=[require_z3()]),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads", marks=[require_yices()]),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles", marks=[require_z3()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles", marks=[require_z3()]),
+    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "rectangles", marks=[require_yices()]),
 
     # require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
@@ -139,15 +139,14 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
     pycarl.clear_variable_pool()
 
 benchmarks_pla = [
-    require_storm()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "quads")),
-    require_storm()(("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "quads")),
-    require_storm()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "quads")),
-    require_stormpy()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "stormpy", "quads")),
-    require_storm()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "rectangles")),
-    require_storm()(
-        ("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "rectangles")),
-    require_storm()(("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "rectangles")),
-    require_stormpy()(("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "stormpy", "rectangles")),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "quads", marks=[require_storm()]),
+    pytest.param("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "quads", marks=[require_storm()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "quads", marks=[require_storm()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "stormpy", "quads", marks=[require_stormpy()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "rectangles", marks=[require_storm()]),
+    pytest.param("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "rectangles", marks=[require_storm()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "rectangles", marks=[require_storm()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "stormpy", "rectangles", marks=[require_stormpy()]),
 ]
 
 
