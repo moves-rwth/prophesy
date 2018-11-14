@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 
 import prophesy.adapter.pycarl as pc
 import prophesy.data.interval
@@ -102,10 +102,10 @@ class ParameterOrder(list):
         of ParameterInstantiations.
         """
         def looks_like_list_of_points(a):
-            return isinstance(a, collections.Sequence) and isinstance(a[0], collections.Sized) and len(a[0]) == len(self)
+            return isinstance(a, collections.abc.Sequence) and isinstance(a[0], collections.abc.Sized) and len(a[0]) == len(self)
 
         def looks_like_a_single_point(a):
-            return isinstance(a, collections.Sized) and len(a) == len(self)
+            return isinstance(a, collections.abc.Sized) and len(a) == len(self)
 
         if looks_like_list_of_points(one_or_more_pointlikes):
             return [ParameterInstantiation.from_point(p, self) for p in one_or_more_pointlikes]
