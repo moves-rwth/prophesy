@@ -11,9 +11,9 @@ from helpers.helper import get_example_path
 from requires import *
 
 tools = [
-    require_storm()((StormModelChecker, "storm")),
-    # require_prism(rational_function=True)((PrismModelChecker, "prism")),
-    require_stormpy()((StormpyModelChecker, "stormpy")),
+    pytest.param(StormModelChecker, "storm", marks=[require_storm()]),
+    # pytest.param(PrismModelChecker, "prism", marks=[require_prism(rational_function=True)]),
+    pytest.param(StormpyModelChecker, "stormpy", marks=[require_stormpy()]),
 ]
 
 

@@ -10,8 +10,8 @@ from requires import *
 import copy
 
 tools = [
-    require_storm()((StormModelChecker, "storm")),
-    require_stormpy()((StormpyModelChecker, "stormpy")),
+    pytest.param(StormModelChecker, "storm", marks=[require_storm()]),
+    pytest.param(StormpyModelChecker, "stormpy", marks=[require_stormpy()]),
 ]
 
 
