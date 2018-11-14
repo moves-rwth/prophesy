@@ -43,11 +43,11 @@ benchmarks = [
 
 @pytest.mark.parametrize("name,benchmark,threshold,dir", benchmarks)
 def test_script_sfsmt(name, benchmark, threshold, dir):
-    command = ["load_solution_function",
+    command = ["load-solution-function",
                os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, benchmark)),
-               "set_threshold",
+               "set-threshold",
                str(threshold),
-               "find_feasible_instantiation",
+               "find-feasible-instantiation",
                 dir,
                 "sfsmt"
                ]
@@ -89,12 +89,12 @@ benchmarks = [
 @require_stormpy()
 @pytest.mark.parametrize("name,benchmark,property,threshold,dir", benchmarks)
 def test_script_etr(name, benchmark,property, threshold, dir):
-    command = ["load_problem",
+    command = ["load-problem",
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, benchmark)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "set_threshold",
+               "set-threshold",
                str(threshold),
-               "find_feasible_instantiation",
+               "find-feasible-instantiation",
                 dir,
                 "etr"
                ]
@@ -108,12 +108,12 @@ def test_script_etr(name, benchmark,property, threshold, dir):
 @require_gurobipy()
 @pytest.mark.parametrize("name,benchmark,property,threshold,dir", benchmarks)
 def test_script_qcqp(name, benchmark,property, threshold, dir):
-    command = ["load_problem",
+    command = ["load-problem",
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, benchmark)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "set_threshold",
+               "set-threshold",
                str(threshold),
-               "find_feasible_instantiation",
+               "find-feasible-instantiation",
                "--qcqp-incremental",
                "--qcqp-store-quadratic",
                "--qcqp-handle-violation", "minimisation",

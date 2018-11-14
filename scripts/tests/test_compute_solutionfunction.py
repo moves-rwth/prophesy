@@ -19,12 +19,12 @@ benchmarks = [
 @pytest.mark.parametrize("name,file,constants,property,tool", benchmarks)
 def test_script(name, file, constants, property, tool):
     command = ["--mc={}".format(tool),
-               "load_problem",
+               "load-problem",
                "--constants",
                constants,
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "compute_solution_function",
+               "compute-solution-function",
                '--export',
                target_file
                ]

@@ -42,9 +42,9 @@ benchmarks = [
 
 @pytest.mark.parametrize("name,benchmark,threshold,safe_above", benchmarks)
 def test_script(name, benchmark, threshold, safe_above):
-    command = ["load_solution_function",
+    command = ["load-solution-function",
                os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, benchmark)),
-               "set_threshold",
+               "set-threshold",
                str(threshold),
                "sample",
                "--samplingnr",

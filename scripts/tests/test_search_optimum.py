@@ -19,12 +19,12 @@ benchmarks = [
 @pytest.mark.parametrize("name,file,constants,property,tool", benchmarks)
 def test_script(name, file, constants, property, tool):
     command = ["--mc={}".format(tool),
-               "load_problem",
+               "load-problem",
                "--constants",
                constants,
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "search_optimum",
+               "search-optimum",
                 "max"
                ]
     logger.debug("parameter_synthesis.py " + " ".join(command))

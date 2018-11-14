@@ -43,12 +43,12 @@ benchmarks = [
 @pytest.mark.parametrize("name,file,constants,property,threshold,tool", benchmarks)
 def test_script(name, file, constants, property, threshold, tool):
     command = ["--mc={}".format(tool),
-               "load_problem",
+               "load-problem",
                "--constants",
                constants,
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
                os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, property)),
-               "set_threshold",
+               "set-threshold",
                str(threshold),
                "sample",
                "--samplingnr",
