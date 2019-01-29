@@ -179,6 +179,8 @@ class RegionGenerator:
             self.start_generation()
             region_info = self.next_region()
             self.stop_generation()
+        # Remove last record as there is no next region
+        self._records.pop(-1)
 
     def _add_pdf(self, name):
         """

@@ -289,6 +289,12 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 self._model_instantiator = stormpy.pars.PDtmcInstantiator(self.get_model())
             elif self.get_model().model_type == stormpy.storage.ModelType.MDP:
                 self._model_instantiator = stormpy.pars.PMdpInstantiator(self.get_model())
+            elif self.get_model().model_type == stormpy.storage.ModelType.CTMC:
+                self._model_instantiator = stormpy.pars.PCtmcInstantiator(self.get_model())
+            elif self.get_model().model_type == stormpy.storage.ModelType.MA:
+                self._model_instantiator = stormpy.pars.PMaInstantiator(self.get_model())
+            else:
+                return NotImplementedError("Model instantiator for {} is not supported.".format(self.get_model().model_type))
         return self._model_instantiator
 
     def get_pla_checker(self, threshold, splitting_assistance = False, allow_simplifications=True):

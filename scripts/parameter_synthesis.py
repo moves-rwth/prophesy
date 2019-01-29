@@ -533,6 +533,8 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
             raise RuntimeError("For ETR stormpy is required.")
         checker = EtrRegionChecker(state.solver, state.mc)
     elif verification_method == "sfsmt":
+        if state.problem_description.solution_function is None:
+            raise RuntimeError("For SFSMT the solution function is required.")
         if state.solver is None:
             raise RuntimeError("For using the solution function an SMT solver is required.")
         checker = SolutionFunctionRegionChecker(state.solver)
