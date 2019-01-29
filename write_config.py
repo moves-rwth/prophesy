@@ -121,6 +121,9 @@ def get_initial_web_config(config):
 
 
 def write_initial_config(search_path=None):
+    if search_path is not None:
+        search_path = os.path.expanduser(search_path)
+
     print("Write config with search path {}".format(search_path))
     config = configparser.ConfigParser()
     get_initial_config(config, search_path)
