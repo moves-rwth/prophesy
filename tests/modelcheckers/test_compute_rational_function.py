@@ -8,7 +8,7 @@ from helpers.helper import get_example_path
 from requires import *
 
 tools = [
-    pytest.param(StormModelChecker, "storm", marks=[require_storm()]),
+    pytest.param(StormModelChecker, "storm", marks=[require_storm(),require_pycarl_parser()]),
     # pytest.param(PrismModelChecker, "prism", marks=[require_prism(rational_function=True)]),
     pytest.param(StormpyModelChecker, "stormpy", marks=[require_stormpy()]),
 ]

@@ -40,7 +40,7 @@ benchmarks = [
     #   ("nand-reward", "nand_20-5", 0.5, True),
 ]
 
-
+@require_pycarl_parser()
 @pytest.mark.parametrize("name,benchmark,threshold,dir", benchmarks)
 def test_script_sfsmt(name, benchmark, threshold, dir):
     command = ["load-solution-function",

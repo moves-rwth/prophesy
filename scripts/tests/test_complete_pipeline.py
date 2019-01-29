@@ -12,7 +12,7 @@ import pycarl
 benchmarks_pipeline = [
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "storm", "etr", "quads", marks=[pytest.mark.xfail, require_storm(), require_z3()]),
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "stormpy", "etr", "quads", marks=[require_stormpy(), require_z3()]),
-    pytest.param("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "storm", "pla", "quads", marks=[require_storm(), require_z3()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "storm", "pla", "quads", marks=[require_storm(), require_z3(), require_pycarl_parser()]),
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", 0.7, "z3", "stormpy", "pla", "quads", marks=[require_stormpy(), require_z3()]),
     pytest.param("herman", "herman3", "", "herman", 0.4, "z3", "stormpy", "pla", "quads", marks=[require_stormpy(), require_z3()]),
 ]

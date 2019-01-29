@@ -49,6 +49,6 @@ def parse_constants_string(input_string):
         var = pc.variable_with_name(constant_and_def[0])
         if var.is_no_variable:
             var = pc.Variable(constant_and_def[0])
-        val = pc.parse(constant_and_def[1])
+        val = str(constant_and_def[1])
         result[var] = val
     return result

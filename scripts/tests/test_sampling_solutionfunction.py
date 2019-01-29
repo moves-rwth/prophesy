@@ -39,7 +39,7 @@ benchmarks = [
     #   ("nand-reward", "nand_20-5", 0.5, True),
 ]
 
-
+@require_pycarl_parser()
 @pytest.mark.parametrize("name,benchmark,threshold,safe_above", benchmarks)
 def test_script(name, benchmark, threshold, safe_above):
     command = ["load-solution-function",

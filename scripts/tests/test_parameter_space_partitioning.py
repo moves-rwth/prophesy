@@ -41,6 +41,7 @@ benchmarks_smt = [
 ]
 
 
+@require_pycarl_parser()
 @pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method",
                          benchmarks_smt)
 def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, tool, method):
@@ -102,7 +103,6 @@ benchmarks_etr = [
     #   ("brp", "brp_256-5", "z3"),
 ]
 
-
 @require_stormpy()
 @pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method", benchmarks_etr)
 def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, tool, method):
@@ -116,8 +116,6 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
         constants,
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
-        "load-solution-function",
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.rat".format(name, ratfile)),
         "set-threshold",
         str(threshold),
         "load-samples",
@@ -139,13 +137,13 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
     pycarl.clear_variable_pool()
 
 benchmarks_pla = [
-    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "quads", marks=[require_storm()]),
-    pytest.param("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "quads", marks=[require_storm()]),
-    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "quads", marks=[require_storm()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "quads", marks=[require_storm(),require_pycarl_parser()]),
+    pytest.param("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "quads", marks=[require_storm(),require_pycarl_parser()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "quads", marks=[require_storm(),require_pycarl_parser()]),
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "stormpy", "quads", marks=[require_stormpy()]),
-    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "rectangles", marks=[require_storm()]),
-    pytest.param("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "rectangles", marks=[require_storm()]),
-    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "rectangles", marks=[require_storm()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "storm", "rectangles", marks=[require_storm(),require_pycarl_parser()]),
+    pytest.param("crowds", "crowds", "CrowdSize=3,TotalRuns=5", "property1", "crowds_3-5", 0.95, "storm", "rectangles", marks=[require_storm(),require_pycarl_parser()]),
+    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", 0.35, "storm", "rectangles", marks=[require_storm(),require_pycarl_parser()]),
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", "brp_16-2", 0.95, "stormpy", "rectangles", marks=[require_stormpy()]),
 ]
 

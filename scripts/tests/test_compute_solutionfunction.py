@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 target_file = "compute_solutionfunction_{}.rat".format(current_time)
 
 benchmarks = [
-    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "storm", marks=[require_storm()]),
+    pytest.param("brp", "brp", "N=16,MAX=2", "property1", "storm", marks=[require_storm(),require_pycarl_parser()]),
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", "prism", marks=[require_prism(rational_function=True)]),
     pytest.param("brp", "brp", "N=16,MAX=2", "property1", "stormpy", marks=[require_stormpy()]),
 ]

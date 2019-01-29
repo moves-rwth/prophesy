@@ -3,13 +3,23 @@ import pycarl.gmp
 import pycarl.gmp.formula
 import pycarl.formula
 import pycarl.convert
+import logging
 
-if pycarl.has_parser():
+from prophesy.config import modules
+
+pycarl_parser_available = modules.has_pycarl_parser()
+
+if pycarl_parser_available:
+    if not pycarl.has_parser():
+        raise RuntimeError("Pycarl parser is configured to be available, but could not be loaded")
     import pycarl.parse
     import pycarl.gmp.parse
 
     ParserError = pycarl.parse.ParserError
 else:
+    if pycarl.has_parser():
+        logging.warning("Pycarl has a parser, but this is switched off")
+
     ParserError = RuntimeError
 
 if pycarl.has_cln():
@@ -42,6 +52,9 @@ inf = pycarl.inf
 def parse(input):
     if not pycarl.has_parser():
         raise ImportError("Parsing capabilities not available as pycarl was built without parsing support.")
+    if not pycarl_parser_available:
+        raise ImportError("Pycarl parsing capabilities are not configured.")
+
     return pycarl.parse.deserialize(input, pycarl.gmp)
 
 

@@ -49,8 +49,11 @@ def read_pstorm_result(location, require_result=True):
     :return: The data obtained from the model.
     :rtype: ParametricResult
     """
+    logging.debug("Open result file from storm...")
     with open(location) as f:
         inputstring = f.read()
+
+
 
     # Build parameters
     logger.debug("Reading parameters...")

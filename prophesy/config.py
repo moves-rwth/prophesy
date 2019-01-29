@@ -3,7 +3,6 @@ import logging
 import re
 
 import prophesy.util as util
-from prophesy.adapter.pycarl import Integer, Rational
 from prophesy.util import Configuration
 from prophesy.exceptions.configuration_error import ConfigurationError
 
@@ -20,6 +19,9 @@ class ModulesConfig(Configuration):
     def has_stormpy(self):
         return self.is_module_available("stormpy")
 
+    def has_pycarl_parser(self):
+        return self.is_module_available("pycarl-parser")
+
 
 class ProphesyConfig(Configuration):
     # section names
@@ -31,7 +33,9 @@ class ProphesyConfig(Configuration):
 
     def __init__(self, path_to_cfg):
         super().__init__(path_to_cfg)
+        from prophesy.adapter.pycarl import Integer, Rational
         self._init_tools()
+        self._sampling_epsilon = Rational(Integer(1), Integer(800))
 
     def getAvailableSMTSolvers(self):
         return self.smtsolvers
@@ -199,7 +203,7 @@ class ProphesyConfig(Configuration):
 
     def get_sampling_epsilon(self):
         # Smallest discernable difference for intervals (used for strict bounds)
-        return Rational(Integer(1), Integer(800))
+        return self._sampling_epsilon
         # TODO why is the following commented out.
         # return self.get_float(ProphesyConfig.SAMPLING, "epsilon")
 
