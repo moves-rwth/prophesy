@@ -338,7 +338,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
             checker = EtrRegionChecker(state.solver, state.mc)
 
         checker.initialize(state.problem_description, fixed_threshold=True, fixed_direction="safe" if dir == "below" else "bad")
-        result, data = checker.analyse_region(region, dir == "below")
+        result, data = checker.analyse_region(region, dir == "below", check_for_eq=False)
         encoding_time = checker.encoding_timer
         solver_time = checker.solver_timer
 

@@ -25,6 +25,10 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         self.fixed_threshold = True
         self._thresholdVar = None
         self.threshold_set = False
+        self._exact = True
+
+    def over_approximates(self):
+        return not self._exact
 
     def initialize(self, problem_description, constants=None, fixed_threshold = True, fixed_direction = None):
         """
@@ -56,6 +60,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
         safeVar = pc.Variable("?_safe", pc.VariableType.BOOL)
         badVar = pc.Variable("?_bad", pc.VariableType.BOOL)
+        equalsVar = pc.Variable("?_equals", pc.VariableType.BOOL)
         self._thresholdVar = pc.Variable("T")
         rf1Var = pc.Variable("rf1")
         rf2Var = pc.Variable("rf2")
@@ -64,6 +69,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(equalsVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
         #Fix direction after declaring variables
@@ -72,6 +78,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             # Notice that we have to flip the values, as we are checking all-quantification
             self._smt2interface.fix_guard("?_" + self._fixed_direction, False)
             self._smt2interface.fix_guard("?_" + excluded_dir, True)
+            self._smt2interface.fix_guard("?_equals", False)
 
         #TODO denominator unequal constant.
         if pc.denominator(self._ratfunc) != 1:
@@ -94,6 +101,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
                 safe_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._bad_relation)
                 bad_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._safe_relation)
+                eq_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, pc.Relation.EQ)
             else:
                 if lower_bounded_variables:
                     self._smt2interface.assert_constraint(pc.Constraint(rf1Var, pc.Relation.GREATER, pc.Rational(0)))
@@ -101,6 +109,7 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
                 safe_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._safe_relation)
                 bad_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, self._bad_relation)
+                eq_constraint = Constraint(pc.Polynomial(rf1Var) - self._thresholdVar * rf2Var, pc.Relation.EQ)
             rf1_constraint = Constraint(pc.Polynomial(rf1Var) - pc.numerator(self._ratfunc), Relation.EQ)
             rf2_constraint = Constraint(pc.Polynomial(rf2Var) - pc.denominator(self._ratfunc), Relation.EQ)
             self._smt2interface.assert_constraint(rf1_constraint)
@@ -108,9 +117,12 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         else:
             safe_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._safe_relation)
             bad_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._bad_relation)
+            eq_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), pc.Relation.EQ)
 
         self._smt2interface.assert_guarded_constraint("?_safe", safe_constraint)
         self._smt2interface.assert_guarded_constraint("?_bad", bad_constraint)
+        self._smt2interface.assert_guarded_constraint("?_equals", eq_constraint)
+
         if self.fixed_threshold:
             self._add_threshold_constraint(problem_description.threshold)
         self._encoding_timer += time.time() - encoding_start
