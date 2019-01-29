@@ -54,8 +54,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         for p in self.parameters:
             self._smt2interface.add_variable(p.name, VariableDomain.Real)
 
-        safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
-        badVar = pc.Variable("__bad", pc.VariableType.BOOL)
+        safeVar = pc.Variable("?_safe", pc.VariableType.BOOL)
+        badVar = pc.Variable("?_bad", pc.VariableType.BOOL)
         self._thresholdVar = pc.Variable("T")
         rf1Var = pc.Variable("rf1")
         rf2Var = pc.Variable("rf2")
@@ -70,8 +70,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
         if self._fixed_direction is not None:
             excluded_dir = "safe" if self._fixed_direction == "bad" else "bad"
             # Notice that we have to flip the values, as we are checking all-quantification
-            self._smt2interface.fix_guard("__" + self._fixed_direction, False)
-            self._smt2interface.fix_guard("__" + excluded_dir, True)
+            self._smt2interface.fix_guard("?_" + self._fixed_direction, False)
+            self._smt2interface.fix_guard("?_" + excluded_dir, True)
 
         #TODO denominator unequal constant.
         if pc.denominator(self._ratfunc) != 1:
@@ -107,8 +107,8 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
             safe_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._safe_relation)
             bad_constraint = Constraint(pc.numerator(self._ratfunc) - pc.Polynomial(self._thresholdVar), self._bad_relation)
 
-        self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
-        self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
+        self._smt2interface.assert_guarded_constraint("?_safe", safe_constraint)
+        self._smt2interface.assert_guarded_constraint("?_bad", bad_constraint)
         if self.fixed_threshold:
             self._add_threshold_constraint(problem_description.threshold)
         self._encoding_timer += time.time() - encoding_start
@@ -143,10 +143,14 @@ class SolutionFunctionRegionChecker(SmtRegionChecker):
 
     def _smt_model_to_sample(self, smt_model):
         sample = ParameterInstantiation()
-        for par in self.parameters:
-            value = smt_model[par.name]
-            rational = pc.Rational(value)
-            sample[par] = rational
+        try:
+            for par in self.parameters:
+                value = smt_model[par.name]
+                rational = pc.Rational(value)
+                sample[par] = rational
+        except ValueError:
+            logger.debug("Cannot translate into a rational instance")
+            return None
         return sample
 
     def _evaluate(self, smt_model):

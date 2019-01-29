@@ -4,15 +4,17 @@ from abc import ABCMeta, abstractmethod
 
 class RegionCheckResult(Enum):
     """
-    Result of region check (counterexample, satisfied, refined, unknown).
+    Result of region check (counterexample, satisfied, refined, homogeneous, unknown).
     """
     CounterExample = 0  #: The region does not satisfy the property; we found a counterexample
     Satisfied = 1  #: The region satisfies the property.
     Refined = 2  #: We don't know, we return a subregion which is still undecided. The remainder is satisfied.
-    Unknown = 3  #: We don't know.
+    Homogenous =  3 #: All the same color.
+    Inhomogenous = 4 #: Contains a border point
+    Unknown = 5  #: We don't know.
 
     def __str__(self):
-        names = ["Cex", "Sat", "Ref", "Unk"]
+        names = ["RCR:Cex", "RCR:Sat", "RCR:Ref", "RCR:Hom", "RCR:Inhom", "RCR:Unk"]
         assert self.value < len(names)
         return names[self.value]
 

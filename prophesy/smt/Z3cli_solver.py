@@ -10,7 +10,7 @@ class Z3CliSolver(SmtlibSolver):
         from prophesy.config import configuration
         super().__init__(location if location is not None else configuration.get_z3(),
                          memout if memout is not None else configuration.get_smt_memout(),
-                         timeout if timeout is not None else configuration.get_smt_timeout, True)
+                         timeout if timeout is not None else configuration.get_smt_timeout(), True)
 
     def name(self):
         return "Z3 cli tool"

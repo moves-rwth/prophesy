@@ -99,7 +99,7 @@ class Plot:
                      samples_green=[], samples_red=[], samples_blue=[], samples_black=[],
                      poly_green=[], poly_red=[], poly_blue_crossed=[], poly_blue_dotted=[], poly_blue=[], poly_black=[],
                      anchor_points=[], additional_arrows=[],
-                     path_to_save=None, display=False):
+                     path_to_pdf=None, path_to_src=None, display=False):
         """
         Plot all results.
         :param parameters: Parameters.
@@ -113,13 +113,21 @@ class Plot:
         :param poly_blue: Polygons with color blue.
         :param anchor_points: List of anchor points with direction.
         :param additional_arrows: List of additional arrows.
-        :param path_to_save: Paths for pdf file or None if no file should be generated.
+        :param path_to_pdf: Paths for pdf file or None if no file should be generated.
+        :param path_to_src: Paths for the pgf source files or None if no file should be generated.
         :param display: If true, the plot will be displayed automatically.
         """
         logger.info("Plot results")
 
         if len(parameters) > 2:
             raise ValueError("Cannot plot for more than 2 parameters.")
+
+        pgf_with_rc_fonts = {
+            "font.family": "serif",
+            "font.serif": []  # use latex default serif font
+            #"font.sans-serif": ["DejaVu Sans"],  # use a specific sans-serif font
+        }
+        pyplot.rcParams.update(pgf_with_rc_fonts)
 
         if Plot.flip_green_red:
             samples_green, samples_red = samples_red, samples_green
@@ -201,8 +209,10 @@ class Plot:
             ax1.set_ylim([float(parameters[1].interval.left_bound()), float(parameters[1].interval.right_bound())])
             ax1.set_xlabel(str(parameters[0].name))
             ax1.set_ylabel(str(parameters[1].name))
-            if path_to_save is not None:
-                pyplot.savefig(path_to_save, format="PDF")
+            if path_to_pdf is not None:
+                pyplot.savefig(path_to_pdf, format="PDF")
+            if path_to_src is not None:
+                pyplot.savefig(path_to_src, format="PGF")
             if display:
                 pyplot.show()
             pyplot.close(fig)

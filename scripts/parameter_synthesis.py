@@ -24,6 +24,7 @@ from prophesy.optimisation.pla_based_search import PlaSearchOptimisation
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
+from prophesy.regions.region_icpchecker import ICPRegionChecker
 from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
 from prophesy.regions.welldefinedness import check_welldefinedness, is_welldefined
@@ -31,6 +32,7 @@ from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
+from prophesy.smt.IcpCli_solver import IcpCliSolver
 from prophesy.smt.isat import IsatSolver
 from prophesy.optimisation.qcqp import QcqpModelRepair
 from prophesy.modelcheckers.pmc import BisimulationType
@@ -76,9 +78,9 @@ def ensure_model_set(mc, model, constants, property):
 @pass_state
 def parameter_synthesis(state, log_smt_calls, config, logfile):
     set_random_seed(0)
-    logging.basicConfig(filename=logfile, format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    logging.basicConfig(filename=logfile, format='%(levelname)s - %(name)s:%(message)s', level=logging.DEBUG)
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    ch.setLevel(logging.DEBUG)
     logging.getLogger().addHandler(ch)
     logging.debug("Loading configuration")
     state.obj = ConfigState()
@@ -144,6 +146,7 @@ def set_bisimulation(state, bisimulation_type):
     if bisimulation_type == "none":
         btype = BisimulationType.none
     state.mc.set_bisimulation_type(btype)
+    return state
 
 @parameter_synthesis.command()
 @click.argument('solution-file')
@@ -271,7 +274,8 @@ def load_samples(state, samples_file):
 @click.option("--plot-candidates")
 @click.option("--flip-red-green")
 @pass_state
-def configure_plotting(state):
+def configure_plotting(state, plot_every_n, plot_candidates, flip_red_green):
+
     raise RuntimeError("Not yet (reimplemented)")
 
 
@@ -424,7 +428,7 @@ def write_model_stats(state, destination):
 
 
 @parameter_synthesis.command()
-@click.option("--epsilon", type=float, default=0.00001)
+@click.option("--epsilon", type=float)
 @click.argument("verification-method")
 @click.argument("direction", type=click.Choice(["above", "below"]))
 @pass_state
@@ -485,14 +489,15 @@ def prove_bound(state, epsilon, verification_method, direction):
 @parameter_synthesis.command()
 @click.argument("verification-method")
 @click.argument("region-method")
-@click.option("--iterations", default=100)
+@click.option("--iterations", default=10000000)
 @click.option("--area", type=pc.Rational, default=1)
 @click.option("--epsilon", type=pc.Rational)
 @click.option("--stats", help="File to write synthesis stats to")
 @click.option("--plot", help="Should a plot be generated", is_flag=True)
-#@click.option("--gp")
+@click.option("--allow-homogeneity-checks", is_flag=True)
+@click.option("--display-model", is_flag=True)
 @pass_state
-def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon, stats, plot):
+def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon, stats, plot, allow_homogeneity_checks, display_model):
     if state.problem_description.samples is None:
         state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
 
@@ -542,13 +547,16 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
     logging.info("Generating regions")
     checker.initialize(state.problem_description, fixed_threshold=True)
 
+    if display_model:
+        state.mc.display_model()
+
     generator = HyperRectangleRegions(state.problem_description.samples,
                                       state.problem_description.parameters,
                                       state.problem_description.threshold,
                                       checker,
                                       state.problem_description.welldefined_constraints,
                                       state.problem_description.graph_preserving_constraints,
-                                      split_uniformly=region_method == "quads", generate_plots=plot)
+                                      split_uniformly=region_method == "quads", generate_plots=plot, allow_homogeneity=allow_homogeneity_checks)
 
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
                                        plot_candidates=False, export_statistics=stats)
@@ -576,6 +584,7 @@ def make_modelchecker(mc):
 
 def make_solver(solver):
     solvers = prophesy.config.configuration.getAvailableSMTSolvers()
+    logger = logging.getLogger(__name__)
 
     if solver == "z3":
         if 'z3' not in solvers:

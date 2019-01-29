@@ -42,13 +42,15 @@ class SmtlibSolver(SMTSolver):
         self.incremental = incremental
         self.nr_variables = 0
         self._fixed_guards = dict()
+        self._guards = [set()]
+        self.allow_names = False
 
     def _write(self, data):
         # Function to write+flush stdin, which may close after issuing a command
         stdin = self.process.stdin
         if stdin is not None:
             try:
-                logger.debug("Write %s", data)
+                #("Write %s", data)
                 stdin.write(data)
                 stdin.flush()
             except:
@@ -64,13 +66,16 @@ class SmtlibSolver(SMTSolver):
     def _memout_option(self):
         return [""]
 
+    def _call_process(self, args):
+        self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, universal_newlines=True)
+
     def run(self):
         if self.process is None:
             args = [self.location, self._hard_timeout_option()]
             args += self._memout_option()
             args += self._additional_args()
-            self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                                            stderr=subprocess.STDOUT, universal_newlines=True)
+            self._call_process(args)
             if self.incremental:
                 self._write(self.formula)
                 self._write("".join(self.status))
@@ -104,19 +109,22 @@ class SmtlibSolver(SMTSolver):
         return version
 
     def check(self):
+        assert len(self._guards[-1]) == 0, "Guards {} not set".format(self._guards)
         assert self.process is not None
         if not self.incremental:
             self._write(self.formula)
             self._write("".join(self.status))
         s = "(check-sat)\n"
         self.string += s
-        logger.debug("Call %s..", self.name())
+        logger.debug("Call %s with timeout %s", self.name(), self.timeout)
         self._write(s)
 
         for line in iter(self.process.stdout.readline, ""):
             if not line and self.process.poll() is not None:
                 break
             output = line.rstrip()
+            if output == "":
+                continue
             logger.debug("SMT result:\t" + output)
             if output == "unsat":
                 if not self.incremental:
@@ -124,10 +132,15 @@ class SmtlibSolver(SMTSolver):
                     self.run()
                 return Answer.unsat
             elif output == "sat":
+                if not self.incremental:
+                    self.stop()
+                    self.run()
                 return Answer.sat
+
             elif output == "unknown":
-                self.stop()
-                self.run()
+                if not self.incremental:
+                    self.stop()
+                    self.run()
                 return Answer.unknown
             elif output == '(error "out of memory")':
                 self.stop()
@@ -161,6 +174,8 @@ class SmtlibSolver(SMTSolver):
             self.status.append(s)
         else:
             self.status.append("")
+        current_open_guards = self._guards[-1]
+        self._guards.append(set(current_open_guards))
 
     def pop(self):
         logger.debug("Pop [%s]: %s", len(self.status), self.status[-1], )
@@ -169,6 +184,7 @@ class SmtlibSolver(SMTSolver):
         self.string += s
         if self.incremental:
             self._write(s)
+        self._guards.pop()
 
     def add_variable(self, symbol, domain=VariableDomain.Real):
         """Declare variable as a constant function with given domain.
@@ -183,21 +199,26 @@ class SmtlibSolver(SMTSolver):
             self._write(s)
         self.status[-1] += s
 
-    def assert_constraint(self, constraint):
-        s = "(assert " + constraint.to_smt2() + " )\n"
+    def assert_constraint(self, constraint, name=None):
+        name_decl = ":named {})".format(name) if name and self.allow_names else ""
+        name_opening = "(! " if name and self.allow_names else ""
+        s = "(assert {}".format(name_opening) + constraint.to_smt2() + " {})\n".format(name_decl)
         self.string += s
         if self.incremental:
             self._write(s)
         self.status[-1] += s
 
-    def assert_guarded_constraint(self, guard, constraint):
+    def assert_guarded_constraint(self, guard, constraint, name=None):
+        name_decl = ":named {}".format(name) if name and self.allow_names else ""
+        name_opening = "(! " if name and self.allow_names else ""
         if guard in self._fixed_guards:
             if self._fixed_guards[guard]:
-                s = "(assert " + constraint.to_smt2() + ")\n"
+                s = "(assert {}".format(name_opening) + constraint.to_smt2() + " {})\n".format(name_decl)
             else:
                 return
         else:
-            s = "(assert (=> " + guard + " " + constraint.to_smt2() + " ))\n"
+            s = "(assert (=> " + guard + " {}".format(name_opening) + constraint.to_smt2() + " {}))\n".format(name_decl)
+            self._guards[-1].add(guard)
         self.string += s
         if self.incremental:
             self._write(s)
@@ -208,15 +229,18 @@ class SmtlibSolver(SMTSolver):
             s = "(assert " + guard + " )\n"
         else:
             s = "(assert (not " + guard + " ))\n"
+        self._guards[-1].remove(guard)
         self.string += s
         if self.incremental:
             self._write(s)
         self.status[-1] += s
 
     def fix_guard(self, guard, value):
-        self.set_guard(guard, value)
         assert guard not in self._fixed_guards
         self._fixed_guards[guard] = value
+        self._guards[-1].add(guard)# Cheaper than checking in set_guard.
+        self.set_guard(guard, value)
+
 
     def _build_model(self, output):
         raise NotImplementedError("General case not implemented")
@@ -237,11 +261,12 @@ class SmtlibSolver(SMTSolver):
         self._write(s)
         output = self._read_model()
         logger.debug("** model result:\t" + output)
-        model = self._build_model(output)
-        # TODO why?
-        if not self.incremental:
-            self.stop()
-            self.run()
+        try:
+            model = self._build_model(output)
+        except ValueError:
+            model = None
+            logger.warning("Cannot construct model exactly.")
+            #TODO support approx.?
         return model
 
     def from_file(self, path):
@@ -272,6 +297,8 @@ def parse_smt_expr(expr):
         return True
     elif cmd == "false":
         return False
+    elif cmd == "root-obj":
+        raise ValueError("root-obj cannot be translated into a rational.")
     else:
         return Rational(cmd)
 

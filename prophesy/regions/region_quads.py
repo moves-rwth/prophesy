@@ -34,8 +34,8 @@ class HyperRectangleRegions(RegionGenerator):
     Region generation using hyperrectangles.
     """
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False):
-        super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=generate_plots)
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False, allow_homogeneity=False):
+        super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=generate_plots, allow_homogeneity=allow_homogeneity)
 
         self.regions = []
         self.parked_regions = []
@@ -264,14 +264,15 @@ class HyperRectangleRegions(RegionGenerator):
             self.check_region(_AnnotatedRegion(newregion, newsamples, well_defined=region.well_defined,
                                                graph_preserving=region.graph_preserving), depth + 1)
 
-    def fail_region(self):
-        logger.debug("Failed checking the region")
+    def fail_region(self, homogeneity=False):
+        logger.debug("Failed checking the region.")
         # Split region and try again
         regionelem = self.regions[0]
 
         # failure ony applies for region that was already consistent
         self.regions = self.regions[1:]
-        if regionelem.empty_checks == 1:
+        if regionelem.empty_checks == 1 and not homogeneity:
+            logger.debug("Region has not been checked for inverse.")
             dist = self._compute_closest_inverse_sample(not regionelem.safe, regionelem.region)
             self.regions.insert(0, _AnnotatedRegion(regionelem.region, regionelem.samples, not regionelem.safe,
                                                     well_defined=regionelem.well_defined,
@@ -279,10 +280,24 @@ class HyperRectangleRegions(RegionGenerator):
                                                     closest_inverse_sample_distance=dist))
             self.regions[0].empty_checks = 2
         else:
+            logger.debug("Region has to be split.")
             newelems = self.split(regionelem)
             for newregion in newelems:
-                if self.checker.supports_only_closed_regions:
+
+                wd = regionelem.well_defined
+                gp = regionelem.graph_preserving
+                if self.checker.supports_only_closed_regions():
                     newregion = newregion.close()
+                elif True:#self.checker.prefers_closed_regions():
+                    #newregion = newregion.close()
+                    solver = Z3CliSolver()
+                    solver.run()
+                    wd_res = check_welldefinedness(solver, self.parameters, newregion.close(),
+                                                   self.gp_constraints + self.wd_constraints)
+                    solver.stop()
+                    if wd_res == WelldefinednessResult.Welldefined:
+                        newregion = newregion.close()
+                logger.debug("Add region to consider later: {}".format(newregion))
                 newsamples = []
 
                 for pt, safe in regionelem.samples:
@@ -296,8 +311,8 @@ class HyperRectangleRegions(RegionGenerator):
 
                 dist = self._compute_closest_inverse_sample(hypothesis, newregion)
                 self.regions.insert(0, _AnnotatedRegion(newregion, newsamples, hypothesis,
-                                                        well_defined=regionelem.well_defined,
-                                                        graph_preserving=regionelem.graph_preserving,
+                                                        well_defined=wd,
+                                                        graph_preserving=gp,
                                                         closest_inverse_sample_distance=dist))
 
         self._sort_regions()
@@ -314,12 +329,33 @@ class HyperRectangleRegions(RegionGenerator):
 
     def refine_region(self, new_regions):
         """
-        If a constraint could not be checked, but we know that only a subconstraint has to be checked afterwards.
+        If a region could not be checked, but we know that only a region has to be checked afterwards.
         """
+        logger.debug("Refine region")
+        # get the old state from the checked region
+        samples = self.regions[0].samples
+        safe = self.regions[0].safe
+        graph_preserving = self.regions[0].graph_preserving
+        well_defined = self.regions[0].well_defined
+
+        # remove the old region from checking queue
         self.regions = self.regions[1:]
         for region in new_regions:
-            self.regions.append(region)
-        self._sort_regions()
+            # check which samples belong to which region
+            samplesContained = []
+            for sample in samples:
+                if region.contains(sample[0]):
+                    samplesContained.append(sample)
+            if self.checker.supports_only_closed_regions():
+                region = region.close()
+
+            # create a new AnnotatedRegion for each region which was cutoff
+            toAdd = _AnnotatedRegion(region, samplesContained, safe, well_defined, graph_preserving)
+            self.regions.append(toAdd)
+
+        # sort the regions (reversed by default)
+        self._sort_regions_by_size()
+
 
     def accept_region(self):
         logger.debug("Accept region")
@@ -354,4 +390,5 @@ class HyperRectangleRegions(RegionGenerator):
                     break
         logger.debug("Consider %s as next region", region.region)
         assert region.well_defined != WelldefinednessResult.Undecided
-        return region.region, region.well_defined, region.safe
+        check_for_eq = self.allow_homogenous_check #and len(region.samples) > 0
+        return region.region, region.well_defined, region.safe, check_for_eq

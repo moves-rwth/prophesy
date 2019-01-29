@@ -1,5 +1,7 @@
 import logging
 import time
+import os
+import subprocess
 
 from prophesy.config import modules
 from prophesy.exceptions.module_error import ModuleError
@@ -38,6 +40,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.pctlformula = None
         self.constants = None
         self.bisimulation = stormpy.BisimulationType.STRONG
+        self.simplification = True
         self._model_building_time = None
         self._instantiated_model_checking_time = 0.0
         self._samples_checked = 0
@@ -160,6 +163,22 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         else:
             raise ConfigurationError("Bisimulation type {} not valid.".format(bisimulation_type))
 
+    def display_model(self):
+        logger.debug("Display model")
+        model = self.get_model()
+        dotstring = model.to_dot()
+        # TODO make graphviz optional.
+        import pygraphviz as pgv
+        from prophesy.config import configuration
+        logger.debug("rendering...")
+        G = pgv.AGraph(dotstring)
+        G.layout()
+        location = os.path.join(configuration.get_plots_dir(),"model.ps")
+        G.draw(location)
+        subprocess.call(["open", location])
+
+
+
     def get_model(self):
         """
         Get model.
@@ -195,7 +214,16 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
+
+            if self.simplification:
+                if self.pctlformula is None:
+                    raise NotEnoughInformationError("Simplification can only be exectued w.r.t. a single, set formula")
+
+                self._model, raw_simplified = stormpy.pars.simplify_model(self._model, self.pctlformula[0].raw_formula)
+                self.pctlformula = [stormpy.Property("simplified", raw_simplified, comment="simplified of {}".format(str(self.pctlformula[0].raw_formula)))]
+
             self._model_building_time = time.time() - start_time
+
         return self._model
 
     def get_parameter_mapping(self, prophesy_parameters, from_storm = False):
@@ -402,7 +430,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         pla_checker = self.get_pla_checker(None, splitting_assistance=generate_split_estimates, allow_simplifications=(not all_states))
         mapping = self.get_parameter_mapping(parameters, from_storm=True)
         region_string = hyperrectangle.to_region_string(parameters)
-        vars= self.get_model().collect_probability_parameters()
+        vars = self.get_model().collect_probability_parameters()
         vars.update(self.get_model().collect_reward_parameters())
         par_region = stormpy.pars.ParameterRegion(region_string, vars)
         if all_states:
@@ -416,6 +444,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             return stormpy.convert_from_storm_type(result.constant_part()), dict([[mapping[x].id, val] for x, val in pla_checker.get_split_suggestion().items()]) if generate_split_estimates else None
 
     def prob01_states(self):
+        logger.debug("Compute prob01 states")
         model = self.get_model()
         formula = self.pctlformula[0].raw_formula
         assert type(formula) == stormpy.logic.ProbabilityOperator

@@ -76,3 +76,12 @@ class ProbabilisticModelChecker(Sampler):
         :param bisimulationType: Bisimulation type (None, Strong, Weak).
         """
         raise NotImplementedError("Abstract function called")
+
+    @abstractmethod
+    def display_model(self):
+        """
+        Display the model.        
+        :return: 
+        """
+        raise NotImplementedError("Abstract function called")
+

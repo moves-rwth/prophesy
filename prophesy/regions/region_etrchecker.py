@@ -25,22 +25,28 @@ class EtrRegionChecker(SmtRegionChecker):
         self.model_explorer = mc
         self.fixed_threshold = True
         self.threshold_set = False
+        self._threshold = None
         self._safe_transition_relation = pc.Relation.GEQ
         self._bad_transition_relation = pc.Relation.LEQ
+        self._state_var_mapping = None
+        self._exact = True
+        self._additional_constraints = False
 
+    def over_approximates(self):
+        return not self._exact
 
-    def _add_state_constraint(self, equations, model_type):
+    def _add_state_constraint(self, equations, model_type, id):
         if model_type == sp.ModelType.DTMC:
             assert len(equations) == 1
             state_constraint = pc.Constraint(equations[0], pc.Relation.EQ)
-            self._smt2interface.assert_constraint(state_constraint)
+            self._smt2interface.assert_guarded_constraint("?_exact", state_constraint,  name="state_outgoing_{}".format(id))
 
         elif model_type == sp.ModelType.MDP:
             for action_equation in equations:
                 safe_action_constraint = pc.Constraint(action_equation, self._safe_transition_relation)
-                self._smt2interface.assert_guarded_constraint("__safe", safe_action_constraint)
+                self._smt2interface.assert_guarded_constraint("?_safe", safe_action_constraint)
                 bad_action_constraint = pc.Constraint(action_equation, self._bad_transition_relation)
-                self._smt2interface.assert_guarded_constraint("__bad", bad_action_constraint)
+                self._smt2interface.assert_guarded_constraint("?_bad", bad_action_constraint)
 
     def initialize(self, problem_description, fixed_threshold = True, fixed_direction = None):
         """
@@ -51,13 +57,16 @@ class EtrRegionChecker(SmtRegionChecker):
         :return: 
         """
 
-        if self.fixed_threshold and not problem_description.threshold:
-            raise ValueError("ETR with fixed threshold needs a threshold")
+        if self.fixed_threshold:
+            if not problem_description.threshold:
+                raise ValueError("ETR with fixed threshold needs a threshold")
+            else:
+                self._threshold = problem_description.threshold
         if problem_description.model is None:
             raise ValueError("ETR checker requires the model as part of the problem description")
         if fixed_direction is not None:
-            if fixed_direction not in ["safe", "bad"]:
-                raise ValueError("Direction can only be fixed to safe or bad")
+            if fixed_direction not in ["safe", "bad", "border"]:
+                raise ValueError("Direction can only be fixed to safe, bad, border")
             self._fixed_direction = fixed_direction
         model = self.model_explorer.get_model()
 
@@ -69,10 +78,17 @@ class EtrRegionChecker(SmtRegionChecker):
         logger.info("Writing equation system to solver")
         self.fixed_threshold = fixed_threshold
         _bounded_variables = True  # Add bounds to all state variables.
+        _additional_constraints = self._additional_constraints
+
+
+
 
         encoding_start = time.time()
-        safeVar = pc.Variable("__safe", pc.VariableType.BOOL)
-        badVar = pc.Variable("__bad", pc.VariableType.BOOL)
+        safeVar = pc.Variable("?_safe", pc.VariableType.BOOL)
+        badVar = pc.Variable("?_bad", pc.VariableType.BOOL)
+        equalsVar = pc.Variable("?_equals", pc.VariableType.BOOL)
+        exactVar = pc.Variable("?_exact", pc.VariableType.BOOL)
+
         self._thresholdVar = pc.Variable("T")
 
         self.parameters = problem_description.parameters
@@ -81,16 +97,29 @@ class EtrRegionChecker(SmtRegionChecker):
 
         self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+
+        self._smt2interface.add_variable(equalsVar.name, VariableDomain.Bool)
+        self._smt2interface.add_variable(exactVar.name, VariableDomain.Bool)
         self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
 
+
         if self._fixed_direction is not None:
-            excluded_dir = "safe" if self._fixed_direction == "bad" else "bad"
-            # Notice that we have to flip the values, as we are checking all-quantification
-            self._smt2interface.fix_guard("__" + self._fixed_direction, False)
-            self._smt2interface.fix_guard("__" + excluded_dir, True)
+            if self._fixed_direction == "border":
+                self._smt2interface.fix_guard("?_safe", False)
+                self._smt2interface.fix_guard("?_bad", False)
+                self._smt2interface.fix_guard("?_equals", True)
+            else:
+                excluded_dir = "safe" if self._fixed_direction == "bad" else "bad"
+                # Notice that we have to flip the values, as we are checking all-quantification
+                self._smt2interface.fix_guard("?_" + self._fixed_direction, False)
+                self._smt2interface.fix_guard("?_" + excluded_dir, True)
+                self._smt2interface.fix_guard("?_equals", False)
+
+        if self._exact:
+            self._smt2interface.fix_guard("?_exact", True)
 
         initial_state_var = None
-        state_var_mapping = dict()
+        self._state_var_mapping = dict()
 
         if problem_description.property.operator == OperatorType.probability:
             prob0, prob1 = self.model_explorer.prob01_states()
@@ -101,7 +130,7 @@ class EtrRegionChecker(SmtRegionChecker):
                 if prob1.get(state.id):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
-                state_var_mapping[state.id] = stateVar
+                self._state_var_mapping[state.id] = stateVar
                 self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
@@ -117,7 +146,7 @@ class EtrRegionChecker(SmtRegionChecker):
                 if rew0.get(state.id):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
-                state_var_mapping[state.id] = stateVar
+                self._state_var_mapping[state.id] = stateVar
                 self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
@@ -126,15 +155,18 @@ class EtrRegionChecker(SmtRegionChecker):
 
         safe_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._safe_relation)
         bad_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._bad_relation)
-        self._smt2interface.assert_guarded_constraint("__safe", safe_constraint)
-        self._smt2interface.assert_guarded_constraint("__bad", bad_constraint)
+
+        equals_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._equals_relation)
+        self._smt2interface.assert_guarded_constraint("?_safe", safe_constraint)
+        self._smt2interface.assert_guarded_constraint("?_bad", bad_constraint)
+        self._smt2interface.assert_guarded_constraint("?_equals", equals_constraint)
         if self.fixed_threshold:
-            self._add_threshold_constraint(problem_description.threshold)
+            self._add_threshold_constraint(self._threshold)
 
         if problem_description.property.operator == OperatorType.probability:
             for state in model.states:
                 state_equations = []
-                state_var = state_var_mapping.get(state.id)
+                state_var = self._state_var_mapping.get(state.id)
                 if state_var is None:
                     continue
                 if _bounded_variables:
@@ -163,15 +195,15 @@ class EtrRegionChecker(SmtRegionChecker):
                         if prob1.get(transition.column):
                             action_equation +=  value
                             continue
-                        action_equation +=  value * state_var_mapping.get(transition.column)
+                        action_equation +=  value * self._state_var_mapping.get(transition.column)
                 #logger.debug(state_equation)
                     state_equations.append(action_equation)
-                self._add_state_constraint(state_equations, model.model_type)
+                self._add_state_constraint(state_equations, model.model_type, state.id)
             #Nothing left to be done for the model.
         else:
             for state in model.states:
                 state_equations = []
-                state_var = state_var_mapping.get(state.id)
+                state_var = self._state_var_mapping.get(state.id)
                 if state_var is None:
                     continue
                 if _bounded_variables:
@@ -184,7 +216,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     denom = pc.denominator(state_reward)
                     if not denom.is_constant():
                         raise RuntimeError("only polynomial constraints are supported right now.")
-                    denom = denom.constant_part()
+                    denom = denom.constant_part
                     reward_value = pc.numerator(state_reward) * (1 / denom)
                 state_equation = -pc.Polynomial(state_var) + reward_value
 
@@ -208,12 +240,68 @@ class EtrRegionChecker(SmtRegionChecker):
                             value = pc.numerator(pc.convert_from_storm_type(transition.value()))
                             value = value.polynomial() * (1 / denom)
 
-                        action_equation += value * state_var_mapping.get(transition.column)
+                        action_equation += value * self._state_var_mapping.get(transition.column)
                 #logger.debug(state_equation)
                     state_equations.append(action_equation)
 
-                self._add_state_constraint(state_equations, model.model_type)
+                self._add_state_constraint(state_equations, model.model_type, state.id)
             #Nothing left to be one
+
+        if _additional_constraints and problem_description.property.operator == OperatorType.probability:
+            for state in model.states:
+                state_var = self._state_var_mapping.get(state.id)
+                if state_var is None:
+                    continue
+                state_equation = -pc.Polynomial(state_var)
+                for action in state.actions:
+                    trans = []
+                    for transition in action.transitions:
+                        if prob0.get(transition.column):
+                            continue
+                        # obtain the transition value as a polynomial.
+                        if transition.value().is_constant():
+                            value = pc.Polynomial(pc.convert_from_storm_type(transition.value().constant_part()))
+                        else:
+                            denom = pc.denominator(pc.convert_from_storm_type(transition.value()))
+                            if not denom.is_constant():
+                                raise RuntimeError("only polynomial constraints are supported right now.")
+                            denom = denom.constant_part()
+
+                            value = pc.numerator(pc.convert_from_storm_type(transition.value()))
+                            value = value.polynomial() * (1 / denom)
+
+
+
+                        if prob1.get(transition.column):
+                            trans.append((None, value))
+                        else:
+                            trans.append((self._state_var_mapping.get(transition.column), value))
+
+                    prob0, prob1 = self.model_explorer.prob01_states()
+
+
+
+                    if len(trans) == 1:
+                        if trans[0][0] and trans[0][1] != 1:
+                            self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(state_var) - trans[0][0], pc.Relation.LESS))
+                            self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(state_var) - trans[0][1], pc.Relation.LESS))
+                            self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(state_var) - trans[0][0] - trans[0][1] + pc.Rational(1), pc.Relation.GREATER ))
+                    if len(trans) == 2:
+                        if trans[0][0] and trans[0][1] != 1 and trans[1][0] and trans[1][1] != 1:
+                            self._smt2interface.assert_constraint(pc.Constraint(pc.Polynomial(state_var) - trans[0][0] - trans[1][0], pc.Relation.LESS), name="app2ubstst{}".format(state.id))
+                            self._smt2interface.assert_constraint(
+                               pc.Constraint(pc.Polynomial(state_var) - trans[0][0] - trans[1][1], pc.Relation.LESS), name="app2ubsttr{}".format(state.id))
+                            self._smt2interface.assert_constraint(
+                                pc.Constraint(pc.Polynomial(state_var) - trans[0][1] - trans[1][0], pc.Relation.LESS), name="app2ubtrst{}".format(state.id))
+                            self._smt2interface.assert_constraint(
+                                pc.Constraint(pc.Polynomial(state_var) - trans[0][0] - trans[1][0] + pc.Rational(1),
+                                              pc.Relation.GREATER), name="app2lbsttr{}".format(state.id))
+
+
+
+
+                    #Nothing left to be done for the model.
+
         self._encoding_timer += time.time() - encoding_start
 
 
@@ -225,6 +313,7 @@ class EtrRegionChecker(SmtRegionChecker):
         self._smt2interface.push()
         self._add_threshold_constraint(new_threshold)
         self.threshold_set = True
+        self._threshold = new_threshold
 
     def _add_threshold_constraint(self, threshold):
         threshold_constraint = pc.Constraint(pc.Polynomial(self._thresholdVar) - threshold,

@@ -9,7 +9,7 @@ from prophesy.data.samples import InstantiationResultDict
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.util import ensure_dir_exists
-import prophesy.config
+
 
 from prophesy.regions.welldefinedness import WelldefinednessResult
 
@@ -61,16 +61,23 @@ class GenerationRecord:
         return self._region
 
     @property
+    def area(self):
+        if isinstance(self.region, list):
+            return sum([r.size() for r in self.region])
+        else:
+            return self.region.size()
+
+    @property
     def covered_area(self):
-        if self._result in [WelldefinednessResult.Illdefined, RegionCheckResult.Satisfied]:
-            return self._region.size()
+        if self._result in [WelldefinednessResult.Illdefined, RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
+            return self.area
         else:
             return 0.0
 
     @property
     def covered_safe_area(self):
-        if self._safe and self._result == RegionCheckResult.Satisfied:
-            return self._region.size()
+        if self._safe and self._result in [RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
+            return self.area
         else:
             return 0.0
 
@@ -103,7 +110,7 @@ class RegionGenerator:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=False):
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=True, allow_homogeneity=False):
         """
         Constructor.
         :param samples: List of samples.
@@ -136,14 +143,18 @@ class RegionGenerator:
         # Options for plotting.
         self._plot_candidates = False
         self.plot = generate_plot
+        self.plot_source_dir = None
+        self._source_index = 1
         if generate_plot and len(self.parameters) > 2:
             logger.warning("Plotting for more than two dimensions not supported")
             self.plot = False
         self.first_pdf = True
+        from prophesy.config import configuration
         if self.plot:
-            ensure_dir_exists(prophesy.config.configuration.get_plots_dir())
+            ensure_dir_exists(configuration.get_plots_dir())
             _, self.result_file = tempfile.mkstemp(suffix=".pdf", prefix="result_",
-                                               dir=prophesy.config.configuration.get_plots_dir())
+                                               dir=configuration.get_plots_dir())
+        self.allow_homogenous_check = allow_homogeneity
 
     def __iter__(self):
         # Prime the generator
@@ -155,11 +166,11 @@ class RegionGenerator:
         region_info = self.next_region()
         self.stop_generation()
         while region_info is not None:
-            polygon, welldefined, area_safe = region_info
+            polygon, welldefined, area_safe, check_for_eq = region_info
             if self._plot_candidates:
                 self.plot_candidate()
             self.start_analysis()
-            res = self._analyse_region(polygon, welldefined, area_safe)
+            res = self._analyse_region(polygon, welldefined, area_safe, check_for_eq)
             self.stop_analysis()
             self.stop_iteration()
             yield res
@@ -173,7 +184,8 @@ class RegionGenerator:
         """
         Add PDF with name to result.pdf in tmp directory.
         """
-        if not prophesy.config.modules.is_module_available("pypdf2"):
+        from prophesy.config import modules
+        if not modules.is_module_available("pypdf2"):
             logging.warning("Module 'PyPDF2' is not available. PDF export is not supported.")
             return
 
@@ -183,7 +195,7 @@ class RegionGenerator:
         if self.first_pdf:
             self.first_pdf = False
             shutil.copyfile(name, self.result_file)
-            logging.info("Plot file located at {0}".format(self.result_file))
+            logger.debug("Plot file located at {0}".format(self.result_file))
         else:
             merger = PdfFileMerger()
             merger.append(PdfFileReader(self.result_file, 'rb'))
@@ -207,7 +219,13 @@ class RegionGenerator:
         if not self.plot:
             return
 
+
         from prophesy.output.plot import Plot
+        from prophesy.config import configuration
+
+        if self.plot_source_dir is None:
+            self.plot_source_dir = tempfile.mkdtemp(suffix=None, prefix="src_", dir=configuration.get_plots_dir())
+
 
         # Extend arguments
         poly_green = kwargs.get('poly_green', [])
@@ -222,13 +240,17 @@ class RegionGenerator:
         samples_red = [instantiation.get_point(self.parameters) for instantiation in self.bad_samples.keys()]
         samples_black = [instantiation.get_point(self.parameters) for instantiation in self.illdefined_samples.keys()]
 
-        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=prophesy.config.configuration.get_plots_dir())
+
+        _, result_tmp_file = tempfile.mkstemp(".pdf", dir=configuration.get_plots_dir())
+        _, result_src_file = tempfile.mkstemp(".pgf", prefix="{:03d}_".format(self._source_index), dir=self.plot_source_dir)
         Plot.plot_results(parameters=self.parameters,
                           samples_green=samples_green,
                           samples_red=samples_red,
                           samples_black=samples_black,
-                          path_to_save=result_tmp_file,
+                          path_to_pdf=result_tmp_file,
+                          path_to_src=result_src_file,
                           *args, **kwargs)
+        self._source_index += 1
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
@@ -241,7 +263,7 @@ class RegionGenerator:
         raise NotImplementedError("Abstract parent method")
 
     @abstractmethod
-    def fail_region(self):
+    def fail_region(self, homogeneity=False):
         """
         Called after a region could not be checked, usually due to memout or timeout.
         Updates the current set of regions.
@@ -278,11 +300,17 @@ class RegionGenerator:
         """
         logger.info("Region accepted")
 
-        self.all_polys.append((region, RegionCheckResult.Satisfied))
-        if safe:
-            self.safe_polys.append(region)
-        else:
-            self.bad_polys.append(region)
+        if not isinstance(region, list):
+            print(type(region))
+            region = [region]
+        print(region)
+
+        for r in region:
+            self.all_polys.append((r, RegionCheckResult.Satisfied))
+            if safe:
+                self.safe_polys.append(r)
+            else:
+                self.bad_polys.append(r)
         self._records[-1].set_region(region, safe)
         self._records[-1].set_result(RegionCheckResult.Satisfied)
 
@@ -297,6 +325,17 @@ class RegionGenerator:
         else:
             self.bad_samples[additional.instantiation] = additional.result
 
+        self._records[-1].set_region(region, safe)
+        self._records[-1].set_result(RegionCheckResult.CounterExample)
+
+    def record_border(self, region, additional):
+        logger.info("Border found")
+        self.border_samples[additional.instantiation] = additional.result
+        self._records[-1].set_region(region, None)
+        self._records[-1].set_result(RegionCheckResult.CounterExample)
+
+    def record_contains_border(self, region, safe):
+        logger.info("Contains border (no particular point found)")
         self._records[-1].set_region(region, safe)
         self._records[-1].set_result(RegionCheckResult.Unknown)
 
@@ -357,12 +396,17 @@ class RegionGenerator:
 
             if export_statistics:
                 self.export_stats(export_statistics, update=True)
-            # Check termination criteria
-            area_sum = sum(poly.size() for poly, safe in self.all_polys)
-            if area_sum > max_area * self.max_area_sum:
-                break
 
             max_iter -= 1
+            # Check termination criteria
+            area_sum = sum(poly.size() for poly, safe in self.all_polys)
+            logger.debug("Current area is {}, remaining number of iterations is {}".format(area_sum, max_iter))
+
+            if area_sum >= max_area * self.max_area_sum:
+
+                break
+
+
             if max_iter == 0:
                 break
 
@@ -373,11 +417,12 @@ class RegionGenerator:
         # Plot the final outcome
         if self.plot:
             self.plot_results(display=False)
-            logging.info("Generation complete, plot located at {0}".format(self.result_file))
+            logger.info("Generation complete, plot located at {} and sources at {}".format(self.result_file, self.plot_source_dir))
+
 
         # Print results
-        logging.info(self.generate_header())
-        logging.info(self.generate_stats(update=True))
+        logger.info(self.generate_header())
+        logger.info(self.generate_stats(update=True))
 
         return self.safe_polys, self.bad_polys, self.new_samples
 
@@ -403,18 +448,18 @@ class RegionGenerator:
 
             if not update or len(self._records) == idx + 1:
                 stats += "{}\t{:.2f}\t\t{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\n".format(
-                    idx, float(r.region.size()), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time,
+                    idx, float(r.area), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time,
                     cov_area, safe_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time)
         return stats
 
     def export_stats(self, filename, update=False):
-        logging.debug("Write stats to %s (update == %s)", filename, str(update))
+        logger.debug("Write stats to %s (update == %s)", filename, str(update))
         with open(filename, 'a') as file:
             if not update or len(self._records) == 1:
                 file.write(self.generate_header() + "\n")
             file.write(self.generate_stats(update))
 
-    def _analyse_region(self, region, welldefined, safe):
+    def _analyse_region(self, region, welldefined, safe, check_for_eq = False):
         """
         Analyse the given region.
         :param region: Region.
@@ -429,7 +474,7 @@ class RegionGenerator:
             return WelldefinednessResult.Illdefined, region
 
         assert welldefined == WelldefinednessResult.Welldefined
-        checkresult, additional = self.checker.analyse_region(region, safe)
+        checkresult, additional = self.checker.analyse_region(region, safe, check_for_eq)
         if checkresult == RegionCheckResult.Satisfied:
             # remove unnecessary samples which are covered already by regions
             # TODO region might contain this info, why not use that.
@@ -454,13 +499,35 @@ class RegionGenerator:
             # We refined the existing region.
             # additional should contain the candidate for the counterexample.
             # compute setminus operation to get accepted constraints:
-            # accepted = polygon.setminus(additional)
 
-            # return checkresult, (accepted, safe)
-            # TODO implement something.
-            pass
+            #check  if additional actually is a list of hyperrects.
+            if isinstance(additional, HyperRectangle) and isinstance(region, HyperRectangle):
+                accepted_regions = region.setminus(additional) # calculate the accepted regions
+                self.refine_region([additional])
+                self.record_accepted(accepted_regions, safe)
 
+            return checkresult, (accepted_regions, safe)
+        elif checkresult == RegionCheckResult.Homogenous:
+            logger.warning("Still have to check that there is at least one sample here.")
+            self.safe_samples = InstantiationResultDict(
+                {k: v for k, v in self.safe_samples.items() if not region.contains(k.get_point(self.parameters))},
+                parameters=self.parameters)
+            self.bad_samples = InstantiationResultDict(
+                {k: v for k, v in self.bad_samples.items() if not region.contains(k.get_point(self.parameters))},
+                parameters=self.parameters)
+
+            self.accept_region()
+            self.record_accepted(region, safe)
+            return checkresult, (region, safe)
+        elif checkresult == RegionCheckResult.Inhomogenous:
+            if additional:
+                self.reject_region(additional)
+                self.record_border(region, additional)
+            else:
+                self.record_contains_border(region, safe)
+                self.fail_region(homogeneity=True)
+            return checkresult, (region, safe)
         else:
-            self.fail_region()
+            self.fail_region(homogeneity=check_for_eq)
             self.record_unknown(region, safe)
             return RegionCheckResult.Unknown, (region, safe)

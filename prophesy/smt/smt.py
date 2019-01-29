@@ -44,11 +44,11 @@ class SMTSolver:
         raise NotImplementedError
 
     @abstractmethod
-    def assert_constraint(self, c):
+    def assert_constraint(self, c, name):
         raise NotImplementedError
 
     @abstractmethod
-    def assert_guarded_constraint(self, c):
+    def assert_guarded_constraint(self, g, c, name):
         raise NotImplementedError
 
     @abstractmethod
