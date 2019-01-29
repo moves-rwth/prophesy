@@ -4,6 +4,7 @@ import configparser
 import os
 import sys
 import importlib
+import importlib.util
 import logging
 from distutils.spawn import find_executable
 

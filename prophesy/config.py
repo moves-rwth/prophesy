@@ -34,21 +34,15 @@ class ProphesyConfig(Configuration):
         self._init_tools()
 
     def getAvailableSMTSolvers(self):
-        if len(self.smtsolvers) == 0:
-            raise RuntimeError("No SMT solvers in environment")
         return self.smtsolvers
 
     def getAvailableProbMCs(self):
-        if len(self.pmcs) == 0:
-            raise RuntimeError("No model checkers in environment")
         return self.pmcs
 
     def getAvailableParametricMCs(self):
         """
         :return: A set with strings describing the available parametric pmcs.
         """
-        if len(self.ppmcs) == 0:
-            raise RuntimeError("No model checkers in environment")
         return self.ppmcs
 
     def getAvailableSamplers(self):
@@ -64,12 +58,15 @@ class ProphesyConfig(Configuration):
 
         storm_loc = self.get_storm()
         if storm_loc:
+            if not self.get_storm_pars():
+                raise ConfigurationError("When storm is configured, also storm-pars should be configured.")
             self.ppmcs.add('storm')
             self.pmcs.add('storm')
             self.samplers['storm'] = storm_loc  # TODO Just store 'storm'?
 
         if self.get_storm_pars():
-            self.ppmcs.add('storm-pars')
+            if not storm_loc:
+                raise ConfigurationError("When storm-pars is configured, also storm should be configured.")
 
         if self.get_prism():
             self.ppmcs.add('prism')

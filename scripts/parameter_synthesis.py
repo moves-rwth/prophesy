@@ -566,19 +566,26 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
 
 def make_modelchecker(mc):
     pmcs = prophesy.config.configuration.getAvailableParametricMCs()
-    if mc == "storm":
+    if mc == "stormpy":
+        if 'stormpy' not in pmcs and 'storm' not in pmcs:
+            raise RuntimeError("Selected Stormpy as the model checker, however the stormpy dependency is not configured. Use '--mc' to select another model checker, or configure stormpy.")
+        elif 'stormpy' not in pmcs:
+            logging.warning("Stormpy was the preferred model checker, but is not available. Try to fall back to storm.")
+            tool = StormModelChecker()
+        else:
+            from prophesy.modelcheckers.stormpy import StormpyModelChecker
+            tool = StormpyModelChecker()
+    elif mc == "storm":
+
         if 'storm' not in pmcs:
-            raise RuntimeError("Storm location not configured.")
+            raise RuntimeError("Selected Storm as the model checker, however the Prism location is not configured. Use '--mc' to select another model checker, or set the location in prophesy/prophesy.cfg.")
+        logging.warning("Prophesy works best with stormpy.")
         tool = StormModelChecker()
     elif mc == "prism":
         if 'prism' not in pmcs:
-            raise RuntimeError("Prism location not configured.")
+            raise RuntimeError("Selected Prism as the model checker, however the Prism location is not configured. Use '--mc' to select another model checker, or set the location in prophesy/prophesy.cfg.")
+        logging.warning("Prophesy works best with stormpy.")
         tool = PrismModelChecker()
-    elif mc == "stormpy":
-        if 'stormpy' not in pmcs:
-            raise RuntimeError("Stormpy dependency not configured.")
-        from prophesy.modelcheckers.stormpy import StormpyModelChecker
-        tool = StormpyModelChecker()
     else:
         raise RuntimeError("No supported model checker defined")
     return tool
@@ -586,7 +593,7 @@ def make_modelchecker(mc):
 
 def make_solver(solver):
     solvers = prophesy.config.configuration.getAvailableSMTSolvers()
-    logger = logging.getLogger(__name__)
+
 
     if solver == "z3":
         if 'z3' not in solvers:

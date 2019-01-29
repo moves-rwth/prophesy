@@ -1,11 +1,13 @@
 import os.path
 import pytest
+import logging
 from conftest import EXAMPLE_FOLDER, current_time
 from requires import *
 import click.testing
 import pycarl
 
 import parameter_synthesis
+logger = logging.getLogger(__name__)
 
 target_file = "compute_solutionfunction_{}.rat".format(current_time)
 
@@ -29,6 +31,7 @@ def test_script(name, file, constants, property, tool):
                target_file
                ]
     runner = click.testing.CliRunner()
+    logger.debug("parameter_synthesis.py " + " ".join(command))
     result = runner.invoke(parameter_synthesis.parameter_synthesis, command)
     assert result.exit_code == 0, result.output
     assert os.path.isfile(target_file)

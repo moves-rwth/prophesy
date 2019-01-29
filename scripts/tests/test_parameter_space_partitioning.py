@@ -103,7 +103,7 @@ benchmarks_etr = [
 ]
 
 
-
+@require_stormpy()
 @pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method", benchmarks_etr)
 def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, tool, method):
     END_CRITERIA = "--area"
