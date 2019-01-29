@@ -8,12 +8,15 @@ class OperatorType(Enum):
     """
     probability = 0
     reward = 1
+    time = 2
 
     def __str__(self):
         if self == OperatorType.probability:
             return "P"
-        else:
+        elif self == OperatorType.reward:
             return "R"
+        else:
+            return "T"
 
 class OperatorDirection(Enum):
     min = 0
@@ -163,8 +166,20 @@ class Property:
             input_string = input_string[1:]
             operator_direction = OperatorDirection.unspecified
             operator_type = OperatorType.reward
+        elif input_string[:4] == "Tmin":
+            input_string = input_string[4:]
+            operator_direction = OperatorDirection.min
+            operator_type = OperatorType.time
+        elif input_string[:4] == "Tmax":
+            input_string = input_string[4:]
+            operator_direction = OperatorDirection.max
+            operator_type = OperatorType.time
+        elif input_string[:1] == "T":
+            input_string = input_string[1:]
+            operator_direction = OperatorDirection.unspecified
+            operator_type = OperatorType.time
         else:
-            ValueError("Expect property {} to start with P/Pmin/Pmax/R/Rmin/Rmax".format(input_string))
+            ValueError("Expect property {} to start with P/Pmin/Pmax/R/Rmin/Rmax/T/Tmin/Tmax".format(input_string))
 
         reward_name = None
 

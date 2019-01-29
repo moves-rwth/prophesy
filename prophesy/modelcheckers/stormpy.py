@@ -265,7 +265,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             collector = stormpy.ConstraintCollector(self.get_model())
             self._parameter_constraints = []
             self._graph_preservation_constraints = []
-            # Convert formulas to gmp
+            # Convert formulas to standard type (CLN, GMP)
             for formula in collector.wellformed_constraints:
                 assert formula.type == pc.FormulaType.CONSTRAINT
                 converted_formula = pc.Formula(pc.convert_from_storm_type(formula.get_constraint()))
