@@ -26,22 +26,25 @@ if pycarl.has_cln():
     import pycarl.cln
     import pycarl.cln.formula
 
+# Set standard number type of pycarl (gmp or cln)
+pycarl.numtype = pycarl.gmp
+
 Variable = pycarl.Variable
 VariableType = pycarl.VariableType
-Integer = pycarl.gmp.Integer
-Rational = pycarl.gmp.Rational
+Integer = pycarl.numtype.Integer
+Rational = pycarl.numtype.Rational
 Monomial = pycarl.Monomial
-Polynomial = pycarl.gmp.Polynomial
-RationalFunction = pycarl.gmp.RationalFunction
+Polynomial = pycarl.numtype.Polynomial
+RationalFunction = pycarl.numtype.RationalFunction
 
-SimpleConstraint = pycarl.gmp.formula.SimpleConstraintRatFunc
-Constraint = pycarl.gmp.formula.Constraint
+SimpleConstraint = pycarl.numtype.formula.SimpleConstraintRatFunc
+Constraint = pycarl.numtype.formula.Constraint
 Relation = pycarl.formula.Relation
-Formula = pycarl.gmp.formula.Formula
+Formula = pycarl.numtype.formula.Formula
 
-numerator = pycarl.gmp.numerator
-denominator = pycarl.gmp.denominator
-expand = pycarl.gmp.expand
+numerator = pycarl.numtype.numerator
+denominator = pycarl.numtype.denominator
+expand = pycarl.numtype.expand
 variable_with_name = pycarl.variable_with_name
 
 FormulaType = pycarl.formula.FormulaType
@@ -58,7 +61,7 @@ def parse(input):
     return pycarl.parse.deserialize(input, pycarl.gmp)
 
 
-if pycarl.has_cln():
+if pycarl.has_cln() and pycarl.numtype == pycarl.gmp:
     def convert_to_storm_type(data):
         return pycarl.convert.convert_to_cln(data)
 
