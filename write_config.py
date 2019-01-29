@@ -7,6 +7,7 @@ import importlib
 import importlib.util
 import logging
 from distutils.spawn import find_executable
+import pycarl
 
 thisfilepath = os.path.dirname(os.path.realpath(__file__))
 
@@ -102,6 +103,7 @@ def get_initial_dependencies_config(config):
     # Setup optional dependencies
     config_deps = dict()
     config_deps["stormpy"] = check_python_api("stormpy")
+    config_deps["pycarl-parser"] = pycarl.has_parser()
     config_deps["pypdf2"] = check_python_api("PyPDF2")
     config_deps["gurobipy"] = check_python_api("gurobipy")
     config["installed_deps"] = config_deps
