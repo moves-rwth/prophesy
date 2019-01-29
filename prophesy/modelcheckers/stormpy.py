@@ -216,11 +216,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
 
             if self.simplification:
-                if self.pctlformula is None:
-                    raise NotEnoughInformationError("Simplification can only be exectued w.r.t. a single, set formula")
+                if self.get_model().model_type == stormpy.storage.ModelType.CTMC or self.get_model().model_type == stormpy.storage.ModelType.MA:
+                    logger.warning("Simplification is not supported for CTMCs/MAs.")
+                else:
+                    if self.pctlformula is None:
+                        raise NotEnoughInformationError("Simplification can only be exectued w.r.t. a single, set formula")
 
-                self._model, raw_simplified = stormpy.pars.simplify_model(self._model, self.pctlformula[0].raw_formula)
-                self.pctlformula = [stormpy.Property("simplified", raw_simplified, comment="simplified of {}".format(str(self.pctlformula[0].raw_formula)))]
+                    self._model, raw_simplified = stormpy.pars.simplify_model(self._model, self.pctlformula[0].raw_formula)
+                    self.pctlformula = [stormpy.Property("simplified", raw_simplified, comment="simplified of {}".format(str(self.pctlformula[0].raw_formula)))]
 
             self._model_building_time = time.time() - start_time
 
