@@ -329,15 +329,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.get_model()
         # Compute rational function
         logger.info("Compute solution function")
-        rational_function = pc.convert_from_storm_type(
-            stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0]))
+        result = stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0])
+        rational_function = pc.convert_from_storm_type(result)
         logger.info("Stormpy model checking finished successfully")
 
         # Collect constraints
         parameter_constraints, graph_preservation_constraints = self.get_parameter_constraints()
 
-        return ParametricResult(self.prismfile.parameters, parameter_constraints, graph_preservation_constraints,
-                                rational_function)
+        return ParametricResult(self.prismfile.parameters if self.prismfile else self.drnfile.parameters, parameter_constraints, graph_preservation_constraints, rational_function)
 
     def _check_welldefined(self, samplepoint):
         return self._welldefined_checker.check(samplepoint) == WelldefinednessResult.Welldefined

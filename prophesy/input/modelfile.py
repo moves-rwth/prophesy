@@ -47,8 +47,12 @@ class DrnFile:
                     print(line[7:11])
                     if line[7:11] in ["dtmc", "DTMC"]:
                         return ModelType.DTMC
-                    if line[7:10] in ["mdp", "MDP"]:
+                    elif line[7:10] in ["mdp", "MDP"]:
                         return ModelType.MDP
+                    elif line[7:11] in ["ctmc", "CTMC"]:
+                        return ModelType.CTMC
+                    elif line[7:9] in ["ma", "MA"]:
+                            return ModelType.CTMC
                     else:
                         raise NotImplementedError("Support for other types than DTMC and MDPs is not implemented in the parser.")
 
