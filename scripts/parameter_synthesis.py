@@ -24,7 +24,6 @@ from prophesy.optimisation.pla_based_search import PlaSearchOptimisation
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
-from prophesy.regions.region_icpchecker import ICPRegionChecker
 from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
 from prophesy.regions.welldefinedness import check_welldefinedness, is_welldefined
@@ -32,7 +31,6 @@ from prophesy.sampling.sampler_ratfunc import RatFuncSampling
 from prophesy.sampling.sampling import uniform_samples, refine_samples
 from prophesy.smt.YicesCli_solver import YicesCLISolver
 from prophesy.smt.Z3cli_solver import Z3CliSolver
-from prophesy.smt.IcpCli_solver import IcpCliSolver
 from prophesy.smt.isat import IsatSolver
 from prophesy.optimisation.qcqp import QcqpModelRepair
 from prophesy.modelcheckers.pmc import BisimulationType
