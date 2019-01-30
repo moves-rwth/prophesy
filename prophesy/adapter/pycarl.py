@@ -25,6 +25,8 @@ else:
 if pycarl.has_cln():
     import pycarl.cln
     import pycarl.cln.formula
+    if pycarl_parser_available:
+        import pycarl.cln.parse
 
 # Set standard number type of pycarl (gmp or cln)
 pycarl.numtype = pycarl.gmp
@@ -58,7 +60,7 @@ def parse(input):
     if not pycarl_parser_available:
         raise ImportError("Pycarl parsing capabilities are not configured.")
 
-    return pycarl.parse.deserialize(input, pycarl.gmp)
+    return pycarl.parse.deserialize(input, pycarl.numtype)
 
 
 if pycarl.has_cln() and pycarl.numtype == pycarl.gmp:
