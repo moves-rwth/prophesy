@@ -524,7 +524,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
         state.problem_description.welldefined_constraints = wd
         state.problem_description.graph_preserving_constraints = gp
 
-
+    sampler = None
     if verification_method == "etr":
         if state.solver is None:
             raise RuntimeError("For ETR an SMT solver is required.")
@@ -541,6 +541,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
         if state.mc is None:
             raise RuntimeError("For PLA, a model checker is required.")
         checker = PlaRegionChecker(state.mc)
+        sampler = state.mc
     else:
         raise RuntimeError("No method for region checking selected.")
 
@@ -557,10 +558,13 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
                                       checker,
                                       state.problem_description.welldefined_constraints,
                                       state.problem_description.graph_preserving_constraints,
-                                      split_uniformly=region_method == "quads", generate_plots=plot, allow_homogeneity=allow_homogeneity_checks)
+                                      split_uniformly=region_method == "quads", generate_plots=plot, allow_homogeneity=allow_homogeneity_checks, sampler=sampler)
+
 
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
                                        plot_candidates=False, export_statistics=stats)
+
+    logging.info("Usage stats: {}".format(state.mc.usage_stats()))
     return state
 
 def make_modelchecker(mc):

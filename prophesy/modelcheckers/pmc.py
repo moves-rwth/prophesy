@@ -85,3 +85,7 @@ class ProbabilisticModelChecker(Sampler):
         """
         raise NotImplementedError("Abstract function called")
 
+    @abstractmethod
+    def usage_stats(self):
+        return "no stats provided."
+

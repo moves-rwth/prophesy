@@ -55,8 +55,11 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._graph_preservation_constraints = None
         self._parameter_mapping = None
         self._model_instantiator = None
+        self._instantiation_checker = None
         self._pla_checker = None
         self._pla_threshold = None
+        self._pla_checker_time = 0.0
+        self._regions_checked = 0
         self._environment = stormpy.Environment()
 
     def name(self):
@@ -76,6 +79,14 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     @property
     def instantiated_model_checking_time(self):
         return self._instantiated_model_checking_time
+
+    @property
+    def region_model_checking_time(self):
+        return self._pla_checker_time
+
+    @property
+    def nr_regions_checked(self):
+        return self._regions_checked
 
     def set_pctl_formula(self, formula):
         if self._program is None:
@@ -102,6 +113,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._welldefined_checker = None
         self._states_before_bisim = None
         self._transitions_before_bisim = None
+        self._instantiation_checker = None
 
     @property
     def nr_states_before_bisim(self):
@@ -122,6 +134,9 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
     def nr_transitions(self):
         self.get_model()
         return self._model.nr_transitions
+
+    def usage_stats(self):
+        return "Checked {} samples in {} s\nChecked {} regions in {} s\n".format(self.nr_samples_checked,self.instantiated_model_checking_time, self.nr_regions_checked, self.region_model_checking_time)
 
     def set_welldefined_checker(self, checker):
         self._welldefined_checker = checker
@@ -300,6 +315,22 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
                 return NotImplementedError("Model instantiator for {} is not supported.".format(self.get_model().model_type))
         return self._model_instantiator
 
+    def get_model_instantiation_checker(self):
+        only_initial_states = True
+        if self._instantiation_checker is None:
+            logger.debug("Create instantiation checker...")
+            if self.get_model().model_type == stormpy.storage.ModelType.DTMC:
+                self._instantiation_checker = stormpy.pars.PDtmcInstantiationChecker(self.get_model())
+            else:
+                return NotImplementedError("Model instantiator for {} is not supported.".format(self.get_model().model_type))
+            self._instantiation_checker.specify_formula(stormpy.ParametricCheckTask(self.pctlformula[0].raw_formula, only_initial_states))
+            self._instantiation_checker.set_graph_preserving(True)
+            logger.debug("...done.")
+
+        return self._instantiation_checker
+
+
+
     def get_pla_checker(self, threshold, splitting_assistance = False, allow_simplifications=True):
         """
         Return model checker for PLA.
@@ -309,6 +340,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         :return: PLA model checker.
         """
         if self._pla_checker is None or self._pla_threshold != threshold:
+            logger.debug("Generate new PLA Checker")
             #TODO what should we do if there is a PLA checker with the wrong settings.
             self._pla_threshold = threshold
             # Set formula for PLA
@@ -356,24 +388,26 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def sample_single_point(self, parameter_instantiation, parameter_mapping):
         # Instantiate point and check result
-        start = time.time()
-        model_instantiator = self.get_model_instantiator()
+        #model_instantiator = self.get_model_instantiator()
+        model_instatiation_checker = self.get_model_instantiation_checker()
         point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                  parameter_instantiation.items() if parameter_mapping[parameter] is not None}
-        instantiated_model = model_instantiator.instantiate(point)
-        result = pc.convert_from_storm_type(
-            stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
+        start = time.time()
+        #instantiated_model = model_instantiator.instantiate(point)
+        result = pc.convert_from_storm_type(model_instatiation_checker.check(self._environment,point).at(self.get_model().initial_states[0]))
+        #result = pc.convert_from_storm_type(
+        #    stormpy.model_checking(instantiated_model, self.pctlformula[0]).at(instantiated_model.initial_states[0]))
         self._instantiated_model_checking_time += time.time() - start
         self._samples_checked += 1
         return result
 
     def mc_single_point(self, parameter_instantiation, parameter_mapping=None):
-        start = time.time()
         if parameter_mapping is None:
             parameter_mapping = self.get_parameter_mapping(parameter_instantiation.get_parameters())
         model_instantiator = self.get_model_instantiator()
         point = {parameter_mapping[parameter]: pc.convert_to_storm_type(val) for parameter, val in
                  parameter_instantiation.items() if parameter_mapping[parameter] is not None}
+        start = time.time()
         instantiated_model = model_instantiator.instantiate(point)
         result = stormpy.model_checking(instantiated_model, self.pctlformula[0])
         self._instantiated_model_checking_time += time.time() - start
@@ -381,8 +415,9 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         return result
 
 
-    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold):
+    def check_hyperrectangle(self, parameters, hyperrectangle, threshold, above_threshold, only_check_hypothesis = True):
         logger.info("Check region via stormpy")
+        assert only_check_hypothesis
 
         # Initialize PLA checker
         pla_checker = self.get_pla_checker(threshold)
@@ -394,9 +429,13 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Check via PLA
         logger.info("Call stormpy for PLA check")
         hypothesis = stormpy.pars.RegionResultHypothesis.ALLVIOLATED if above_threshold else stormpy.pars.RegionResultHypothesis.ALLSAT
+        start = time.time()
         result = pla_checker.check_region(self._environment, region, hypothesis, stormpy.pars.RegionResult.UNKNOWN,
                                           False)
-        logger.info("Stormpy call finished successfully with result: {}".format(result))
+        duration = time.time() - start
+        self._pla_checker_time += duration
+        self._regions_checked += 1
+        logger.info("Stormpy call finished successfully with result: {} and took {} s".format(result, duration))
 
         if result == stormpy.pars.RegionResult.ALLSAT:
             if hypothesis == stormpy.pars.RegionResultHypothesis.ALLSAT:
