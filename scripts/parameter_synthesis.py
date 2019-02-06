@@ -24,6 +24,7 @@ from prophesy.optimisation.pla_based_search import PlaSearchOptimisation
 from prophesy.regions.region_checker import RegionCheckResult
 from prophesy.regions.region_etrchecker import EtrRegionChecker
 from prophesy.regions.region_plachecker import PlaRegionChecker
+from prophesy.regions.region_monochecker import MonoRegionChecker
 from prophesy.regions.region_quads import HyperRectangleRegions
 from prophesy.regions.region_solutionfunctionchecker import SolutionFunctionRegionChecker
 from prophesy.regions.welldefinedness import check_welldefinedness, is_welldefined
@@ -500,7 +501,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
     if state.problem_description.samples is None:
         state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
 
-    if verification_method in ["etr", "pla"] or state.problem_description.welldefined_constraints is None:
+    if verification_method in ["etr", "pla", "mono"] or state.problem_description.welldefined_constraints is None:
         # TODO dont do this always (that is, if it has been loaded before..)
         state.mc.load_model(state.problem_description.model, state.problem_description.constants)
         state.mc.set_pctl_formula(state.problem_description.property)
@@ -531,6 +532,10 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
         if state.mc.name() != "stormpy":
             raise RuntimeError("For ETR stormpy is required.")
         checker = EtrRegionChecker(state.solver, state.mc)
+    elif verification_method == "mono":
+        if state.mc is None:
+            raise RuntimeError("For Mono, a model checker is required")
+        checker = MonoRegionChecker(state.mc)
     elif verification_method == "sfsmt":
         if state.problem_description.solution_function is None:
             raise RuntimeError("For SFSMT the solution function is required.")
