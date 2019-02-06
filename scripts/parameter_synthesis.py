@@ -252,6 +252,7 @@ def sample(state, export, method, plot, samplingnr, iterations, stats):
                 open_file(plot_path)
         else:
             logging.info("Cannot plot, as dimension is too high!")
+    state.problem_description.samples = refined_samples
     return state
 
 
