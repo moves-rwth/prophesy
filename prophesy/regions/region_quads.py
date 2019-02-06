@@ -6,6 +6,7 @@ from prophesy.regions.welldefinedness import check_welldefinedness, Welldefinedn
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.interval import BoundType
 from prophesy.data.point import Point
+from prophesy.data.samples import ParameterInstantiation
 from prophesy.smt.Z3cli_solver import Z3CliSolver
 
 logger = logging.getLogger(__name__)
@@ -34,13 +35,15 @@ class HyperRectangleRegions(RegionGenerator):
     Region generation using hyperrectangles.
     """
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False, allow_homogeneity=False):
+    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False, allow_homogeneity=False, sampler = None):
         super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=generate_plots, allow_homogeneity=allow_homogeneity)
 
         self.regions = []
         self.parked_regions = []
         self.accepted_regions_safe = []
         self.accepted_regions_unsafe = []
+
+        self.sample_generator = sampler
         # Number of maximal consecutive recursive splits.
         self.check_depth = 5
         if split_uniformly:
@@ -117,6 +120,12 @@ class HyperRectangleRegions(RegionGenerator):
         :return: True iff the region hypothesis is safe.
         """
         logger.debug("Guess hypothesis for region {}".format(region))
+
+        if len(self.safe_samples.items()) == 0:
+            return False
+        if len(self.bad_samples.items()) == 0:
+            return True
+
         sublogger = logger.getChild("_guess_hypothesis")
         center = region.center()
         sublogger.debug("Center is at {}".format(center))
@@ -229,10 +238,17 @@ class HyperRectangleRegions(RegionGenerator):
 
         if region.well_defined == WelldefinednessResult.Welldefined:
             mixed = True
+
+            if self.sample_generator and len(region.samples) == 0:
+                logger.debug("Sampling as there is no sample in the region.")
+                sampledict  =  self.sample_generator.perform_sampling([ParameterInstantiation.from_point(region.region.center(), self.parameters)], surely_welldefined=True)
+                region.samples = [(region.region.center(), list(sampledict.items())[0][1] > self.threshold)]
+                region.empty_checks = 0
             if len(region.samples) == 1:
                 hypothesis_safe = region.samples[0][1]
                 mixed = False
             elif len(region.samples) == 0:
+
                 hypothesis_safe = self._guess_hypothesis(region.region)
                 mixed = False
             elif all([sample[1] for sample in region.samples]):
@@ -252,7 +268,6 @@ class HyperRectangleRegions(RegionGenerator):
                 return
 
         # Mixed region, split.
-        # TODO better splits
         newelems = self.split(region)
         if newelems is None:
             return None
@@ -305,7 +320,15 @@ class HyperRectangleRegions(RegionGenerator):
                         continue
                     newsamples.append((pt, safe))
                 if len(newsamples) == 0:
-                    hypothesis = self._guess_hypothesis(newregion)
+                    if self.sample_generator:
+                        logger.debug("Sampling as there is no sample in the region.")
+                        sampledict = self.sample_generator.perform_sampling(
+                            [ParameterInstantiation.from_point(newregion.center(), self.parameters)],
+                            surely_welldefined=True)
+                        hypothesis = list(sampledict.items())[0][1] < self.threshold
+                        newsamples = [(newregion.center(), hypothesis)]
+                    else:
+                        hypothesis = self._guess_hypothesis(newregion)
                 else:
                     hypothesis = regionelem.safe
 
@@ -355,7 +378,6 @@ class HyperRectangleRegions(RegionGenerator):
 
         # sort the regions (reversed by default)
         self._sort_regions_by_size()
-
 
     def accept_region(self):
         logger.debug("Accept region")

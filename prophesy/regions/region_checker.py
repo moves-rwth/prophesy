@@ -9,12 +9,13 @@ class RegionCheckResult(Enum):
     CounterExample = 0  #: The region does not satisfy the property; we found a counterexample
     Satisfied = 1  #: The region satisfies the property.
     Refined = 2  #: We don't know, we return a subregion which is still undecided. The remainder is satisfied.
-    Homogenous =  3 #: All the same color.
-    Inhomogenous = 4 #: Contains a border point
-    Unknown = 5  #: We don't know.
+    Splitted =3  #: We don't know, but we found subregions ourselves that are safe/unsafe, and subregions that remain
+    Homogenous =  4 #: All the same color.
+    Inhomogenous = 5 #: Contains a border point
+    Unknown = 6  #: We don't know.
 
     def __str__(self):
-        names = ["RCR:Cex", "RCR:Sat", "RCR:Ref", "RCR:Hom", "RCR:Inhom", "RCR:Unk"]
+        names = ["RCR:Cex", "RCR:Sat", "RCR:Ref", "RCR:Split", "RCR:Hom", "RCR:Inhom", "RCR:Unk"]
         assert self.value < len(names)
         return names[self.value]
 

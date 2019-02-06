@@ -18,16 +18,26 @@ logger = logging.getLogger(__name__)
 
 class GenerationRecord:
     def __init__(self):
-        self._region = None
+        self._safe_region = None
+        self._bad_region = None
         self._result = None
         self._analysis_time = None
         self._search_time = None
         self._iteration_time = None
-        self._safe = None
 
     def set_region(self, region, safe):
-        self._region = region
-        self._safe = safe
+        if not isinstance(region, list):
+            region = [region]
+        if safe:
+            self._safe_region = region
+            self._bad_region = []
+        else:
+            self._bad_region = region
+            self._safe_region = []
+
+    def set_regions(self, safe, bad):
+        self._safe_region = safe
+        self._bad_region = bad
 
     def set_result(self, result):
         self._result = result
@@ -58,14 +68,15 @@ class GenerationRecord:
 
     @property
     def region(self):
-        return self._region
+        return self._safe_region + self._bad_region
 
     @property
     def area(self):
-        if isinstance(self.region, list):
-            return sum([r.size() for r in self.region])
-        else:
-            return self.region.size()
+        return sum([r.size() for r in self.region])
+
+    @property
+    def safe_area(self):
+        return sum([r.size() for r in self._safe_region])
 
     @property
     def covered_area(self):
@@ -76,8 +87,8 @@ class GenerationRecord:
 
     @property
     def covered_safe_area(self):
-        if self._safe and self._result in [RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
-            return self.area
+        if self._result in [RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
+            return self.safe_area
         else:
             return 0.0
 
@@ -99,7 +110,11 @@ class GenerationRecord:
 
     @property
     def safe(self):
-        return self._safe
+        if len(self._bad_region) == 0:
+            return True
+        if len(self._safe_region) == 0:
+            return False
+        return None
 
 
 class RegionGenerator:
@@ -294,6 +309,23 @@ class RegionGenerator:
         """
         raise NotImplementedError("Abstract parent method")
 
+    def record_results(self, safe_regions, bad_regions):
+        logger.info("Partial results for region.")
+
+        if not isinstance(safe_regions, list):
+            safe_regions = [safe_regions]
+        if not isinstance(bad_regions, list):
+            safe_regions = [bad_regions]
+
+        for r in safe_regions:
+            self.all_polys.append((r, RegionCheckResult.Satisfied))
+            self.safe_polys.append(r)
+        for r in bad_regions:
+            self.all_polys.append((r, RegionCheckResult.Satisfied))
+            self.bad_polys.append(r)
+        self._records[-1].set_regions(safe_regions, bad_regions)
+        self._records[-1].set_result(RegionCheckResult.Satisfied)
+
     def record_accepted(self, region, safe):
         """
         Record the accepted region.
@@ -303,9 +335,7 @@ class RegionGenerator:
         logger.info("Region accepted")
 
         if not isinstance(region, list):
-            print(type(region))
             region = [region]
-        print(region)
 
         for r in region:
             self.all_polys.append((r, RegionCheckResult.Satisfied))
@@ -497,6 +527,11 @@ class RegionGenerator:
             self.reject_region(additional)
             self.record_cex(region, safe, additional)
             return checkresult, (additional, safe)
+        elif checkresult == RegionCheckResult.Splitted:
+            safe_regions, bad_regions, remaining_regions = additional
+            self.record_results(safe_regions, bad_regions)
+            self.refine_region(remaining_regions)
+            return checkresult, (region, safe) #TODO why do we need to return this?
         elif checkresult == RegionCheckResult.Refined:
             # We refined the existing region.
             # additional should contain the candidate for the counterexample.
