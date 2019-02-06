@@ -51,6 +51,16 @@ class HyperRectangle:
     def center(self):
         return Point(*[interval.center() for interval in self.intervals])
 
+    def get_vertex(self, pick_min_bound):
+        """
+        Get the vertex that corresponds to the left/right bound for the ith parameter, depending on the argument
+        :param pick_min_bound: Array indicating to take the min (True) or the max (False)
+        :return: 
+        """
+        assert len(pick_min_bound) == self.dimension()
+        print(pick_min_bound)
+        return Point(*[(interval.left_bound() if pmb else interval.right_bound()) for interval, pmb in zip(self.intervals, pick_min_bound)])
+
     def split_in_every_dimension(self):
         """
         Splits the hyperrectangle in every dimension
