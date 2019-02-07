@@ -1,9 +1,15 @@
 import collections.abc
+from enum import Enum
 
 import prophesy.adapter.pycarl as pc
 import prophesy.data.interval
 from prophesy.data.samples import ParameterInstantiation
 
+class Monotonicity(Enum):
+    NEGATIVE = 0
+    POSITIVE = 1
+    NEITHER = 2
+    UNKNOWN = 3
 
 class Parameter(pc.Variable):
     """Variable with an associated interval of allowable values. """

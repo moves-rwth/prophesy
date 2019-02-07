@@ -11,6 +11,7 @@ from prophesy.data.constant import parse_constants_string
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.samples import InstantiationResultDict
 from prophesy.data.property import OperatorDirection, OperatorType
+from prophesy.data.parameter import Monotonicity
 from prophesy.input.modelfile import open_model_file
 from prophesy.input.pctlfile import PctlFile
 from prophesy.input.problem_description import ProblemDescription
@@ -267,6 +268,33 @@ def load_samples(state, samples_file):
         # TODO
         raise RuntimeError("Sampling and problem parameters are not equal")
     state.problem_description.samples = samples
+    return state
+
+@parameter_synthesis.command()
+@click.argument('mono-file')
+@pass_state
+def load_monotonicity(state, mono_file):
+    state.problem_description.monotonicity = dict()
+    with open(mono_file, 'r') as f:
+        for line in f:
+            if line.startswith("//"):
+                continue
+            kv = line.strip().split()
+            if len(kv) != 2:
+                raise RuntimeError("Expected key-value pairs")
+            logging.debug("Found Parameter Name: {}".format(kv[0]))
+            if kv[1] == "+":
+                mono = Monotonicity.POSITIVE
+            elif kv[1] == "-":
+                mono = Monotonicity.NEGATIVE
+            elif kv[1] == "?":
+                mono = Monotonicity.UNKNOWN
+            elif kv[1] == "x":
+                mono = Monotonicity.NEITHER
+            else:
+                raise RuntimeError("Expected either of the following: {+,-,?,x} but got {}".format(kv[1]))
+            state.problem_description.monotonicity[kv[0]] = mono
+
     return state
 
 @parameter_synthesis.command()
@@ -563,7 +591,8 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
                                       checker,
                                       state.problem_description.welldefined_constraints,
                                       state.problem_description.graph_preserving_constraints,
-                                      split_uniformly=region_method == "quads", generate_plots=plot, allow_homogeneity=allow_homogeneity_checks, sampler=sampler)
+                                      split_uniformly=region_method == "quads", generate_plots=plot,
+                                      allow_homogeneity=allow_homogeneity_checks, sampler=sampler)
 
 
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,

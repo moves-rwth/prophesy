@@ -18,3 +18,4 @@ class ProblemDescription:
         self.graph_preserving_constraints = gp_constraints
         self.samples = samples
         self.threshold = threshold
+        self.monotonicity = None
