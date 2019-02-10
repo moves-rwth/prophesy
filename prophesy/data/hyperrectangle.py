@@ -238,11 +238,11 @@ class HyperRectangle:
         :type variables: List[pycarl.Variable]
         :return: 
         """
-        if not self.is_closed():
-            raise ValueError("Region strings are only defined for closed intervals")
         var_strings = []
         for variable, interval in zip(variables, self.intervals):
-            var_strings.append("{}<={}<={}".format(interval.left_bound(), variable.name, interval.right_bound()))
+            leftboundstr = "<=" if interval.left_bound_type() == BoundType.closed else "<"
+            rightboundstr = "<=" if interval.right_bound_type() == BoundType.closed else "<"
+            var_strings.append("{}{}{}{}{}".format(interval.left_bound(), leftboundstr, variable.name, rightboundstr, interval.right_bound()))
         return ",".join(var_strings)
 
     @classmethod
@@ -254,11 +254,24 @@ class HyperRectangle:
         interval_strings = input_string.split(",")
         variables_to_intervals = dict()
         for int_str in interval_strings:
-            components = int_str.split("<=")
+            components = int_str.split("<")
             if len(components) != 3:
-                raise ValueError("Expected string in the form Number<=Variable<=Number, got {}".format(int_str))
-            variables_to_intervals[components[1]] = Interval(pc.Rational(components[0]), BoundType.closed,
-                                                             pc.Rational(components[2]), BoundType.closed)
+                raise ValueError("Expected string in the form Number{<=,<}Variable{<=,<}Number, got {}".format(int_str))
+
+            if components[1][0] == "=":
+                left_bt = BoundType.closed
+                components[1] = components[1][1:]
+            else:
+                left_bt = BoundType.open
+
+            if components[2][0] == "=":
+                right_bt = BoundType.closed
+                components[2] = components[2][1:]
+            else:
+                right_bt = BoundType.open
+
+            variables_to_intervals[components[1]] = Interval(pc.Rational(components[0]), left_bt,
+                                                             pc.Rational(components[2]), right_bt)
         ordered_intervals = []
         for variable in variables:
             ordered_intervals.append(variables_to_intervals[variable.name])

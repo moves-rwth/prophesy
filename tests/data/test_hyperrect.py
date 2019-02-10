@@ -53,3 +53,14 @@ def test_region_string():
     variables = [pc.Variable("x"), pc.Variable("y")]
     h3 = HyperRectangle.from_region_string(h2.to_region_string(variables), variables)
     assert h2 == h3
+    h4 = HyperRectangle(string_to_interval("(2,5]", pc.Rational), string_to_interval("[3,6]", pc.Rational))
+    variables = [pc.Variable("x"), pc.Variable("y")]
+    h5 = HyperRectangle.from_region_string(h4.to_region_string(variables), variables)
+    assert h4 == h5
+    assert h4 != h3
+    h6 = HyperRectangle(string_to_interval("[2,5)", pc.Rational), string_to_interval("(3,6)", pc.Rational))
+    variables = [pc.Variable("x"), pc.Variable("y")]
+    h7 = HyperRectangle.from_region_string(h6.to_region_string(variables), variables)
+    assert h6 == h7
+    assert h6 != h3
+    assert h6 != h5
