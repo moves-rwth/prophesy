@@ -35,8 +35,8 @@ class HyperRectangleRegions(RegionGenerator):
     Region generation using hyperrectangles.
     """
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False, allow_homogeneity=False, sampler = None):
-        super().__init__(samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=generate_plots, allow_homogeneity=allow_homogeneity)
+    def __init__(self, samples, parameters, region, threshold, checker, wd_constraints, gp_constraints, split_uniformly=False, generate_plots=False, allow_homogeneity=False, sampler = None):
+        super().__init__(samples, parameters, region, threshold, checker, wd_constraints, gp_constraints, generate_plot=generate_plots, allow_homogeneity=allow_homogeneity)
 
         self.regions = []
         self.parked_regions = []
@@ -52,9 +52,6 @@ class HyperRectangleRegions(RegionGenerator):
             self.split = HyperRectangleRegions.split_by_growing_rectangles
 
         # Setup initial region
-        region = HyperRectangle(*self.parameters.get_parameter_bounds())
-        if checker.supports_only_closed_regions():
-            region = region.close()
         regionsamples = []
 
         # Add all samples to region

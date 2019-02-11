@@ -125,7 +125,7 @@ class RegionGenerator:
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, samples, parameters, threshold, checker, wd_constraints, gp_constraints, generate_plot=True, allow_homogeneity=False):
+    def __init__(self, samples, parameters, region, threshold, checker, wd_constraints, gp_constraints, generate_plot=True, allow_homogeneity=False):
         """
         Constructor.
         :param samples: List of samples.
@@ -139,7 +139,7 @@ class RegionGenerator:
         self.parameters = parameters
         self.threshold = threshold
 
-        self.max_area_sum = HyperRectangle(*self.parameters.get_parameter_bounds()).size()
+        self.max_area_sum = region.size()
 
         self.checker = checker
 

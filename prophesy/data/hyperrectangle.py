@@ -18,6 +18,18 @@ class HyperRectangle:
         self.intervals = tuple(intervals)
 
     @classmethod
+    def cube(cls, left_bound, right_bound, dimension, boundtype):
+        """
+        
+        :param left_bound: lower bound for all intervals
+        :param right_bound: upper bound for all intervals
+        :param dimension: dimension of the created interval
+        :param boundtype: bound type for all bounds
+        :return: A hyperrectangle <left_bound, right_bound>^dimension (with adequate bounds)
+        """
+        return cls(*[Interval(left_bound, boundtype, right_bound, boundtype) for _ in range(dimension)])
+
+    @classmethod
     def from_extremal_points(cls, point1, point2, boundtype):
         """
         Construct a hyperrectangle from two boundary points.
@@ -274,6 +286,8 @@ class HyperRectangle:
                                                              pc.Rational(components[2]), right_bt)
         ordered_intervals = []
         for variable in variables:
+            if variable.name not in variables_to_intervals:
+                raise RuntimeError("Parameter {} not found in region string".format(variable.name))
             ordered_intervals.append(variables_to_intervals[variable.name])
         # TODO checks.
         return cls(*ordered_intervals)

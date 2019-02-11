@@ -160,6 +160,26 @@ def load_solution_function(state, solution_file):
     return state
 
 @parameter_synthesis.command()
+@click.option('--region-string', help="set the region. If no region is set, the open (0,1) cube is used.")
+@click.option('--epsilon', type=pc.Rational)
+@pass_state
+def set_parameter_space(state, region_string, epsilon):
+    if state.problem_description.parameters is None:
+        raise RuntimeError("Parameters should be fixed before setting the parameter space.")
+    if region_string:
+        logging.info("Setting parameter space from region string")
+        state.problem_description.set_parameter_space_from_region_string(region_string)
+        if epsilon:
+            raise RuntimeError("Cannot use epsilon option when region string is explicitly set.")
+    elif epsilon:
+        logging.info("Setting default parameter space (with epsilon={})".format(epsilon))
+        state.problem_description.set_closed_epsilon_parameter_space(epsilon)
+    else:
+        logging.info("Setting default parameter space")
+        state.problem_description.set_open01_parameter_space()
+    return state
+
+@parameter_synthesis.command()
 @click.option('--export')
 @pass_state
 def compute_solution_function(state, export):
@@ -344,6 +364,8 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
         # TODO it would be better to modify the model accordingly, but that might be hard to realise.
         # The variable bounds generated here are not necessarily induced by graph-epsilons.
         # However, for benchmarks we use, it is the same.
+
+    #TODO add option to set region (maybe via a command)
     region = HyperRectangle(*state.problem_description.parameters.get_parameter_bounds())
     encoding_time = 0.0
     solver_time = 0.0
@@ -534,13 +556,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
         state.mc.load_model(state.problem_description.model, state.problem_description.constants)
         state.mc.set_pctl_formula(state.problem_description.property)
 
-    #TODO only do this when gp is set
-    state.problem_description.parameters.make_intervals_open()
 
-    if epsilon:
-        # First, create the open interval
-        state.problem_description.parameters.make_intervals_open()
-        state.problem_description.parameters.make_intervals_closed(epsilon)
 
 
     if state.problem_description.welldefined_constraints is None:
@@ -587,6 +603,7 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
 
     generator = HyperRectangleRegions(state.problem_description.samples,
                                       state.problem_description.parameters,
+                                      state.problem_description.parameter_space,
                                       state.problem_description.threshold,
                                       checker,
                                       state.problem_description.welldefined_constraints,
