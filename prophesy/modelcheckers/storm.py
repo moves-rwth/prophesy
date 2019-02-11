@@ -2,6 +2,7 @@ import os
 import tempfile
 import logging
 import re
+import copy
 
 import prophesy.config
 from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
@@ -236,7 +237,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
 
         region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
-        property_to_check = self.pctlformula
+        property_to_check = copy.deepcopy(self.pctlformula)
         property_to_check.bound = OperatorBound(pc.Relation.LESS, threshold)
         hypothesis = "allviolated" if safe else "allsat"
 
