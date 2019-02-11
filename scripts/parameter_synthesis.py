@@ -541,13 +541,12 @@ def prove_bound(state, epsilon, verification_method, direction):
 @click.argument("region-method")
 @click.option("--iterations", default=10000000)
 @click.option("--area", type=pc.Rational, default=1)
-@click.option("--epsilon", type=pc.Rational)
 @click.option("--stats", help="File to write synthesis stats to")
 @click.option("--plot", help="Should a plot be generated", is_flag=True)
 @click.option("--allow-homogeneity-checks", is_flag=True)
 @click.option("--display-model", is_flag=True)
 @pass_state
-def parameter_space_partitioning(state, verification_method, region_method, iterations, area, epsilon, stats, plot, allow_homogeneity_checks, display_model):
+def parameter_space_partitioning(state, verification_method, region_method, iterations, area, stats, plot, allow_homogeneity_checks, display_model):
     if state.problem_description.samples is None:
         state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
 
@@ -556,8 +555,9 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
         state.mc.load_model(state.problem_description.model, state.problem_description.constants)
         state.mc.set_pctl_formula(state.problem_description.property)
 
-
-
+    if state.problem_description.parameter_space is None:
+        logging.info("Set default parameter space")
+        state.problem_description.set_open01_parameter_space()
 
     if state.problem_description.welldefined_constraints is None:
         if state.mc is None:

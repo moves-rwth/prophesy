@@ -30,9 +30,10 @@ def test_script_pla(name, file, constants, propertyfile, threshold, solver, tool
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
         "set-threshold",
         str(threshold),
+        "set-parameter-space",
+        "--epsilon", "0.001",
         "sample",
         "parameter-space-partitioning",
-        "--epsilon", "0.001",
         "--area", "0.30",
         verification_method,
         region_method
