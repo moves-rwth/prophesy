@@ -1,6 +1,9 @@
 import prophesy.adapter.pycarl as pc
+import logging
 from enum import Enum
 import re
+
+logger = logging.getLogger(__name__)
 
 class OperatorType(Enum):
     """
@@ -86,7 +89,6 @@ class OperatorBound:
         :return: the bound
         :rtype: OperatorBound
         """
-
         if input[:2] == "<=":
             relation = pc.Relation.LEQ
             input = input[2:]
@@ -140,6 +142,8 @@ class Property:
         :return: 
         :rtype: Property
         """
+        logger.debug("Parsing {}".format(input_string))
+
         orig_input_string = input_string.strip()
         input_string = re.sub("[\{].*[\}]", "", orig_input_string)
         if input_string[:4] == "Pmin":
@@ -181,12 +185,16 @@ class Property:
         else:
             ValueError("Expect property {} to start with P/Pmin/Pmax/R/Rmin/Rmax/T/Tmin/Tmax".format(input_string))
 
+        if operator_type == OperatorType.reward and input_string[0:5] == "[exp]":
+            logger.debug("Drop reward expectation")
+            input_string = orig_input_string[6:]
+
         reward_name = None
+        if operator_type == OperatorType.reward and input_string[0] == "{":
+            reward_name = input_string[2:].split('}', 1)[0][:-1]
+            input_string = input_string[4+len(reward_name):]
+            logger.debug("Found reward name: {}".format(reward_name))
 
-        if operator_type == OperatorType.reward and orig_input_string[1] == "{":
-            reward_name = orig_input_string[3:].split('}', 1)[0][:-1]
-
-        print(reward_name)
 
         operator_bound = OperatorBound.from_string(input_string.split(" ", 1)[0])
 
