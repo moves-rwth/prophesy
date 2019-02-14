@@ -39,6 +39,7 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
         self.prismfile = None
         self.constants = None
         self.drnfile = None
+        self.transform_from_continuous = False
 
     def name(self):
         return "storm"
@@ -60,13 +61,18 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
     def load_model_from_prismfile(self, prismfile, constants=Constants()):
         self.prismfile = prismfile
         self.constants = constants
+        self.transform_from_continuous = prismfile.do_transform and prismfile.model_type.is_continuous_time()
 
     def load_model_from_drn(self, drnfile, constants=Constants()):
         self.drnfile = drnfile
         self.constants = constants
+        self.transform_from_continuous = drnfile.do_transform and drnfile.model_type.is_continuous_time()
 
     def _has_model_set(self):
         return not (self.prismfile is None and self.drnfile is None)
+
+    def has_built_model(self):
+        return False
 
     def get_parameter_constraints(self):
         if not self._has_model_set():

@@ -90,10 +90,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def set_pctl_formula(self, formula):
         if self._program is None:
-            logger.debug("Load formula without a program.")
+            logger.debug("Parse formula {} without a program.".format(formula))
             self.pctlformula = stormpy.parse_properties(str(formula))
         else:
-            logger.debug("Load formula with respect to program.")
+            logger.debug("Load formula {} with respect to program.".format(formula))
             self.pctlformula = stormpy.parse_properties_for_prism_program(str(formula), self._program)
         # Reset formula for PLA
         self._pla_threshold = None
@@ -114,6 +114,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._states_before_bisim = None
         self._transitions_before_bisim = None
         self._instantiation_checker = None
+        self._transform_from_continuous = False
 
     @property
     def nr_states_before_bisim(self):
@@ -145,6 +146,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self._reset_internal()
         self.drnfile = drnfile
         self.constants = constants
+        self._transform_from_continuous = drnfile.do_transform and drnfile.model_type.is_continuous_time()
 
     def load_model_from_prismfile(self, prism_file, constants=Constants()):
         logger.debug("Load model from prism file")
@@ -153,6 +155,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         self.constants = constants
         prismcompatibility = True if self.prismfile.model_type == ModelType.CTMC else False
         self._program = stormpy.parse_prism_program(self.prismfile.location, prismcompatibility)
+        self._transform_from_continuous = prism_file.do_transform and prism_file.model_type.is_continuous_time()
 
         if not self._program.undefined_constants_are_graph_preserving:
             # Need to instantiate constants
@@ -192,7 +195,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         G.draw(location)
         subprocess.call(["open", location])
 
-
+    def has_built_model(self):
+        return self._model is not None
 
     def get_model(self):
         """
@@ -225,13 +229,19 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._states_before_bisim = self._model.nr_states
             self._transitions_before_bisim = self._model.nr_transitions
 
+            if self._transform_from_continuous:
+                logger.info("Transform to discrete time model")
+                self._model, raw_transformed = stormpy.transform_to_discrete_time_model(self._model, self.pctlformula)
+                self.pctlformula = [stormpy.Property("transformed", raw_transformed[0], comment="transformed of {}".format(
+                    str(self.pctlformula[0].raw_formula)))]
+
             self._model.reduce_to_state_based_rewards()
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
 
             if self.simplification:
-                if self.get_model().model_type == stormpy.storage.ModelType.CTMC or self.get_model().model_type == stormpy.storage.ModelType.MA:
+                if self._model.model_type in [stormpy.storage.ModelType.CTMC, stormpy.storage.ModelType.MA]:
                     logger.warning("Simplification is not supported for CTMCs/MAs.")
                 else:
                     if self.pctlformula is None:
@@ -285,14 +295,12 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             self._graph_preservation_constraints = []
             # Convert formulas to standard type (CLN, GMP)
             for formula in collector.wellformed_constraints:
-                assert formula.type == pc.FormulaType.CONSTRAINT
-                converted_formula = pc.Formula(pc.convert_from_storm_type(formula.get_constraint()))
+                converted_formula = pc.convert_from_storm_type(formula)
                 self._parameter_constraints.append(converted_formula)
             for formula in collector.graph_preserving_constraints:
-                assert formula.type == pc.FormulaType.CONSTRAINT
-                converted_formula = pc.Formula(pc.convert_from_storm_type(formula.get_constraint()))
+                converted_formula = pc.convert_from_storm_type(formula)
                 self._graph_preservation_constraints.append(converted_formula)
-            logger.info("Stormpy call finished")
+            logger.info("Stormpy finished collecting constraints")
 
         return self._parameter_constraints, self._graph_preservation_constraints
 

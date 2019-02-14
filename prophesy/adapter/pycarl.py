@@ -63,17 +63,27 @@ def parse(input):
     return pycarl.parse.deserialize(input, pycarl.numtype)
 
 
-if pycarl.has_cln() and pycarl.numtype == pycarl.gmp:
+if pycarl.numtype == pycarl.gmp:
     def convert_to_storm_type(data):
+        assert pycarl.has_cln()
         return pycarl.convert.convert_to_cln(data)
 
 
     def convert_from_storm_type(data):
         return pycarl.convert.convert_to_gmp(data)
+
+    def expand_from_storm_type(data):
+        return pycarl.convert.convert_to_gmp(pycarl.cln.expand(data))
+
 else:
     def convert_to_storm_type(data):
         return data
 
-
     def convert_from_storm_type(data):
-        return data
+        return pycarl.convert.convert_to_cln(data)
+
+
+    def expand_from_storm_type(data):
+        return pycarl.cln.expand(data)
+
+

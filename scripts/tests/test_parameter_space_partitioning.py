@@ -75,12 +75,13 @@ def test_script_sfsmt(name, file, constants, propertyfile, ratfile, threshold, t
 
 
 benchmarks_etr = [
-    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "quads", marks=[require_z3()]),
-    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads", marks=[require_z3()]),
-    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "quads", marks=[require_yices()]),
-    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "z3", "rectangles", marks=[require_z3()]),
-    pytest.param("nand", "nand", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles", marks=[require_z3()]),
-    pytest.param("kydie", "kydie", "", "property1", "kydie", "15/100", "yices", "rectangles", marks=[require_yices()]),
+    pytest.param("kydie", "kydie.pm", "", "property1", "kydie", "15/100", "z3", "quads", False, marks=[require_z3()]),
+    pytest.param("nand", "nand.pm", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "quads", False, marks=[require_z3()]),
+    pytest.param("kydie", "kydie.pm", "", "property1", "kydie", "15/100", "yices", "quads", False, marks=[require_yices()]),
+    pytest.param("kydie", "kydie.pm", "", "property1", "kydie", "15/100", "z3", "rectangles", False, marks=[require_z3()]),
+    pytest.param("nand", "nand.pm", "N=2,K=1", "property1", "nand_2-1", "35/100", "z3", "rectangles", False, marks=[require_z3()]),
+    pytest.param("kydie", "kydie.pm", "", "property1", "kydie", "15/100", "yices", "rectangles", False, marks=[require_yices()]),
+    pytest.param("hecs", "hecs_1_1_1_np_param.drn", "", "hecs", "hecs", "15/100", "z3", "quads", True, marks=[require_z3()]),
 
     # require_z3()(("brp", "brp_16-2","property1", 0.95, "z3", "quads")),
     # ("crowds", "crowds_3-5", 0.5, "z3"),
@@ -104,8 +105,8 @@ benchmarks_etr = [
 ]
 
 @require_stormpy()
-@pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method", benchmarks_etr)
-def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, tool, method):
+@pytest.mark.parametrize("name,file,constants,propertyfile,ratfile,threshold,tool,method,transform", benchmarks_etr)
+def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, tool, method, transform):
     END_CRITERIA = "--area"
     END_CRITERIA_VALUE = 0.30
 
@@ -114,7 +115,8 @@ def test_script_etr(name, file, constants, propertyfile, ratfile, threshold, too
         "load-problem",
         "--constants",
         constants,
-        os.path.join(EXAMPLE_FOLDER, "{}/{}.pm".format(name, file)),
+        "--transform-continuous" if transform else "",
+        os.path.join(EXAMPLE_FOLDER, "{}/{}".format(name, file)),
         os.path.join(EXAMPLE_FOLDER, "{}/{}.pctl".format(name, propertyfile)),
         "set-threshold",
         str(threshold),

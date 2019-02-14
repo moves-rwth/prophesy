@@ -57,6 +57,10 @@ class ProbabilisticModelChecker(Sampler):
             return self.load_model_from_prismfile(model_description, constants)
 
     @abstractmethod
+    def has_built_model(self):
+        raise NotImplementedError("Abstract function called")
+
+    @abstractmethod
     def load_model_from_drn(self, drnfile, constants=Constants()):
         raise NotImplementedError("Abstract function called")
 

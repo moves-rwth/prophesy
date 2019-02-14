@@ -104,11 +104,13 @@ def parameter_synthesis(state, log_smt_calls, config, logfile):
 @click.argument('property-file')
 @click.option('--constants')
 @click.option('--pctl-index', default=0)
+@click.option('--transform-continuous', is_flag=True)
 @pass_state
-def load_problem(state, model_file, property_file, constants, pctl_index):
+def load_problem(state, model_file, property_file, constants, pctl_index, transform_continuous):
     constants = parse_constants_string(constants)
     click.echo(constants)
     state.problem_description.model = open_model_file(model_file)
+    state.problem_description.model.do_transform = transform_continuous
     pctl_file = PctlFile(property_file)
     state.problem_description.property = pctl_file.get(pctl_index)
     state.problem_description.constants = constants
@@ -511,29 +513,6 @@ def prove_bound(state, epsilon, verification_method, direction):
     else:
         raise ValueError("Could not prove bound")
     return state
-#
-# @parameter_synthesis.command()
-# @click.argument("verification-method")
-# @pass_state
-# def find_and_prove_bound(state, verification_method):
-#     if verification_method == "pla":
-#         raise RuntimeError("Currently, PLA can only be used to bound. We need to extend PlaSearchOptimisation")
-#     elif verification_method == "etr":
-#         optimiser = BinarySearchOptimisation(SolutionFunctionRegionChecker(state.solver), state.problem_description)
-#     elif verification_method == "sfsmt":
-#         optimiser = BinarySearchOptimisation(EtrRegionChecker(state.solver, state.mc), state.problem_description)
-#
-#
-#     if state.problem_description.property.operator_direction == OperatorDirection.max:
-#         if state.problem_description.property.operator == OperatorType.reward:
-#             bound = pc.inf
-#         else:
-#             bound = pc.Rational(1)
-#     else:
-#         bound = pc.Rational(0)
-#     optimiser.search(requested_gap=cmdargs.gap, max_iterations=cmdargs.iterations, dir=optimal_dir, realised=score,
-#                      bound=bound)
-#     return state
 
 
 @parameter_synthesis.command()
@@ -552,8 +531,11 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
 
     if verification_method in ["etr", "pla", "mono"] or state.problem_description.welldefined_constraints is None:
         # TODO dont do this always (that is, if it has been loaded before..)
-        state.mc.load_model(state.problem_description.model, state.problem_description.constants)
-        state.mc.set_pctl_formula(state.problem_description.property)
+        if not state.mc.has_built_model():
+            logging.debug("Load model to model checker...")
+            state.mc.load_model(state.problem_description.model, state.problem_description.constants)
+            state.mc.set_pctl_formula(state.problem_description.property)
+
 
     if state.problem_description.parameter_space is None:
         logging.info("Set default parameter space")

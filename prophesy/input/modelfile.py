@@ -24,13 +24,29 @@ def open_model_file(location):
         logger.debug("Assume input is a Prism File")
         return PrismFile(location)
 
+class ModelInput:
+    """
+    Abstract class for input model descriptions. 
+    """
 
-class DrnFile:
+    def __init__(self, do_transform=False):
+        """
+        :param do_transform: If set, the model should be transformed to a discrete time model before analysis.
+                               
+        """
+        #TODO maybe used later for POMDPs as well.
+        self.do_transform = do_transform
+
+
+
+
+class DrnFile(ModelInput):
     """
     Wraps a DRN file.
     """
 
-    def __init__(self, location):
+    def __init__(self, location, do_transform=False):
+        super().__init__(do_transform)
         self.location = location
         check_filepath_for_reading(location)
         self.model_type = self._get_model_type()
@@ -75,14 +91,15 @@ class DrnFile:
                     next_line_has_parameters = True
 
 
-class PrismFile:
+class PrismFile(ModelInput):
     """
     Wrapper for Prism file; extracts parameter names.
     
     Rationale for not using stormpy bindings: Support for prism file should be given even without stormpy.
     """
 
-    def __init__(self, location):
+    def __init__(self, location, do_transform=False):
+        super().__init__(do_transform)
         assert isinstance(location, str)
         self._is_temp = False
         self.location = location
