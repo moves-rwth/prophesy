@@ -9,6 +9,17 @@ import prophesy.adapter.pycarl as pc
 
 logger = logging.getLogger(__name__)
 
+class Context:
+    def __init__(self, smt_context, fd):
+        self.smt_context = smt_context
+        self.fd = fd
+
+    def __enter__(self):
+        self.smt_context.push()
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.smt_context.pop()
 
 class SmtRegionChecker(RegionChecker):
     def __init__(self, backend):
@@ -43,6 +54,9 @@ class SmtRegionChecker(RegionChecker):
     @abstractmethod
     def initialize(self, problem_description, threshold, constants=None):
         raise NotImplementedError("Calling an abstract method")
+
+    def _getsolver(self, safe):
+        return Context(self._smt2interface, self._fixed_direction)
 
     @abstractmethod
     def _evaluate(self, smt_model):
@@ -83,11 +97,13 @@ class SmtRegionChecker(RegionChecker):
 
         while not smt_successful:
             # check constraint with smt
-            with self._smt2interface as smt_context:
+            with self._getsolver(safe) as context:
+                smt_context = context.smt_context
+                fd = context.fd
                 smt_context.assert_constraint(constraint)
 
 
-                if not self._fixed_direction:
+                if not fd:
                     if check_for_eq:
                         smt_context.set_guard("?_equals", True)
                         smt_context.set_guard("?_safe", False)

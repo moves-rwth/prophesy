@@ -1,12 +1,12 @@
 import logging
 import time
 
-from prophesy.regions.region_smtchecker import SmtRegionChecker
+from prophesy.regions.region_smtchecker import SmtRegionChecker, Context
 import prophesy.adapter.stormpy as sp
 import prophesy.adapter.pycarl as pc
 from prophesy.smt.smt import VariableDomain
 from prophesy.data.samples import ParameterInstantiation, InstantiationResult
-from prophesy.data.property import Property, OperatorType
+from prophesy.data.property import Property, OperatorType, OperatorDirection
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +31,25 @@ class EtrRegionChecker(SmtRegionChecker):
         self._state_var_mapping = None
         self._exact = True
         self._additional_constraints = False
+        self._safe_demonic = None
+        self._smt2interface_bad = None
+        # When checking MDPs for safe regions, take the demonic relation.
+        # For the bad region, we thus take the angelic relation
 
     def over_approximates(self):
         return not self._exact
+
+    def _getsolver(self, safe):
+        # flip flag to search for contrary
+        if self._smt2interface_bad is not None:
+            if not safe:
+                logger.debug("Use SMT/Safe ETR solver; demonic encoding: {}".format(self._safe_demonic))
+                return Context(self._smt2interface, True)
+            else:
+                logger.debug("Use SMT/Bad ETR solver; demonic encoding: {}".format(not self._safe_demonic))
+                return Context(self._smt2interface_bad, True)
+        else:
+            return Context(self._smt2interface, self._fixed_direction)
 
     def _make_constraint(self, lhs, rel):
         # TODO add smarter checks for rational functions
@@ -41,7 +57,7 @@ class EtrRegionChecker(SmtRegionChecker):
             return pc.Constraint(lhs, rel)
         else:
             assert type(lhs) == pc.RationalFunction
-            if rel == pc.Relation.EQ:
+            if rel == pc.Relation.EQ or lhs.denominator.is_constant():
                 return pc.Constraint(lhs.numerator,rel)
             else:
                 raise NotImplementedError("We focussed on simple cases so far.")
@@ -53,12 +69,43 @@ class EtrRegionChecker(SmtRegionChecker):
             state_constraint = self._make_constraint(equations[0], pc.Relation.EQ)
             self._smt2interface.assert_guarded_constraint("?_exact", state_constraint,  name="state_outgoing_{}".format(id))
 
-        elif model_type == sp.ModelType.MDP:
+        elif model_type == sp.ModelType.MDP and self._safe_demonic:
+            # safe gets demonic encoding
+            safe_action_constraint = pc.Formula(pc.FormulaType.OR, [pc.Formula(self._make_constraint(action_equation, pc.Relation.EQ)) for action_equation in equations])
+            self._smt2interface.assert_guarded_constraint("?_safe", safe_action_constraint)
             for action_equation in equations:
-                safe_action_constraint = pc.Constraint(action_equation, self._safe_transition_relation)
+                # bad gets angelic encoding
+                bad_action_constraint = self._make_constraint(action_equation, self._bad_transition_relation)
+                self._smt2interface_bad.assert_guarded_constraint("?_bad", bad_action_constraint)
+
+        elif model_type == sp.ModelType.MDP and not self._safe_demonic:
+            bad_action_constraint = pc.Formula(pc.FormulaType.OR, [pc.Formula(self._make_constraint(action_equation, pc.Relation.EQ)) for action_equation in equations])
+            self._smt2interface_bad.assert_guarded_constraint("?_bad", bad_action_constraint)
+            for action_equation in equations:
+                safe_action_constraint = self._make_constraint(action_equation, self._safe_transition_relation)
                 self._smt2interface.assert_guarded_constraint("?_safe", safe_action_constraint)
-                bad_action_constraint = pc.Constraint(action_equation, self._bad_transition_relation)
-                self._smt2interface.assert_guarded_constraint("?_bad", bad_action_constraint)
+
+    def _add_variable_to_smtinterfaces(self, name, tp):
+        self._smt2interface.add_variable(name, tp)
+        if self._smt2interface_bad:
+            self._smt2interface_bad.add_variable(name, tp)
+
+
+    def _assert_constraint(self, constraint):
+        self._smt2interface.assert_constraint(constraint)
+        if self._smt2interface_bad:
+            self._smt2interface_bad.assert_constraint(constraint)
+
+    def _assert_guarded_constraint(self, guard, constraint):
+        self._smt2interface.assert_guarded_constraint(guard, constraint)
+        if self._smt2interface_bad:
+            self._smt2interface_bad.assert_guarded_constraint(guard, constraint)
+
+    def _fix_guard(self, guard, val):
+        self._smt2interface.fix_guard(guard, val)
+        if self._smt2interface_bad:
+            self._smt2interface_bad.fix_guard(guard, val)
+
 
     def initialize(self, problem_description, fixed_threshold = True, fixed_direction = None):
         """
@@ -83,6 +130,18 @@ class EtrRegionChecker(SmtRegionChecker):
         model = self.model_explorer.get_model()
         _property = Property.from_string(str(self.model_explorer.pctlformula[0].raw_formula)) #TODO ugly :(
 
+
+        if model.model_type == sp.ModelType.MDP:
+            # TODO for logging smt calls, and obtaining proper stats in the cli, this is not a good idea.
+            self._smt2interface_bad = type(self._smt2interface)(self._smt2interface.location)
+            self._smt2interface_bad.run()
+            if _property.operator_direction == OperatorDirection.max:
+                self._safe_demonic = True
+            else:
+                assert _property.operator_direction == OperatorDirection.min
+                self._safe_demonic = False
+
+
         if len(model.initial_states) > 1:
             raise NotImplementedError("We only support models with a single initial state")
         if len(model.initial_states) == 0:
@@ -103,17 +162,20 @@ class EtrRegionChecker(SmtRegionChecker):
 
         self.parameters = problem_description.parameters
         for par in self.parameters:
-            self._smt2interface.add_variable(par.name)
+            self._add_variable_to_smtinterfaces(par.name, VariableDomain.Real)
 
-        self._smt2interface.add_variable(safeVar.name, VariableDomain.Bool)
-        self._smt2interface.add_variable(badVar.name, VariableDomain.Bool)
+        self._add_variable_to_smtinterfaces(safeVar.name, VariableDomain.Bool)
+        self._add_variable_to_smtinterfaces(badVar.name, VariableDomain.Bool)
 
-        self._smt2interface.add_variable(equalsVar.name, VariableDomain.Bool)
-        self._smt2interface.add_variable(exactVar.name, VariableDomain.Bool)
-        self._smt2interface.add_variable(self._thresholdVar.name, VariableDomain.Real)
+        self._add_variable_to_smtinterfaces(equalsVar.name, VariableDomain.Bool)
+        self._add_variable_to_smtinterfaces(exactVar.name, VariableDomain.Bool)
+        self._add_variable_to_smtinterfaces(self._thresholdVar.name, VariableDomain.Real)
 
 
         if self._fixed_direction is not None:
+            #TODO support this for MDPs
+            if model.model_type != sp.ModelType.DTMC:
+                raise NotImplementedError("Support for fixed directions and MDPs is not yet present")
             if self._fixed_direction == "border":
                 self._smt2interface.fix_guard("?_safe", False)
                 self._smt2interface.fix_guard("?_bad", False)
@@ -125,8 +187,18 @@ class EtrRegionChecker(SmtRegionChecker):
                 self._smt2interface.fix_guard("?_" + excluded_dir, True)
                 self._smt2interface.fix_guard("?_equals", False)
 
+        if self._smt2interface_bad:
+            self._smt2interface_bad.fix_guard("?_bad", True)
+            self._smt2interface_bad.fix_guard("?_safe", False)
+            self._smt2interface_bad.fix_guard("?_equals", False)
+            self._smt2interface.fix_guard("?_safe", True)
+            self._smt2interface.fix_guard("?_bad", False)
+            self._smt2interface.fix_guard("?_equals", False)
+
         if self._exact:
-            self._smt2interface.fix_guard("?_exact", True)
+            self._fix_guard("?_exact", True)
+        else:
+            raise NotImplementedError("Support for inexact solvign for MDPs is not yet present")
 
         initial_state_var = None
         self._state_var_mapping = dict()
@@ -141,7 +213,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
                 self._state_var_mapping[state.id] = stateVar
-                self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
+                self._add_variable_to_smtinterfaces(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
             if initial_state_var is None:
@@ -157,7 +229,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 stateVar = pc.Variable("s_" + str(state))
                 self._state_var_mapping[state.id] = stateVar
-                self._smt2interface.add_variable(stateVar.name, VariableDomain.Real)
+                self._add_variable_to_smtinterfaces(stateVar.name, VariableDomain.Real)
                 if state.id in model.initial_states:
                     initial_state_var = stateVar
             if initial_state_var is None:
@@ -167,9 +239,9 @@ class EtrRegionChecker(SmtRegionChecker):
         bad_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._bad_relation)
 
         equals_constraint = pc.Constraint(pc.Polynomial(initial_state_var) - self._thresholdVar, self._equals_relation)
-        self._smt2interface.assert_guarded_constraint("?_safe", safe_constraint)
-        self._smt2interface.assert_guarded_constraint("?_bad", bad_constraint)
-        self._smt2interface.assert_guarded_constraint("?_equals", equals_constraint)
+        self._assert_guarded_constraint("?_safe", safe_constraint)
+        self._assert_guarded_constraint("?_bad", bad_constraint)
+        self._assert_guarded_constraint("?_equals", equals_constraint)
         if self.fixed_threshold:
             self._add_threshold_constraint(self._threshold)
 
@@ -181,8 +253,8 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 if _bounded_variables:
                     # if bounded variable constraints are to be added, do so.
-                    self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
-                    self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.LESS, pc.Rational(1)))
+                    self._assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
+                    self._assert_constraint(pc.Constraint(state_var, pc.Relation.LESS, pc.Rational(1)))
                 state_equation = -pc.Polynomial(state_var)
                 for action in state.actions:
                     action_equation = state_equation
@@ -219,7 +291,7 @@ class EtrRegionChecker(SmtRegionChecker):
                     continue
                 if _bounded_variables:
                     # if bounded variable constraints are to be added, do so.
-                    self._smt2interface.assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
+                    self._assert_constraint(pc.Constraint(state_var, pc.Relation.GREATER, pc.Rational(0)))
                 state_reward = pc.expand_from_storm_type(reward_model.state_rewards[state.id])
                 if state_reward.is_constant():
                     reward_value = state_reward.constant_part()
@@ -261,6 +333,7 @@ class EtrRegionChecker(SmtRegionChecker):
             #Nothing left to be one
 
         if _additional_constraints and problem_description.property.operator == OperatorType.probability:
+            assert model.model_type == sp.ModelType.DTMC
             for state in model.states:
                 state_var = self._state_var_mapping.get(state.id)
                 if state_var is None:
@@ -319,6 +392,8 @@ class EtrRegionChecker(SmtRegionChecker):
 
 
     def change_threshold(self, new_threshold):
+        if self._smt2interface_bad:
+            raise RuntimeError("Not supported for two smt interfaces (MDP)")
         assert self.fixed_threshold is not True
         #TODO check that the interface is at the level where we pushed the threshold.
         if self.threshold_set:
@@ -331,7 +406,8 @@ class EtrRegionChecker(SmtRegionChecker):
     def _add_threshold_constraint(self, threshold):
         threshold_constraint = pc.Constraint(pc.Polynomial(self._thresholdVar) - threshold,
                                              pc.Relation.EQ)
-        self._smt2interface.assert_constraint(threshold_constraint)
+        self._assert_constraint(threshold_constraint)
+
 
 
     def _get_reward_model(self, model, _property):

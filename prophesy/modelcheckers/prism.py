@@ -102,14 +102,18 @@ class PrismModelChecker(ParametricProbabilisticModelChecker):
 
         raise NotImplementedError("Writing of prism result is not implemented")
 
-    def perform_uniform_sampling(self, parameters, samples_per_dimension):
+    def perform_uniform_sampling(self, parameters, region, samples_per_dimension):
         logger.info("Perform uniform sampling")
         if self.pctlformula is None: raise NotEnoughInformationError("pctl formula missing")
         if self.prismfile is None: raise NotEnoughInformationError("model missing")
         assert len(self.prismfile.parameters) == len(parameters), "Number of intervals does not match number of parameters"
         assert samples_per_dimension > 1
+        if region is None:
+            intervals = parameters.get_parameter_bounds()
+        else:
+            intervals = region.intervals
         ranges = [prophesy.data.range.create_range_from_interval(interval, samples_per_dimension, prophesy.config.configuration.get_sampling_epsilon()) for interval in
-                  parameters.get_parameter_bounds()]
+                  intervals]
 
         range_strings = ["{0}:{1}:{2}".format(float(r.start), float(r.step), float(r.stop)) for r in ranges]
         const_values_string = ",".join(["{}={}".format(v.name, r) for v, r in zip(parameters, range_strings)])
