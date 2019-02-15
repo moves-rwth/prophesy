@@ -20,7 +20,7 @@ class Sampler:
     def __init__(self):
         pass
 
-    def perform_uniform_sampling(self, parameters, samples_per_dimension):
+    def perform_uniform_sampling(self, parameters, region, samples_per_dimension):
         """
         Samples a uniform grid of points.
 
@@ -38,7 +38,8 @@ class Sampler:
 
         # points evenly spaced over the interval, for each dimension
         ranges = []
-        for i in parameters.get_parameter_bounds():
+
+        for i in region.intervals:
             minNum = i.left_bound() if i.left_bound_type() == BoundType.closed else i.left_bound() + prophesy.config.configuration.get_sampling_epsilon()
             maxNum = i.right_bound() if i.right_bound_type() == BoundType.closed else i.right_bound() - prophesy.config.configuration.get_sampling_epsilon()
             ranges.append(map(Rational, linspace(float(minNum), float(maxNum), samples_per_dimension)))

@@ -111,7 +111,7 @@ class ParticleSwarmSampleGenerator(SampleGenerator):
     """Perform PSO yielding each iterations' samples (particle positions)."""
 
     def __init__(self, sampler, parameters, score_fct, hint=None, pso_options=None, region=None):
-        super().__init__(sampler, parameters)
+        super().__init__(sampler, parameters, region)
         self.score_fct = score_fct
         self.latest_sampling_result = None
 

@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 class LinearRefinement(SampleGenerator):
     """Based on an initial set of samples, refines the samples by means
     of linear interpolation to approximate the threshold"""
-    def __init__(self, sampler, parameters, samples, threshold):
-        super().__init__(sampler, parameters, samples)
+    def __init__(self, sampler, parameters, region, samples, threshold):
+        super().__init__(sampler, parameters, region, samples)
         self.threshold = threshold
 
         self.first = True

@@ -7,7 +7,7 @@ class SampleGenerator:
     iteration interface to do so.
     """
 
-    def __init__(self, sampler, parameters, samples = None):
+    def __init__(self, sampler, parameters, region, samples = None):
         """
         @param sampler Sampler used to generate new samples
         @param parameters VariableOrder
@@ -16,6 +16,7 @@ class SampleGenerator:
         """
         self.sampler = sampler
         self.parameters = parameters
+        self.region = region
         self.samples = samples.copy() if samples else InstantiationResultDict(parameters=parameters)
         assert prophesy.config is not None
         self.distance = prophesy.config.configuration.get_sampling_min_distance()

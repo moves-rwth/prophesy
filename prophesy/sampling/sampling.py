@@ -6,7 +6,7 @@ from prophesy.data.samples import InstantiationResultDict
 from prophesy.sampling.sampling_linear import LinearRefinement
 
 
-def uniform_samples(sampler, parameters, samples_per_dim):
+def uniform_samples(sampler, parameters, region, samples_per_dim):
     """
     Generate a uniform grid of samples.
     
@@ -15,10 +15,9 @@ def uniform_samples(sampler, parameters, samples_per_dim):
     :param samples_per_dim: The number of samples per dimension
     :return:
     """
-    # TODO simplify uniform sampling in a subregion.
     # TODO make sure that if uniform sampling is implemented for the sampler, that we use that one.
     samples = InstantiationResultDict(parameters=parameters)
-    uniform_generator = UniformSampleGenerator(sampler, parameters, samples, samples_per_dim)
+    uniform_generator = UniformSampleGenerator(sampler, parameters, region, samples, samples_per_dim)
 
     for new_samples in uniform_generator:
         samples.update(new_samples)
@@ -26,7 +25,7 @@ def uniform_samples(sampler, parameters, samples_per_dim):
     return samples
 
 
-def refine_samples(sampler, parameters, samples, iterations, threshold):
+def refine_samples(sampler, parameters, region, samples, iterations, threshold):
     """
     Refine samples over several iterations.
     
@@ -37,7 +36,7 @@ def refine_samples(sampler, parameters, samples, iterations, threshold):
     :param threshold: The threshold value we are most interested in
     :return: 
     """
-    refinement_generator = LinearRefinement(sampler, parameters, samples, threshold)
+    refinement_generator = LinearRefinement(sampler, parameters, region, samples, threshold)
 
     # Using range to limit the number of iterations
     for (i, new_samples) in zip(range(0, iterations), refinement_generator):

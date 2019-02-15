@@ -240,7 +240,7 @@ def sample(state, export, method, plot, samplingnr, iterations, stats):
 
     logging.debug("Performing uniform sampling ..")
     uniform_sampling_time = time.time()
-    initial_samples = uniform_samples(sampling_interface, state.problem_description.parameters, samplingnr)
+    initial_samples = uniform_samples(sampling_interface, state.problem_description.parameters, state.problem_description.parameter_space, samplingnr)
     #logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
     uniform_sampling_time = time.time() - uniform_sampling_time
     nr_initial_samples = len(initial_samples)
@@ -248,7 +248,7 @@ def sample(state, export, method, plot, samplingnr, iterations, stats):
 
     logging.debug("Performing refined sampling ..")
     refine_sampling_time = time.time()
-    refined_samples = refine_samples(sampling_interface, state.problem_description.parameters, initial_samples, iterations,
+    refined_samples = refine_samples(sampling_interface, state.problem_description.parameters, state.problem_description.parameter_space, initial_samples, iterations,
                                      state.problem_description.threshold)
     refined_sampling_time = time.time() - refine_sampling_time
 
