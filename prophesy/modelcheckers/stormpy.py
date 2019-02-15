@@ -242,6 +242,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             if self.bisimulation == stormpy.BisimulationType.STRONG or self.bisimulation == stormpy.BisimulationType.WEAK:
                 logger.info("Perform bisimulation")
                 self._model = stormpy.perform_bisimulation(self._model, self.pctlformula, self.bisimulation)
+                logger.debug("Bisimulation yields model with {} states and {} transitions".format(self._model.nr_states, self._model.nr_transitions))
 
             if self.simplification:
                 if self._model.model_type in [stormpy.storage.ModelType.CTMC, stormpy.storage.ModelType.MA]:
@@ -383,6 +384,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Compute rational function
         logger.info("Compute solution function")
         result = stormpy.model_checking(self._model, self.pctlformula[0]).at(self._model.initial_states[0])
+        logger.debug("Converting solution function to prophesy data types")
         rational_function = pc.convert_from_storm_type(result)
         logger.info("Stormpy model checking finished successfully")
 
@@ -443,6 +445,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Set region
         region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
+        logger.debug("Model parameters are {}".format(model_parameters))
         region = stormpy.pars.ParameterRegion(region_string, model_parameters)
         # Check via PLA
         logger.info("Call stormpy for PLA check")
