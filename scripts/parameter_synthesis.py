@@ -190,7 +190,35 @@ def compute_solution_function(state, export):
     state.mc.set_pctl_formula(state.problem_description.property)
     result = state.mc.get_rational_function()
     state.problem_description.solution_function = result.ratfunc
-    state.problem_description.parameters.update_variables(result.ratfunc.gather_variables())
+    #state.problem_description.parameters.update_variables(result.ratfunc.gather_variables())
+
+    # Mapping for parameters from solution function
+    def get_matching_model_parameter(model_parameters, variable_name):
+        """Return matching parameter or None."""
+        return next((v for v in model_parameters if v.name == variable_name), None)
+
+    parameter_mapping = {}
+    model_parameters = state.problem_description.parameters
+    for sf_param in result.ratfunc.gather_variables():
+        model_param = get_matching_model_parameter(model_parameters, sf_param.name)
+        parameter_mapping[sf_param] = pc.Polynomial(model_param)
+
+    for parameter in result.ratfunc.gather_variables():
+        assert parameter in parameter_mapping, repr(parameter) + " not in  " + str(parameter_mapping)
+
+    # Convert variables to prophesy variables according to generated mapping
+    # Note that the substitution looses the factorization
+    num = result.ratfunc.numerator
+    if num.is_constant():
+        num_conv = pc.Polynomial(num.constant_part())
+    else:
+        num_conv = num.polynomial().substitute(parameter_mapping)
+    denom = result.ratfunc.denominator
+    if denom.is_constant():
+        denom_conv = pc.Polynomial(denom.constant_part())
+    else:
+        denom_conv = denom.polynomial().substitute(parameter_mapping)
+    result.ratfunc = pc.RationalFunction(num_conv, denom_conv)
 
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
