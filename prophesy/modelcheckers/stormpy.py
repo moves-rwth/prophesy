@@ -358,7 +358,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             formula = self.pctlformula[0].raw_formula
             if threshold is not None:
                 expression_manager = stormpy.ExpressionManager()
-                expression = expression_manager.create_rational(pc.convert_from_storm_type(threshold))
+                expression = expression_manager.create_rational(stormpy.Rational(threshold))
                 formula.set_bound(stormpy.logic.ComparisonType.LESS, expression)
             # Create PLA checker
             if self.get_model().model_type == stormpy.storage.ModelType.DTMC:
