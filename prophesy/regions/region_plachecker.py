@@ -1,7 +1,9 @@
 import time
+import logging
 from prophesy.regions.region_checker import RegionChecker, RegionCheckResult
 from prophesy.data.hyperrectangle import HyperRectangle
 
+logger = logging.getLogger(__name__)
 
 class PlaRegionChecker(RegionChecker):
     def __init__(self, backend):

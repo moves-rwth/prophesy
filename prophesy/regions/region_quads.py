@@ -407,7 +407,7 @@ class HyperRectangleRegions(RegionGenerator):
                         break
                 if not refuted:
                     break
-        logger.debug("Consider %s as next region", region.region)
+        logger.debug("Consider %s as next region with hypothesis %s", region.region, region.safe)
         assert region.well_defined != WelldefinednessResult.Undecided
         check_for_eq = self.allow_homogenous_check #and len(region.samples) > 0
         return region.region, region.well_defined, region.safe, check_for_eq
