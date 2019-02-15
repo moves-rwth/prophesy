@@ -228,6 +228,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
             self._states_before_bisim = self._model.nr_states
             self._transitions_before_bisim = self._model.nr_transitions
+            logger.debug("Built a model with {} states and {} transitions".format(self._states_before_bisim, self._transitions_before_bisim))
 
             if self._transform_from_continuous:
                 logger.info("Transform to discrete time model")
@@ -329,8 +330,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             logger.debug("Create instantiation checker...")
             if self.get_model().model_type == stormpy.storage.ModelType.DTMC:
                 self._instantiation_checker = stormpy.pars.PDtmcInstantiationChecker(self.get_model())
+            elif self.get_model().model_type == stormpy.storage.ModelType.MDP:
+                self._instantiation_checker = stormpy.pars.PMdpInstantiationChecker(self.get_model())
             else:
-                return NotImplementedError("Model instantiator for {} is not supported.".format(self.get_model().model_type))
+                raise NotImplementedError("Model instantiator for {} is not supported.".format(self.get_model().model_type))
             self._instantiation_checker.specify_formula(stormpy.ParametricCheckTask(self.pctlformula[0].raw_formula, only_initial_states))
             self._instantiation_checker.set_graph_preserving(True)
             logger.debug("...done.")
