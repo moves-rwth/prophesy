@@ -86,4 +86,24 @@ else:
     def expand_from_storm_type(data):
         return pycarl.cln.expand(data)
 
-
+def substitute_variables_ratfunc(ratfunc, mapping):
+    if isinstance(ratfunc, pycarl.numtype.RationalFunction) or isinstance(ratfunc, pycarl.numtype.FactorizedRationalFunction):
+        num = ratfunc.numerator
+        denom = ratfunc.denominator
+    else:
+        num = ratfunc
+        denom = pycarl.numtype.Polynomial(1)
+    if num.is_constant():
+        num_conv = pycarl.numtype.Polynomial(num.constant_part())
+    else:
+        if isinstance(num, pycarl.numtype.FactorizedPolynomial):
+            num = num.polynomial()
+        num_conv = num.substitute(mapping)
+    if denom.is_constant():
+        cons = denom.constant_part()
+        denom_conv = pycarl.numtype.Polynomial(denom.constant_part())
+    else:
+        if isinstance(denom, pycarl.numtype.FactorizedPolynomial):
+            denom = denom.polynomial()
+        denom_conv = denom.substitute(mapping)
+    return pycarl.numtype.RationalFunction(num_conv, denom_conv)

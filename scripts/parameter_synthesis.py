@@ -209,17 +209,7 @@ def compute_solution_function(state, export):
 
     # Convert variables to prophesy variables according to generated mapping
     # Note that the substitution looses the factorization
-    num = result.ratfunc.numerator
-    if num.is_constant():
-        num_conv = pc.Polynomial(num.constant_part())
-    else:
-        num_conv = num.polynomial().substitute(parameter_mapping)
-    denom = result.ratfunc.denominator
-    if denom.is_constant():
-        denom_conv = pc.Polynomial(denom.constant_part())
-    else:
-        denom_conv = denom.polynomial().substitute(parameter_mapping)
-    result.ratfunc = pc.RationalFunction(num_conv, denom_conv)
+    result.ratfunc = pc.substitute_variables_ratfunc(result.ratfunc, parameter_mapping)
 
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
