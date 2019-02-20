@@ -190,7 +190,6 @@ def compute_solution_function(state, export):
     state.mc.load_model(state.problem_description.model, state.problem_description.constants)
     state.mc.set_pctl_formula(state.problem_description.property)
     result = state.mc.get_rational_function()
-    state.problem_description.solution_function = result.ratfunc
     #state.problem_description.parameters.update_variables(result.ratfunc.gather_variables())
 
     # Mapping for parameters from solution function
@@ -209,7 +208,7 @@ def compute_solution_function(state, export):
 
     # Convert variables to prophesy variables according to generated mapping
     # Note that the substitution looses the factorization
-    result.ratfunc = pc.substitute_variables_ratfunc(result.ratfunc, parameter_mapping)
+    state.problem_description.solution_function = pc.substitute_variables_ratfunc(result.ratfunc, parameter_mapping)
 
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
