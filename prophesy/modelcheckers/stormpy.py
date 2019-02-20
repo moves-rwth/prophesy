@@ -384,6 +384,9 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         # Compute rational function
         logger.info("Compute solution function")
         results = stormpy.model_checking(self._model, self.pctlformula[0])
+        if results is None:
+            logging.error("Model checking did not return a result. Maybe it is not supported?")
+            raise RuntimeError("Model checking not succesful")
         result = results.at(self._model.initial_states[0])
         logger.debug("Converting solution function to prophesy data types")
         rational_function = pc.convert_from_storm_type(result)
