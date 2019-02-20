@@ -298,7 +298,7 @@ class EtrRegionChecker(SmtRegionChecker):
                 else:
                     denom = pc.denominator(state_reward)
                     if denom.is_constant():
-                        denom = denom.constant_part
+                        denom = denom.constant_part()
                         reward_value = pc.numerator(state_reward) * (1 / denom)
                     else:
                         reward_value = state_reward

@@ -106,8 +106,8 @@ class QcqpSolver():
             else:
                 ut.inverse_denominator = 1 / self._float_repr(den.constant_part())
             num = self._numerator(transition_value)
-            ut.variable_dependent_numerator = num - num.constant_part
-            ut.constant = self._float_repr(num.constant_part) * ut.inverse_denominator
+            ut.variable_dependent_numerator = num - num.constant_part()
+            ut.constant = self._float_repr(num.constant_part()) * ut.inverse_denominator
         return ut
 
     def _compute_states_and_transitions(self, model):
