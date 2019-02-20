@@ -185,17 +185,23 @@ class Property:
         else:
             ValueError("Expect property {} to start with P/Pmin/Pmax/R/Rmin/Rmax/T/Tmin/Tmax".format(input_string))
 
-        if operator_type == OperatorType.reward and input_string[0:5] == "[exp]":
-            logger.debug("Drop reward expectation")
-            input_string = orig_input_string[6:]
-
         reward_name = None
-        if operator_type == OperatorType.reward and input_string[0] == "{":
-            reward_name = input_string[2:].split('}', 1)[0][:-1]
-            input_string = input_string[4+len(reward_name):]
-            logger.debug("Found reward name: {}".format(reward_name))
+        if operator_type == OperatorType.reward:
+            if input_string[0:5] == "[exp]":
+                logger.debug("Drop reward expectation")
+                input_string = input_string[5:]
 
+            if input_string[0] == "{":
+                reward_name = input_string[2:].split('}', 1)[0][:-1]
+                input_string = input_string[4+len(reward_name):]
+                logger.debug("Found reward name: {}".format(reward_name))
 
+            if input_string[0:3] == "min":
+                operator_direction = OperatorDirection.min
+                input_string = input_string[3:]
+            elif input_string[0:3] == "max":
+                operator_direction = OperatorDirection.max
+                input_string = input_string[3:]
         operator_bound = OperatorBound.from_string(input_string.split(" ", 1)[0])
 
 
