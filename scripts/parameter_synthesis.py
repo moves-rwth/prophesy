@@ -197,19 +197,6 @@ def compute_solution_function(state, export):
     if export:
         write_pstorm_result(export, result)
     return state
-    #
-    # problem_parameters = [p for p in model_file.parameters if p not in constants]
-    # if problem_parameters != result.parameters:
-    #     if len(problem_parameters) != len(result.parameters):
-    #         raise ValueError(
-    #             "Parameters in model '{}' and in result '{}' do not coincide.".format(model_file.parameters,
-    #                                                                                   result.parameters))
-    #     for p in problem_parameters:
-    #         if p not in result.parameters:
-    #             raise ValueError(
-    #                 "Parameters in model '{}' and in result '{}' do not coincide.".format(prism_file.parameters,
-    #                                                                                       result.parameters))
-    #     result.parameters = model_file.parameters
 
 
 @parameter_synthesis.command()

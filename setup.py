@@ -66,7 +66,7 @@ class ConfigBuild(build):
 setup(
     name="Prophesy",
     version=obtain_version(),
-    author="S. Junges, H. Bruintjes, M. Volk",
+    author="S. Junges, M. Volk",
     author_email="sebastian.junges@cs.rwth-aachen.de",
     maintainer="S. Junges",
     maintainer_email="sebastian.junges@cs.rwth-aachen.de",
@@ -90,7 +90,7 @@ setup(
         'scripts/parameter_synthesis.py',
         'scripts/webcegar.py'],
     cmdclass={
-        'build': ConfigBuild,
+        'develop': ConfigBuild,
         'test': Tox
     }
 )
