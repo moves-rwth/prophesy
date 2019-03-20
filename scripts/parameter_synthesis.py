@@ -75,10 +75,11 @@ def ensure_model_set(mc, model, constants, property):
 @click.option("--log-smt-calls")
 @click.option("--config")
 @click.option("--logfile", default="prophesy.log")
+@click.option('--verbose', '-v', is_flag=True, help='Print more output')
 @pass_state
-def parameter_synthesis(state, log_smt_calls, config, logfile):
+def parameter_synthesis(state, log_smt_calls, config, logfile, verbose):
     set_random_seed(0)
-    logging.basicConfig(filename=logfile, format='%(levelname)s - %(name)s:%(message)s', level=logging.DEBUG)
+    logging.basicConfig(filename=logfile, format='%(levelname)s - %(name)s:%(message)s', level=logging.DEBUG if verbose else logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     logging.getLogger().addHandler(ch)
@@ -189,8 +190,25 @@ def compute_solution_function(state, export):
     state.mc.load_model(state.problem_description.model, state.problem_description.constants)
     state.mc.set_pctl_formula(state.problem_description.property)
     result = state.mc.get_rational_function()
-    state.problem_description.solution_function = result.ratfunc
-    state.problem_description.parameters.update_variables(result.ratfunc.gather_variables())
+    #state.problem_description.parameters.update_variables(result.ratfunc.gather_variables())
+
+    # Mapping for parameters from solution function
+    def get_matching_model_parameter(model_parameters, variable_name):
+        """Return matching parameter or None."""
+        return next((v for v in model_parameters if v.name == variable_name), None)
+
+    parameter_mapping = {}
+    model_parameters = state.problem_description.parameters
+    for sf_param in result.ratfunc.gather_variables():
+        model_param = get_matching_model_parameter(model_parameters, sf_param.name)
+        parameter_mapping[sf_param] = pc.Polynomial(model_param)
+
+    for parameter in result.ratfunc.gather_variables():
+        assert parameter in parameter_mapping, repr(parameter) + " not in  " + str(parameter_mapping)
+
+    # Convert variables to prophesy variables according to generated mapping
+    # Note that the substitution looses the factorization
+    state.problem_description.solution_function = pc.substitute_variables_ratfunc(result.ratfunc, parameter_mapping)
 
     state.problem_description.welldefined_constraints = result.welldefined_constraints
     state.problem_description.graph_preserving_constraints = result.graph_preservation_constraints
