@@ -16,6 +16,8 @@
 import sys
 import os
 
+import sphinx_bootstrap_theme
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -53,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'prophesy'
-copyright = '2017, MOVES @ RWTH Aachen University'
+copyright = '2019, MOVES @ RWTH Aachen University'
 author = 'Harold Bruintjes, Sebatian Junges, Matthias Volk'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -111,102 +113,106 @@ todo_include_todos = True
 
 
 # -- Options for HTML output ----------------------------------------------
+# Activate the theme.
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = 'nature'
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#html_theme_options = {}
-
-# Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
-
-# The name for this set of Sphinx documents.  If None, it defaults to
-# "<project> v<release> documentation".
-#html_title = None
-
-# A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
-
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-#html_logo = None
-
-# The name of an image file (within the static path) to use as favicon of the
-# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
-#html_favicon = None
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
-# Add any extra paths that contain custom files (such as robots.txt or
-# .htaccess) here, relative to this directory. These files are copied
-# directly to the root of the documentation.
-#html_extra_path = []
-
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
-# using the given strftime format.
-#html_last_updated_fmt = '%b %d, %Y'
-
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-#html_use_smartypants = True
-
-# Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
-
-# Additional templates that should be rendered to pages, maps page names to
-# template names.
-#html_additional_pages = {}
-
-# If false, no module index is generated.
-#html_domain_indices = True
-
-# If false, no index is generated.
-#html_use_index = True
-
-# If true, the index is split into individual pages for each letter.
-#html_split_index = False
-
-# If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
-
-# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#html_show_sphinx = True
-
-# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-#html_show_copyright = True
-
-# If true, an OpenSearch description file will be output, and all pages will
-# contain a <link> tag referring to it.  The value of this option must be the
-# base URL from which the finished HTML is served.
-#html_use_opensearch = ''
-
-# This is the file name suffix for HTML files (e.g. ".xhtml").
-#html_file_suffix = None
-
-# Language to be used for generating the HTML full-text search index.
-# Sphinx supports the following languages:
-#   'da', 'de', 'en', 'es', 'fi', 'fr', 'h', 'it', 'ja'
-#   'nl', 'no', 'pt', 'ro', 'r', 'sv', 'tr'
-#html_search_language = 'en'
-
-# A dictionary with options for the search language support, empty by default.
-# Now only 'ja' uses this config value
-#html_search_options = {'type': 'default'}
-
-# The name of a javascript file (relative to the configuration directory) that
-# implements a search results scorer. If empty, the default will be used.
-#html_search_scorer = 'scorer.js'
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = 'prophesydoc'
+#
+# # The theme to use for HTML and HTML Help pages.  See the documentation for
+# # a list of builtin themes.
+# html_theme = 'nature'
+#
+# # Theme options are theme-specific and customize the look and feel of a theme
+# # further.  For a list of options available for each theme, see the
+# # documentation.
+# #html_theme_options = {}
+#
+# # Add any paths that contain custom themes here, relative to this directory.
+# #html_theme_path = []
+#
+# # The name for this set of Sphinx documents.  If None, it defaults to
+# # "<project> v<release> documentation".
+# #html_title = None
+#
+# # A shorter title for the navigation bar.  Default is the same as html_title.
+# #html_short_title = None
+#
+# # The name of an image file (relative to this directory) to place at the top
+# # of the sidebar.
+# #html_logo = None
+#
+# # The name of an image file (within the static path) to use as favicon of the
+# # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# # pixels large.
+# #html_favicon = None
+#
+# # Add any paths that contain custom static files (such as style sheets) here,
+# # relative to this directory. They are copied after the builtin static files,
+# # so a file named "default.css" will overwrite the builtin "default.css".
+# html_static_path = ['_static']
+#
+# # Add any extra paths that contain custom files (such as robots.txt or
+# # .htaccess) here, relative to this directory. These files are copied
+# # directly to the root of the documentation.
+# #html_extra_path = []
+#
+# # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# # using the given strftime format.
+# #html_last_updated_fmt = '%b %d, %Y'
+#
+# # If true, SmartyPants will be used to convert quotes and dashes to
+# # typographically correct entities.
+# #html_use_smartypants = True
+#
+# # Custom sidebar templates, maps document names to template names.
+# #html_sidebars = {}
+#
+# # Additional templates that should be rendered to pages, maps page names to
+# # template names.
+# #html_additional_pages = {}
+#
+# # If false, no module index is generated.
+# #html_domain_indices = True
+#
+# # If false, no index is generated.
+# #html_use_index = True
+#
+# # If true, the index is split into individual pages for each letter.
+# #html_split_index = False
+#
+# # If true, links to the reST sources are added to the pages.
+# #html_show_sourcelink = True
+#
+# # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+# #html_show_sphinx = True
+#
+# # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+# #html_show_copyright = True
+#
+# # If true, an OpenSearch description file will be output, and all pages will
+# # contain a <link> tag referring to it.  The value of this option must be the
+# # base URL from which the finished HTML is served.
+# #html_use_opensearch = ''
+#
+# # This is the file name suffix for HTML files (e.g. ".xhtml").
+# #html_file_suffix = None
+#
+# # Language to be used for generating the HTML full-text search index.
+# # Sphinx supports the following languages:
+# #   'da', 'de', 'en', 'es', 'fi', 'fr', 'h', 'it', 'ja'
+# #   'nl', 'no', 'pt', 'ro', 'r', 'sv', 'tr'
+# #html_search_language = 'en'
+#
+# # A dictionary with options for the search language support, empty by default.
+# # Now only 'ja' uses this config value
+# #html_search_options = {'type': 'default'}
+#
+# # The name of a javascript file (relative to the configuration directory) that
+# # implements a search results scorer. If empty, the default will be used.
+# #html_search_scorer = 'scorer.js'
+#
+# # Output file base name for HTML help builder.
+# htmlhelp_basename = 'prophesydoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -359,3 +365,80 @@ epub_exclude_files = ['search.html']
 # If false, no index is generated.
 #epub_use_index = True
 
+
+# (Optional) Logo. Should be small enough to fit the navbar (ideally 24x24).
+# Path should be relative to the ``_static`` files directory.
+html_logo = "my_logo.png"
+
+# Theme options are theme-specific and customize the look and feel of a
+# theme further.
+html_theme_options = {
+    # Navigation bar title. (Default: ``project`` value)
+    'navbar_title': "Demo",
+
+    # Tab name for entire site. (Default: "Site")
+    'navbar_site_name': "Site",
+
+    # A list of tuples containing pages or urls to link to.
+    # Valid tuples should be in the following forms:
+    #    (name, page)                 # a link to a page
+    #    (name, "/aa/bb", 1)          # a link to an arbitrary relative url
+    #    (name, "http://example.com", True) # arbitrary absolute url
+    # Note the "1" or "True" value above as the third argument to indicate
+    # an arbitrary url.
+    'navbar_links': [
+        ("Examples", "examples"),
+        ("Link", "http://example.com", True),
+    ],
+
+    # Render the next and previous page links in navbar. (Default: true)
+    'navbar_sidebarrel': True,
+
+    # Render the current pages TOC in the navbar. (Default: true)
+    'navbar_pagenav': True,
+
+    # Tab name for the current pages TOC. (Default: "Page")
+    'navbar_pagenav_name': "Page",
+
+    # Global TOC depth for "site" navbar tab. (Default: 1)
+    # Switching to -1 shows all levels.
+    'globaltoc_depth': 2,
+
+    # Include hidden TOCs in Site navbar?
+    #
+    # Note: If this is "false", you cannot have mixed ``:hidden:`` and
+    # non-hidden ``toctree`` directives in the same page, or else the build
+    # will break.
+    #
+    # Values: "true" (default) or "false"
+    'globaltoc_includehidden': "true",
+
+    # HTML navbar class (Default: "navbar") to attach to <div> element.
+    # For black navbar, do "navbar navbar-inverse"
+    'navbar_class': "navbar navbar-inverse",
+
+    # Fix navigation bar to top of page?
+    # Values: "true" (default) or "false"
+    'navbar_fixed_top': "true",
+
+    # Location of link to source.
+    # Options are "nav" (default), "footer" or anything else to exclude.
+    'source_link_position': "nav",
+
+    # Bootswatch (http://bootswatch.com/) theme.
+    #
+    # Options are nothing (default) or the name of a valid theme
+    # such as "cosmo" or "sandstone".
+    #
+    # The set of valid themes depend on the version of Bootstrap
+    # that's used (the next config option).
+    #
+    # Currently, the supported themes are:
+    # - Bootstrap 2: https://bootswatch.com/2
+    # - Bootstrap 3: https://bootswatch.com/3
+    'bootswatch_theme': "cosmo",
+
+    # Choose Bootstrap version.
+    # Values: "3" (default) or "2" (in quotes)
+    'bootstrap_version': "3",
+}
