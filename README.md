@@ -2,7 +2,7 @@ Prophesy
 ========
 
 Prophesy is a tool set for parameter synthesis of parametric Markov models.
-It can work with a variety of backends.
+It can work with a variety of backend tools.
 The release of Prophesy is accompanied by an [overview paper]().
 To get started, see the notes further below.
 
@@ -53,4 +53,4 @@ Prophesy received notable contributions from:
 We would like to thank Christian Hensel and Tim Quatmann for their contributions in the [Storm](https://www.stormchecker.org) backend, 
 Murat Cubuktepe for his support in developing the QCQP-driven feasibility sampling,
 and Gereon Kremer for his support of CArL.
-Prophesy is developed in close cooperation with [Nils Jansen](https://nilsjansen.org), [Joost-Pieter Katoen](http://www-i2.informatik.rwth-aachen.de/~katoen/), and [Erika Abraham](https://ths.rwth-aachen.de/people/erika-abraham/).
+Prophesy is developed in close cooperation with [Nils Jansen](http://nilsjansen.org), [Joost-Pieter Katoen](http://www-i2.informatik.rwth-aachen.de/~katoen/), and [Erika Abraham](https://ths.rwth-aachen.de/people/erika-abraham/).
