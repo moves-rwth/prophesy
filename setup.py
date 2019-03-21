@@ -90,7 +90,7 @@ setup(
         'scripts/parameter_synthesis.py',
         'scripts/webcegar.py'],
     cmdclass={
-        'develop': ConfigBuild,
+        'build': ConfigBuild,
         'test': Tox
     }
 )
