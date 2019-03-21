@@ -27,6 +27,7 @@ linux)
         export PYTHON=$PYTHON;
         export CONFIG=$CONFIG;
         export TASK=$TASK;
+        export LANG=C.UTF-8;
         cd /opt/prophesy;
         travis/build-helper.sh"
     exit $?
