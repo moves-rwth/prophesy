@@ -13,24 +13,24 @@ Installation
 ------------
 
 We advise users to follow [this guide](https://moves-rwth.github.io/prophesy/installation.html). The following outline is very brief.
-Make sure you have [carl](http://smtrat.github.io/carl/) in the c++14 version installed.
- 
- Then:
+Make sure you have [CArL](http://smtrat.github.io/carl/) in the c++14 version installed.
 
-    python setup.py develop 
-    
- installs the required dependencies and prophesy.
-    
- It will create `prophesy/prophesy.cfg` and `prophesy/dependencies.cfg` which you might want to extend.
-  
- Running:
-  
+Then:
+
+    python setup.py develop
+
+installs the required dependencies and prophesy.
+
+It will create `prophesy/prophesy.cfg` and `prophesy/dependencies.cfg` which you might want to extend.
+
+Running:
+
     python -m pytest tests
     python -m pytest scripts/tests
-    
- executes varying tests. Any occurrences of `s` show that your support currently does not contain some optional dependencies.
- 
- 
+
+executes varying tests. Any occurrences of `s` show that your support currently does not contain some optional dependencies.
+
+
 Getting Started
 ---------------
 
@@ -50,7 +50,7 @@ Prophesy received notable contributions from:
 - Tom Janson
 - Lutz Klinkenberg
 
-We would like to thank Christian Hensel and Tim Quatmann for their contributions in the [Storm](https://www.stormchecker.org) backend, 
+We would like to thank Christian Hensel and [Tim Quatmann](https://moves.rwth-aachen.de/people/quatmann/) for their contributions in the [Storm](https://www.stormchecker.org) backend,
 Murat Cubuktepe for his support in developing the QCQP-driven feasibility sampling,
 and Gereon Kremer for his support of CArL.
 Prophesy is developed in close cooperation with [Nils Jansen](http://nilsjansen.org), [Joost-Pieter Katoen](http://www-i2.informatik.rwth-aachen.de/~katoen/), and [Erika Abraham](https://ths.rwth-aachen.de/people/erika-abraham/).
