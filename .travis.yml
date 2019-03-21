@@ -1,0 +1,73 @@
+#
+# General config
+#
+branches:
+  only:
+  - master
+sudo: required
+dist: trusty
+language: generic
+
+# Enable docker support
+services:
+- docker
+
+notifications:
+  email:
+    on_failure: always
+    on_success: change
+    recipients:
+    - secure: "DsSRJPAbTCeYeDcBhvID8hzcENbsfUx5v7xQeg/pPqcBf66XkuiQiCxGGmLhqlo+GmYnoXGZ5VZwVWsVLUP6yQWBjjWO2uDkW4+YDl2PugPHZGN2667ok/TLHjTyXfRgvzlBnwqeQguPWFaqgIP3ocwX5w+PstVi/EhZkb8riFeAOeOgVYZ2zO422MT5O3NUUaiXJ78zzcSqk1z0AJkw0cg2VL4XyOzqKDOeW07PWrQkTG9d6RTx73FbtssMeG9Pe/jF+rWi96gDtcujvSEDZCpOvtFqZo5ADbSJftnwxLvZPeZ7GxxH3ENPqy0PchvBZn2VRvnKh3vouiPLWtmD0SesG7cd2eMMYZvAuCWvrBxgIauBkMmLmoAkn13TPkt0nZspHRY8r3fwgh1AuX3+4Gw0rcGaZ3CcVBwvGMLTRp0Gq9U3xoqb6/pLLT9yKSTZ7rZTJFpJDq4XM6MO6vHdY0PlNejk23LvTrwhuNkczb5ebnVgEzS3UC/h6g+fiWFyqtBkZolIFrqkH2mydeqMzQkzmQo6rpknauDTMhgBfaoKl9Qr1ZySbptpSA3i880saSm/m3sBAHKDh3y1sVfnZn872t46jaYL22YD6QeWjar1frPzez47gM7DMRLQNgFJP4jBZLNXngKmqztEfLOSnvEI69jrIvNiwh2B9E1bFgk="
+    -secure: "yHtBy/rTDWJxmUZwEiOg47FZngTuCwMT7SXjz9WwM3G/VUkhWguz0ee7XxjgI4ZoroudBUCm02xbvZJJ4NFT492XZSD4heyuy5zdCHmMvjWQez4foXXX1vSAYohDRA3WjMiUxpYzpKmfwKJiMN8KEXZZKqWGUwK2QKPH6fhy7nsOh5ETpy5AR3CXPHkmjBI/8zzajK2rWTrrXoIg8g8DWJjjP9HJDVPI3ZEm0jNvKQ46KjlTgpjejFo/A/vE5ko0P9Xlgematbz9V+COeJ5V6GIT0kvl7a2rWiUHcASuyt71V3PH++hjjQ5lXbKebZx0WufbGaMIXW3VMCFBtt6WhF1RJpiBqL2Ex58PyCkRxQfpCtznvQ6TA5nHqgNUbIcrANoMJGgAMUmiCY5YYx8s2+k1g1+Ch5AEZhSO8MIrU8YbTkt/4awiO+tgrUAPbKBjYhpUWR3EIFLtpYgHRcUrym6wu0nof/6hfiGX4jwwMiOGJwkPJ6CvTG7qbhDlz6eSN1PX7ChDWVAVok1kYa2Smf7MpkzfgnRPYpvoQyy1XkRgZKSU5KsT/CANcmurYaK1hTrhq0vrjk4gklB/gGn1d9NktuDyPbSQaBTHU3gnVSrSv1lc919rZxvEosuwgdIV/XbjT6iDKlpIWihvgs2DoOzk85fYNPvuLMTEPBuX6Bc="
+
+#
+# Configurations
+#
+jobs:
+  include:
+    # Docker Storm master
+    - os: linux
+      compiler: gcc
+      env: TASK=Test CONFIG=Release DOCKER=storm:travis PYTHON=python3
+      script:
+        travis/build.sh
+    # Docker Storm master in debug mode
+    - os: linux
+      compiler: gcc
+      env: TASK=Test CONFIG=Debug DOCKER=storm:travis-debug PYTHON=python3
+      script:
+        travis/build.sh
+    # Docker Storm stable
+    - os: linux
+      compiler: gcc
+      env: TASK=Test CONFIG=Release DOCKER=storm:1.3.0 PYTHON=python3
+      script:
+        travis/build.sh
+    # Docker Storm stable in debug mode
+    - os: linux
+      compiler: gcc
+      env: TASK=Test CONFIG=Debug DOCKER=storm:1.3.0-debug PYTHON=python3
+      script:
+        travis/build.sh
+    # Documentation
+    - os: linux
+      compiler: gcc
+      env: TASK=Documentation CONFIG=Release DOCKER=storm:travis PYTHON=python3
+      script:
+        travis/build.sh
+      before_deploy:
+        docker cp prophesy:/opt/prophesy/. .
+      deploy:
+        provider: pages
+        skip_cleanup: true
+        github_token: $GITHUB_TOKEN
+        local_dir: doc/build/html/
+        on:
+          branch: master
+
+  # Allow failures of stable versions as new features might have been added
+  allow_failures:
+    - os: linux
+      env: TASK=Test CONFIG=Release DOCKER=storm:1.3.0 PYTHON=python3
+    - os: linux
+      env: TASK=Test CONFIG=Debug DOCKER=storm:1.3.0-debug PYTHON=python3
