@@ -1,6 +1,8 @@
 Prophesy
 ========
 
+[![Build Status](https://travis-ci.org/moves-rwth/prophesy.svg?branch=master)](https://travis-ci.org/moves-rwth/prophesy)
+
 Prophesy is a tool set for parameter synthesis of parametric Markov models.
 It can work with a variety of backend tools.
 The release of Prophesy is accompanied by an [overview paper](https://arxiv.org/pdf/1903.07993.pdf).
