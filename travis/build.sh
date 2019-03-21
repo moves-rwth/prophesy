@@ -15,8 +15,9 @@ linux)
     # Copy local content into container
     docker exec prophesy mkdir /opt/prophesy
     docker cp . prophesy:/opt/prophesy
-    # Install virtualenv
+    # Install missing packages
     docker exec prophesy apt-get update
+    docker exec prophesy apt-get install -qq -y z3
     docker exec prophesy apt-get install -qq -y python python3 virtualenv
     set +e
 
