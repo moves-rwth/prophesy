@@ -55,6 +55,8 @@ run() {
   # Perform task
   case $TASK in
   Test)
+    # Install pytest
+    pip install pytest
     # Run tests
     set +e
     python -m pytest tests
