@@ -150,8 +150,11 @@ class Plot:
             for spine in fig.gca().spines.values():
                 spine.set_visible(False)
 
-            if path_to_save is not None:
-                pyplot.savefig(path_to_save, format="PDF")
+            if path_to_pdf is not None:
+                pyplot.savefig(path_to_pdf, format="PDF")
+                print("saved fig: {}".format(path_to_pdf))
+            if path_to_src is not None:
+                pyplot.savefig(path_to_src, format="PGF")
             if display:
                 pyplot.show()
             pyplot.close(fig)
