@@ -1,6 +1,7 @@
 from distutils.core import setup
-from distutils.command.build import build
-from setuptools.command.test import test as TestCommand
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+from setuptools.command.test import test
 import write_config
 import sys
 import re
@@ -29,8 +30,54 @@ def obtain_version():
     return verstr
 
 
-class Tox(TestCommand):
-    """Custom command to execute the tests using tox
+class ConfigDevelop(develop):
+    """
+    Custom command to write the config files after installation
+    """
+    user_options = develop.user_options + [
+        ('search-path=', None, 'Path to search for tools'),
+    ]
+
+    def initialize_options(self):
+        develop.initialize_options(self)
+        self.search_path = None
+
+    def finalize_options(self):
+        develop.finalize_options(self)
+
+    def run(self):
+        develop.run(self)
+        # Write config after installing the dependencies
+        # as pycarl must be present already
+        write_config.write_initial_config(self.search_path)
+
+
+class ConfigInstall(install):
+    """
+    Custom command to write the config files after installation
+    """
+
+    user_options = install.user_options + [
+        ('search-path=', None, 'Path to search for tools'),
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.search_path = None
+
+    def finalize_options(self):
+        install.finalize_options(self)
+
+    def run(self):
+        install.run(self)
+        # Write config after installing the dependencies
+        # as pycarl must be present already
+        write_config.write_initial_config(self.search_path)
+
+
+class Tox(test):
+    """
+    Custom command to execute the tests using tox
     """
 
     def finalize_options(self):
@@ -43,24 +90,6 @@ class Tox(TestCommand):
         import tox
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
-
-
-class ConfigBuild(build):
-    user_options = build.user_options + [
-        ('search-path=', None, 'Path to search for tools'),
-    ]
-
-    def initialize_options(self):
-        build.initialize_options(self)
-        self.search_path = None
-
-    def finalize_options(self):
-        build.finalize_options(self)
-
-    def run(self):
-        # Write config before executing setup, so cfg files are found
-        write_config.write_initial_config(self.search_path)
-        build.run(self)
 
 
 setup(
@@ -82,7 +111,7 @@ setup(
         'pdf': ["PyPDF2"],
     },
     package_data={
-        'prophesy': ['prophesy.cfg'],
+        'prophesy': ['prophesy.cfg', 'dependencies.cfg'],
         'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
     },
     scripts=[
@@ -90,7 +119,8 @@ setup(
         'scripts/parameter_synthesis.py',
         'scripts/webcegar.py'],
     cmdclass={
-        'build': ConfigBuild,
+        'develop': ConfigDevelop,
+        'install': ConfigInstall,
         'test': Tox
     }
 )

@@ -85,15 +85,11 @@ Step-by-step guide (minimal)
 
     * Download the latest release
 
-    * Write an initial config file::
+    * Run setup.py and write an initial config file::
 
-        $ python setup.py build --search-path PATH
+        $ python setup.py develop --search-path PATH
 
       The optional argument defines a search path, where to look for the tools (modelcheckers, SMT solvers, etc.).
-
-    * Run setup.py, e.g.::
-
-        $ python setup.py develop
 
     * Done
 
@@ -167,14 +163,10 @@ Step-by-step guide (full)
 
     * Download the latest release
 
-    * Write an initial config file::
+    * Run setup.py and write an initial config file::
 
-        $ python setup.py build --search-path PATH
+        $ python setup.py develop --search-path PATH
 
       The optional argument defines a search path, where to look for the tools (modelcheckers, SMT solvers, etc.).
-
-    * Run setup.py, e.g.::
-
-        $ python setup.py develop
 
     * Done
