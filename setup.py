@@ -2,7 +2,6 @@ from distutils.core import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.test import test
-import write_config
 import sys
 import re
 
@@ -49,6 +48,7 @@ class ConfigDevelop(develop):
         develop.run(self)
         # Write config after installing the dependencies
         # as pycarl must be present already
+        import write_config
         write_config.write_initial_config(self.search_path)
 
 
@@ -72,6 +72,7 @@ class ConfigInstall(install):
         install.run(self)
         # Write config after installing the dependencies
         # as pycarl must be present already
+        import write_config
         write_config.write_initial_config(self.search_path)
 
 
