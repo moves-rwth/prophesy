@@ -145,7 +145,7 @@ class Property:
         logger.debug("Parsing {}".format(input_string))
 
         orig_input_string = input_string.strip()
-        input_string = re.sub("[\{].*[\}]", "", orig_input_string)
+        input_string = re.sub(r"[\{].*[\}]", "", orig_input_string)
         if input_string[:4] == "Pmin":
             input_string = input_string[4:]
             operator_direction = OperatorDirection.min

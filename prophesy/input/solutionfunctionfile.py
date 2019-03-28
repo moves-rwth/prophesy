@@ -58,7 +58,7 @@ def read_pstorm_result(location, require_result=True):
     # Build parameters
     logger.debug("Reading parameters...")
     parameters = ParameterOrder()
-    parameter_strings = re.findall('\$Parameters:\s(.*)', inputstring)[0].split(";")
+    parameter_strings = re.findall(r'\$Parameters:\s(.*)', inputstring)[0].split(";")
     for parameter_string in parameter_strings:
         if parameter_string.strip():
             name_and_info = parameter_string.split()
@@ -87,7 +87,7 @@ def read_pstorm_result(location, require_result=True):
 
     # Build rational function
     logger.debug("Looking for solution function...")
-    match = re.findall('\$Result:(.*)$', inputstring, re.MULTILINE)
+    match = re.findall(r'\$Result:(.*)$', inputstring, re.MULTILINE)
 
     if require_result:
         if len(match) == 0:

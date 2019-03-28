@@ -135,7 +135,7 @@ class PrismFile(ModelInput):
     def _get_parameters(self):
         with open(self.location, 'r') as f:
             inputstring = f.read()
-            parameter_names = re.findall("^const double (\w*\s*);", inputstring, re.MULTILINE)
+            parameter_names = re.findall(r"^const double (\w*\s*);", inputstring, re.MULTILINE)
             for par_name in parameter_names:
                 #TODO change this in order to support variables for rewards.
                 bound = interval.Interval(Rational(0), interval.BoundType.open, Rational(1), interval.BoundType.open)
@@ -162,7 +162,7 @@ class PrismFile(ModelInput):
            with the given string (unless the line is commented out)."""
         with open(self.location, 'r') as f:
             inputstring = f.read()
-            substitute_regex = "(?<!// )(const double) (\w*\s*;)"
+            substitute_regex = r"(?<!// )(const double) (\w*\s*;)"
             outputstring, subs = re.subn(substitute_regex, r"{0} \2".format(new_keyword), inputstring, re.MULTILINE)
             if subs != len(self.parameters):
                 raise RuntimeError("Number of substitutions does not match number of parameters")
