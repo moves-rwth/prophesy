@@ -18,34 +18,38 @@ run() {
   python --version
 
   # Build pycarl
-  travis_fold start build_pycarl
-  git clone https://github.com/moves-rwth/pycarl.git
-  cd pycarl
-  case "$CONFIG" in
-  Debug*)
-    python setup.py build_ext --debug -j 1 develop
-    ;;
-  *)
-    python setup.py build_ext -j 1 develop
-    ;;
-  esac
-  travis_fold end build_pycarl
-  cd ..
+  if [[ $CONFIG != *"Pip"* ]]; then
+    travis_fold start build_pycarl
+    git clone https://github.com/moves-rwth/pycarl.git
+    cd pycarl
+    case "$CONFIG" in
+    Debug*)
+      python setup.py build_ext --debug -j 1 develop
+      ;;
+    *)
+      python setup.py build_ext -j 1 develop
+      ;;
+    esac
+    travis_fold end build_pycarl
+    cd ..
+  fi
 
   # Build stormpy
-  travis_fold start build_stormpy
-  git clone https://github.com/moves-rwth/stormpy.git
-  cd stormpy
-  case "$CONFIG" in
-  Debug*)
-    python setup.py build_ext --storm-dir /opt/storm/build/ --debug -j 1 develop
-    ;;
-  *)
-    python setup.py build_ext --storm-dir /opt/storm/build/ -j 1 develop
-    ;;
-  esac
-  travis_fold end build_stormpy
-  cd ..
+  if [[ $CONFIG != *"Pip"* ]]; then
+    travis_fold start build_stormpy
+    git clone https://github.com/moves-rwth/stormpy.git
+    cd stormpy
+    case "$CONFIG" in
+    Debug*)
+      python setup.py build_ext --storm-dir /opt/storm/build/ --debug -j 1 develop
+      ;;
+    *)
+      python setup.py build_ext --storm-dir /opt/storm/build/ -j 1 develop
+      ;;
+    esac
+    travis_fold end build_stormpy
+    cd ..
+  fi
 
   # Build prophesy
   travis_fold start build_prophesy
