@@ -53,7 +53,7 @@ run() {
 
   # Build prophesy
   travis_fold start build_prophesy
-  python setup.py build --search-path=/opt/ develop
+  python setup.py develop --search-path=/opt/
   travis_fold end build_prophesy
 
   # Perform task
