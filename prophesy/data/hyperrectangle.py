@@ -16,6 +16,7 @@ class HyperRectangle:
         :param intervals: Multiple Intervals as arguments
         """
         self.intervals = tuple(intervals)
+        self._size = None
 
     @classmethod
     def cube(cls, left_bound, right_bound, dimension, boundtype):
@@ -70,7 +71,6 @@ class HyperRectangle:
         :return: 
         """
         assert len(pick_min_bound) == self.dimension()
-        print(pick_min_bound)
         return Point(*[(interval.left_bound() if pmb else interval.right_bound()) for interval, pmb in zip(self.intervals, pick_min_bound)])
 
     def split_in_every_dimension(self):
@@ -96,9 +96,12 @@ class HyperRectangle:
         """
         :return: The size of the hyperrectangle
         """
+        if self._size:
+            return self._size
         s = 1
         for interv in self.intervals:
             s = s * interv.width()
+        self._size = s
         return s
 
     def contains(self, point):
