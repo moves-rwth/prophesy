@@ -2,6 +2,7 @@ from distutils.core import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.test import test
+from wheel import bdist_wheel
 import sys
 import re
 
@@ -48,8 +49,8 @@ class ConfigDevelop(develop):
         develop.run(self)
         # Write config after installing the dependencies
         # as pycarl must be present already
-        import write_config
-        write_config.write_initial_config(self.search_path)
+        import prophesy_write_config
+        prophesy_write_config.write_initial_config(self.search_path, skip_existing=True)
 
 
 class ConfigInstall(install):
@@ -72,8 +73,8 @@ class ConfigInstall(install):
         install.run(self)
         # Write config after installing the dependencies
         # as pycarl must be present already
-        import write_config
-        write_config.write_initial_config(self.search_path)
+        import prophesy_write_config
+        prophesy_write_config.write_initial_config(self.search_path)
 
 
 class Tox(test):
@@ -102,23 +103,27 @@ setup(
     maintainer_email="sebastian.junges@cs.rwth-aachen.de",
     url="http://moves.rwth-aachen.de",
     description="Prophesy - Parametric Probabilistic Model Checking",
-    packages=["prophesy", "prophesy.smt", "prophesy.sampling", "prophesy.output", "prophesy.input",
-              "prophesy.modelcheckers", "prophesy.data", "prophesy.regions", "prophesy.exceptions", "prophesy_web"],
-    install_requires=['tornado', 'pycket', 'redis', 'pycarl>=2.0.2', 'shapely',
+    packages=["prophesy", "prophesy.adapter", "prophesy.data", "prophesy.exceptions", "prophesy.input",
+              "prophesy.modelcheckers", "prophesy.modelrepair", "prophesy.optimisation",
+              "prophesy.output", "prophesy.regions",  "prophesy.sampling", "prophesy.smt", "prophesy.script_utilities",
+              "prophesy_web"],
+    install_requires=[ 'pycarl>=2.0.3', 'shapely',
                       'numpy', 'matplotlib', 'heuristic_optimization>=0.4.3,<0.5', 'click'],
     tests_require=['pytest'],
     extras_require={
         'stormpy': ["stormpy"],
         'pdf': ["PyPDF2"],
+        'web': ['tornado', 'pycket', 'redis']
     },
     package_data={
-        'prophesy': ['prophesy.cfg', 'dependencies.cfg'],
-        'prophesy_web': ['prophesy_web.cfg', 'static/*.*', 'static/flot/*']
+        'prophesy': [],
+        'prophesy_web': [ 'static/*.*', 'static/flot/*']
     },
     scripts=[
         'scripts/modelrepair.py',
         'scripts/parameter_synthesis.py',
-        'scripts/webcegar.py'],
+        'scripts/webcegar.py',
+        'prophesy_write_config.py'],
     cmdclass={
         'develop': ConfigDevelop,
         'install': ConfigInstall,

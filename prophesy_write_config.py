@@ -9,7 +9,12 @@ import logging
 from distutils.spawn import find_executable
 import pycarl
 
-thisfilepath = os.path.dirname(os.path.realpath(__file__))
+import prophesy
+
+prophesy_config_root = prophesy.get_config_root()
+print(prophesy_config_root)
+
+#thisfilepath = os.path.dirname(os.path.realpath(__file__))
 
 
 def is_executable(path):
@@ -65,7 +70,7 @@ def check_python_api(name):
 def get_initial_config(config, search_path):
     # Setup paths
     config_dirs = dict()
-    config_dirs["tmp"] = os.path.join(thisfilepath, "/", "tmp", "prophesy")
+    config_dirs["tmp"] = os.path.join(prophesy_config_root, "tmp", "prophesy")
     config_dirs["intermediate_files"] = os.path.join(
         config_dirs["tmp"], "intermediate")
     config_dirs["plots"] = os.path.join(config_dirs["tmp"], "plots")
@@ -112,7 +117,7 @@ def get_initial_dependencies_config(config):
 def get_initial_web_config(config):
     config_dirs = dict()
     config_dirs["server_tmp"] = os.path.join(
-        thisfilepath, "/", "tmp", "prophesy_web")
+        prophesy_config_root, "tmp", "prophesy_web")
     config_dirs["web_sessions"] = os.path.join(
         config_dirs["server_tmp"], "sessions")
     config_dirs["web_results"] = os.path.join(
@@ -122,39 +127,47 @@ def get_initial_web_config(config):
     config["directories"] = config_dirs
 
 
-def write_initial_config(search_path=None):
+def write_initial_config(search_path=None, skip_existing=False):
     if search_path is not None:
         search_path = os.path.expanduser(search_path)
 
-    path = os.path.join(thisfilepath, "prophesy", "prophesy.cfg")
+    exists = False
+    path = os.path.join(prophesy_config_root,  "prophesy.cfg")
     if os.path.isfile(path):
         print("Config file {} already exists.".format(path))
-    else:
-        print("Write config with search path {}".format(search_path))
+        exists = True
+    if not exists or not skip_existing:
+        print("Write config to {} with search path {}".format(path, search_path))
         config = configparser.ConfigParser()
         get_initial_config(config, search_path)
         logging.info("Writing config to " + path)
-        with open(path, 'w') as configfile:
+        with open(path, 'w+') as configfile:
             config.write(configfile)
 
-    path = os.path.join(thisfilepath, "prophesy", "dependencies.cfg")
+    exists = False
+
+    path = os.path.join(prophesy_config_root, "dependencies.cfg")
     if os.path.isfile(path):
         print("Dependencies file {} already exists.".format(path))
-    else:
+        exists = True
+    if not exists or not skip_existing:
+        logging.info("Writing dependencies to " + path)
         config = configparser.ConfigParser()
         get_initial_dependencies_config(config)
-        logging.info("Writing dependencies to " + path)
-        with open(path, 'w') as configfile:
+
+        with open(path, 'w+') as configfile:
             config.write(configfile)
 
-    path = os.path.join(thisfilepath, "prophesy_web", "prophesy_web.cfg")
+    exists = False
+    path = os.path.join(prophesy_config_root, "prophesy_web.cfg")
     if os.path.isfile(path):
         print("Web config file {} already exists.".format(path))
-    else:
+        exists = True
+    if not exists or not skip_existing:
         config = configparser.ConfigParser()
         get_initial_web_config(config)
         logging.info("Writing config to " + path)
-        with open(path, 'w') as configfile:
+        with open(path, 'w+') as configfile:
             config.write(configfile)
 
 
