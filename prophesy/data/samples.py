@@ -140,7 +140,7 @@ class InstantiationResult:
         return str(self.instantiation) + ": " + str(self.result)
 
 
-class InstantiationResultDict(OrderedDict):
+class InstantiationResultDict(dict):
     """Maintains a set of instantiations with their results."""
 
     def __init__(self, *args, parameters=None):
