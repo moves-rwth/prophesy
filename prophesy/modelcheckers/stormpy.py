@@ -405,10 +405,10 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         if not surely_welldefined:
             logger.warning("Sampling assumes (without any checks) that the point is welldefined")
         # Perform sampling with model instantiator
-        logger.info("Call stormpy for sampling")
+        logger.debug("Call stormpy for sampling")
         parameter_mapping = self.get_parameter_mapping(sample_points[0].get_parameters())
         samples = InstantiationResultDict({p: self.sample_single_point(p, parameter_mapping) for p in sample_points})
-        logger.info("Sampling with stormpy successfully finished")
+        logger.debug("Sampling with stormpy successfully finished")
         return samples
 
     def sample_single_point(self, parameter_instantiation, parameter_mapping):

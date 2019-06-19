@@ -184,12 +184,12 @@ class MonoRegionChecker(RegionChecker):
 
 
         for i in range(1, iters):
-            logger.debug("Anchors are {} and {}".format(lower, upper))
+            logger.debug("Anchors are %s and %s", lower, upper)
             center = (lower + upper) * pc.Rational(0.5)
-            logger.debug("Evaluating at {}".format(center))
+            logger.debug("Evaluating at %s", center)
             results = self._checker.perform_sampling([ParameterInstantiation.from_point(center, self._parameters)],
                                                      True)
-            logger.debug("Result: {}".format(float(list(results.values())[0])))
+            logger.debug("Result: %s", float(list(results.values())[0]))
             if list(results.values())[0] > self.threshold:
                 upper = center
                 upper_res = center
@@ -212,12 +212,9 @@ class MonoRegionChecker(RegionChecker):
 
         safe_regions = [above_threshold_region]
         bad_regions = [below_threshold_region]
-        # else:
-        #     reject_regions = [above_threshold_region]
-        #     accept_regions = [below_threshold_region]
 
-        logger.debug("Area above: {}; Area below {}; Unknown area: {} ({} %)".format(float(above_threshold_region.size()), float(below_threshold_region.size()), float(mini_region.size() + midi_region.size() + maxi_region.size()),  float(100*(mini_region.size() + midi_region.size() + maxi_region.size())/hyperrectangle.size())))
-        logger.debug("Result: lower: {} upper: {}".format(lower_res, upper_res))
+        logger.debug("Area above: %s; Area below %s; Unknown area: %s (%s %)", float(above_threshold_region.size()), float(below_threshold_region.size()), float(mini_region.size() + midi_region.size() + maxi_region.size()),  float(100*(mini_region.size() + midi_region.size() + maxi_region.size())/hyperrectangle.size()))
+        logger.debug("Result: lower: %s upper: %s", lower_res, upper_res)
 
         return RegionCheckResult.Splitted, (safe_regions, bad_regions, [mini_region, midi_region, maxi_region])
 

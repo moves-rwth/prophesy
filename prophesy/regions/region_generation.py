@@ -390,13 +390,10 @@ class RegionGenerator:
         self._records[-1].start_iteration_timer()
 
     def start_analysis(self):
-        print("start analysis timer")
         self._records[-1].start_analysis_timer()
 
     def stop_analysis(self):
-        print("stop analysis timer")
         self._records[-1].stop_analysis_timer()
-        print(self._records[-1].analysis_time)
 
     def start_generation(self):
         self._records[-1].start_generation_timer()
@@ -406,8 +403,7 @@ class RegionGenerator:
 
     def stop_iteration(self):
         self._records[-1].stop_iteration_timer()
-        print(self._records[-1].iteration_time)
-        logger.info("Done with iteration: took %s", str(self._records[-1].iteration_time))
+        logger.debug("Done with iteration: took %s", str(self._records[-1].iteration_time))
 
     def generate_constraints(self, max_iter=-1, max_area=1, plot_every_n=1, plot_candidates=True,
                              export_statistics=None):
@@ -479,13 +475,13 @@ class RegionGenerator:
             cumulative_total_time += r.iteration_time
 
             if not update or len(self._records) == idx + 1:
-                stats += "{}\t{:.2f}\t\t{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\n".format(
+                stats += "{}\t{:.5f}\t\t{}\t{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\t\t{:.2f}\n".format(
                     idx, float(r.area), r.result, r.safe, r.generation_time, r.analysis_time, r.iteration_time,
                     cov_area, safe_area, cumulative_generation_time, cumulative_analysis_time, cumulative_total_time)
         return stats
 
     def export_stats(self, filename, update=False):
-        logger.debug("Write stats to %s (update == %s)", filename, str(update))
+        logger.debug("Write stats to %s (update == %s)", filename, update)
         with open(filename, 'a') as file:
             if not update or len(self._records) == 1:
                 file.write(self.generate_header() + "\n")
@@ -499,7 +495,7 @@ class RegionGenerator:
         :param safe: Flag iff the region should be considered safe.
         :return: Tuple (RegionCheckResult, (region/counterexample, safe))
         """
-        print(region)
+        logger.debug("Analyse region %s", region)
         if welldefined == WelldefinednessResult.Illdefined:
             self.ignore_region()
             self.record_illdefined(region)

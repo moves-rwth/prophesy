@@ -75,14 +75,16 @@ def ensure_model_set(mc, model, constants, property):
 @click.option("--log-smt-calls")
 @click.option("--config")
 @click.option("--logfile", default="prophesy.log")
+@click.option('--nolog', is_flag=True, help="Suppres logging")
 @click.option('--verbose', '-v', is_flag=True, help='Print more output')
 @pass_state
-def parameter_synthesis(state, log_smt_calls, config, logfile, verbose):
+def parameter_synthesis(state, log_smt_calls, config, logfile, nolog, verbose):
     set_random_seed(0)
-    logging.basicConfig(filename=logfile, format='%(levelname)s - %(name)s:%(message)s', level=logging.DEBUG if verbose else logging.INFO)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    logging.getLogger().addHandler(ch)
+    if not nolog:
+        logging.basicConfig(filename=logfile, format='%(levelname)s - %(name)s:%(message)s', level=logging.DEBUG if verbose else logging.INFO)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG if verbose else logging.INFO)
+        logging.getLogger().addHandler(ch)
     logging.debug("Loading configuration")
     state.obj = ConfigState()
     state.overall_start_time = time.time()
