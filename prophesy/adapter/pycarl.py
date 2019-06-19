@@ -29,7 +29,7 @@ if pycarl.has_cln():
         import pycarl.cln.parse
 
 # Set standard number type of pycarl (gmp or cln)
-pycarl.numtype = pycarl.gmp
+pycarl.numtype = pycarl.cln
 
 Variable = pycarl.Variable
 VariableType = pycarl.VariableType
