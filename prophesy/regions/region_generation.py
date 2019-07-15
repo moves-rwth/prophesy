@@ -24,6 +24,8 @@ class GenerationRecord:
         self._analysis_time = None
         self._search_time = None
         self._iteration_time = None
+        self._covered_area = None
+        self._safe_covered_area = None
 
     def set_region(self, region, safe):
         if not isinstance(region, list):
@@ -71,8 +73,16 @@ class GenerationRecord:
         return self._safe_region + self._bad_region
 
     @property
+    def safe_regions(self):
+        return self._safe_region
+
+    @property
+    def bad_regions(self):
+        return self._bad_region
+
+    @property
     def area(self):
-        return sum([r.size() for r in self.region])
+        return sum([r.size() for r in self._safe_region]) + sum([r.size() for r in self._bad_region])
 
     @property
     def safe_area(self):
@@ -80,17 +90,21 @@ class GenerationRecord:
 
     @property
     def covered_area(self):
-        if self._result in [WelldefinednessResult.Illdefined, RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
-            return self.area
-        else:
-            return 0.0
+        if self._covered_area is None:
+            if self._result in [WelldefinednessResult.Illdefined, RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
+                self._covered_area = self.area
+            else:
+                self._covered_area = 0.0
+        return self._covered_area
 
     @property
     def covered_safe_area(self):
-        if self._result in [RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
-            return self.safe_area
-        else:
-            return 0.0
+        if self._safe_covered_area is None:
+            if self._result in [RegionCheckResult.Satisfied, RegionCheckResult.Homogenous]:
+                self._safe_covered_area = self.safe_area
+            else:
+                self._safe_covered_area = 0.0
+        return self._safe_covered_area
 
     @property
     def result(self):
