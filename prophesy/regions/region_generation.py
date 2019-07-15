@@ -285,6 +285,15 @@ class RegionGenerator:
         self._add_pdf(result_tmp_file)
         os.unlink(result_tmp_file)
 
+    def export_results(self, path):
+        logger.debug("Write results to %s", path)
+        with open(path, 'w+') as file:
+            for idx, r in enumerate(self._records):
+                for reg in r.safe_regions:
+                    file.write("{}: {}\n".format(reg, "safe"))
+                for reg in r.bad_regions:
+                    file.write("{}: {}\n".format(reg, "unsafe"))
+
     @abstractmethod
     def next_region(self):
         """

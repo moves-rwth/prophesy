@@ -531,8 +531,9 @@ def prove_bound(state, epsilon, verification_method, direction):
 @click.option("--plot", help="Should a plot be generated", is_flag=True)
 @click.option("--allow-homogeneity-checks", is_flag=True)
 @click.option("--display-model", is_flag=True)
+@click.option("--export", type=str, help="File to write regions to")
 @pass_state
-def parameter_space_partitioning(state, verification_method, region_method, iterations, area, stats, plot, allow_homogeneity_checks, display_model):
+def parameter_space_partitioning(state, verification_method, region_method, iterations, area, stats, plot, allow_homogeneity_checks, display_model, export):
     if state.problem_description.samples is None:
         state.problem_description.samples = InstantiationResultDict(parameters=state.problem_description.parameters)
 
@@ -604,7 +605,10 @@ def parameter_space_partitioning(state, verification_method, region_method, iter
     generator.generate_constraints(max_iter=iterations, max_area=area, plot_every_n=100000,
                                        plot_candidates=False, export_statistics=stats)
 
-    logging.info("Usage stats: {}".format(state.mc.usage_stats()))
+    if export:
+        generator.export_results(export)
+    # TODO consider using a logger for results
+    print("Usage stats: {}".format(state.mc.usage_stats()))
     return state
 
 def make_modelchecker(mc):
@@ -654,8 +658,9 @@ def make_solver(solver):
     return tool
 
 if __name__ == "__main__":
-    state = parameter_synthesis.main(standalone_mode=False)[0]
-    if state is not None:
+    state = parameter_synthesis.main(standalone_mode=False)
+    if state is not None and type(state) is not int:
+        state = state[0]
         state.solver.stop()
         if state.log_smt_calls:
             state.solver.to_file(state.log_smt_calls)
