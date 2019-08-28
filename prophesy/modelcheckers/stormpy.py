@@ -451,7 +451,8 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         region_string = hyperrectangle.to_region_string(parameters)
         logger.debug("Region string is {}".format(region_string))
         logger.debug("Model parameters are {}".format(model_parameters))
-        region = stormpy.pars.ParameterRegion(region_string, model_parameters)
+        # TODO use constructor (better performance)
+        region = stormpy.pars.ParameterRegion.create_from_string(region_string, model_parameters)
         # Check via PLA
         logger.info("Call stormpy for PLA check")
         hypothesis = stormpy.pars.RegionResultHypothesis.ALLVIOLATED if above_threshold else stormpy.pars.RegionResultHypothesis.ALLSAT
@@ -486,6 +487,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
             raise RuntimeError("Unexpected result '{}'".format(result))
 
         region = HyperRectangle.from_region_string(region_string, parameters)
+        #TODO copy in a different fashion.
         regions = [(region_result, region)]
         return regions
 
@@ -504,7 +506,7 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
         mapping = self.get_parameter_mapping(parameters, from_storm=True)
         region_string = hyperrectangle.to_region_string(parameters)
         vars = self.get_parameters()
-        par_region = stormpy.pars.ParameterRegion(region_string, vars)
+        par_region = stormpy.pars.ParameterRegion.create_from_string(region_string, vars)
         if all_states:
             logger.debug("Bound for all states")
             return pla_checker.get_bound_all_states(
