@@ -11,6 +11,9 @@ travis_fold() {
 
 # Helper for building and testing
 run() {
+  # We start in /opt/prophesy
+  cd ..
+
   travis_fold start virtualenv
   if [[ "$CONFIG" != *Stormpy* ]]
   then
@@ -25,6 +28,7 @@ run() {
 
   # Build prophesy
   travis_fold start build_prophesy
+  cd prophesy
   python setup.py develop --search-path=/opt/
   travis_fold end build_prophesy
 
