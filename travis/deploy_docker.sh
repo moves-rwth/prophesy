@@ -21,17 +21,17 @@ case $OS in
 linux)
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     # Deploy as debug/release
-    case "$CONFIG" in
-    *Debug*)
+    case "$DOCKER" in
+    *travis-debug)
         docker commit $1 movesrwth/$1:travis-debug
         docker push movesrwth/$1:travis-debug
         ;;
-    *Release*)
+    *travis)
         docker commit $1 movesrwth/$1:travis
         docker push movesrwth/$1:travis
         ;;
     *)
-        echo "Unrecognized value of CONFIG: $CONFIG"; exit 1
+        echo "Unrecognized value of DOCKER: $DOCKER"; exit 1
         ;;
     esac
     ;;
