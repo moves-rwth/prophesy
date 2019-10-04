@@ -77,11 +77,14 @@ jobs:
         on:
           branch: master
 
-  # Allow failures of stable versions as new features might have been added
   allow_failures:
+  # Allow failures of stable versions as new features might have been added
     - os: linux
       env: TASK=Test CONFIG=Stormpy DOCKER=stormpy:1.3.0 PYTHON=python3
     - os: linux
       env: TASK=Test CONFIG=Stormpy DOCKER=stormpy:1.3.0-debug PYTHON=python3
+  # Allow failures of pip installation for now
     - os: linux
-      env: TASK=Test CONFIG=Pip DOCKER=stormpy:1.3.0 PYTHON=python3
+      env: TASK=Test CONFIG=Pip DOCKER=storm:travis PYTHON=python3
+    - os: linux
+      env: TASK=Test CONFIG=Pip DOCKER=storm:travis-debug PYTHON=python3
