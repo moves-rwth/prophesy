@@ -17,6 +17,7 @@ from prophesy.data.constant import Constants
 from prophesy.data.hyperrectangle import HyperRectangle
 from prophesy.data.model_type import ModelType
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
+from prophesy.exceptions.unsupported_model import UnsupportedModel
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,13 @@ class StormModelChecker(ParametricProbabilisticModelChecker):
             raise NotEnoughInformationError("pctl formula missing")
         if not self._has_model_set():
             raise NotEnoughInformationError("model missing")
+
+        if self.drnfile:
+            if self.drnfile.model_type != ModelType.DTMC:
+                raise UnsupportedModel("Rational functions can only be computed for DTMCs.")
+        elif self.prismfile:
+            if self.prismfile.model_type != ModelType.DTMC:
+                raise UnsupportedModel("Rational functions can only be computed for DTMCs.")
 
         # create a temporary file for the result.
         ensure_dir_exists(prophesy.config.configuration.get_intermediate_dir())

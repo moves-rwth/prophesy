@@ -9,6 +9,7 @@ from prophesy.modelcheckers.ppmc import ParametricProbabilisticModelChecker
 from prophesy.modelcheckers.pmc import BisimulationType
 from prophesy.exceptions.configuration_error import ConfigurationError
 from prophesy.exceptions.not_enough_information_error import NotEnoughInformationError
+from prophesy.exceptions.unsupported_model import UnsupportedModel
 from prophesy.input.solutionfunctionfile import ParametricResult
 from prophesy.data.constant import Constants
 from prophesy.data.samples import InstantiationResultDict
@@ -381,6 +382,9 @@ class StormpyModelChecker(ParametricProbabilisticModelChecker):
 
     def get_rational_function(self):
         self.get_model()
+        if self._model.model_type != stormpy.ModelType.DTMC:
+            raise UnsupportedModel("Rational functions can only be computed for DTMCs.")
+
         # Compute rational function
         logger.info("Compute solution function")
         results = stormpy.model_checking(self._model, self.pctlformula[0])
