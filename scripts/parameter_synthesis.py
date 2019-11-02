@@ -251,6 +251,13 @@ def sample(state, export, method, plot, samplingnr, iterations, stats):
     #logging.info("Performing uniform sampling: {} samples".format(len(initial_samples)))
     uniform_sampling_time = time.time() - uniform_sampling_time
     nr_initial_samples = len(initial_samples)
+
+    if state.problem_description.threshold is None:
+        logging.warning("Threshold was not provided. No refinement sampling possible.")
+        if export:
+            write_samples_file(state.problem_description.parameters, initial_samples, export)
+        return state
+
     nr_initial_samples_safe = len(initial_samples.split(state.problem_description.threshold)[0])
 
     logging.debug("Performing refined sampling ..")
