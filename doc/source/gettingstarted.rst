@@ -106,7 +106,20 @@ Using SMT
 
 TBD
 
-The approximate synthesis problem
-=================================
+The parameter space partitioning problem
+========================================
+This problem asks to provide a partitioning into accepting, rejecting and unknown regions, trying to minimize the unknown regions.
 
+.. code-block::
 
+    $  python scripts/parameter_synthesis.py load-problem  benchmarkfiles/smallpmdp/smallpmdp.pm benchmarkfiles/smallpmdp/min.pctl set-threshold 3/10 set-parameter-space --region-string "0.1<=p<=0.2,0.4<=q<=0.6" parameter-space-partitioning --iterations 30 pla quads
+
+This method runs using the quad heuristic for splitting the parameter space,
+and uses PLA (parameter lifting) for verifying the regions.
+
+It is often beneficial to sample a bit before running the parameter space partitiong.
+We do so by adding the sample command.
+
+.. code-block::
+
+    $  python scripts/parameter_synthesis.py load-problem  benchmarkfiles/smallpmdp/smallpmdp.pm benchmarkfiles/smallpmdp/min.pctl set-threshold 3/10 set-parameter-space --region-string "0.1<=p<=0.2,0.4<=q<=0.6" sample --iterations 2 parameter-space-partitioning --iterations 30 pla quads
