@@ -122,7 +122,6 @@ setup(
         'prophesy_web': [ 'static/*.*', 'static/flot/*']
     },
     scripts=[
-        'scripts/modelrepair.py',
         'scripts/parameter_synthesis.py',
         'scripts/webcegar.py',
         'prophesy_write_config.py'],
