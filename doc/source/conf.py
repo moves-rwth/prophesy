@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'prophesy'
-copyright = '2015-2019, MOVES @ RWTH Aachen University'
+copyright = '2015-2020, MOVES @ RWTH Aachen University'
 author = 'Sebastian Junges, Matthias Volk'
 
 # The version info for the project you're documenting, acts as replacement for
