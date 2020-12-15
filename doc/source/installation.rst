@@ -30,9 +30,9 @@ Step-by-step guide (minimal)
     $ cd <location>
 
 - Obtain carl
-    * Download the latest release or clone the git repository from `carl <https://github.com/smtrat/carl>`_, e.g.::
+    * Clone the git repository from `carl <https://github.com/smtrat/carl>`_ with branch `master14`, e.g.::
 
-        $ git clone https://github.com/smtrat/carl.git
+        $ git clone https://github.com/smtrat/carl.git -b master14
         $ cd carl
 
     * Prepare the build::
@@ -49,9 +49,9 @@ Step-by-step guide (minimal)
         $ cd <location>
 
 - Obtain carl-parser
-    * Download the latest release::
+    * Clone the git repository from `carl-parser <https://github.com/ths-rwth/carl-parser>`_ with branch `master14`, e.g.::
 
-        $ git clone https://github.com/smtrat/carl-parser.git
+        $ git clone https://github.com/smtrat/carl-parser.git -b master14
         $ cd carl-parser
 
     * Prepare the build::
@@ -82,7 +82,6 @@ Step-by-step guide (minimal)
         $ cd <location>
 
 - Obtain prophesy
-
     * Download the latest release
 
     * Run setup.py and write an initial config file::
@@ -104,9 +103,9 @@ Step-by-step guide (full)
     $ cd <location>
 
 - Obtain carl
-    * Download the latest release or clone the git repository from `carl <https://github.com/smtrat/carl>`_, e.g.::
+    * Clone the git repository from `carl <https://github.com/smtrat/carl>`_ with branch `master14`, e.g.::
 
-        $ git clone https://github.com/smtrat/carl.git
+        $ git clone https://github.com/smtrat/carl.git -b master14
         $ cd carl
 
     * Prepare the build::
@@ -123,9 +122,9 @@ Step-by-step guide (full)
         $ cd <location>
 
 - Obtain carl-parser
-    * Download the latest release::
+    * Clone the git repository from `carl-parser <https://github.com/ths-rwth/carl-parser>`_ with branch `master14`, e.g.::
 
-        $ git clone https://github.com/smtrat/carl-parser.git
+        $ git clone https://github.com/smtrat/carl-parser.git -b master14
         $ cd carl-parser
 
     * Prepare the build::
@@ -156,11 +155,12 @@ Step-by-step guide (full)
         $ cd <location>
 
 - Obtain storm
+    * See the `Storm documentation <https://www.stormchecker.org/documentation/obtain-storm/build.html>`_
 
 - Obtain stormpy
+    * See the `Stormpy documentation <https://moves-rwth.github.io/stormpy/installation.html>`_
 
 - Obtain prophesy
-
     * Download the latest release
 
     * Run setup.py and write an initial config file::
