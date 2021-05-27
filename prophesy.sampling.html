@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy.sampling package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy.modelcheckers package" href="prophesy.modelcheckers.html" />
+    <link rel="prev" title="prophesy.regions package" href="prophesy.regions.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy.sampling package</a><ul>
+<li><a class="reference internal" href="#sampler-how-to-sample">Sampler: How to sample?</a><ul>
+<li><a class="reference internal" href="#module-prophesy.sampling.sampler">prophesy.sampling.sampler module</a></li>
+<li><a class="reference internal" href="#module-prophesy.sampling.sampler_ratfunc">prophesy.sampling.sampler_ratfunc module</a></li>
+<li><a class="reference internal" href="#sampling-via-probabilistic-model-checking">Sampling via probabilistic model checking</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sampling-where-to-sample">Sampling: Where to sample?</a><ul>
+<li><a class="reference internal" href="#module-prophesy.sampling.sample_generator">prophesy.sampling.sample_generator module</a></li>
+<li><a class="reference internal" href="#module-prophesy.sampling.sampling_linear">prophesy.sampling.sampling_linear module</a></li>
+<li><a class="reference internal" href="#module-prophesy.sampling.sampling_uniform">prophesy.sampling.sampling_uniform module</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#high-level-convenience-functions">High-level convenience functions</a><ul>
+<li><a class="reference internal" href="#module-prophesy.sampling.sampling">prophesy.sampling.sampling module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="prophesy.regions.html" title="Previous Chapter: prophesy.regions package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; prophesy.regi...</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.modelcheckers.html" title="Next Chapter: prophesy.modelcheckers package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy.mode... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-sampling-package">
+<h1>prophesy.sampling package<a class="headerlink" href="#prophesy-sampling-package" title="Permalink to this headline">¶</a></h1>
+<p>Sampling is the package to get a rough image of the parameter space by considering single points in the parameter space.</p>
+<section id="sampler-how-to-sample">
+<h2>Sampler: How to sample?<a class="headerlink" href="#sampler-how-to-sample" title="Permalink to this headline">¶</a></h2>
+<p>The basic interface for sampling is the sampler interface.
+Besides sampling on given points, it supports uniform sampling as some samplers might perform better.</p>
+<section id="module-prophesy.sampling.sampler">
+<span id="prophesy-sampling-sampler-module"></span><h3>prophesy.sampling.sampler module<a class="headerlink" href="#module-prophesy.sampling.sampler" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.sampling.sampler.Sampler">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Sampler</span></span><a class="headerlink" href="#prophesy.sampling.sampler.Sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for performing sampling of given set of points</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.sampling.sampler.Sampler.perform_sampling">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">perform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samplepoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_welldefinedness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampler.Sampler.perform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given some parameter instantiations, perform sampling on these instantiations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>samplepoints</strong> – An iterable yielding parameter instantiations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A collection with the results of these samples</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="prophesy.data.html#prophesy.data.samples.InstantiationResultDict" title="prophesy.data.samples.InstantiationResultDict">InstantiationResultDict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.sampling.sampler.Sampler.perform_uniform_sampling">
+<span class="sig-name descname"><span class="pre">perform_uniform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampler.Sampler.perform_uniform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples a uniform grid of points.</p>
+<p>Given a list of intervals (i.e., the first and last point;
+for each dimension, in order) and the number of samples per
+dimension, a uniformly-spaced grid of points (the cartesian
+product) is sampled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> – Parameters together with their region.</p></li>
+<li><p><strong>samples_per_dimension</strong> – In how many points should the region be divided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.sampling.sampler_ratfunc">
+<span id="prophesy-sampling-sampler-ratfunc-module"></span><h3>prophesy.sampling.sampler_ratfunc module<a class="headerlink" href="#module-prophesy.sampling.sampler_ratfunc" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.sampling.sampler_ratfunc.RatFuncSampling">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">RatFuncSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ratfunc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampler_ratfunc.RatFuncSampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.sampling.sampler.Sampler" title="prophesy.sampling.sampler.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.sampling.sampler.Sampler</span></code></a></p>
+<p>Simple sampler based on pycarl rational function</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.sampling.sampler_ratfunc.RatFuncSampling.perform_sampling">
+<span class="sig-name descname"><span class="pre">perform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samplepoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampler_ratfunc.RatFuncSampling.perform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>samplepoints</strong> – iterable of SamplePoint</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="prophesy.data.html#prophesy.data.samples.InstantiationResultDict" title="prophesy.data.samples.InstantiationResultDict">InstantiationResultDict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="sampling-via-probabilistic-model-checking">
+<h3>Sampling via probabilistic model checking<a class="headerlink" href="#sampling-via-probabilistic-model-checking" title="Permalink to this headline">¶</a></h3>
+<p>One can also sample via probabilistic model checkers, see <a class="reference internal" href="prophesy.modelcheckers.html#ref-prophesy-modelcheckers-pmc"><span class="std std-ref">prophesy.modelcheckers.pmc module</span></a>.</p>
+</section>
+</section>
+<section id="sampling-where-to-sample">
+<h2>Sampling: Where to sample?<a class="headerlink" href="#sampling-where-to-sample" title="Permalink to this headline">¶</a></h2>
+<p>To determine sample points based on the already sampled information, we provide sample generators.</p>
+<section id="module-prophesy.sampling.sample_generator">
+<span id="prophesy-sampling-sample-generator-module"></span><h3>prophesy.sampling.sample_generator module<a class="headerlink" href="#module-prophesy.sampling.sample_generator" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.sampling.sample_generator.SampleGenerator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">SampleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sample_generator.SampleGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to generate samples given a sampler. SampleGenerator uses the
+iteration interface to do so.</p>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.sampling.sampling_linear">
+<span id="prophesy-sampling-sampling-linear-module"></span><h3>prophesy.sampling.sampling_linear module<a class="headerlink" href="#module-prophesy.sampling.sampling_linear" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.sampling.sampling_linear.LinearRefinement">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">LinearRefinement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampling_linear.LinearRefinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.sampling.sample_generator.SampleGenerator" title="prophesy.sampling.sample_generator.SampleGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.sampling.sample_generator.SampleGenerator</span></code></a></p>
+<p>Based on an initial set of samples, refines the samples by means
+of linear interpolation to approximate the threshold</p>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.sampling.sampling_uniform">
+<span id="prophesy-sampling-sampling-uniform-module"></span><h3>prophesy.sampling.sampling_uniform module<a class="headerlink" href="#module-prophesy.sampling.sampling_uniform" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.sampling.sampling_uniform.UniformSampleGenerator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">UniformSampleGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampling_uniform.UniformSampleGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.sampling.sample_generator.SampleGenerator" title="prophesy.sampling.sample_generator.SampleGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.sampling.sample_generator.SampleGenerator</span></code></a></p>
+<p>Generates a uniform grid of samples</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="high-level-convenience-functions">
+<h2>High-level convenience functions<a class="headerlink" href="#high-level-convenience-functions" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.sampling.sampling">
+<span id="prophesy-sampling-sampling-module"></span><h3>prophesy.sampling.sampling module<a class="headerlink" href="#module-prophesy.sampling.sampling" title="Permalink to this headline">¶</a></h3>
+<p>Helper module for simplified sampling access.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.sampling.sampling.refine_samples">
+<span class="sig-name descname"><span class="pre">refine_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampling.refine_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refine samples over several iterations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sampler</strong> – The sampler to use</p></li>
+<li><p><strong>parameters</strong> – The parameters of the problem</p></li>
+<li><p><strong>samples</strong> – The already known samples</p></li>
+<li><p><strong>iterations</strong> – The number of iterations the refinement generator should be called.</p></li>
+<li><p><strong>threshold</strong> – The threshold value we are most interested in</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.sampling.sampling.uniform_samples">
+<span class="sig-name descname"><span class="pre">uniform_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_dim</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.sampling.sampling.uniform_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a uniform grid of samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sampler</strong> – The sampler to use</p></li>
+<li><p><strong>parameters</strong> – The parameters in our problem</p></li>
+<li><p><strong>samples_per_dim</strong> – The number of samples per dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.sampling.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

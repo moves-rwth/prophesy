@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy.data package" href="prophesy.data.html" />
+    <link rel="prev" title="API Documentation" href="api.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#utility-methods">Utility methods</a><ul>
+<li><a class="reference internal" href="#module-prophesy.util">prophesy.util module</a></li>
+<li><a class="reference internal" href="#module-prophesy.config">prophesy.config module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="api.html" title="Previous Chapter: API Documentation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; API Documentation</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.data.html" title="Next Chapter: prophesy.data package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy.data package &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-package">
+<h1>prophesy package<a class="headerlink" href="#prophesy-package" title="Permalink to this headline">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.data.html">prophesy.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.data.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.constant">prophesy.data.constant module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.constraint">prophesy.data.constraint module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.hyperrectangle">prophesy.data.hyperrectangle module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.interval">prophesy.data.interval module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.model_type">prophesy.data.model_type module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.nice_approximation">prophesy.data.nice_approximation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.parameter">prophesy.data.parameter module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.point">prophesy.data.point module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-0">prophesy.data.property module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.range">prophesy.data.range module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.samples">prophesy.data.samples module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.regions.html">prophesy.regions package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.regions.html#region-checking">Region Checking</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_checker">prophesy.regions.region_checker module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_smtchecker">prophesy.regions.region_smtchecker module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.regions.html#region-generation">Region Generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_generation">prophesy.regions.region_generation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_quads">prophesy.regions.region_quads module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.sampling.html">prophesy.sampling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.sampling.html#sampler-how-to-sample">Sampler: How to sample?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampler">prophesy.sampling.sampler module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampler_ratfunc">prophesy.sampling.sampler_ratfunc module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#sampling-via-probabilistic-model-checking">Sampling via probabilistic model checking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.sampling.html#sampling-where-to-sample">Sampling: Where to sample?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sample_generator">prophesy.sampling.sample_generator module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampling_linear">prophesy.sampling.sampling_linear module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampling_uniform">prophesy.sampling.sampling_uniform module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.sampling.html#high-level-convenience-functions">High-level convenience functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampling">prophesy.sampling.sampling module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.modelcheckers.html">prophesy.modelcheckers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.modelcheckers.html#interfaces">Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.pmc">prophesy.modelcheckers.pmc module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.ppmc">prophesy.modelcheckers.ppmc module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.modelcheckers.html#implementations">Implementations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.storm">prophesy.modelcheckers.storm module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.stormpy">prophesy.modelcheckers.stormpy module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.param">prophesy.modelcheckers.param module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.prism">prophesy.modelcheckers.prism module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.smt.html">prophesy.smt package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.smt.html#interfaces-and-convenience-functions">Interfaces and convenience functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.smt">prophesy.smt.smt module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.smtlib">prophesy.smt.smtlib module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.smt.html#solver-bindings">Solver bindings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.Z3cli_solver">prophesy.smt.Z3cli_solver module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.YicesCli_solver">prophesy.smt.YicesCli_solver module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.isat">prophesy.smt.isat module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.exceptions.html">prophesy.exceptions package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.input.html">prophesy.input package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.input.html#input-file-handlers">Input file handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.modelfile">prophesy.input.modelfile module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.pctlfile">prophesy.input.pctlfile module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.input.html#module-0">prophesy.input.problem_description module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.samplefile">prophesy.input.samplefile module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.solutionfunctionfile">prophesy.input.solutionfunctionfile module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.output.html">prophesy.output package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.output.html#module-prophesy.output.plot">prophesy.output.plot module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="utility-methods">
+<h2>Utility methods<a class="headerlink" href="#utility-methods" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.util">
+<span id="prophesy-util-module"></span><h3>prophesy.util module<a class="headerlink" href="#module-prophesy.util" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.util.Configuration">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Configuration for prophesy.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.check_existence">
+<span class="sig-name descname"><span class="pre">check_existence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.check_existence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given key exists in the configuration and raise a ConfigurationError if not.
+:param section: Section.
+:param key: Key.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get config value for given key.
+:param section: Section.
+:param key: Key.
+:return: Config value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.get_all">
+<span class="sig-name descname"><span class="pre">get_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all entries of the configuration.
+:return: Dict with all entries.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.get_boolean">
+<span class="sig-name descname"><span class="pre">get_boolean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.get_boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get config value as boolean.
+:param section: Section.
+:param key: Key.
+:return: Config value as boolean.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.get_float">
+<span class="sig-name descname"><span class="pre">get_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.get_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get config value as float.
+:param section: Section.
+:param key: Key.
+:return: Config value as float.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.get_int">
+<span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.get_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get config value as integer.
+:param section: Section.
+:param key: Key.
+:return: Config value as integer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set config entry.
+:param section: Section.
+:param key: Key.
+:param value: New value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.util.Configuration.update_configuration_file">
+<span class="sig-name descname"><span class="pre">update_configuration_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.Configuration.update_configuration_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write configuration file again.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.check_filepath_for_reading">
+<span class="sig-name descname"><span class="pre">check_filepath_for_reading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filedescription_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'file'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.check_filepath_for_reading" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given path can be read. Raises an IOError otherwise.
+:param filepath: Path.
+:param filedescription_string: Type of path (file/dir).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.ensure_dir_exists">
+<span class="sig-name descname"><span class="pre">ensure_dir_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.ensure_dir_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the directory exists and create it if not. Raises an IOError if not successful.
+:param path: Directory path.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.open_file">
+<span class="sig-name descname"><span class="pre">open_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.open_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open file with system-default application.
+Works for Mac OS (<cite>open</cite>) and Linux with <cite>xdg-open</cite>.
+:param path: Path.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.run_tool">
+<span class="sig-name descname"><span class="pre">run_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.run_tool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a process.
+:param args: CLI arguments to execute.
+:param quiet: If false the output is logged.
+:param outputfile: Path for saving output.
+:return: Stdout of process or exitcode.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.which">
+<span class="sig-name descname"><span class="pre">which</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">program</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.which" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if executable exists and return its path.
+See <a class="reference external" href="http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028#377028">http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python/377028#377028</a>
+:param program: String with name of the program.
+:return: Path to program or None if not found.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.write_string_to_file">
+<span class="sig-name descname"><span class="pre">write_string_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.write_string_to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write string to file.
+:param path: File where we want to put the string.
+:param string: New content.
+:param append: If True, append to file, else overwrite.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.util.write_string_to_tmpfile">
+<span class="sig-name descname"><span class="pre">write_string_to_tmpfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.util.write_string_to_tmpfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write string to temporary file.
+:param string: New content.
+:return: The path to the temporary file.</p>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.config">
+<span id="prophesy-config-module"></span><h3>prophesy.config module<a class="headerlink" href="#module-prophesy.config" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.config.ModulesConfig">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ModulesConfig</span></span><a class="headerlink" href="#prophesy.config.ModulesConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.util.Configuration" title="prophesy.util.Configuration"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.util.Configuration</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.config.ModulesConfig.DEPENDENCIES">
+<span class="sig-name descname"><span class="pre">DEPENDENCIES</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'installed_deps'</span></em><a class="headerlink" href="#prophesy.config.ModulesConfig.DEPENDENCIES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ModulesConfig.has_pycarl_parser">
+<span class="sig-name descname"><span class="pre">has_pycarl_parser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ModulesConfig.has_pycarl_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ModulesConfig.has_stormpy">
+<span class="sig-name descname"><span class="pre">has_stormpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ModulesConfig.has_stormpy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ModulesConfig.is_module_available">
+<span class="sig-name descname"><span class="pre">is_module_available</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ModulesConfig.is_module_available" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ProphesyConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_cfg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.util.Configuration" title="prophesy.util.Configuration"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.util.Configuration</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.CONSTRAINTS">
+<span class="sig-name descname"><span class="pre">CONSTRAINTS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'constraints'</span></em><a class="headerlink" href="#prophesy.config.ProphesyConfig.CONSTRAINTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.DIRECTORIES">
+<span class="sig-name descname"><span class="pre">DIRECTORIES</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'directories'</span></em><a class="headerlink" href="#prophesy.config.ProphesyConfig.DIRECTORIES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.EXTERNAL_TOOLS">
+<span class="sig-name descname"><span class="pre">EXTERNAL_TOOLS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'external_tools'</span></em><a class="headerlink" href="#prophesy.config.ProphesyConfig.EXTERNAL_TOOLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.SAMPLING">
+<span class="sig-name descname"><span class="pre">SAMPLING</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'sampling'</span></em><a class="headerlink" href="#prophesy.config.ProphesyConfig.SAMPLING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.SMT">
+<span class="sig-name descname"><span class="pre">SMT</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'smt'</span></em><a class="headerlink" href="#prophesy.config.ProphesyConfig.SMT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.check_tools">
+<span class="sig-name descname"><span class="pre">check_tools</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.check_tools" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.getAvailableParametricMCs">
+<span class="sig-name descname"><span class="pre">getAvailableParametricMCs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.getAvailableParametricMCs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A set with strings describing the available parametric pmcs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.getAvailableProbMCs">
+<span class="sig-name descname"><span class="pre">getAvailableProbMCs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.getAvailableProbMCs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.getAvailableSMTSolvers">
+<span class="sig-name descname"><span class="pre">getAvailableSMTSolvers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.getAvailableSMTSolvers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.getAvailableSamplers">
+<span class="sig-name descname"><span class="pre">getAvailableSamplers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.getAvailableSamplers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.getSection">
+<span class="sig-name descname"><span class="pre">getSection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.getSection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_intermediate_dir">
+<span class="sig-name descname"><span class="pre">get_intermediate_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_intermediate_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_isat">
+<span class="sig-name descname"><span class="pre">get_isat</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_isat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_param">
+<span class="sig-name descname"><span class="pre">get_param</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_param" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_plots_dir">
+<span class="sig-name descname"><span class="pre">get_plots_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_plots_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_prism">
+<span class="sig-name descname"><span class="pre">get_prism</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_prism" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_sampling_epsilon">
+<span class="sig-name descname"><span class="pre">get_sampling_epsilon</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_sampling_epsilon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_sampling_min_distance">
+<span class="sig-name descname"><span class="pre">get_sampling_min_distance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_sampling_min_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_smt_memout">
+<span class="sig-name descname"><span class="pre">get_smt_memout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_smt_memout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_smt_timeout">
+<span class="sig-name descname"><span class="pre">get_smt_timeout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_smt_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_storm">
+<span class="sig-name descname"><span class="pre">get_storm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_storm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_storm_pars">
+<span class="sig-name descname"><span class="pre">get_storm_pars</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_storm_pars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_tool">
+<span class="sig-name descname"><span class="pre">get_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">toolname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_tool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_yices">
+<span class="sig-name descname"><span class="pre">get_yices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_yices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.get_z3">
+<span class="sig-name descname"><span class="pre">get_z3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.get_z3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.has_gurobipy">
+<span class="sig-name descname"><span class="pre">has_gurobipy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.has_gurobipy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.config.ProphesyConfig.has_stormpy">
+<span class="sig-name descname"><span class="pre">has_stormpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.ProphesyConfig.has_stormpy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.config.load_configuration">
+<span class="sig-name descname"><span class="pre">load_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.config.load_configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

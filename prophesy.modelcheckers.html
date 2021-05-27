@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy.modelcheckers package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy.smt package" href="prophesy.smt.html" />
+    <link rel="prev" title="prophesy.sampling package" href="prophesy.sampling.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy.modelcheckers package</a><ul>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers">Module contents</a></li>
+<li><a class="reference internal" href="#interfaces">Interfaces</a><ul>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers.pmc">prophesy.modelcheckers.pmc module</a></li>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers.ppmc">prophesy.modelcheckers.ppmc module</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implementations">Implementations</a><ul>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers.storm">prophesy.modelcheckers.storm module</a></li>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers.stormpy">prophesy.modelcheckers.stormpy module</a></li>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers.param">prophesy.modelcheckers.param module</a></li>
+<li><a class="reference internal" href="#module-prophesy.modelcheckers.prism">prophesy.modelcheckers.prism module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="prophesy.sampling.html" title="Previous Chapter: prophesy.sampling package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; prophesy.samp...</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.smt.html" title="Next Chapter: prophesy.smt package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy.smt package &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-modelcheckers-package">
+<h1>prophesy.modelcheckers package<a class="headerlink" href="#prophesy-modelcheckers-package" title="Permalink to this headline">¶</a></h1>
+<section id="module-prophesy.modelcheckers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-prophesy.modelcheckers" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="interfaces">
+<h2>Interfaces<a class="headerlink" href="#interfaces" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.modelcheckers.pmc">
+<span id="prophesy-modelcheckers-pmc-module"></span><span id="ref-prophesy-modelcheckers-pmc"></span><h3>prophesy.modelcheckers.pmc module<a class="headerlink" href="#module-prophesy.modelcheckers.pmc" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.BisimulationType">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">BisimulationType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.BisimulationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Bisimulation type (None, Strong, Weak).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.BisimulationType.none">
+<span class="sig-name descname"><span class="pre">none</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.modelcheckers.pmc.BisimulationType.none" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.BisimulationType.strong">
+<span class="sig-name descname"><span class="pre">strong</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.modelcheckers.pmc.BisimulationType.strong" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.BisimulationType.weak">
+<span class="sig-name descname"><span class="pre">weak</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#prophesy.modelcheckers.pmc.BisimulationType.weak" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ProbabilisticModelChecker</span></span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="prophesy.sampling.html#prophesy.sampling.sampler.Sampler" title="prophesy.sampling.sampler.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.sampling.sampler.Sampler</span></code></a></p>
+<p>An abstraction of probabilistic model checkers for concrete systems.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.display_model">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">display_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.display_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the model.        
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.has_built_model">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">has_built_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.has_built_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.load_model">
+<span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.load_model" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_description</strong> – </p></li>
+<li><p><strong>constants</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.load_model_from_drn">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">load_model_from_drn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drnfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.load_model_from_drn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.load_model_from_prismfile">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">load_model_from_prismfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prismfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.load_model_from_prismfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load model from given Prism file.
+:param prismfile: Prism file.
+:param constants: List of constants and their values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.name">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of model checker.
+:return: A string with the name of the model checker.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.set_bisimulation_type">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">set_bisimulation_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bisimulationType</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.set_bisimulation_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set bisimulation type.
+:param bisimulationType: Bisimulation type (None, Strong, Weak).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.set_pctl_formula">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">set_pctl_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.set_pctl_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PCTL formula to check.
+:param formula: PCTL formula</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.usage_stats">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">usage_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.usage_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.pmc.ProbabilisticModelChecker.version">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get version of model checker.
+:return: A string with the version of the model checker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.modelcheckers.ppmc">
+<span id="prophesy-modelcheckers-ppmc-module"></span><h3>prophesy.modelcheckers.ppmc module<a class="headerlink" href="#module-prophesy.modelcheckers.ppmc" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ParametricProbabilisticModelChecker</span></span><a class="headerlink" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.modelcheckers.pmc.ProbabilisticModelChecker" title="prophesy.modelcheckers.pmc.ProbabilisticModelChecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.modelcheckers.pmc.ProbabilisticModelChecker</span></code></a></p>
+<p>An abstraction of probabilistic model checkers for parametric systems.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker.check_hyperrectangle">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">check_hyperrectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperrectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">above_threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker.check_hyperrectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given hypothesis holds in the given hyperrectangle.
+:param parameters: A dictionary of variable name to its interval.
+:param hyperrectangle: Hyperrectangle.
+:param threshold: A value indicating the threshold, that is, a value expected to be</p>
+<blockquote>
+<div><p>above or below each value in the hyperrectangle.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>above_threshold</strong> – Whether the rectangle is expected to be above or below the given threshold.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True iff the hypothesis holds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker.get_parameter_constraints">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">get_parameter_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker.get_parameter_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the model and the parameters at hand, get the constraints under which they induce a welldefined model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Two list of constraints, one with the welldefinedness constraints, one with the graph preservation constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker.get_rational_function">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">get_rational_function</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker.get_rational_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute rational function representing model checking result.
+:return: A rational function in prophesy format.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="implementations">
+<h2>Implementations<a class="headerlink" href="#implementations" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.modelcheckers.storm">
+<span id="prophesy-modelcheckers-storm-module"></span><h3>prophesy.modelcheckers.storm module<a class="headerlink" href="#module-prophesy.modelcheckers.storm" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">StormModelChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker" title="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker</span></code></a></p>
+<p>Class wrapping the storm model checker CLI.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.check_hyperrectangle">
+<span class="sig-name descname"><span class="pre">check_hyperrectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperrectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.check_hyperrectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given hypothesis holds in the given hyperrectangle.
+:param parameters: A dictionary of variable name to its interval.
+:param hyperrectangle: Hyperrectangle.
+:param threshold: A value indicating the threshold, that is, a value expected to be</p>
+<blockquote>
+<div><p>above or below each value in the hyperrectangle.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>above_threshold</strong> – Whether the rectangle is expected to be above or below the given threshold.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True iff the hypothesis holds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.get_parameter_constraints">
+<span class="sig-name descname"><span class="pre">get_parameter_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.get_parameter_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the model and the parameters at hand, get the constraints under which they induce a welldefined model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Two list of constraints, one with the welldefinedness constraints, one with the graph preservation constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.get_rational_function">
+<span class="sig-name descname"><span class="pre">get_rational_function</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.get_rational_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute rational function representing model checking result.
+:return: A rational function in prophesy format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.has_built_model">
+<span class="sig-name descname"><span class="pre">has_built_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.has_built_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.load_model_from_drn">
+<span class="sig-name descname"><span class="pre">load_model_from_drn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drnfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.load_model_from_drn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.load_model_from_prismfile">
+<span class="sig-name descname"><span class="pre">load_model_from_prismfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prismfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.load_model_from_prismfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load model from given Prism file.
+:param prismfile: Prism file.
+:param constants: List of constants and their values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of model checker.
+:return: A string with the name of the model checker.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.perform_sampling">
+<span class="sig-name descname"><span class="pre">perform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surely_welldefined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.perform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given some parameter instantiations, perform sampling on these instantiations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>samplepoints</strong> – An iterable yielding parameter instantiations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A collection with the results of these samples</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="prophesy.data.html#prophesy.data.samples.InstantiationResultDict" title="prophesy.data.samples.InstantiationResultDict">InstantiationResultDict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.set_bisimulation_type">
+<span class="sig-name descname"><span class="pre">set_bisimulation_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.set_bisimulation_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set bisimulation type.
+:param bisimulationType: Bisimulation type (None, Strong, Weak).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.set_pctl_formula">
+<span class="sig-name descname"><span class="pre">set_pctl_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.set_pctl_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PCTL formula to check.
+:param formula: PCTL formula</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.storm.StormModelChecker.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.storm.StormModelChecker.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get version of model checker.
+:return: A string with the version of the model checker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.modelcheckers.stormpy">
+<span id="prophesy-modelcheckers-stormpy-module"></span><h3>prophesy.modelcheckers.stormpy module<a class="headerlink" href="#module-prophesy.modelcheckers.stormpy" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">StormpyModelChecker</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker" title="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker</span></code></a></p>
+<p>Class wrapping the stormpy bindings.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.bound_value_in_hyperrectangle">
+<span class="sig-name descname"><span class="pre">bound_value_in_hyperrectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperrectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_split_estimates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.bound_value_in_hyperrectangle" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> – The parameters</p></li>
+<li><p><strong>hyperrectangle</strong> – The hyperrectangle for the parameters</p></li>
+<li><p><strong>direction</strong> – </p></li>
+<li><p><strong>all_states</strong> – Should the value be computed for all states</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.check_hyperrectangle">
+<span class="sig-name descname"><span class="pre">check_hyperrectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperrectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">above_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_check_hypothesis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.check_hyperrectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given hypothesis holds in the given hyperrectangle.
+:param parameters: A dictionary of variable name to its interval.
+:param hyperrectangle: Hyperrectangle.
+:param threshold: A value indicating the threshold, that is, a value expected to be</p>
+<blockquote>
+<div><p>above or below each value in the hyperrectangle.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>above_threshold</strong> – Whether the rectangle is expected to be above or below the given threshold.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True iff the hypothesis holds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.display_model">
+<span class="sig-name descname"><span class="pre">display_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.display_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the model.        
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_model">
+<span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get model.
+If model is not built before, first build the model and (optionally) perform bisimulation.
+:return: Model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_model_instantiation_checker">
+<span class="sig-name descname"><span class="pre">get_model_instantiation_checker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_model_instantiation_checker" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_model_instantiator">
+<span class="sig-name descname"><span class="pre">get_model_instantiator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_model_instantiator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return model instantiator.
+:return: Model instantiator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_parameter_constraints">
+<span class="sig-name descname"><span class="pre">get_parameter_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_parameter_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the model and the parameters at hand, get the constraints under which they induce a welldefined model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Two list of constraints, one with the welldefinedness constraints, one with the graph preservation constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_parameter_mapping">
+<span class="sig-name descname"><span class="pre">get_parameter_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prophesy_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_storm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_parameter_mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a mapping from prophesy parameters to model parameters in stormpy (or the other way around).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_parameters">
+<span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_pla_checker">
+<span class="sig-name descname"><span class="pre">get_pla_checker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splitting_assistance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_simplifications</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_pla_checker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return model checker for PLA.
+:param threshold: Threshold in formula.
+:param splitting_assistance: Should splitting assistance be turned on (induces a mild performance penalty)
+:param allow_simplifications: Allow model simplifications in the checker (prevents using solutions for all states, induces an overhead on simplified models)
+:return: PLA model checker.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.get_rational_function">
+<span class="sig-name descname"><span class="pre">get_rational_function</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.get_rational_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute rational function representing model checking result.
+:return: A rational function in prophesy format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.has_built_model">
+<span class="sig-name descname"><span class="pre">has_built_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.has_built_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.instantiated_model_checking_time">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">instantiated_model_checking_time</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.instantiated_model_checking_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.load_model_from_drn">
+<span class="sig-name descname"><span class="pre">load_model_from_drn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drnfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.load_model_from_drn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.load_model_from_prismfile">
+<span class="sig-name descname"><span class="pre">load_model_from_prismfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prism_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.load_model_from_prismfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load model from given Prism file.
+:param prismfile: Prism file.
+:param constants: List of constants and their values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.mc_single_point">
+<span class="sig-name descname"><span class="pre">mc_single_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_instantiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.mc_single_point" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.model_building_time">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">model_building_time</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.model_building_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of model checker.
+:return: A string with the name of the model checker.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_regions_checked">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nr_regions_checked</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_regions_checked" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_samples_checked">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nr_samples_checked</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_samples_checked" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_states">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nr_states</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_states" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_states_before_bisim">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nr_states_before_bisim</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_states_before_bisim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_transitions">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nr_transitions</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_transitions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_transitions_before_bisim">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nr_transitions_before_bisim</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.nr_transitions_before_bisim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.perform_sampling">
+<span class="sig-name descname"><span class="pre">perform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surely_welldefined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.perform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given some parameter instantiations, perform sampling on these instantiations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>samplepoints</strong> – An iterable yielding parameter instantiations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A collection with the results of these samples</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="prophesy.data.html#prophesy.data.samples.InstantiationResultDict" title="prophesy.data.samples.InstantiationResultDict">InstantiationResultDict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.prob01_states">
+<span class="sig-name descname"><span class="pre">prob01_states</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.prob01_states" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.region_model_checking_time">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">region_model_checking_time</span></span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.region_model_checking_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.rew0_states">
+<span class="sig-name descname"><span class="pre">rew0_states</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.rew0_states" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.sample_single_point">
+<span class="sig-name descname"><span class="pre">sample_single_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_instantiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_mapping</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.sample_single_point" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.set_bisimulation_type">
+<span class="sig-name descname"><span class="pre">set_bisimulation_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bisimulation_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.set_bisimulation_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set bisimulation type.
+:param bisimulationType: Bisimulation type (None, Strong, Weak).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.set_pctl_formula">
+<span class="sig-name descname"><span class="pre">set_pctl_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.set_pctl_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PCTL formula to check.
+:param formula: PCTL formula</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.set_welldefined_checker">
+<span class="sig-name descname"><span class="pre">set_welldefined_checker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checker</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.set_welldefined_checker" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.usage_stats">
+<span class="sig-name descname"><span class="pre">usage_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.usage_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.stormpy.StormpyModelChecker.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.stormpy.StormpyModelChecker.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get version of model checker.
+:return: A string with the version of the model checker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.modelcheckers.param">
+<span id="prophesy-modelcheckers-param-module"></span><h3>prophesy.modelcheckers.param module<a class="headerlink" href="#module-prophesy.modelcheckers.param" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ParamParametricModelChecker</span></span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker" title="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker</span></code></a></p>
+<p>Class wrapping the param model checker CLI.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.check_hyperrectangle">
+<span class="sig-name descname"><span class="pre">check_hyperrectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperrectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">above_threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.check_hyperrectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given hypothesis holds in the given hyperrectangle.
+:param parameters: A dictionary of variable name to its interval.
+:param hyperrectangle: Hyperrectangle.
+:param threshold: A value indicating the threshold, that is, a value expected to be</p>
+<blockquote>
+<div><p>above or below each value in the hyperrectangle.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>above_threshold</strong> – Whether the rectangle is expected to be above or below the given threshold.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True iff the hypothesis holds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.get_parameter_constraints">
+<span class="sig-name descname"><span class="pre">get_parameter_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.get_parameter_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the model and the parameters at hand, get the constraints under which they induce a welldefined model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Two list of constraints, one with the welldefinedness constraints, one with the graph preservation constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.get_rational_function">
+<span class="sig-name descname"><span class="pre">get_rational_function</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.get_rational_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute rational function representing model checking result.
+:return: A rational function in prophesy format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.load_model_from_prismfile">
+<span class="sig-name descname"><span class="pre">load_model_from_prismfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prismfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.load_model_from_prismfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load model from given Prism file.
+:param prismfile: Prism file.
+:param constants: List of constants and their values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of model checker.
+:return: A string with the name of the model checker.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.perform_sampling">
+<span class="sig-name descname"><span class="pre">perform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samplepoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.perform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given some parameter instantiations, perform sampling on these instantiations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>samplepoints</strong> – An iterable yielding parameter instantiations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A collection with the results of these samples</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="prophesy.data.html#prophesy.data.samples.InstantiationResultDict" title="prophesy.data.samples.InstantiationResultDict">InstantiationResultDict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.set_bisimulation_type">
+<span class="sig-name descname"><span class="pre">set_bisimulation_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BisimulationType</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.set_bisimulation_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set bisimulation type.
+:param bisimulationType: Bisimulation type (None, Strong, Weak).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.set_pctl_formula">
+<span class="sig-name descname"><span class="pre">set_pctl_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.set_pctl_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PCTL formula to check.
+:param formula: PCTL formula</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.param.ParamParametricModelChecker.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.param.ParamParametricModelChecker.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get version of model checker.
+:return: A string with the version of the model checker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.modelcheckers.prism">
+<span id="prophesy-modelcheckers-prism-module"></span><h3>prophesy.modelcheckers.prism module<a class="headerlink" href="#module-prophesy.modelcheckers.prism" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PrismModelChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker" title="prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.modelcheckers.ppmc.ParametricProbabilisticModelChecker</span></code></a></p>
+<p>Class wrapping the prism model checker CLI.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.check_hyperrectangle">
+<span class="sig-name descname"><span class="pre">check_hyperrectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperrectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">above_threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.check_hyperrectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the given hypothesis holds in the given hyperrectangle.
+:param parameters: A dictionary of variable name to its interval.
+:param hyperrectangle: Hyperrectangle.
+:param threshold: A value indicating the threshold, that is, a value expected to be</p>
+<blockquote>
+<div><p>above or below each value in the hyperrectangle.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>above_threshold</strong> – Whether the rectangle is expected to be above or below the given threshold.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True iff the hypothesis holds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.get_parameter_constraints">
+<span class="sig-name descname"><span class="pre">get_parameter_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.get_parameter_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the model and the parameters at hand, get the constraints under which they induce a welldefined model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Two list of constraints, one with the welldefinedness constraints, one with the graph preservation constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.get_rational_function">
+<span class="sig-name descname"><span class="pre">get_rational_function</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.get_rational_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute rational function representing model checking result.
+:return: A rational function in prophesy format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.load_model_from_drn">
+<span class="sig-name descname"><span class="pre">load_model_from_drn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drnfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.load_model_from_drn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.load_model_from_prismfile">
+<span class="sig-name descname"><span class="pre">load_model_from_prismfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prismfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constants</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.load_model_from_prismfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load model from given Prism file.
+:param prismfile: Prism file.
+:param constants: List of constants and their values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name of model checker.
+:return: A string with the name of the model checker.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.perform_sampling">
+<span class="sig-name descname"><span class="pre">perform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samplepoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surely_welldefined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.perform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given some parameter instantiations, perform sampling on these instantiations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>samplepoints</strong> – An iterable yielding parameter instantiations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A collection with the results of these samples</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="prophesy.data.html#prophesy.data.samples.InstantiationResultDict" title="prophesy.data.samples.InstantiationResultDict">InstantiationResultDict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.perform_uniform_sampling">
+<span class="sig-name descname"><span class="pre">perform_uniform_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.perform_uniform_sampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples a uniform grid of points.</p>
+<p>Given a list of intervals (i.e., the first and last point;
+for each dimension, in order) and the number of samples per
+dimension, a uniformly-spaced grid of points (the cartesian
+product) is sampled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> – Parameters together with their region.</p></li>
+<li><p><strong>samples_per_dimension</strong> – In how many points should the region be divided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.sample_single_point">
+<span class="sig-name descname"><span class="pre">sample_single_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_instantiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pctl_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.sample_single_point" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.set_bisimulation_type">
+<span class="sig-name descname"><span class="pre">set_bisimulation_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bisimulationType</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.set_bisimulation_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set bisimulation type.
+:param bisimulationType: Bisimulation type (None, Strong, Weak).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.set_pctl_formula">
+<span class="sig-name descname"><span class="pre">set_pctl_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">formula</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.set_pctl_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set PCTL formula to check.
+:param formula: PCTL formula</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.modelcheckers.prism.PrismModelChecker.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.modelcheckers.prism.PrismModelChecker.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get version of model checker.
+:return: A string with the version of the model checker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.modelcheckers.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

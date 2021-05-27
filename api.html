@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>API Documentation &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy package" href="prophesy.html" />
+    <link rel="prev" title="Command Line Utility" href="scripts.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">API Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="scripts.html" title="Previous Chapter: Command Line Utility"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Command Line Utility</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.html" title="Next Chapter: prophesy package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy package &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prophesy.html">prophesy package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.data.html">prophesy.data package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.data.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.constant">prophesy.data.constant module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.constraint">prophesy.data.constraint module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.hyperrectangle">prophesy.data.hyperrectangle module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.interval">prophesy.data.interval module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.model_type">prophesy.data.model_type module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.nice_approximation">prophesy.data.nice_approximation module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.parameter">prophesy.data.parameter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.point">prophesy.data.point module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-0">prophesy.data.property module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.range">prophesy.data.range module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.data.html#module-prophesy.data.samples">prophesy.data.samples module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.regions.html">prophesy.regions package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.regions.html#region-checking">Region Checking</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_checker">prophesy.regions.region_checker module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_smtchecker">prophesy.regions.region_smtchecker module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.regions.html#region-generation">Region Generation</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_generation">prophesy.regions.region_generation module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.regions.html#module-prophesy.regions.region_quads">prophesy.regions.region_quads module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.sampling.html">prophesy.sampling package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.sampling.html#sampler-how-to-sample">Sampler: How to sample?</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampler">prophesy.sampling.sampler module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampler_ratfunc">prophesy.sampling.sampler_ratfunc module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#sampling-via-probabilistic-model-checking">Sampling via probabilistic model checking</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.sampling.html#sampling-where-to-sample">Sampling: Where to sample?</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sample_generator">prophesy.sampling.sample_generator module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampling_linear">prophesy.sampling.sampling_linear module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampling_uniform">prophesy.sampling.sampling_uniform module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.sampling.html#high-level-convenience-functions">High-level convenience functions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.sampling.html#module-prophesy.sampling.sampling">prophesy.sampling.sampling module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.modelcheckers.html">prophesy.modelcheckers package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.modelcheckers.html#interfaces">Interfaces</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.pmc">prophesy.modelcheckers.pmc module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.ppmc">prophesy.modelcheckers.ppmc module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.modelcheckers.html#implementations">Implementations</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.storm">prophesy.modelcheckers.storm module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.stormpy">prophesy.modelcheckers.stormpy module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.param">prophesy.modelcheckers.param module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.modelcheckers.html#module-prophesy.modelcheckers.prism">prophesy.modelcheckers.prism module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.smt.html">prophesy.smt package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.smt.html#interfaces-and-convenience-functions">Interfaces and convenience functions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.smt">prophesy.smt.smt module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.smtlib">prophesy.smt.smtlib module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.smt.html#solver-bindings">Solver bindings</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.Z3cli_solver">prophesy.smt.Z3cli_solver module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.YicesCli_solver">prophesy.smt.YicesCli_solver module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt.isat">prophesy.smt.isat module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.smt.html#module-prophesy.smt">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.exceptions.html">prophesy.exceptions package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.input.html">prophesy.input package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.input.html#input-file-handlers">Input file handlers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.modelfile">prophesy.input.modelfile module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.pctlfile">prophesy.input.pctlfile module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.input.html#module-0">prophesy.input.problem_description module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.samplefile">prophesy.input.samplefile module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="prophesy.input.html#module-prophesy.input.solutionfunctionfile">prophesy.input.solutionfunctionfile module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.output.html">prophesy.output package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="prophesy.output.html#module-prophesy.output.plot">prophesy.output.plot module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.html#utility-methods">Utility methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.html#module-prophesy.util">prophesy.util module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="prophesy.html#module-prophesy.config">prophesy.config module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</div>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/api.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

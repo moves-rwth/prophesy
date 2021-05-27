@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy.output package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy_web package" href="prophesy_web.html" />
+    <link rel="prev" title="prophesy.input package" href="prophesy.input.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy.output package</a><ul>
+<li><a class="reference internal" href="#module-prophesy.output.plot">prophesy.output.plot module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="prophesy.input.html" title="Previous Chapter: prophesy.input package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; prophesy.inpu...</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy_web.html" title="Next Chapter: prophesy_web package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy_web package &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-output-package">
+<h1>prophesy.output package<a class="headerlink" href="#prophesy-output-package" title="Permalink to this headline">¶</a></h1>
+<section id="module-prophesy.output.plot">
+<span id="prophesy-output-plot-module"></span><h2>prophesy.output.plot module<a class="headerlink" href="#module-prophesy.output.plot" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.output.plot.Plot">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Plot</span></span><a class="headerlink" href="#prophesy.output.plot.Plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class handling plotting of samples and result boxes.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.output.plot.Plot.flip_green_red">
+<span class="sig-name descname"><span class="pre">flip_green_red</span></span><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#prophesy.output.plot.Plot.flip_green_red" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.output.plot.Plot.plot_poly">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">plot_poly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subplot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.output.plot.Plot.plot_poly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a polygon or hyperrectangle.
+:param subplot:
+:param poly: Polygon.
+:param args:
+:param kwargs:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.output.plot.Plot.plot_results">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_green</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_red</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_blue</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_black</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_green</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_red</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_blue_crossed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_blue_dotted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_blue</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_black</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_arrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_pdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.output.plot.Plot.plot_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot all results.
+:param parameters: Parameters.
+:param samples_green: Samples with color green.
+:param samples_red: Samples with color red.
+:param samples_blue: Samples with color blue.
+:param poly_green: Polygons with color green.
+:param poly_red: Polygons with color red.
+:param poly_blue_crossed: Polygons with color blue and crossed hatch.
+:param poly_blue_dotted: Polygons with color blue and dotted hatch.
+:param poly_blue: Polygons with color blue.
+:param anchor_points: List of anchor points with direction.
+:param additional_arrows: List of additional arrows.
+:param path_to_pdf: Paths for pdf file or None if no file should be generated.
+:param path_to_src: Paths for the pgf source files or None if no file should be generated.
+:param display: If true, the plot will be displayed automatically.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.output.plot.plot_samples">
+<span class="sig-name descname"><span class="pre">plot_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safe_above_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.output.plot.plot_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create pdf file displaying the samples.
+:param samples: List of samples.
+:param parameters: Paramaters.
+:param safe_above_threshold: If true, all values above the threshold are considered</p>
+<blockquote>
+<div><blockquote>
+<div><p>safe (indicated by green color), otherwise they are considered</p>
+</div></blockquote>
+<p>unsafe (red color).</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threshold</strong> – Threshold for safe/unsafe values.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Path to pdf file containing the samples plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.output.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy.data package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy.regions package" href="prophesy.regions.html" />
+    <link rel="prev" title="prophesy package" href="prophesy.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy.data package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li><a class="reference internal" href="#module-prophesy.data.constant">prophesy.data.constant module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.constraint">prophesy.data.constraint module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.hyperrectangle">prophesy.data.hyperrectangle module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.interval">prophesy.data.interval module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.model_type">prophesy.data.model_type module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.nice_approximation">prophesy.data.nice_approximation module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.parameter">prophesy.data.parameter module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.point">prophesy.data.point module</a></li>
+<li><a class="reference internal" href="#module-0">prophesy.data.property module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.range">prophesy.data.range module</a></li>
+<li><a class="reference internal" href="#module-prophesy.data.samples">prophesy.data.samples module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="prophesy.html" title="Previous Chapter: prophesy package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; prophesy package</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.regions.html" title="Next Chapter: prophesy.regions package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy.regi... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-data-package">
+<h1>prophesy.data package<a class="headerlink" href="#prophesy-data-package" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.data.constant">
+<span id="prophesy-data-constant-module"></span><h3>prophesy.data.constant module<a class="headerlink" href="#module-prophesy.data.constant" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.constant.Constants">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Constants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.constant.Constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+<p>Container that holds constants for a model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.constant.Constants.to_key_value_string">
+<span class="sig-name descname"><span class="pre">to_key_value_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_float</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.constant.Constants.to_key_value_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides a key-value string from variable to constant value.</p>
+<p>The key-value string format can be immediately used for storm or prism.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>to_float</strong> – Should the constant value be casted into a float</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A string of the format var1=val1,…,varn=valn</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.constant.parse_constants_string">
+<span class="sig-name descname"><span class="pre">parse_constants_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.constant.parse_constants_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a key-value string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_string</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.constraint">
+<span id="prophesy-data-constraint-module"></span><h3>prophesy.data.constraint module<a class="headerlink" href="#module-prophesy.data.constraint" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.constraint.region_from_polygon">
+<span class="sig-name descname"><span class="pre">region_from_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.constraint.region_from_polygon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute formula representing  polygon (Polygon, LineString or LinearRing).</p>
+<p>Area will be considered at the rhs (ccw) of line segments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>polygon</strong> – Polygon, LineString or LinearRing, must be convex</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Formula s.t. points in polygon are satisfied.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pycarl.Formula or pycarl.Constraint</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.hyperrectangle">
+<span id="prophesy-data-hyperrectangle-module"></span><h3>prophesy.data.hyperrectangle module<a class="headerlink" href="#module-prophesy.data.hyperrectangle" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">HyperRectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">intervals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Defines a hyper-rectangle, that is the Cartisean product of intervals,
+i.e. the n-dimensional variant of a box.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.center" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.contains">
+<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.contains" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>point</strong> – A Point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if inside, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.cube">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundtype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.cube" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left_bound</strong> – lower bound for all intervals</p></li>
+<li><p><strong>right_bound</strong> – upper bound for all intervals</p></li>
+<li><p><strong>dimension</strong> – dimension of the created interval</p></li>
+<li><p><strong>boundtype</strong> – bound type for all bounds</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A hyperrectangle &lt;left_bound, right_bound&gt;^dimension (with adequate bounds)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.dimension">
+<span class="sig-name descname"><span class="pre">dimension</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.dimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.empty">
+<span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.from_extremal_points">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_extremal_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundtype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.from_extremal_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a hyperrectangle from two boundary points.
+:param point1: The first point.
+:param point2: The second point.
+:param boundtype: BoundType to use as bounds for the resulting HyperRectangle.
+:return: HyperRectangle.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.from_region_string">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_region_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.from_region_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a hyperrectangle with dimensions according to the variable order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A HyperRectangle</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.get_vertex">
+<span class="sig-name descname"><span class="pre">get_vertex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pick_min_bound</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.get_vertex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the vertex that corresponds to the left/right bound for the ith parameter, depending on the argument
+:param pick_min_bound: Array indicating to take the min (True) or the max (False)
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.intersect">
+<span class="sig-name descname"><span class="pre">intersect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the intersection
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.is_closed">
+<span class="sig-name descname"><span class="pre">is_closed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.is_closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the hyperrectangle is closed in every dimension.
+:return: True iff all intervals are closed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.non_empty_intersection">
+<span class="sig-name descname"><span class="pre">non_empty_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.non_empty_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.setminus">
+<span class="sig-name descname"><span class="pre">setminus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.setminus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does a setminus operation on hyperrectangles and returns a list with hyperrects covering the resulting area
+:param other: the other HyperRectangle
+:param dimension: dimension where to start the operation
+:return: a list of HyperRectangles</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.size" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The size of the hyperrectangle</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.split_in_every_dimension">
+<span class="sig-name descname"><span class="pre">split_in_every_dimension</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.split_in_every_dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the hyperrectangle in every dimension</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The 2^n many hyperrectangles obtained by the split</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.split_in_single_dimension">
+<span class="sig-name descname"><span class="pre">split_in_single_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.split_in_single_dimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.to_formula">
+<span class="sig-name descname"><span class="pre">to_formula</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.to_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given list of variables, compute constraints</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>variables</strong> – Variables for each dimension</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A formula specifying the points inside the hyperrectangle</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pc.Constraint or pc.Formula</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.to_region_string">
+<span class="sig-name descname"><span class="pre">to_region_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.to_region_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a region string, as e.g. used by storm-pars
+:param variables: An ordered list of the variables
+:type variables: List[pycarl.Variable]
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.hyperrectangle.HyperRectangle.vertices">
+<span class="sig-name descname"><span class="pre">vertices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.hyperrectangle.HyperRectangle.vertices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.interval">
+<span id="prophesy-data-interval-module"></span><h3>prophesy.data.interval module<a class="headerlink" href="#module-prophesy.data.interval" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.interval.BoundType">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">BoundType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.BoundType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.interval.BoundType.closed">
+<span class="sig-name descname"><span class="pre">closed</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.data.interval.BoundType.closed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.BoundType.negated">
+<span class="sig-name descname"><span class="pre">negated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.BoundType.negated" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.interval.BoundType.open">
+<span class="sig-name descname"><span class="pre">open</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.data.interval.BoundType.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_bt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_bt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Interval class for arbitrary (constant) types.
+Construction from string is possible via string_to_interval</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the center of the interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an interval with all bounds closed. Can not be called on unbounded intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A new interval which has closed bounds instead.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.contains">
+<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does the interval contain a specific point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pt</strong> – A value</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the value lies between the bounds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.empty">
+<span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does the interval contain any points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True, iff there exists a point in the interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.intersect">
+<span class="sig-name descname"><span class="pre">intersect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute intersection between to intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.is_bounded">
+<span class="sig-name descname"><span class="pre">is_bounded</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.is_bounded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the interval is bounded</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The interval is bounded, if both the left and the right bound are not equal to infinity.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.is_closed">
+<span class="sig-name descname"><span class="pre">is_closed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.is_closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does the interval have closed bounds on both sides.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True iff both bounds are closed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.left_bound">
+<span class="sig-name descname"><span class="pre">left_bound</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.left_bound" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.left_bound_type">
+<span class="sig-name descname"><span class="pre">left_bound_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.left_bound_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an interval with all bounds open.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A new interval which has open bounds instead</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.right_bound">
+<span class="sig-name descname"><span class="pre">right_bound</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.right_bound" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.right_bound_type">
+<span class="sig-name descname"><span class="pre">right_bound_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.right_bound_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.setminus">
+<span class="sig-name descname"><span class="pre">setminus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.setminus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the setminus of two rectangles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the interval in two equally large halfs. Can only be called on bounded intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Two intervals, the first from the former left bound to (excluding) middle point (leftbound + rightbound)/2, 
+the second from the middle point (including) till the former right bound</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.interval.Interval.width">
+<span class="sig-name descname"><span class="pre">width</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.Interval.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>The width of the interval</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>right bound - left bound, if bounded from both sides, and math.inf otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.interval.constraint_to_interval">
+<span class="sig-name descname"><span class="pre">constraint_to_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_parse_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.constraint_to_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.interval.create_embedded_closed_interval">
+<span class="sig-name descname"><span class="pre">create_embedded_closed_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.create_embedded_closed_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>For an (half) open interval from l to r, create a closed interval [l+eps, r-eps].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interval</strong> – The interval which goes into the method</p></li>
+<li><p><strong>epsilon</strong> – An epsilon offset used to close.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A closed interval.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.interval.string_to_interval">
+<span class="sig-name descname"><span class="pre">string_to_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_parse_func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.interval.string_to_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parsing intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_str</strong> – A string of the form [l,r] or (l,r) or the like.</p></li>
+<li><p><strong>internal_parse_func</strong> – the function to parse l and r, in case they are not -infty or infty, respectively</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An interval</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.model_type">
+<span id="prophesy-data-model-type-module"></span><h3>prophesy.data.model_type module<a class="headerlink" href="#module-prophesy.data.model_type" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.model_type.ModelType">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ModelType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.model_type.ModelType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>The type of a Markovian model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.model_type.ModelType.CTMC">
+<span class="sig-name descname"><span class="pre">CTMC</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#prophesy.data.model_type.ModelType.CTMC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.model_type.ModelType.DTMC">
+<span class="sig-name descname"><span class="pre">DTMC</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.data.model_type.ModelType.DTMC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.model_type.ModelType.MA">
+<span class="sig-name descname"><span class="pre">MA</span></span><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#prophesy.data.model_type.ModelType.MA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.model_type.ModelType.MDP">
+<span class="sig-name descname"><span class="pre">MDP</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.data.model_type.ModelType.MDP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.model_type.ModelType.is_continuous_time">
+<span class="sig-name descname"><span class="pre">is_continuous_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.model_type.ModelType.is_continuous_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the model type is continuous-time
+:param model_type: 
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.model_type.model_is_nondeterministic">
+<span class="sig-name descname"><span class="pre">model_is_nondeterministic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.model_type.model_is_nondeterministic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the model type is non-deterministic.
+:param model_type: 
+:return: True, if the model type encodes a model with potential non-determinism.</p>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.nice_approximation">
+<span id="prophesy-data-nice-approximation-module"></span><h3>prophesy.data.nice_approximation module<a class="headerlink" href="#module-prophesy.data.nice_approximation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.nice_approximation.FixedDenomFloatApproximation">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">FixedDenomFloatApproximation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">denom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.nice_approximation.FixedDenomFloatApproximation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.nice_approximation.FixedDenomFloatApproximation.find">
+<span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.nice_approximation.FixedDenomFloatApproximation.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.parameter">
+<span id="prophesy-data-parameter-module"></span><h3>prophesy.data.parameter module<a class="headerlink" href="#module-prophesy.data.parameter" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.parameter.Monotonicity">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Monotonicity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.Monotonicity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.parameter.Monotonicity.NEGATIVE">
+<span class="sig-name descname"><span class="pre">NEGATIVE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.data.parameter.Monotonicity.NEGATIVE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.parameter.Monotonicity.NEITHER">
+<span class="sig-name descname"><span class="pre">NEITHER</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#prophesy.data.parameter.Monotonicity.NEITHER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.parameter.Monotonicity.POSITIVE">
+<span class="sig-name descname"><span class="pre">POSITIVE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.data.parameter.Monotonicity.POSITIVE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.parameter.Monotonicity.UNKNOWN">
+<span class="sig-name descname"><span class="pre">UNKNOWN</span></span><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#prophesy.data.parameter.Monotonicity.UNKNOWN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.parameter.Parameter">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.Parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pycarl.core.Variable</span></code></p>
+<p>Variable with an associated interval of allowable values.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ParameterOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
+<p>Class to represent on ordered list of parameters.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.get_parameter">
+<span class="sig-name descname"><span class="pre">get_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parameter with the given name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.get_parameter_bounds">
+<span class="sig-name descname"><span class="pre">get_parameter_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.get_parameter_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a list of bounds ordered according to this ParameterOrder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of Interval</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>(<a class="reference internal" href="#prophesy.data.interval.Interval" title="prophesy.data.interval.Interval">Interval</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.instantiate">
+<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">one_or_more_pointlikes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.instantiate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create ParameterInstantiation(s) from point-like objects.</p>
+<p>Returns the same shape as the input, i.e., if the input is a single
+point-like object (i.e., iterable, hopefully of numbers), returns a
+single ParameterInstantiation; for a list of points, returns a list
+of ParameterInstantiations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.make_intervals_closed">
+<span class="sig-name descname"><span class="pre">make_intervals_closed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.make_intervals_closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>For several applications, we want to have an embedded closed interval</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>epsilon</strong> – How far from an open bound should the embedded interval-bound be away</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.make_intervals_open">
+<span class="sig-name descname"><span class="pre">make_intervals_open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.make_intervals_open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.remove_parameter">
+<span class="sig-name descname"><span class="pre">remove_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.remove_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove parameter represented by a given variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.parameter.ParameterOrder.update_variables">
+<span class="sig-name descname"><span class="pre">update_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.parameter.ParameterOrder.update_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.point">
+<span id="prophesy-data-point-module"></span><h3>prophesy.data.point module<a class="headerlink" href="#module-prophesy.data.point" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.point.Point">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>An n-dimensional point class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.point.Point.dimension">
+<span class="sig-name descname"><span class="pre">dimension</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point.dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>The dimension of the point, e.g. the number of coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of entries</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.point.Point.distance">
+<span class="sig-name descname"><span class="pre">distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point.distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the (Euclidean) distance between this point and another point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#id0" title="prophesy.data.point.Point"><em>Point</em></a>) – Another n-dimensional point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Euclidean distance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.point.Point.numerical_distance">
+<span class="sig-name descname"><span class="pre">numerical_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point.numerical_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the (Euclidean) distance between this point and another point, using floating point arithmetic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#id0" title="prophesy.data.point.Point"><em>Point</em></a>) – Another n-dimensional point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.point.Point.projection">
+<span class="sig-name descname"><span class="pre">projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point.projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project the point onto the selected dimensions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dims</strong> – An iterable of dimensions to select</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A len(dims)-dimensional Point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.point.Point.to_float">
+<span class="sig-name descname"><span class="pre">to_float</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point.to_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.point.Point.to_nice_rationals">
+<span class="sig-name descname"><span class="pre">to_nice_rationals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ApproxType=&lt;class</span> <span class="pre">'prophesy.data.nice_approximation.FixedDenomFloatApproximation'&gt;</span></em>, <em class="sig-param"><span class="pre">approx_type_arg=16384</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.point.Point.to_nice_rationals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer the coordinates into rational numbers with smaller coefficients</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ApproxType</strong> – The type of approximation to use</p></li>
+<li><p><strong>approx_type_arg</strong> – An argument for the approximation, typically some sort of precision of the approximation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A point with slightly modified coordinates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#id0" title="prophesy.data.point.Point">Point</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-0">
+<span id="prophesy-data-property-module"></span><h3>prophesy.data.property module<a class="headerlink" href="#module-0" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>An n-dimensional point class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">dimension</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>The dimension of the point, e.g. the number of coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of entries</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the (Euclidean) distance between this point and another point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#id0" title="prophesy.data.point.Point"><em>Point</em></a>) – Another n-dimensional point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Euclidean distance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">numerical_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the (Euclidean) distance between this point and another point, using floating point arithmetic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#id0" title="prophesy.data.point.Point"><em>Point</em></a>) – Another n-dimensional point</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project the point onto the selected dimensions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dims</strong> – An iterable of dimensions to select</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A len(dims)-dimensional Point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">to_float</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">to_nice_rationals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ApproxType=&lt;class</span> <span class="pre">'prophesy.data.nice_approximation.FixedDenomFloatApproximation'&gt;</span></em>, <em class="sig-param"><span class="pre">approx_type_arg=16384</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer the coordinates into rational numbers with smaller coefficients</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ApproxType</strong> – The type of approximation to use</p></li>
+<li><p><strong>approx_type_arg</strong> – An argument for the approximation, typically some sort of precision of the approximation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A point with slightly modified coordinates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#id0" title="prophesy.data.point.Point">Point</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.range">
+<span id="prophesy-data-range-module"></span><h3>prophesy.data.range module<a class="headerlink" href="#module-prophesy.data.range" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.range.Range">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.range.Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A container similar to the Python native range construct, consisting of a lower bound, an upper bound
+and a step size</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.range.Range.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.range.Range.values" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list with all values encoded by the range</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.range.create_cartesian_product">
+<span class="sig-name descname"><span class="pre">create_cartesian_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ranges</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.range.create_cartesian_product" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ranges</strong> – Iterable containing Range elements</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An iterator for the Cartesian product of the ranges.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.range.create_range_from_interval">
+<span class="sig-name descname"><span class="pre">create_range_from_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.range.create_range_from_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given closed interval [l,h], generate a Range with nr_sample
+steps in this interval</p>
+</dd></dl>
+
+</section>
+<section id="module-prophesy.data.samples">
+<span id="prophesy-data-samples-module"></span><h3>prophesy.data.samples module<a class="headerlink" href="#module-prophesy.data.samples" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.samples.InexactInstantiationResult">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">InexactInstantiationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InexactInstantiationResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.samples.InexactRelation">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">InexactRelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InexactRelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.samples.InexactRelation.GEQ">
+<span class="sig-name descname"><span class="pre">GEQ</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#prophesy.data.samples.InexactRelation.GEQ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.samples.InexactRelation.GREATER">
+<span class="sig-name descname"><span class="pre">GREATER</span></span><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#prophesy.data.samples.InexactRelation.GREATER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.samples.InexactRelation.LEQ">
+<span class="sig-name descname"><span class="pre">LEQ</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.data.samples.InexactRelation.LEQ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.samples.InexactRelation.LESS">
+<span class="sig-name descname"><span class="pre">LESS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.data.samples.InexactRelation.LESS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResult">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">InstantiationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instantiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to represent a single sample. Maps a point (tuple of
+pycarl.Rational) to a value (pycarl.Rational).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResult.from_point">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResult.from_point" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pt</strong> – </p></li>
+<li><p><strong>res</strong> – </p></li>
+<li><p><strong>parameters</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResult.get_instantiation_point">
+<span class="sig-name descname"><span class="pre">get_instantiation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResult.get_instantiation_point" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>variable_order</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResult.get_parameters">
+<span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResult.get_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResult.well_defined">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">well_defined</span></span><a class="headerlink" href="#prophesy.data.samples.InstantiationResult.well_defined" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResultDict">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">InstantiationResultDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResultDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+<p>Maintains a set of instantiations with their results.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResultDict.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">a</span> <span class="pre">shallow</span> <span class="pre">copy</span> <span class="pre">of</span> <span class="pre">D</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResultDict.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResultDict.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResultDict.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split given samples into separated sample dictionaries, where the value
+is either &gt;= or &lt; threshold or ill-defined.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResultFlag">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">InstantiationResultFlag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.InstantiationResultFlag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.data.samples.InstantiationResultFlag.NOT_WELLDEFINED">
+<span class="sig-name descname"><span class="pre">NOT_WELLDEFINED</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.data.samples.InstantiationResultFlag.NOT_WELLDEFINED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ParameterInstantiation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+<p>Simple dictionary mapping from a Parameter to pycarl.Rational.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation.distance">
+<span class="sig-name descname"><span class="pre">distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation.distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distance between two instantiations over the same parameters (in the same order)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The distance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation.from_point">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation.from_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct ParameterInstantiation from Point and ParameterOrder</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pt</strong> – Point of pycarl.Rational</p></li>
+<li><p><strong>parameters</strong> – ParameterOrder</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation.get_parameters">
+<span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation.get_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation.get_point">
+<span class="sig-name descname"><span class="pre">get_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation.get_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Point corresponding to this sample, given variable
+ordering provided as argument
+:param parameters: Must correspond to parameters of this sample point.
+:type parameters: Iterable[Parameter]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation.numerical_distance">
+<span class="sig-name descname"><span class="pre">numerical_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation.numerical_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.data.samples.ParameterInstantiation.to_formula">
+<span class="sig-name descname"><span class="pre">to_formula</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.ParameterInstantiation.to_formula" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given list of variables, compute constraints</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>variables</strong> – Variables for each dimension</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A formula specifying the points inside the hyperrectangle</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pc.Constraint or pc.Formula</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.data.samples.weighed_interpolation">
+<span class="sig-name descname"><span class="pre">weighed_interpolation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fudge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.data.samples.weighed_interpolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates between sample sample1 and sample2 to
+result in a point estimated close to the given threshold (by linear
+interpolation). Fudge allows to offset this point slightly either
+positively or negatively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample1</strong> – Sample</p></li>
+<li><p><strong>sample2</strong> – Sample</p></li>
+<li><p><strong>threshold</strong> (<em>pycarl.Rational</em>) – The value we are interested in</p></li>
+<li><p><strong>fudge</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Fraction of distance betwen both samples to fudge
+around</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tuple of pycarl.Rational if interpolated point, or None if the
+values are too close</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.data.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Installation &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="A Quick Tour Through Prophesy" href="gettingstarted.html" />
+    <link rel="prev" title="Prophesy" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li><a class="reference internal" href="#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="index.html" title="Previous Chapter: Prophesy"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Prophesy</span>
+    </a>
+  </li>
+  <li>
+    <a href="gettingstarted.html" title="Next Chapter: A Quick Tour Through Prophesy"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">A Quick Tour ... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>We provide a general introduction into setting up prophesy. If you want to get started as quick as possible, try our step-by-step guides (<a class="reference internal" href="#installation-step-by-step-minimal"><span class="std std-ref">minimal</span></a> and <a class="reference internal" href="#installation-step-by-step-full"><span class="std std-ref">full</span></a>)!</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>For the base functionality of prophesy, we require Python3 and the latest version of <a class="reference external" href="https://moves-rwth.github.io/pycarl/">pycarl</a> (including the parser functionality).
+You can then run the setup.py command with the environment of your choice.</p>
+<p>To use the different features of prophesy, we suggest that you at least have</p>
+<ul class="simple">
+<li><p>a probabilistic model checker, e.g. <a class="reference external" href="https://www.stormchecker.org">storm</a>.</p></li>
+<li><p>an smt-checker with nonlinear real arithmetic support (QF_NRA), e.g. <a class="reference external" href="https://github.com/Z3Prover/z3">z3</a>.</p></li>
+</ul>
+<p>It is easiest to first install these or other optional dependencies, and only then install prophesy.
+This way, chances are that prophesy will find the tools itself.</p>
+<p>To make the most out of prophesy, we suggest that you use <a class="reference external" href="https://moves-rwth.github.io/stormpy/">stormpy</a>, which
+are python bindings for the model checker storm. These allow an interactive communication with the model checker backend,
+which drastically improves performance of some methods.</p>
+</section>
+<section id="step-by-step-guide-minimal">
+<span id="installation-step-by-step-minimal"></span><h2>Step-by-step guide (minimal)<a class="headerlink" href="#step-by-step-guide-minimal" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Change directories to a suitable location:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+<li><dl>
+<dt>Obtain carl</dt><dd><ul>
+<li><p>Clone the git repository from <a class="reference external" href="https://github.com/smtrat/carl">carl</a> with branch <cite>master14</cite>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/smtrat/carl.git -b master14
+$ cd carl
+</pre></div>
+</div>
+</li>
+<li><p>Prepare the build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir build &amp;&amp; cd build
+$ cmake .. -DUSE_CLN_NUMBERS=ON -DUSE_GINAC=ON
+</pre></div>
+</div>
+</li>
+<li><p>Build lib_carl:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make lib_carl
+</pre></div>
+</div>
+</li>
+<li><p>Done:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Obtain carl-parser</dt><dd><ul>
+<li><p>Clone the git repository from <a class="reference external" href="https://github.com/ths-rwth/carl-parser">carl-parser</a> with branch <cite>master14</cite>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/smtrat/carl-parser.git -b master14
+$ cd carl-parser
+</pre></div>
+</div>
+</li>
+<li><p>Prepare the build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir build &amp;&amp; cd build
+$ cmake ..
+</pre></div>
+</div>
+</li>
+<li><p>Build the parser:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make
+</pre></div>
+</div>
+</li>
+<li><p>Done:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Obtain pycarl</dt><dd><ul>
+<li><p>Download the latest release:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/moves-rwth/pycarl
+$ cd pycarl
+</pre></div>
+</div>
+</li>
+<li><p>Run setup.py, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py develop
+</pre></div>
+</div>
+</li>
+<li><p>Done:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Obtain prophesy</dt><dd><ul>
+<li><p>Download the latest release</p></li>
+<li><p>Run setup.py and write an initial config file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py develop --search-path PATH
+</pre></div>
+</div>
+<p>The optional argument defines a search path, where to look for the tools (modelcheckers, SMT solvers, etc.).</p>
+</li>
+<li><p>Done</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="step-by-step-guide-full">
+<span id="installation-step-by-step-full"></span><h2>Step-by-step guide (full)<a class="headerlink" href="#step-by-step-guide-full" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Change directories to a suitable location:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+<li><dl>
+<dt>Obtain carl</dt><dd><ul>
+<li><p>Clone the git repository from <a class="reference external" href="https://github.com/smtrat/carl">carl</a> with branch <cite>master14</cite>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/smtrat/carl.git -b master14
+$ cd carl
+</pre></div>
+</div>
+</li>
+<li><p>Prepare the build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir build &amp;&amp; cd build
+$ cmake .. -DUSE_CLN_NUMBERS=ON -DUSE_GINAC=ON
+</pre></div>
+</div>
+</li>
+<li><p>Build lib_carl:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make lib_carl
+</pre></div>
+</div>
+</li>
+<li><p>Done:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Obtain carl-parser</dt><dd><ul>
+<li><p>Clone the git repository from <a class="reference external" href="https://github.com/ths-rwth/carl-parser">carl-parser</a> with branch <cite>master14</cite>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/smtrat/carl-parser.git -b master14
+$ cd carl-parser
+</pre></div>
+</div>
+</li>
+<li><p>Prepare the build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir build &amp;&amp; cd build
+$ cmake ..
+</pre></div>
+</div>
+</li>
+<li><p>Build the parser:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make
+</pre></div>
+</div>
+</li>
+<li><p>Done:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Obtain pycarl</dt><dd><ul>
+<li><p>Download the latest release:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/moves-rwth/pycarl
+$ cd pycarl
+</pre></div>
+</div>
+</li>
+<li><p>Run setup.py, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py develop
+</pre></div>
+</div>
+</li>
+<li><p>Done:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;location&gt;
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Obtain storm</dt><dd><ul class="simple">
+<li><p>See the <a class="reference external" href="https://www.stormchecker.org/documentation/obtain-storm/build.html">Storm documentation</a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Obtain stormpy</dt><dd><ul class="simple">
+<li><p>See the <a class="reference external" href="https://moves-rwth.github.io/stormpy/installation.html">Stormpy documentation</a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Obtain prophesy</dt><dd><ul>
+<li><p>Download the latest release</p></li>
+<li><p>Run setup.py and write an initial config file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python setup.py develop --search-path PATH
+</pre></div>
+</div>
+<p>The optional argument defines a search path, where to look for the tools (modelcheckers, SMT solvers, etc.).</p>
+</li>
+<li><p>Done</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/installation.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

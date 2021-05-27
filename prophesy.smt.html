@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy.smt package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy.exceptions package" href="prophesy.exceptions.html" />
+    <link rel="prev" title="prophesy.modelcheckers package" href="prophesy.modelcheckers.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy.smt package</a><ul>
+<li><a class="reference internal" href="#interfaces-and-convenience-functions">Interfaces and convenience functions</a><ul>
+<li><a class="reference internal" href="#module-prophesy.smt.smt">prophesy.smt.smt module</a></li>
+<li><a class="reference internal" href="#module-prophesy.smt.smtlib">prophesy.smt.smtlib module</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#solver-bindings">Solver bindings</a><ul>
+<li><a class="reference internal" href="#module-prophesy.smt.Z3cli_solver">prophesy.smt.Z3cli_solver module</a></li>
+<li><a class="reference internal" href="#module-prophesy.smt.YicesCli_solver">prophesy.smt.YicesCli_solver module</a></li>
+<li><a class="reference internal" href="#module-prophesy.smt.isat">prophesy.smt.isat module</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-prophesy.smt">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="prophesy.modelcheckers.html" title="Previous Chapter: prophesy.modelcheckers package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; prophesy.mode...</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.exceptions.html" title="Next Chapter: prophesy.exceptions package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy.exce... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-smt-package">
+<h1>prophesy.smt package<a class="headerlink" href="#prophesy-smt-package" title="Permalink to this headline">¶</a></h1>
+<section id="interfaces-and-convenience-functions">
+<h2>Interfaces and convenience functions<a class="headerlink" href="#interfaces-and-convenience-functions" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.smt.smt">
+<span id="prophesy-smt-smt-module"></span><h3>prophesy.smt.smt module<a class="headerlink" href="#module-prophesy.smt.smt" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Answer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.Answer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer.killed">
+<span class="sig-name descname"><span class="pre">killed</span></span><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#prophesy.smt.smt.Answer.killed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer.memout">
+<span class="sig-name descname"><span class="pre">memout</span></span><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#prophesy.smt.smt.Answer.memout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer.sat">
+<span class="sig-name descname"><span class="pre">sat</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.smt.smt.Answer.sat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer.timeout">
+<span class="sig-name descname"><span class="pre">timeout</span></span><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#prophesy.smt.smt.Answer.timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer.unknown">
+<span class="sig-name descname"><span class="pre">unknown</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#prophesy.smt.smt.Answer.unknown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.Answer.unsat">
+<span class="sig-name descname"><span class="pre">unsat</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.smt.smt.Answer.unsat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">SMTSolver</span></span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.add_variable">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">add_variable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.assert_constraint">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">assert_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.assert_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.assert_guarded_constraint">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">assert_guarded_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.assert_guarded_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.check">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.fix_guards">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">fix_guards</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.fix_guards" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.from_file">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.name">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.pop">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.push">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.push" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.set_guard">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">set_guard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.set_guard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.to_file">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.to_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smt.SMTSolver.version">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.SMTSolver.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.smt.VariableDomain">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">VariableDomain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smt.VariableDomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.VariableDomain.Bool">
+<span class="sig-name descname"><span class="pre">Bool</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#prophesy.smt.smt.VariableDomain.Bool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.VariableDomain.Int">
+<span class="sig-name descname"><span class="pre">Int</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#prophesy.smt.smt.VariableDomain.Int" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="prophesy.smt.smt.VariableDomain.Real">
+<span class="sig-name descname"><span class="pre">Real</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#prophesy.smt.smt.VariableDomain.Real" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.smt.smtlib">
+<span id="prophesy-smt-smtlib-module"></span><h3>prophesy.smt.smtlib module<a class="headerlink" href="#module-prophesy.smt.smtlib" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">SmtlibSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incremental</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.smt.smt.SMTSolver" title="prophesy.smt.smt.SMTSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.smt.smt.SMTSolver</span></code></a></p>
+<p>Abstract class for smt-lib based command line interfaces for SMT solvers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.add_variable">
+<span class="sig-name descname"><span class="pre">add_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">symbol</span></em>, <em class="sig-param"><span class="pre">domain=&lt;VariableDomain.Real:</span> <span class="pre">1&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare variable as a constant function with given domain.</p>
+<p><cite>symbol</cite> must be a string, not a Variable object or similar.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.assert_constraint">
+<span class="sig-name descname"><span class="pre">assert_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.assert_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.assert_guarded_constraint">
+<span class="sig-name descname"><span class="pre">assert_guarded_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.assert_guarded_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.fix_guard">
+<span class="sig-name descname"><span class="pre">fix_guard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.fix_guard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.from_file">
+<span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.get_model">
+<span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.get_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.pop">
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.print_calls">
+<span class="sig-name descname"><span class="pre">print_calls</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.print_calls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.push" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.set_guard">
+<span class="sig-name descname"><span class="pre">set_guard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.set_guard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store_exit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.to_file">
+<span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.to_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.SmtlibSolver.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.SmtlibSolver.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.parse_smt_command">
+<span class="sig-name descname"><span class="pre">parse_smt_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.parse_smt_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Breaks the given SMT command “(CMD ARG ARG ARG)” into tuple (CMD, [ARG]),
+where ARG again can be a (non-parsed) command</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.smt.smtlib.parse_smt_expr">
+<span class="sig-name descname"><span class="pre">parse_smt_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.smtlib.parse_smt_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates given SMT expression “(OP ARG ARG)” as ARG OP ARG.
+Expression may be of arbitrary arity</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="solver-bindings">
+<h2>Solver bindings<a class="headerlink" href="#solver-bindings" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.smt.Z3cli_solver">
+<span id="prophesy-smt-z3cli-solver-module"></span><h3>prophesy.smt.Z3cli_solver module<a class="headerlink" href="#module-prophesy.smt.Z3cli_solver" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.Z3cli_solver.Z3CliSolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Z3CliSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.Z3cli_solver.Z3CliSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.smt.smtlib.SmtlibSolver" title="prophesy.smt.smtlib.SmtlibSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.smt.smtlib.SmtlibSolver</span></code></a></p>
+<p>TODO: support the soft timeout kill.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.Z3cli_solver.Z3CliSolver.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.Z3cli_solver.Z3CliSolver.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.smt.YicesCli_solver">
+<span id="prophesy-smt-yicescli-solver-module"></span><h3>prophesy.smt.YicesCli_solver module<a class="headerlink" href="#module-prophesy.smt.YicesCli_solver" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.YicesCli_solver.YicesCLISolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">YicesCLISolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.YicesCli_solver.YicesCLISolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.smt.smtlib.SmtlibSolver" title="prophesy.smt.smtlib.SmtlibSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.smt.smtlib.SmtlibSolver</span></code></a></p>
+<p>Yices 2 (cli) wrapper class</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.YicesCli_solver.YicesCLISolver.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.YicesCli_solver.YicesCLISolver.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.smt.isat">
+<span id="prophesy-smt-isat-module"></span><h3>prophesy.smt.isat module<a class="headerlink" href="#module-prophesy.smt.isat" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">IsatSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.smt.smt.SMTSolver" title="prophesy.smt.smt.SMTSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.smt.smt.SMTSolver</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.add_variable">
+<span class="sig-name descname"><span class="pre">add_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.assert_constraint">
+<span class="sig-name descname"><span class="pre">assert_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.assert_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.assert_guarded_constraint">
+<span class="sig-name descname"><span class="pre">assert_guarded_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.assert_guarded_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.from_file">
+<span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.pop">
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.print_calls">
+<span class="sig-name descname"><span class="pre">print_calls</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.print_calls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.push">
+<span class="sig-name descname"><span class="pre">push</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.push" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.set_guard">
+<span class="sig-name descname"><span class="pre">set_guard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.set_guard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.to_file">
+<span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.to_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.smt.isat.IsatSolver.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.smt.isat.IsatSolver.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="module-prophesy.smt">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-prophesy.smt" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.smt.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

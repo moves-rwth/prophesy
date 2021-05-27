@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>A Quick Tour Through Prophesy &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Command Line Utility" href="scripts.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">A Quick Tour Through Prophesy</a><ul>
+<li><a class="reference internal" href="#sampling">Sampling</a></li>
+<li><a class="reference internal" href="#the-solution-function-problem">The solution function problem</a></li>
+<li><a class="reference internal" href="#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li><a class="reference internal" href="#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a><ul>
+<li><a class="reference internal" href="#using-particle-swarm-optimisation">Using particle swarm optimisation</a></li>
+<li><a class="reference internal" href="#using-convex-optimisation">Using convex optimisation</a><ul>
+<li><a class="reference internal" href="#options">Options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-smt">Using SMT</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="installation.html" title="Previous Chapter: Installation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Installation</span>
+    </a>
+  </li>
+  <li>
+    <a href="scripts.html" title="Next Chapter: Command Line Utility"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Command Line Utility &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="a-quick-tour-through-prophesy">
+<h1>A Quick Tour Through Prophesy<a class="headerlink" href="#a-quick-tour-through-prophesy" title="Permalink to this headline">¶</a></h1>
+<p>This tour focuses on the use of the Command Line Interface (CLI).
+While the tour is organised around a series of problems common in parameter synthesis,
+we recommend first-time users to follow the guide in a linear fashion.</p>
+<section id="sampling">
+<h2>Sampling<a class="headerlink" href="#sampling" title="Permalink to this headline">¶</a></h2>
+<p>A parametric model can be instantiated with different values for the parameters (instantiations).
+Sampling explores the parameter space (i.e. the set of all instantiations) by evaluating various instantiated models</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python scripts/parameter_synthesis.py load-problem model.pm property.pctl sample</span>
+</pre></div>
+</div>
+</section>
+<section id="the-solution-function-problem">
+<h2>The solution function problem<a class="headerlink" href="#the-solution-function-problem" title="Permalink to this headline">¶</a></h2>
+<p>This problem asks for a closed-form representation that shows how the measure-of-interest
+(e.g., the probability to reach a predefined set of target states) depends on the parameter values.
+Many probabilistic model checkers support these computations: Prophesy can be used as a uniform gateway to these model checkers</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python scripts/parameter_synthesis.py load-problem model.pm property.pctl compute-solution-function</span>
+</pre></div>
+</div>
+<p>This tells the CLI to load the problem instance described by the model file and the property file, and then to compute a solution function.
+The call can be adapted in several directions</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python scripts/parameter_synthesis.py --mc storm load-problem model.pm property.pctl compute-solution-function --export sol.out</span>
+</pre></div>
+</div>
+<p>This call has been adapted in two directions: We now specified the model checker to be used, in this case storm, and that the result should be exported to a file sol.out.</p>
+<p>The computed solution function can be used to speed up sampling:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TBD</span>
+</pre></div>
+</div>
+</section>
+<section id="the-exact-synthesis-problem">
+<h2>The exact synthesis problem<a class="headerlink" href="#the-exact-synthesis-problem" title="Permalink to this headline">¶</a></h2>
+<p>The exact synthesis problem asks for an exact representation of all parameter instantiations that satisfy a specification.
+The solution function is a concise (but often very complex) solution.
+Prophesy currently does not support any other versions of the exact synthesis problem.</p>
+</section>
+<section id="the-feasible-optimal-instantiation-problem">
+<h2>The feasible / optimal instantiation problem<a class="headerlink" href="#the-feasible-optimal-instantiation-problem" title="Permalink to this headline">¶</a></h2>
+<p>The feasible instantiation problem asks for a parameter valuation
+such that the induced Markov model satisfies a given property.</p>
+<p>There are various approaches to do so:</p>
+<ul class="simple">
+<li><p>SMT</p></li>
+<li><p>Particle Swarm Optimisation</p></li>
+<li><p>Convex optimisation</p></li>
+</ul>
+<section id="using-particle-swarm-optimisation">
+<h3>Using particle swarm optimisation<a class="headerlink" href="#using-particle-swarm-optimisation" title="Permalink to this headline">¶</a></h3>
+<p>The two essential arguments are whether you want to find a solution above or below the threshold, and what technique to use. Here, we specified to use PSO</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python scripts/parameter_synthesis.py load-problem model.pm property.pctl set-threshold <span class="m">0</span>.1 find-feasible-instantiation below pso
+</pre></div>
+</div>
+<p>The threshold and the direction in the property should not be specified, i.e., use P=? […] to specify your reachability property.
+Instead, we set the threshold to 0.1 by the command line, and then ask prophesy to find a feasible instantiation.</p>
+</section>
+<section id="using-convex-optimisation">
+<h3>Using convex optimisation<a class="headerlink" href="#using-convex-optimisation" title="Permalink to this headline">¶</a></h3>
+<p>To switch to convex optimisation, all you need to do is switch the last command to QCQP.
+We notice that this method requires gurobi</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python scripts/parameter_synthesis.py load-problem model.pm property.pctl set-threshold <span class="m">0</span>.1 find-feasible-instantiation below qcqp
+</pre></div>
+</div>
+<p>To speed things up, there are a couple of options that you want to set when using QCQP (they should soon become default flags)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python scripts/parameter_synthesis.py load-problem model.pm property.pctl set-threshold <span class="m">0</span>.1 find-feasible-instantiation --qcqp-incremental --qcqp-store-quadratic --qcqp-handle-violation minimisation --qcqp-mc full --precheck-welldefinedness below qcqp
+</pre></div>
+</div>
+<section id="options">
+<h4>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h4>
+<p>TBD</p>
+</section>
+</section>
+<section id="using-smt">
+<h3>Using SMT<a class="headerlink" href="#using-smt" title="Permalink to this headline">¶</a></h3>
+<p>TBD</p>
+</section>
+</section>
+<section id="the-parameter-space-partitioning-problem">
+<h2>The parameter space partitioning problem<a class="headerlink" href="#the-parameter-space-partitioning-problem" title="Permalink to this headline">¶</a></h2>
+<p>This problem asks to provide a partitioning into accepting, rejecting and unknown regions, trying to minimize the unknown regions.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$  python scripts/parameter_synthesis.py load-problem  benchmarkfiles/smallpmdp/smallpmdp.pm benchmarkfiles/smallpmdp/min.pctl set-threshold 3/10 set-parameter-space --region-string &quot;0.1&lt;=p&lt;=0.2,0.4&lt;=q&lt;=0.6&quot; parameter-space-partitioning --iterations 30 pla quads
+</pre></div>
+</div>
+<p>This method runs using the quad heuristic for splitting the parameter space,
+and uses PLA (parameter lifting) for verifying the regions.</p>
+<p>It is often beneficial to sample a bit before running the parameter space partitiong.
+We do so by adding the sample command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$  python scripts/parameter_synthesis.py load-problem  benchmarkfiles/smallpmdp/smallpmdp.pm benchmarkfiles/smallpmdp/min.pctl set-threshold 3/10 set-parameter-space --region-string &quot;0.1&lt;=p&lt;=0.2,0.4&lt;=q&lt;=0.6&quot; sample --iterations 2 parameter-space-partitioning --iterations 30 pla quads
+</pre></div>
+</div>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/gettingstarted.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

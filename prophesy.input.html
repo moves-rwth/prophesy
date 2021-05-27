@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>prophesy.input package &#8212; prophesy 2.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-sphinx.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="prophesy.output package" href="prophesy.output.html" />
+    <link rel="prev" title="prophesy.exceptions package" href="prophesy.exceptions.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Prophesy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://github.com/moves-rwth/prophesy">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Prophesy <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-minimal">Step-by-step guide (minimal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-by-step-guide-full">Step-by-step guide (full)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">A Quick Tour Through Prophesy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#sampling">Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-solution-function-problem">The solution function problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-exact-synthesis-problem">The exact synthesis problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-feasible-optimal-instantiation-problem">The feasible / optimal instantiation problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#the-parameter-space-partitioning-problem">The parameter space partitioning problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command Line Utility</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="prophesy.html">prophesy package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prophesy_web.html">prophesy_web package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write_config.html">write_config module</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">prophesy.input package</a><ul>
+<li><a class="reference internal" href="#input-file-handlers">Input file handlers</a><ul>
+<li><a class="reference internal" href="#module-prophesy.input.modelfile">prophesy.input.modelfile module</a></li>
+<li><a class="reference internal" href="#module-prophesy.input.pctlfile">prophesy.input.pctlfile module</a></li>
+<li><a class="reference internal" href="#module-0">prophesy.input.problem_description module</a></li>
+<li><a class="reference internal" href="#module-prophesy.input.samplefile">prophesy.input.samplefile module</a></li>
+<li><a class="reference internal" href="#module-prophesy.input.solutionfunctionfile">prophesy.input.solutionfunctionfile module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="prophesy.exceptions.html" title="Previous Chapter: prophesy.exceptions package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; prophesy.exce...</span>
+    </a>
+  </li>
+  <li>
+    <a href="prophesy.output.html" title="Next Chapter: prophesy.output package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">prophesy.outp... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="prophesy-input-package">
+<h1>prophesy.input package<a class="headerlink" href="#prophesy-input-package" title="Permalink to this headline">¶</a></h1>
+<section id="input-file-handlers">
+<h2>Input file handlers<a class="headerlink" href="#input-file-handlers" title="Permalink to this headline">¶</a></h2>
+<section id="module-prophesy.input.modelfile">
+<span id="prophesy-input-modelfile-module"></span><h3>prophesy.input.modelfile module<a class="headerlink" href="#module-prophesy.input.modelfile" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.DrnFile">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">DrnFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.DrnFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.input.modelfile.ModelInput" title="prophesy.input.modelfile.ModelInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.input.modelfile.ModelInput</span></code></a></p>
+<p>Wraps a DRN file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.DrnFile.contains_nondeterministic_model">
+<span class="sig-name descname"><span class="pre">contains_nondeterministic_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.DrnFile.contains_nondeterministic_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.ModelInput">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ModelInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">do_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.ModelInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Abstract class for input model descriptions.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.PrismFile">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PrismFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.PrismFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#prophesy.input.modelfile.ModelInput" title="prophesy.input.modelfile.ModelInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">prophesy.input.modelfile.ModelInput</span></code></a></p>
+<p>Wrapper for Prism file; extracts parameter names.</p>
+<p>Rationale for not using stormpy bindings: Support for prism file should be given even without stormpy.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.PrismFile.contains_nondeterministic_model">
+<span class="sig-name descname"><span class="pre">contains_nondeterministic_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.PrismFile.contains_nondeterministic_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.PrismFile.make_temporary_copy">
+<span class="sig-name descname"><span class="pre">make_temporary_copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.PrismFile.make_temporary_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a temporary copy of itself, which will be deleted automatically.
+Does nothing if a temporary copy already exists.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.PrismFile.nr_parameters">
+<span class="sig-name descname"><span class="pre">nr_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.PrismFile.nr_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.PrismFile.replace_parameter_keyword">
+<span class="sig-name descname"><span class="pre">replace_parameter_keyword</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_keyword</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.PrismFile.replace_parameter_keyword" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitutes parameter type keywords (e.g. ‘const double’)
+with the given string (unless the line is commented out).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.input.modelfile.open_model_file">
+<span class="sig-name descname"><span class="pre">open_model_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.modelfile.open_model_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-prophesy.input.pctlfile">
+<span id="prophesy-input-pctlfile-module"></span><h3>prophesy.input.pctlfile module<a class="headerlink" href="#module-prophesy.input.pctlfile" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.input.pctlfile.PctlFile">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PctlFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.pctlfile.PctlFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Wrapper for pctl files, which contain a list of pctl formulae</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.pctlfile.PctlFile.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.pctlfile.PctlFile.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="prophesy.input.pctlfile.PctlFile.get_nr_formulas">
+<span class="sig-name descname"><span class="pre">get_nr_formulas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.pctlfile.PctlFile.get_nr_formulas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-0">
+<span id="prophesy-input-problem-description-module"></span><h3>prophesy.input.problem_description module<a class="headerlink" href="#module-0" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PctlFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Wrapper for pctl files, which contain a list of pctl formulae</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">get_nr_formulas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-prophesy.input.samplefile">
+<span id="prophesy-input-samplefile-module"></span><h3>prophesy.input.samplefile module<a class="headerlink" href="#module-prophesy.input.samplefile" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.input.samplefile.read_samples_file">
+<span class="sig-name descname"><span class="pre">read_samples_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.samplefile.read_samples_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads sample files.</p>
+<p>The first line specifies the parameters (with an optional “Result” for the last column).
+The second line optionally specifies a threshold. This is important if we have binary samples,
+(for which we do not know the value, but just whether it is above or below the threshold).
+The remaining lines give the parameter values and the value. This value is either a number or
+“above” or “below”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.input.samplefile.write_samples_file">
+<span class="sig-name descname"><span class="pre">write_samples_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.samplefile.write_samples_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-prophesy.input.solutionfunctionfile">
+<span id="prophesy-input-solutionfunctionfile-module"></span><h3>prophesy.input.solutionfunctionfile module<a class="headerlink" href="#module-prophesy.input.solutionfunctionfile" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="prophesy.input.solutionfunctionfile.ParametricResult">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">ParametricResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph_preservation_constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratfunc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.solutionfunctionfile.ParametricResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Stores the data that represent a property of a parametric model, which
+are its parameters, the solution function for the property
+and any constraints that apply to the parameters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.input.solutionfunctionfile.read_param_result">
+<span class="sig-name descname"><span class="pre">read_param_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.solutionfunctionfile.read_param_result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.input.solutionfunctionfile.read_pstorm_result">
+<span class="sig-name descname"><span class="pre">read_pstorm_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.solutionfunctionfile.read_pstorm_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the output of pstorm into a ParametricResult
+:param location: The location of the file to be read
+:type location: str
+:param require_result: If true, parsing fails if no result is found
+:type require_result: Bool
+:return: The data obtained from the model.
+:rtype: ParametricResult</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prophesy.input.solutionfunctionfile.write_pstorm_result">
+<span class="sig-name descname"><span class="pre">write_pstorm_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prophesy.input.solutionfunctionfile.write_pstorm_result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/prophesy.input.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015-2020, MOVES @ RWTH Aachen University.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
