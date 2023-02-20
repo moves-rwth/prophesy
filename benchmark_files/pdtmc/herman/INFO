@@ -1,0 +1,24 @@
+Hermans's self-stabilising protocol
+
+Taken from:
+Saba Aflaki, Matthias Volk, Borzoo Bonakdarpour, Joost-Pieter Katoen, Arne Storjohann:
+Automated Fine Tuning of Probabilistic Self-Stabilizing Algorithms. SRDS 2017: 94-103
+
+Original model from:
+Marta Z. Kwiatkowska, Gethin Norman, David Parker:
+Probabilistic verification of Herman's self-stabilisation algorithm. Formal Asp. Comput. 24(4-6): 661-670 (2012)
+http://www.prismmodelchecker.org/casestudies/self-stabilisation.php#herman
+
+
+Parameter: p
+Constants: N
+
+Models:
+- herman3
+  Threshold: 3
+- herman5
+  Threshold: 5
+- herman7
+  Threshold: 7
+- herman9
+  Threshold: 9

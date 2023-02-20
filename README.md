@@ -38,6 +38,13 @@ Getting Started
 
 The command line tools are available in the `scripts` folder.
 
+
+Examples
+--------
+The directory `examples` contains parametric models which can be used as input for Prophesy.
+The directory `benchmark_files` contains additional parametric models which have been used as benchmarks in the [overview paper](https://arxiv.org/pdf/1903.07993.pdf).
+
+
 Authors
 -------
 

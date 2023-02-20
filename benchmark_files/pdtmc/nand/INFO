@@ -1,0 +1,23 @@
+NAND Multiplexing
+
+Taken from:
+Christian Dehnert, Sebastian Junges, Nils Jansen, Florian Corzilius, Matthias Volk, Harold Bruintjes, Joost-Pieter Katoen, Erika Ábrahám:
+PROPhESY: A PRObabilistic ParamEter SYnthesis Tool. CAV (1) 2015: 214-231
+
+Original model from:
+Gethin Norman, David Parker, Marta Z. Kwiatkowska, Sandeep K. Shukla:
+Evaluating the reliability of NAND multiplexing with PRISM. IEEE Trans. on CAD of Integrated Circuits and Systems 24(10): 1629-1637 (2005)
+http://www.prismmodelchecker.org/casestudies/nand.php
+
+
+Parameters: perr, prob1
+Threshold: 0.1
+
+Models:
+- K=2, N=2
+- K=2, N=10
+- K=5, N=10
+- K=2, N=20
+- K=5, N=20
+- K=2, N=30
+- K=5, N=30

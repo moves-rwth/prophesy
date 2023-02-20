@@ -1,0 +1,22 @@
+Dynamic Fault Tree of Computer system
+
+Taken from:
+Matthias Volk, Sebastian Junges, Joost-Pieter Katoen:
+Advancing Dynamic Fault Tree Analysis - Get Succinct State Spaces Fast and Synthesise Failure Rates. SAFECOMP 2016: 253-265
+https://github.com/moves-rwth/dft-examples
+
+Original model from:
+David Coppit, Kevin J. Sullivan, Joanne Bechta Dugan:
+Formal Semantics for Computational Engineering: A Case Study on Dynamic Fault Trees. ISSRE 2000: 270-282
+
+
+Parameters: x, y
+Threshold: 700
+
+Constants: m, k, j
+
+Additional flags: "--transform-continuous"
+
+Models:
+- hecs_1_1_1_np_param
+- hecs_1_1_2_np_param

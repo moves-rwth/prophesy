@@ -1,0 +1,37 @@
+Network scheduling
+
+Taken from:
+Sebastian Junges, Nils Jansen, Ralf Wimmer, Tim Quatmann, Leonore Winterer, Joost-Pieter Katoen, Bernd Becker:
+Finite-State Controllers of POMDPs using Parameter Synthesis. UAI 2018: 519-529
+
+Original model from:
+Gethin Norman, David Parker, Xueyi Zou:
+Verification and control of partially observable probabilistic systems. Real-Time Systems 53(3): 354-402 (2017)
+
+
+Constants: c, K, T
+
+Models:
+- network2K-2_T-2_extended-simple_full.drn
+  Parameters: p1_0, p5_0, ..., p18_0
+  Threshold: 3
+
+- network2K-2_T-3_extended-simple_full
+  Parameters: p1_0, p5_0, ..., p35_0
+  Threshold: 3
+
+- network2K-2_T-4_extended-simple_full
+  Parameters: p1_0, p5_0, ..., p53_0
+  Threshold: 3
+
+- network2K-4_T-2_extended-simple_full
+  Parameters: p1_0, p5_0, ..., p44_0
+  Threshold: 4
+
+- network2K-4_T-3_extended-simple_full
+  Parameters: p1_0, p5_0, ..., p79_0
+  Threshold: 4
+
+- network2K-4_T-4_extended-simple_full
+  Parameters: p1_0, p5_0, ..., p115_0
+  Threshold: 4

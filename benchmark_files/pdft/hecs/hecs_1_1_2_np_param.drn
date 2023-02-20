@@ -1,0 +1,889 @@
+// Exported by storm
+// Original model type: CTMC
+@type: CTMC
+@parameters
+y x 
+@reward_models
+
+@nr_states
+145
+@model
+state 0 !1 failed
+	action 0
+		0 : 1
+state 1 !(x+607)/(100000) init
+	action 0
+		0 : (x+5)/(100000)
+		2 : 1/500
+		3 : 1/2000
+		4 : 3/5000
+		5 : 3/5000
+		6 : 1/50000
+		7 : 3/5000
+		8 : 3/5000
+		9 : 1/2000
+		10 : 3/5000
+state 2 !(x+100*y+507)/(100000) A_11_fail
+	action 0
+		0 : (x+5)/(100000)
+		11 : 1/1000
+		12 : 1/2000
+		13 : 3/5000
+		14 : 3/5000
+		32 : (y)/(1000)
+		33 : 1/50000
+		34 : 3/5000
+		35 : 3/5000
+		36 : 1/2000
+		37 : 3/5000
+state 3 !(x+437)/(100000) MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+235)/(100000)
+		12 : 1/500
+		31 : 1/50000
+state 4 !(x+547)/(100000) MR_1_2_fail M_1_2_fail
+	action 0
+		0 : (x+55)/(100000)
+		3 : 1/2000
+		13 : 1/500
+		15 : 1/50000
+		27 : 3/5000
+		28 : 3/5000
+		29 : 3/5000
+		30 : 3/5000
+state 5 !(x+547)/(100000) MR_1_5_fail M_1_5_fail
+	action 0
+		0 : (x+55)/(100000)
+		9 : 1/2000
+		14 : 1/500
+		23 : 1/50000
+		24 : 3/5000
+		25 : 3/5000
+		26 : 3/5000
+		27 : 3/5000
+state 6 !(x+606)/(100000) BUS_11_fail
+	action 0
+		0 : (x+6)/(100000)
+		15 : 3/5000
+		19 : 3/5000
+		20 : 3/5000
+		21 : 1/2000
+		22 : 3/5000
+		23 : 3/5000
+		31 : 1/2000
+		33 : 1/500
+state 7 !(x+547)/(100000) MR_1_4_fail M_1_4_fail
+	action 0
+		0 : (x+55)/(100000)
+		9 : 1/2000
+		17 : 3/5000
+		18 : 3/5000
+		19 : 1/50000
+		24 : 3/5000
+		28 : 3/5000
+		34 : 1/500
+state 8 !(x+547)/(100000) MR_1_3_fail MSIU_1_fail M_1_3_fail
+	action 0
+		0 : (x+105)/(100000)
+		16 : 3/5000
+		17 : 3/5000
+		20 : 1/50000
+		25 : 3/5000
+		29 : 3/5000
+		35 : 1/500
+state 9 !(x+437)/(100000) MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+235)/(100000)
+		21 : 1/50000
+		36 : 1/500
+state 10 !(x+547)/(100000) MR_1_1_fail M_1_1_fail
+	action 0
+		0 : (x+55)/(100000)
+		3 : 1/2000
+		16 : 3/5000
+		18 : 3/5000
+		22 : 1/50000
+		26 : 3/5000
+		30 : 3/5000
+		37 : 1/500
+state 11 !(x+100*y+407)/(100000) A_11_fail A_12_fail P_11_fail
+	action 0
+		0 : (x+100*y+5)/(100000)
+		38 : 1/2000
+		39 : 3/5000
+		40 : 1/2000
+		41 : 1/50000
+		77 : 3/5000
+		78 : 3/5000
+		79 : 3/5000
+		80 : 3/5000
+state 12 !(x+100*y+337)/(100000) A_11_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+235)/(100000)
+		38 : 1/1000
+		75 : (y)/(1000)
+		76 : 1/50000
+state 13 !(x+100*y+447)/(100000) A_11_fail MR_1_2_fail M_1_2_fail
+	action 0
+		0 : (x+55)/(100000)
+		12 : 1/2000
+		42 : (y)/(1000)
+		70 : 1/50000
+		71 : 3/5000
+		72 : 3/5000
+		73 : 3/5000
+		74 : 3/5000
+		80 : 1/1000
+state 14 !(x+100*y+447)/(100000) A_11_fail MR_1_5_fail M_1_5_fail
+	action 0
+		0 : (x+55)/(100000)
+		36 : 1/2000
+		65 : (y)/(1000)
+		66 : 1/50000
+		67 : 3/5000
+		68 : 3/5000
+		69 : 3/5000
+		71 : 3/5000
+		77 : 1/1000
+state 15 !(x+546)/(100000) BUS_11_fail MR_1_2_fail M_1_2_fail
+	action 0
+		0 : (x+56)/(100000)
+		31 : 1/2000
+		61 : 3/5000
+		62 : 3/5000
+		63 : 3/5000
+		64 : 3/5000
+		70 : 1/500
+state 16 !(x+487)/(100000) MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail
+	action 0
+		0 : (x+285)/(100000)
+		59 : 1/50000
+		60 : 1/500
+state 17 !(x+487)/(100000) MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail
+	action 0
+		0 : (x+285)/(100000)
+		57 : 1/50000
+		58 : 1/500
+state 18 !(x+487)/(100000) MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail
+	action 0
+		0 : (x+285)/(100000)
+		55 : 1/50000
+		56 : 1/500
+state 19 !(x+546)/(100000) BUS_11_fail MR_1_4_fail M_1_4_fail
+	action 0
+		0 : (x+56)/(100000)
+		21 : 1/2000
+		43 : 1/500
+		54 : 3/5000
+		55 : 3/5000
+		57 : 3/5000
+		62 : 3/5000
+state 20 !(x+546)/(100000) BUS_11_fail MR_1_3_fail MSIU_1_fail M_1_3_fail
+	action 0
+		0 : (x+106)/(100000)
+		52 : 3/5000
+		53 : 1/500
+		57 : 3/5000
+		59 : 3/5000
+		63 : 3/5000
+state 21 !(x+436)/(100000) BUS_11_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+236)/(100000)
+		51 : 1/500
+state 22 !(x+546)/(100000) BUS_11_fail MR_1_1_fail M_1_1_fail
+	action 0
+		0 : (x+56)/(100000)
+		31 : 1/2000
+		49 : 3/5000
+		50 : 1/500
+		55 : 3/5000
+		59 : 3/5000
+		64 : 3/5000
+state 23 !(x+546)/(100000) BUS_11_fail MR_1_5_fail M_1_5_fail
+	action 0
+		0 : (x+56)/(100000)
+		21 : 1/2000
+		49 : 3/5000
+		52 : 3/5000
+		54 : 3/5000
+		61 : 3/5000
+		66 : 1/500
+state 24 !(x+487)/(100000) MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+235)/(100000)
+		9 : 1/2000
+		54 : 1/50000
+		67 : 1/500
+state 25 !(x+487)/(100000) MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail
+	action 0
+		0 : (x+285)/(100000)
+		52 : 1/50000
+		68 : 1/500
+state 26 !(x+487)/(100000) MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail
+	action 0
+		0 : (x+285)/(100000)
+		49 : 1/50000
+		69 : 1/500
+state 27 !(x+487)/(100000) MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail
+	action 0
+		0 : (x+285)/(100000)
+		61 : 1/50000
+		71 : 1/500
+state 28 !(x+487)/(100000) MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail
+	action 0
+		0 : (x+285)/(100000)
+		62 : 1/50000
+		72 : 1/500
+state 29 !(x+487)/(100000) MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail
+	action 0
+		0 : (x+285)/(100000)
+		63 : 1/50000
+		73 : 1/500
+state 30 !(x+487)/(100000) MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+235)/(100000)
+		3 : 1/2000
+		64 : 1/50000
+		74 : 1/500
+state 31 !(x+436)/(100000) BUS_11_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+236)/(100000)
+		76 : 1/500
+state 32 !(x+507)/(100000) A_11_fail A_1S_fail P_11_fail
+	action 0
+		0 : (x+105)/(100000)
+		42 : 3/5000
+		44 : 1/50000
+		45 : 3/5000
+		46 : 3/5000
+		47 : 1/2000
+		48 : 3/5000
+		65 : 3/5000
+		75 : 1/2000
+state 33 !(x+100*y+506)/(100000) A_11_fail BUS_11_fail
+	action 0
+		0 : (x+6)/(100000)
+		41 : 1/1000
+		43 : 3/5000
+		44 : (y)/(1000)
+		50 : 3/5000
+		51 : 1/2000
+		53 : 3/5000
+		66 : 3/5000
+		70 : 3/5000
+		76 : 1/2000
+state 34 !(x+100*y+447)/(100000) A_11_fail MR_1_4_fail M_1_4_fail
+	action 0
+		0 : (x+55)/(100000)
+		36 : 1/2000
+		43 : 1/50000
+		45 : (y)/(1000)
+		56 : 3/5000
+		58 : 3/5000
+		67 : 3/5000
+		72 : 3/5000
+		78 : 1/1000
+state 35 !(x+100*y+447)/(100000) A_11_fail MR_1_3_fail MSIU_1_fail M_1_3_fail
+	action 0
+		0 : (x+105)/(100000)
+		46 : (y)/(1000)
+		53 : 1/50000
+		58 : 3/5000
+		60 : 3/5000
+		68 : 3/5000
+		73 : 3/5000
+		79 : 1/1000
+state 36 !(x+100*y+337)/(100000) A_11_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+235)/(100000)
+		40 : 1/1000
+		47 : (y)/(1000)
+		51 : 1/50000
+state 37 !(x+100*y+447)/(100000) A_11_fail MR_1_1_fail M_1_1_fail
+	action 0
+		0 : (x+55)/(100000)
+		12 : 1/2000
+		39 : 1/1000
+		48 : (y)/(1000)
+		50 : 1/50000
+		56 : 3/5000
+		60 : 3/5000
+		69 : 3/5000
+		74 : 3/5000
+state 38 !(x+100*y+237)/(100000) A_11_fail A_12_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+100*y+235)/(100000)
+		81 : 1/50000
+state 39 !(x+100*y+347)/(100000) A_11_fail A_12_fail MR_1_1_fail M_1_1_fail P_11_fail
+	action 0
+		0 : (x+100*y+55)/(100000)
+		38 : 1/2000
+		82 : 3/5000
+		83 : 3/5000
+		122 : 1/50000
+		123 : 3/5000
+		124 : 3/5000
+state 40 !(x+100*y+237)/(100000) A_11_fail A_12_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+235)/(100000)
+		121 : 1/50000
+state 41 !(x+100*y+406)/(100000) A_11_fail A_12_fail BUS_11_fail P_11_fail
+	action 0
+		0 : (x+100*y+6)/(100000)
+		81 : 1/2000
+		84 : 3/5000
+		118 : 3/5000
+		119 : 3/5000
+		120 : 3/5000
+		121 : 1/2000
+		122 : 3/5000
+state 42 !(x+447)/(100000) A_11_fail A_1S_fail MR_1_2_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+155)/(100000)
+		75 : 1/2000
+		85 : 1/50000
+		114 : 3/5000
+		115 : 3/5000
+		116 : 3/5000
+		117 : 3/5000
+state 43 !(x+100*y+446)/(100000) A_11_fail BUS_11_fail MR_1_4_fail M_1_4_fail
+	action 0
+		0 : (x+56)/(100000)
+		51 : 1/2000
+		109 : (y)/(1000)
+		110 : 3/5000
+		111 : 3/5000
+		112 : 3/5000
+		113 : 3/5000
+		119 : 1/1000
+state 44 !(x+506)/(100000) A_11_fail A_1S_fail BUS_11_fail P_11_fail
+	action 0
+		0 : (x+106)/(100000)
+		85 : 3/5000
+		104 : 3/5000
+		105 : 3/5000
+		106 : 1/2000
+		107 : 3/5000
+		108 : 1/2000
+		109 : 3/5000
+state 45 !(x+447)/(100000) A_11_fail A_1S_fail MR_1_4_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+155)/(100000)
+		47 : 1/2000
+		101 : 3/5000
+		102 : 3/5000
+		103 : 3/5000
+		109 : 1/50000
+		115 : 3/5000
+state 46 !(x+447)/(100000) A_11_fail A_1S_fail MR_1_3_fail MSIU_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+205)/(100000)
+		99 : 3/5000
+		100 : 3/5000
+		102 : 3/5000
+		105 : 1/50000
+		116 : 3/5000
+state 47 !(x+337)/(100000) A_11_fail A_1S_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+335)/(100000)
+		106 : 1/50000
+state 48 !(x+447)/(100000) A_11_fail A_1S_fail MR_1_1_fail M_1_1_fail P_11_fail
+	action 0
+		0 : (x+155)/(100000)
+		75 : 1/2000
+		86 : 3/5000
+		100 : 3/5000
+		103 : 3/5000
+		107 : 1/50000
+		117 : 3/5000
+state 49 !(x+486)/(100000) BUS_11_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail
+	action 0
+		0 : (x+286)/(100000)
+		98 : 1/500
+state 50 !(x+100*y+446)/(100000) A_11_fail BUS_11_fail MR_1_1_fail M_1_1_fail
+	action 0
+		0 : (x+56)/(100000)
+		76 : 1/2000
+		96 : 3/5000
+		97 : 3/5000
+		98 : 3/5000
+		107 : (y)/(1000)
+		113 : 3/5000
+		122 : 1/1000
+state 51 !(x+100*y+336)/(100000) A_11_fail BUS_11_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+236)/(100000)
+		106 : (y)/(1000)
+		121 : 1/1000
+state 52 !(x+486)/(100000) BUS_11_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail
+	action 0
+		0 : (x+286)/(100000)
+		95 : 1/500
+state 53 !(x+100*y+446)/(100000) A_11_fail BUS_11_fail MR_1_3_fail MSIU_1_fail M_1_3_fail
+	action 0
+		0 : (x+106)/(100000)
+		94 : 3/5000
+		95 : 3/5000
+		96 : 3/5000
+		105 : (y)/(1000)
+		111 : 3/5000
+		120 : 1/1000
+state 54 !(x+486)/(100000) BUS_11_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+236)/(100000)
+		21 : 1/2000
+		110 : 1/500
+state 55 !(x+486)/(100000) BUS_11_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail
+	action 0
+		0 : (x+286)/(100000)
+		113 : 1/500
+state 56 !(x+100*y+387)/(100000) A_11_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail
+	action 0
+		0 : (x+285)/(100000)
+		83 : 1/1000
+		103 : (y)/(1000)
+		113 : 1/50000
+state 57 !(x+486)/(100000) BUS_11_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail
+	action 0
+		0 : (x+286)/(100000)
+		111 : 1/500
+state 58 !(x+100*y+387)/(100000) A_11_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail
+	action 0
+		0 : (x+285)/(100000)
+		93 : 1/1000
+		102 : (y)/(1000)
+		111 : 1/50000
+state 59 !(x+486)/(100000) BUS_11_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail
+	action 0
+		0 : (x+286)/(100000)
+		96 : 1/500
+state 60 !(x+100*y+387)/(100000) A_11_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail
+	action 0
+		0 : (x+285)/(100000)
+		96 : 1/50000
+		100 : (y)/(1000)
+		124 : 1/1000
+state 61 !(x+486)/(100000) BUS_11_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail
+	action 0
+		0 : (x+286)/(100000)
+		92 : 1/500
+state 62 !(x+486)/(100000) BUS_11_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail
+	action 0
+		0 : (x+286)/(100000)
+		112 : 1/500
+state 63 !(x+486)/(100000) BUS_11_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail
+	action 0
+		0 : (x+286)/(100000)
+		94 : 1/500
+state 64 !(x+486)/(100000) BUS_11_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+236)/(100000)
+		31 : 1/2000
+		97 : 1/500
+state 65 !(x+447)/(100000) A_11_fail A_1S_fail MR_1_5_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+155)/(100000)
+		47 : 1/2000
+		86 : 3/5000
+		99 : 3/5000
+		101 : 3/5000
+		104 : 1/50000
+		114 : 3/5000
+state 66 !(x+100*y+446)/(100000) A_11_fail BUS_11_fail MR_1_5_fail M_1_5_fail
+	action 0
+		0 : (x+56)/(100000)
+		51 : 1/2000
+		92 : 3/5000
+		95 : 3/5000
+		98 : 3/5000
+		104 : (y)/(1000)
+		110 : 3/5000
+		118 : 1/1000
+state 67 !(x+100*y+387)/(100000) A_11_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+235)/(100000)
+		36 : 1/2000
+		91 : 1/1000
+		101 : (y)/(1000)
+		110 : 1/50000
+state 68 !(x+100*y+387)/(100000) A_11_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail
+	action 0
+		0 : (x+285)/(100000)
+		90 : 1/1000
+		95 : 1/50000
+		99 : (y)/(1000)
+state 69 !(x+100*y+387)/(100000) A_11_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail
+	action 0
+		0 : (x+285)/(100000)
+		86 : (y)/(1000)
+		98 : 1/50000
+		123 : 1/1000
+state 70 !(x+100*y+446)/(100000) A_11_fail BUS_11_fail MR_1_2_fail M_1_2_fail
+	action 0
+		0 : (x+56)/(100000)
+		76 : 1/2000
+		84 : 1/1000
+		85 : (y)/(1000)
+		92 : 3/5000
+		94 : 3/5000
+		97 : 3/5000
+		112 : 3/5000
+state 71 !(x+100*y+387)/(100000) A_11_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail
+	action 0
+		0 : (x+285)/(100000)
+		89 : 1/1000
+		92 : 1/50000
+		114 : (y)/(1000)
+state 72 !(x+100*y+387)/(100000) A_11_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail
+	action 0
+		0 : (x+285)/(100000)
+		88 : 1/1000
+		112 : 1/50000
+		115 : (y)/(1000)
+state 73 !(x+100*y+387)/(100000) A_11_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail
+	action 0
+		0 : (x+285)/(100000)
+		87 : 1/1000
+		94 : 1/50000
+		116 : (y)/(1000)
+state 74 !(x+100*y+387)/(100000) A_11_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+235)/(100000)
+		12 : 1/2000
+		82 : 1/1000
+		97 : 1/50000
+		117 : (y)/(1000)
+state 75 !(x+337)/(100000) A_11_fail A_1S_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+335)/(100000)
+		108 : 1/50000
+state 76 !(x+100*y+336)/(100000) A_11_fail BUS_11_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+236)/(100000)
+		81 : 1/1000
+		108 : (y)/(1000)
+state 77 !(x+100*y+347)/(100000) A_11_fail A_12_fail MR_1_5_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+55)/(100000)
+		40 : 1/2000
+		89 : 3/5000
+		90 : 3/5000
+		91 : 3/5000
+		118 : 1/50000
+		123 : 3/5000
+state 78 !(x+100*y+347)/(100000) A_11_fail A_12_fail MR_1_4_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+55)/(100000)
+		40 : 1/2000
+		83 : 3/5000
+		88 : 3/5000
+		91 : 3/5000
+		93 : 3/5000
+		119 : 1/50000
+state 79 !(x+100*y+347)/(100000) A_11_fail A_12_fail MR_1_3_fail MSIU_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+100*y+105)/(100000)
+		87 : 3/5000
+		90 : 3/5000
+		93 : 3/5000
+		120 : 1/50000
+		124 : 3/5000
+state 80 !(x+100*y+347)/(100000) A_11_fail A_12_fail MR_1_2_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+100*y+55)/(100000)
+		38 : 1/2000
+		82 : 3/5000
+		84 : 1/50000
+		87 : 3/5000
+		88 : 3/5000
+		89 : 3/5000
+state 81 !(x+100*y+236)/(100000) A_11_fail A_12_fail BUS_11_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+100*y+236)/(100000)
+state 82 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+100*y+235)/(100000)
+		38 : 1/2000
+		125 : 1/50000
+state 83 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		126 : 1/50000
+state 84 !(x+100*y+346)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_2_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+100*y+56)/(100000)
+		81 : 1/2000
+		125 : 3/5000
+		127 : 3/5000
+		143 : 3/5000
+		144 : 3/5000
+state 85 !(x+446)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_2_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+156)/(100000)
+		108 : 1/2000
+		128 : 3/5000
+		140 : 3/5000
+		141 : 3/5000
+		142 : 3/5000
+state 86 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		139 : 1/50000
+state 87 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		144 : 1/50000
+state 88 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		127 : 1/50000
+state 89 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		143 : 1/50000
+state 90 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		138 : 1/50000
+state 91 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+235)/(100000)
+		40 : 1/2000
+		137 : 1/50000
+state 92 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail
+	action 0
+		0 : (x+286)/(100000)
+		140 : (y)/(1000)
+		143 : 1/1000
+state 93 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		136 : 1/50000
+state 94 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail
+	action 0
+		0 : (x+286)/(100000)
+		141 : (y)/(1000)
+		144 : 1/1000
+state 95 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail
+	action 0
+		0 : (x+286)/(100000)
+		135 : (y)/(1000)
+		138 : 1/1000
+state 96 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail
+	action 0
+		0 : (x+286)/(100000)
+		129 : (y)/(1000)
+		134 : 1/1000
+state 97 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail
+	action 0
+		0 : (x+236)/(100000)
+		76 : 1/2000
+		125 : 1/1000
+		142 : (y)/(1000)
+state 98 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail
+	action 0
+		0 : (x+286)/(100000)
+		133 : 1/1000
+		139 : (y)/(1000)
+state 99 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		135 : 1/50000
+state 100 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		129 : 1/50000
+state 101 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+335)/(100000)
+		47 : 1/2000
+		132 : 1/50000
+state 102 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		131 : 1/50000
+state 103 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		130 : 1/50000
+state 104 !(x+446)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_5_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+156)/(100000)
+		106 : 1/2000
+		132 : 3/5000
+		135 : 3/5000
+		139 : 3/5000
+		140 : 3/5000
+state 105 !(x+446)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_3_fail MSIU_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+206)/(100000)
+		129 : 3/5000
+		131 : 3/5000
+		135 : 3/5000
+		141 : 3/5000
+state 106 !(x+336)/(100000) A_11_fail A_1S_fail BUS_11_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+336)/(100000)
+state 107 !(x+446)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_1_fail M_1_1_fail P_11_fail
+	action 0
+		0 : (x+156)/(100000)
+		108 : 1/2000
+		129 : 3/5000
+		130 : 3/5000
+		139 : 3/5000
+		142 : 3/5000
+state 108 !(x+336)/(100000) A_11_fail A_1S_fail BUS_11_fail MIU1_1_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+336)/(100000)
+state 109 !(x+446)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_4_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+156)/(100000)
+		106 : 1/2000
+		128 : 3/5000
+		130 : 3/5000
+		131 : 3/5000
+		132 : 3/5000
+state 110 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail
+	action 0
+		0 : (x+236)/(100000)
+		51 : 1/2000
+		132 : (y)/(1000)
+		137 : 1/1000
+state 111 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail
+	action 0
+		0 : (x+286)/(100000)
+		131 : (y)/(1000)
+		136 : 1/1000
+state 112 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail
+	action 0
+		0 : (x+286)/(100000)
+		127 : 1/1000
+		128 : (y)/(1000)
+state 113 !(x+100*y+386)/(100000) A_11_fail BUS_11_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail
+	action 0
+		0 : (x+286)/(100000)
+		126 : 1/1000
+		130 : (y)/(1000)
+state 114 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		140 : 1/50000
+state 115 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		128 : 1/50000
+state 116 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+385)/(100000)
+		141 : 1/50000
+state 117 !(x+387)/(100000) A_11_fail A_1S_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+335)/(100000)
+		75 : 1/2000
+		142 : 1/50000
+state 118 !(x+100*y+346)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_5_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+56)/(100000)
+		121 : 1/2000
+		133 : 3/5000
+		137 : 3/5000
+		138 : 3/5000
+		143 : 3/5000
+state 119 !(x+100*y+346)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_4_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+56)/(100000)
+		121 : 1/2000
+		126 : 3/5000
+		127 : 3/5000
+		136 : 3/5000
+		137 : 3/5000
+state 120 !(x+100*y+346)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_3_fail MSIU_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+100*y+106)/(100000)
+		134 : 3/5000
+		136 : 3/5000
+		138 : 3/5000
+		144 : 3/5000
+state 121 !(x+100*y+236)/(100000) A_11_fail A_12_fail BUS_11_fail MIU2_1_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+236)/(100000)
+state 122 !(x+100*y+346)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_1_fail M_1_1_fail P_11_fail
+	action 0
+		0 : (x+100*y+56)/(100000)
+		81 : 1/2000
+		125 : 3/5000
+		126 : 3/5000
+		133 : 3/5000
+		134 : 3/5000
+state 123 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		133 : 1/50000
+state 124 !(x+100*y+287)/(100000) A_11_fail A_12_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+100*y+285)/(100000)
+		134 : 1/50000
+state 125 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+100*y+236)/(100000)
+		81 : 1/2000
+state 126 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 127 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 128 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_2_fail MR_1_4_fail M_1_2_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 129 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 130 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_1_fail MR_1_4_fail M_1_1_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 131 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 132 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+336)/(100000)
+		106 : 1/2000
+state 133 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 134 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_1_fail MR_1_3_fail MSIU_1_fail M_1_1_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 135 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 136 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_3_fail MR_1_4_fail MSIU_1_fail M_1_3_fail M_1_4_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 137 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_4_fail MR_1_5_fail M_1_4_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+236)/(100000)
+		121 : 1/2000
+state 138 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_3_fail MR_1_5_fail MSIU_1_fail M_1_3_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 139 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_1_fail MR_1_5_fail M_1_1_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 140 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 141 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+386)/(100000)
+state 142 !(x+386)/(100000) A_11_fail A_1S_fail BUS_11_fail MR_1_1_fail MR_1_2_fail M_1_1_fail M_1_2_fail P_11_fail
+	action 0
+		0 : (x+336)/(100000)
+		108 : 1/2000
+state 143 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_2_fail MR_1_5_fail M_1_2_fail M_1_5_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
+state 144 !(x+100*y+286)/(100000) A_11_fail A_12_fail BUS_11_fail MR_1_2_fail MR_1_3_fail MSIU_1_fail M_1_2_fail M_1_3_fail P_11_fail
+	action 0
+		0 : (x+100*y+286)/(100000)
