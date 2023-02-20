@@ -1,0 +1,22 @@
+Bounded retransmission protocol
+
+Taken from:
+Ernst Moritz Hahn, Holger Hermanns, Lijun Zhang:
+Probabilistic reachability for parametric Markov models. STTT 13(1): 3-19 (2011)
+https://depend.cs.uni-saarland.de/tools/param/casestudies/#brp
+
+Original model from:
+Pedro R. D'Argenio, Bertrand Jeannet, Henrik Ejersbo Jensen, Kim Guldstrand Larsen:
+Reachability Analysis of Probabilistic Systems by Successive Refinements. PAPM-PROBMIV 2001: 39-56
+
+Parameter: pL, pK
+Threshold: 0.9
+
+Models:
+- MAX=2, N=16
+- MAX=5, N=16
+- MAX=2, N=256
+- MAX=5, N=256
+- MAX=2, N=512
+- MAX=5, N=512
+
