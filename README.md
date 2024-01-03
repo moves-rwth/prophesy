@@ -1,21 +1,16 @@
 Prophesy
 ========
 
-[![Build Status](https://travis-ci.org/moves-rwth/prophesy.svg?branch=master)](https://travis-ci.org/moves-rwth/prophesy)
-
-Prophesy is a tool set for parameter synthesis of parametric Markov models.
-It can work with a variety of backend tools.
-The release of Prophesy is accompanied by an [overview paper](https://arxiv.org/pdf/1903.07993.pdf).
-To get started, see the notes further below.
-
+Prophesy is a tool set for parameter synthesis of parametric Markov models, developed between 2015 and 2019. 
 Please notice that prophesy is academic software, and mostly meant as a sandbox for developing new algorithms.
-Prophesy is licensed under the GPL License. If you are interested in other licensing options, do not hesitate to contact us!
+Prophesy is no longer actively developed. 
+
+The so-far final release of Prophesy is accompanied by an [overview paper](https://arxiv.org/pdf/1903.07993.pdf).
 
 Installation
 ------------
 
-We advise users to follow [this guide](https://moves-rwth.github.io/prophesy/installation.html). The following outline is very brief.
-Make sure you have [CArL](http://smtrat.github.io/carl/) in the c++14 version installed.
+We advise users to follow [this guide](https://moves-rwth.github.io/prophesy/installation.html). 
 
 Then:
 
@@ -48,7 +43,7 @@ The directory `benchmark_files` contains additional parametric models which have
 Authors
 -------
 
-Prophesy is mainly developed at RWTH Aachen University by:
+Prophesy was mainly developed at RWTH Aachen University by:
 
 - [Sebastian Junges](https://moves.rwth-aachen.de/people/sebastian-junges/)
 - [Matthias Volk](https://moves.rwth-aachen.de/people/volk/)
