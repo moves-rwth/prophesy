@@ -158,7 +158,7 @@ class SmtlibSolver(SMTSolver):
             else:
                 self.stop()
                 self.run()
-                raise NotImplementedError("Unknown output {}. Input:\n{}".format(output, self.string))
+                raise NotImplementedError("Unknown output '{}'. Input:\n{}".format(output, self.string))
 
         self.stop()
         self.run()
@@ -263,10 +263,12 @@ class SmtlibSolver(SMTSolver):
         logger.debug("** model result:\t" + output)
         try:
             model = self._build_model(output)
-        except ValueError:
+        except ValueError as e:
+            print(e)
             model = None
             logger.warning("Cannot construct model exactly.")
             #TODO support approx.?
+
         return model
 
     def from_file(self, path):
@@ -309,10 +311,19 @@ def parse_smt_command(command):
     command = command.strip()
     if command[0] != "(":
         return command, []
-    command = command[1:-1].split(maxsplit=1)
-    if len(command) == 1:
-        return command[0], []
-    (command, arguments) = command
+    if command[-1] != ")":
+        raise RuntimeError(f"Expected closing parenthesis at end of SMT output '{command}'.")
+    # remove parenthesis
+    command = command[1:-1].strip()
+    arguments = None
+    if command[0] == "(":
+        arguments = command
+        command = ""
+    else:
+        command = command.split(maxsplit=1)
+        if len(command) == 1:
+            return command[0], []
+        (command, arguments) = command
     args = [""]
     paren = 0
     while len(arguments) > 0:
@@ -323,7 +334,7 @@ def parse_smt_command(command):
         elif c == ')':
             paren -= 1
             if paren < 0:
-                raise RuntimeError("Unmatched closing brace in SMT output")
+                raise RuntimeError(f"Unmatched closing parenthesis in SMT output '{arguments}'.")
         elif c == " ":
             if paren == 0:
                 arguments = arguments.strip()

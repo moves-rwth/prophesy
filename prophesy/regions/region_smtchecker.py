@@ -82,7 +82,7 @@ class SmtRegionChecker(RegionChecker):
         if constraint is valid the tuple  is (True, polygon added)
         if constraint is invalid the tuple is (False, point as counterexample)
         
-        :param polygon: either HyperRectangle or shapely Polygon
+        :param polygon: either HyperRectangle
         :param safe: Boolean to indicate if the region should be considered as safe or unsafe
         """
         logger.info("Analyse region (safe={}, check_for_eq={}, fixed_direction={})".format(safe, check_for_eq, self._fixed_direction))

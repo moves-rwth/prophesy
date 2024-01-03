@@ -416,9 +416,7 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
             result_found = True
         else:
             raise RuntimeError("Region checker returns with {}".format(result))
-
-
-    if method in ["qcqp"]:
+    elif method in ["qcqp"]:
         if qcqp_mc is None:
             qcqp_mc = "no"
         if qcqp_handle_violation is None:
@@ -462,8 +460,9 @@ def find_feasible_instantiation(state, stats, epsilon, qcqp_incremental, qcqp_mc
     if result_found:
         if dir == "below" and result.result > state.problem_description.threshold:
             raise ValueError("Result does not match threshold")
-        if dir == "above" and result.result < state.problem_description.threshold:
-            raise ValueError("Result does not match threshold")
+        if dir == "above" and result.result - state.problem_description.threshold < 0:
+            print(result.result - state.problem_description.threshold)
+            raise ValueError(f"Result {result.result} does not exceed threshold {state.problem_description.threshold}")
     procedure_time = time.time() - start_time
     total_time = time.time() - state.overall_start_time
 
