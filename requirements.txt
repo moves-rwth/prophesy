@@ -1,10 +1,5 @@
-tornado
-# fetch specific dependencies
-#--no-index
-#--find-links deps/
-
-# install package
-# NOTE: -e . for editable mode
--e . 
-git+git://github.com/moves-rwth/pycarl@master#egg=pycarl
-git+git://github.com/moves-rwth/stormpy@master#egg=stormpy
+wheel
+numpy
+matplotlib
+heuristic_optimization>=0.4.3,<0.5
+click

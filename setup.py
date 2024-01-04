@@ -116,6 +116,9 @@ setup(
         'stormpy': ["stormpy"],
         'pdf': ["PyPDF2"]
     },
+    package_data={
+        'prophesy': []
+    },
     scripts=[
         'scripts/parameter_synthesis.py',
         'prophesy_write_config.py'],
