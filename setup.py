@@ -107,23 +107,17 @@ setup(
     long_description="Prophesy is a library and script-collection for methods handling parameter synthesis in Markov decision processes and Markov chains",
     packages=["prophesy", "prophesy.adapter", "prophesy.data", "prophesy.exceptions", "prophesy.input",
               "prophesy.modelcheckers", "prophesy.modelrepair", "prophesy.optimisation",
-              "prophesy.output", "prophesy.regions",  "prophesy.sampling", "prophesy.smt", "prophesy.script_utilities",
-              "prophesy_web"],
+              "prophesy.output", "prophesy.regions",  "prophesy.sampling", "prophesy.smt", "prophesy.script_utilities"
+              ],
     install_requires=[ 'pycarl>=2.0.3', 'shapely',
                       'numpy', 'matplotlib', 'heuristic_optimization>=0.4.3,<0.5', 'click'],
     tests_require=['pytest'],
     extras_require={
         'stormpy': ["stormpy"],
-        'pdf': ["PyPDF2"],
-        'web': ['tornado', 'pycket', 'redis']
-    },
-    package_data={
-        'prophesy': [],
-        'prophesy_web': [ 'static/*.*', 'static/flot/*']
+        'pdf': ["PyPDF2"]
     },
     scripts=[
         'scripts/parameter_synthesis.py',
-        'scripts/webcegar.py',
         'prophesy_write_config.py'],
     cmdclass={
         'develop': ConfigDevelop,

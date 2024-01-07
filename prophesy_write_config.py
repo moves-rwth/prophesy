@@ -114,19 +114,6 @@ def get_initial_dependencies_config(config):
     config["installed_deps"] = config_deps
 
 
-def get_initial_web_config(config):
-    config_dirs = dict()
-    config_dirs["server_tmp"] = os.path.join(
-        prophesy_config_root, "tmp", "prophesy_web")
-    config_dirs["web_sessions"] = os.path.join(
-        config_dirs["server_tmp"], "sessions")
-    config_dirs["web_results"] = os.path.join(
-        config_dirs["server_tmp"], "results")
-    config_dirs["web_examples"] = os.path.join(
-        config_dirs["server_tmp"], "examples")
-    config["directories"] = config_dirs
-
-
 def write_initial_config(search_path=None, skip_existing=False):
     if search_path is not None:
         search_path = os.path.expanduser(search_path)
@@ -155,18 +142,6 @@ def write_initial_config(search_path=None, skip_existing=False):
         config = configparser.ConfigParser()
         get_initial_dependencies_config(config)
 
-        with open(path, 'w+') as configfile:
-            config.write(configfile)
-
-    exists = False
-    path = os.path.join(prophesy_config_root, "prophesy_web.cfg")
-    if os.path.isfile(path):
-        print("Web config file {} already exists.".format(path))
-        exists = True
-    if not exists or not skip_existing:
-        config = configparser.ConfigParser()
-        get_initial_web_config(config)
-        logging.info("Writing config to " + path)
         with open(path, 'w+') as configfile:
             config.write(configfile)
 

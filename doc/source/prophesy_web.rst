@@ -1,2 +1,0 @@
-prophesy_web package
-====================

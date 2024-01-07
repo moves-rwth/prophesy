@@ -5,6 +5,5 @@ API Documentation
    :maxdepth: 5
 
    prophesy
-   prophesy_web
    write_config
 
