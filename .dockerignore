@@ -1,0 +1,24 @@
+# Config files
+prophesy/prophesy.cfg
+prophesy/dependencies.cfg
+**/*.log
+#Git files
+.git
+.github
+.gitignore
+#The remainder is based on .gitignore
+**/*.so
+**/*.py[cod]
+lib/**/_config.py
+**/.eggs/
+**/*.egg-info/
+**/build/
+**/dist/
+**/.idea/
+**/__pycache__/
+**/_build/
+**/.pytest_cache/
+**/.idea/
+**/cmake-build-debug/
+
+**/.DS_Store
